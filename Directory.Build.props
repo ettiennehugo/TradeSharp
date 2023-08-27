@@ -1,0 +1,12 @@
+<Project>
+ <PropertyGroup>
+    <TradeSharpRoot>$(MSBuildThisFileDirectory)</TradeSharpRoot>
+    <TradeSharpBin>$(TradeSharpRoot)bin</TradeSharpBin>
+    <TradeSharpConfig>$(TradeSharpRoot)config</TradeSharpConfig>
+    <TradeSharpData>$(TradeSharpRoot)data</TradeSharpData>
+    <TradeSharpDoc>$(TradeSharpRoot)doc</TradeSharpDoc>
+    <TradeSharpObj>$(TradeSharpRoot)obj</TradeSharpObj>
+    <TradeSharpSrc>$(TradeSharpRoot)src</TradeSharpSrc>
+    <TradeSharpTest>$(TradeSharpRoot)test</TradeSharpTest>
+ </PropertyGroup>
+</Project>

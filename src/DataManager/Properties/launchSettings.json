@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DataManager (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DataManager (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

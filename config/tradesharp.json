@@ -1,0 +1,15 @@
+{
+  "General": {
+    "CultureFallback": "en-US, fr-FR",
+    "TimeZone": "Local",
+    "DataStore": {
+      "Typename": "TradeSharp.Data.SqliteDataStore",
+      "ConnectionString" : "TradeSharp.db"
+    }
+  },
+  "DataProviders": {
+    "StockDataOrg" : ""
+  },
+  "Brokers": { },
+  "Extensions": { }
+}
