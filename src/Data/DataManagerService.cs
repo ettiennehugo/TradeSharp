@@ -95,8 +95,8 @@ namespace TradeSharp.Data
       m_dataProviders = new List<IDataProvider>();
       foreach (var dataProviderConfig in m_configuration.DataProviders)
       {
-        Type dataProviderType = Type.GetType(dataProviderConfig.Key) ?? throw new ArgumentException(string.Format(Resources.DataProviderCreateFail, dataProviderConfig.Key.ToString()));
-        IDataProvider dataProvider = (IDataProvider?)Activator.CreateInstance("", dataProviderConfig.Key) ?? throw new ArgumentException(string.Format(Resources.DataProviderCreateFail, dataProviderConfig.Key.ToString()));
+        Type? type = Type.GetType(dataProviderConfig.Key) ?? throw new ArgumentException(string.Format(Resources.DataProviderCreateFail, dataProviderConfig.Key));
+        IDataProvider dataProvider = (IDataProvider?)Activator.CreateInstance(type!) ?? throw new ArgumentException(string.Format(Resources.DataProviderCreateFail, dataProviderConfig.Key));
         dataProvider.Create(dataProviderConfig.Value);
         m_dataProviders.Add(dataProvider);
       }

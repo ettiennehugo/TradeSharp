@@ -31,6 +31,7 @@ namespace TradeSharp.Data.Testing
 
     //attributes
     private Mock<IConfigurationService> m_configuration;
+    private Dictionary<string, object> m_generalConfiguration;
     private Mock<ILoggerFactory> m_loggerFactory;
     private CultureInfo m_cultureEnglish;
     private CultureInfo m_cultureFrench;
@@ -43,7 +44,6 @@ namespace TradeSharp.Data.Testing
     private Exchange m_exchange;
     private Data.Instrument m_instrument;
     private DateTime m_instrumentInceptionDate;
-    private IConfigurationService.TimeZone m_timeZoneSetting;
     private Mock<Common.IObserver<ModelChange>> m_modelChangeObserver;
     private long m_modelChangeObserverCount;
     private Mock<Common.IObserver<FundamentalChange>> m_fundamentalChangeObserver;
@@ -72,13 +72,17 @@ namespace TradeSharp.Data.Testing
       m_configuration.Setup(x => x.CultureInfo).Returns(m_cultureEnglish);
       m_configuration.Setup(x => x.RegionInfo).Returns(m_regionInfo);
       m_configuration.Setup(x => x.CultureFallback).Returns(new List<CultureInfo>(1) { m_cultureEnglish, m_cultureFrench }); //we use m_cultureGerman as the ANY language fallback
-      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, string>() { { typeof(TradeSharp.Data.Testing.TestDataProvider).ToString(), "TestDataProvider1" } });
-      m_configuration.Setup(x => x.General).Returns(new Dictionary<string, object>() {
-          { IConfigurationService.GeneralConfiguration.TimeZone, (object)m_timeZoneSetting },
+      Type testDataProviderType = typeof(TradeSharp.Data.Testing.TestDataProvider);
+      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, string>() { { testDataProviderType.AssemblyQualifiedName!, "TestDataProvider1" } });
+
+      m_generalConfiguration = new Dictionary<string, object>() {
+          { IConfigurationService.GeneralConfiguration.TimeZone, (object)IConfigurationService.TimeZone.Local },
           { IConfigurationService.GeneralConfiguration.CultureFallback, new List<CultureInfo>(1) { m_cultureEnglish } },
           { IConfigurationService.GeneralConfiguration.DataStore, new IConfigurationService.DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), Path.GetTempPath() + "TradeSharpTest.db") }
-      });
-      
+      };
+
+      m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);
+
       m_modelChangeObserver = new Mock<Common.IObserver<ModelChange>>(MockBehavior.Strict);
       m_modelChangeObserver.Setup(x => x.OnChange(It.IsAny<IEnumerable<ModelChange>>())).Callback(() => { m_modelChangeObserverCount++; });
       m_modelChangeObserver.Setup(x => x.GetHashCode()).Returns(-1);
@@ -1285,7 +1289,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void Update_InstrumentExchangeTickerInceptionDate_Success()
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime newInceptionDate = DateTime.Now.ToUniversalTime().AddDays(-10);
       Exchange newExchange = (Exchange)m_dataManager.Create(m_country, "NewExchange", m_timeZone);
 
@@ -1382,7 +1386,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetDataFeed_DisposeUnsubscribesFromDataManager_Success()
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       m_dataManager.Update(m_instrument, Resolution.Day, dateTime, 1, 2, 3, 4, 5, false);
 
@@ -1400,7 +1404,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetDataFeed_SameCriteriaReturnsSameDataFeed_Success()
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       m_dataManager.Update(m_instrument, Resolution.Day, dateTime, 1, 2, 3, 4, 5, false);
 
@@ -1421,7 +1425,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Month, PriceDataType.Synthetic)]
     public void Update_InstrumentPriceDataSingleBar_Success(Resolution resolution, PriceDataType priceDataType)
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       m_dataManager.Update(m_instrument, resolution, dateTime, 1, 2, 3, 4, 5, priceDataType == PriceDataType.Synthetic);
 
@@ -1452,7 +1456,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Month, PriceDataType.Synthetic)]
      public void Update_InstrumentPriceDataReplaceBar_Success(Resolution resolution, PriceDataType priceDataType)
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       m_dataManager.Update(m_instrument, resolution, dateTime, 1, 2, 3, 4, 5, priceDataType == PriceDataType.Synthetic);
 
@@ -1494,7 +1498,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Month, PriceDataType.Synthetic)]
     public void Update_InstrumentPriceDataRange_Success(Resolution resolution, PriceDataType priceDataType)
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime fromDateTime = DateTime.Now.ToUniversalTime();
       DateTime toDateTime = fromDateTime.AddMonths(4);
       BarData barData = new IDataStoreService.BarData(5);
@@ -1565,7 +1569,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Month)]
     public void Update_InstrumentPriceDataBarActualAndSyntheticRange_Success(Resolution resolution)
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime fromDateTime = DateTime.Now.ToUniversalTime();
       DateTime toDateTime = fromDateTime.AddMonths(4);
       BarData barData = new IDataStoreService.BarData(5);
@@ -1630,7 +1634,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(PriceDataType.Synthetic)]
     public void Update_InstrumentPriceDataL1Data_Success(PriceDataType priceDataType)
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       IDataStoreService.Level1Data level1Data = new IDataStoreService.Level1Data(5);
 
@@ -1679,7 +1683,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void Update_InstrumentPriceDataL1ActualAndSyntheticData_Success()
     {
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       IDataStoreService.Level1Data level1Data = new IDataStoreService.Level1Data(5);
 
@@ -1779,7 +1783,7 @@ namespace TradeSharp.Data.Testing
       //   - second phase is to output the data using a random order
       //   - third pahse is switch again to sequential output
       // - retrieve a DataFeed over the given set of test data
-      m_timeZoneSetting = IConfigurationService.TimeZone.UTC;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       createTestDataNoPersist(DateTime.Now.ToUniversalTime(), 10000);    //increase this bar count and the totals used below to increase the test time and potential update conflicts
 
       (IInstrument, IDataManagerService, IDataStoreService.BarData, Resolution, int, int, int) task1Parameters = new (m_instrument, m_dataManager, m_testBarData[resolution], resolution, 5000, 2500, 2500);

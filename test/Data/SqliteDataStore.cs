@@ -21,6 +21,7 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
 using static System.Collections.Specialized.BitVector32;
 using System.Collections;
+using static TradeSharp.Common.IConfigurationService;
 
 namespace TradeSharp.Data.Testing
 {
@@ -38,6 +39,7 @@ namespace TradeSharp.Data.Testing
 
     //attributes
     private Mock<IConfigurationService> m_configuration;
+    private Dictionary<string, object> m_generalConfiguration;
     private Mock<IDataManagerService> m_dataManager;
     private Mock<IDataProvider> m_dataProvider1;
     private Mock<IDataProvider> m_dataProvider2;
@@ -61,10 +63,20 @@ namespace TradeSharp.Data.Testing
       m_cultureGerman = CultureInfo.GetCultureInfo("de-DE");
       m_regionInfo = new RegionInfo(m_cultureEnglish.Name);
 
-      m_configuration = new Mock<IConfigurationService>().SetupAllProperties();
-      m_configuration.SetupGet(x => x.CultureInfo).Returns(m_cultureEnglish);
-      m_configuration.SetupGet(x => x.RegionInfo).Returns(m_regionInfo);
-      m_configuration.SetupGet(x => x.CultureFallback).Returns(new List<CultureInfo>(1) { m_cultureEnglish, m_cultureFrench }); //we use m_cultureGerman as the ANY language fallback
+      m_configuration = new Mock<IConfigurationService>(MockBehavior.Strict);
+      m_configuration.Setup(x => x.CultureInfo).Returns(m_cultureEnglish);
+      m_configuration.Setup(x => x.RegionInfo).Returns(m_regionInfo);
+      m_configuration.Setup(x => x.CultureFallback).Returns(new List<CultureInfo>(1) { m_cultureEnglish, m_cultureFrench }); //we use m_cultureGerman as the ANY language fallback
+      Type testDataProviderType = typeof(TradeSharp.Data.Testing.TestDataProvider);
+      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, string>() { { "TestDataProvider1", "TestDataProvider1" }, { "TestDataProvider2", "TestDataProvider2" } });
+
+      m_generalConfiguration = new Dictionary<string, object>() {
+          { IConfigurationService.GeneralConfiguration.TimeZone, (object)IConfigurationService.TimeZone.Local },
+          { IConfigurationService.GeneralConfiguration.CultureFallback, new List<CultureInfo>(1) { m_cultureEnglish } },
+          { IConfigurationService.GeneralConfiguration.DataStore, new IConfigurationService.DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), Path.GetTempPath() + "TradeSharpTest.db") }
+      };
+
+      m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);
 
       m_dataProvider1 = new Mock<IDataProvider>().SetupAllProperties();
       m_dataProvider1.SetupGet(x => x.Name).Returns("TestDataProvider1");

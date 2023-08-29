@@ -29,7 +29,7 @@ namespace TradeSharp.Data.Testing
     //attributes
     private Mock<IConfigurationService> m_configuration;
     private Mock<ILoggerFactory> m_loggerFactory;
-    private IConfigurationService.TimeZone m_configurationTimeZone;
+    private Dictionary<string, object> m_generalConfiguration;
     private CultureInfo m_cultureEnglish;
     private RegionInfo m_regionInfo;
     private TradeSharp.Data.DataManagerService m_dataManager;
@@ -55,17 +55,20 @@ namespace TradeSharp.Data.Testing
       m_loggerFactory = new Mock<ILoggerFactory>(MockBehavior.Strict);
       m_loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
-      m_configurationTimeZone = IConfigurationService.TimeZone.Local;
       m_configuration = new Mock<IConfigurationService>(MockBehavior.Strict);
       m_configuration.Setup(x => x.CultureInfo).Returns(m_cultureEnglish);
       m_configuration.Setup(x => x.RegionInfo).Returns(m_regionInfo);
       m_configuration.Setup(x => x.CultureFallback).Returns(new List<CultureInfo>(1) { m_cultureEnglish });
-      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, string>() { { typeof(TradeSharp.Data.Testing.TestDataProvider).ToString(), "TestDataProvider1" } });
-      m_configuration.Setup(x => x.General).Returns(new Dictionary<string, object>() { 
-          { IConfigurationService.GeneralConfiguration.TimeZone, (object)m_configurationTimeZone },
-          { IConfigurationService.GeneralConfiguration.CultureFallback, new List<CultureInfo>(1) { m_cultureEnglish } }, 
-          { IConfigurationService.GeneralConfiguration.DataStore, new IConfigurationService.DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), Path.GetTempPath() + "TradeSharpTest.db") } 
-      });
+      Type testDataProviderType = typeof(TradeSharp.Data.Testing.TestDataProvider);
+      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, string>() { { testDataProviderType.AssemblyQualifiedName, "TestDataProvider1" } });
+
+      m_generalConfiguration = new Dictionary<string, object>() {
+          { IConfigurationService.GeneralConfiguration.TimeZone, (object)IConfigurationService.TimeZone.Local },
+          { IConfigurationService.GeneralConfiguration.CultureFallback, new List<CultureInfo>(1) { m_cultureEnglish } },
+          { IConfigurationService.GeneralConfiguration.DataStore, new IConfigurationService.DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), Path.GetTempPath() + "TradeSharpTest.db") }
+      };
+
+      m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);
 
       m_dataStore = new TradeSharp.Data.SqliteDataStoreService(m_configuration.Object);
 
@@ -439,7 +442,7 @@ namespace TradeSharp.Data.Testing
     public void GetDataFeed_BarDataConversionByTimeZone_CheckData(Resolution resolution, IConfigurationService.TimeZone timeZone)
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
-      m_configurationTimeZone = timeZone;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
       Data.DataFeed dataFeed = m_dataManager.GetDataFeed(m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Both);
       BarData barData = m_testBarDataReversed[resolution];
 
@@ -472,7 +475,7 @@ namespace TradeSharp.Data.Testing
     public void GetDataFeed_Level1DateTimeConversionByTimeZone_CheckData(Resolution resolution, IConfigurationService.TimeZone timeZone)
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
-      m_configurationTimeZone = timeZone;
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
       Data.DataFeed dataFeed = m_dataManager.GetDataFeed(m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Both);
 
       switch (resolution)

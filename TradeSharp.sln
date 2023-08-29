@@ -14,7 +14,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreUI", "src\CoreUI\CoreUI
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{B627EADE-FFF4-449A-BE57-5C034BF95755}"
 	ProjectSection(SolutionItems) = preProject
-		tradesharp.json = tradesharp.json
+		config\tradesharp.json = config\tradesharp.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataManager", "src\DataManager\DataManager.csproj", "{D1A4F45C-DAE2-4BC6-953D-230803AB22BB}"

@@ -3,7 +3,7 @@
     "CultureFallback": "en-US, fr-FR",
     "TimeZone": "Local",
     "DataStore": {
-      "Typename": "TradeSharp.Data.SqliteDataStore",
+      "Typename": "TradeSharp.Data.SqliteDataStore,TradeSharp.Data.dll",
       "ConnectionString" : "TradeSharp.db"
     }
   },

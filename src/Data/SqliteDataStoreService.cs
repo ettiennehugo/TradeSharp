@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Net.Http.Headers;
 using TradeSharp.Common;
@@ -82,7 +83,7 @@ namespace TradeSharp.Data
 
       //validate database type and setup the database connection
       IConfigurationService.DataStoreConfiguration dataStoreConfiguration = (IConfigurationService.DataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.DataStore];
-      Trace.Assert(dataStoreConfiguration.Typename == this.GetType().Name, $"Incorrect data store \"{this.GetType().Name}\" instatiated against data store configuration \"{dataStoreConfiguration.Typename}\"");
+      Trace.Assert(dataStoreConfiguration.Typename != this.GetType().Name, $"Incorrect data store \"{this.GetType().Name}\" instatiated against data store configuration \"{dataStoreConfiguration.Typename}\"");
       m_databaseFile = dataStoreConfiguration.ConnectionString;
 
       m_connectionString = new SqliteConnectionStringBuilder()
@@ -198,12 +199,12 @@ namespace TradeSharp.Data
 
       AssociationCacheEntry? cacheEntry;
       if (m_countryFundamentalAssociations.TryGetValue(fundamental.DataProviderName, out cacheEntry))
+        cacheEntry![fundamental.FundamentalId.GetHashCode() + fundamental.CountryId.GetHashCode()] = fundamental.AssociationId;
+      else
       {
         cacheEntry = new AssociationCacheEntry() { { fundamental.FundamentalId.GetHashCode() + fundamental.CountryId.GetHashCode(), fundamental.AssociationId } };
         m_countryFundamentalAssociations[fundamental.DataProviderName] = cacheEntry;
       }
-      else
-        cacheEntry![fundamental.FundamentalId.GetHashCode() + fundamental.CountryId.GetHashCode()] = fundamental.AssociationId;
     }
 
     public void CreateInstrumentFundamental(ref IDataStoreService.InstrumentFundamental fundamental)
@@ -221,12 +222,12 @@ namespace TradeSharp.Data
 
       AssociationCacheEntry? cacheEntry;
       if (m_instrumentFundamentalAssociations.TryGetValue(fundamental.DataProviderName, out cacheEntry))
+        cacheEntry![fundamental.FundamentalId.GetHashCode() + fundamental.InstrumentId.GetHashCode()] = fundamental.AssociationId;
+      else
       {
         cacheEntry = new AssociationCacheEntry() { { fundamental.FundamentalId.GetHashCode() + fundamental.InstrumentId.GetHashCode(), fundamental.AssociationId } };
-        m_countryFundamentalAssociations[fundamental.DataProviderName] = cacheEntry;
+        m_instrumentFundamentalAssociations[fundamental.DataProviderName] = cacheEntry;
       }
-      else
-        cacheEntry![fundamental.FundamentalId.GetHashCode() + fundamental.InstrumentId.GetHashCode()] = fundamental.AssociationId;
     }
 
     public void CreateInstrumentGroup(IDataStoreService.InstrumentGroup instrumentGroup)
@@ -518,10 +519,10 @@ namespace TradeSharp.Data
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalAssociations)} WHERE CountryId = '{id.ToString()}'"))
-          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
-        result += Delete(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalAssociations), id, null, null, "CountryId");
-        CacheCountryFundamentalAssociations(dataProvider.Key);
+        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations)} WHERE CountryId = '{id.ToString()}'"))
+          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+        result += Delete(GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations), id, null, null, "CountryId");
+        CacheCountryFundamentalAssociations(dataProvider.Value);
       }
 
       return result;
@@ -558,11 +559,11 @@ namespace TradeSharp.Data
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations)} WHERE InstrumentId = '{id.ToString()}'"))
-          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
-        result += Delete(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations), id, null, null, "InstrumentId");
-        result += deleteData(dataProvider.Key, ticker, null);
-        CacheInstrumentFundamentalAssociations(dataProvider.Key);
+        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations)} WHERE InstrumentId = '{id.ToString()}'"))
+          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+        result += Delete(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations), id, null, null, "InstrumentId");
+        result += deleteData(dataProvider.Value, ticker, null);
+        CacheInstrumentFundamentalAssociations(dataProvider.Value);
       }
 
       return result;
@@ -602,8 +603,8 @@ namespace TradeSharp.Data
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        CacheCountryFundamentalAssociations(dataProvider.Key);
-        CacheInstrumentFundamentalAssociations(dataProvider.Key);
+        CacheCountryFundamentalAssociations(dataProvider.Value);
+        CacheInstrumentFundamentalAssociations(dataProvider.Value);
       }
       return result;
     }
@@ -611,7 +612,7 @@ namespace TradeSharp.Data
     public int DeleteFundamentalValues(Guid id)
     {
       int result = 0;
-      foreach (var dataProvider in m_configurationService.DataProviders) result += DeleteFundamentalValues(dataProvider.Key, id);
+      foreach (var dataProvider in m_configurationService.DataProviders) result += DeleteFundamentalValues(dataProvider.Value, id);
       return result;
     }
 
@@ -627,8 +628,8 @@ namespace TradeSharp.Data
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        CacheCountryFundamentalAssociations(dataProvider.Key);
-        CacheInstrumentFundamentalAssociations(dataProvider.Key);
+        CacheCountryFundamentalAssociations(dataProvider.Value);
+        CacheInstrumentFundamentalAssociations(dataProvider.Value);
       }
 
       return result;
@@ -1328,15 +1329,15 @@ namespace TradeSharp.Data
         //create data provider specific data tables if required
         foreach (var dataProvider in m_configurationService.DataProviders)
         {
-          if (!requireTableDefinitions(dataProvider.Key)) continue;
-          CreateCountryFundamentalAssociationTable(dataProvider.Key);
-          CreateCountryFundamentalValuesTable(dataProvider.Key);
-          CreateInstrumentFundamentalAssociationTable(dataProvider.Key);
-          CreateInstrumentFundamentalValuesTable(dataProvider.Key);
+          if (!requireTableDefinitions(dataProvider.Value)) continue;
+          CreateCountryFundamentalAssociationTable(dataProvider.Value);
+          CreateCountryFundamentalValuesTable(dataProvider.Value);
+          CreateInstrumentFundamentalAssociationTable(dataProvider.Value);
+          CreateInstrumentFundamentalValuesTable(dataProvider.Value);
           foreach (Resolution resolution in s_SupportedResolutions)
           {
-            CreateInstrumentDataTable(dataProvider.Key, resolution);
-            CreateInstrumentDataSyntheticTable(dataProvider.Key, resolution);
+            CreateInstrumentDataTable(dataProvider.Value, resolution);
+            CreateInstrumentDataSyntheticTable(dataProvider.Value, resolution);
           }
         }
 
@@ -1379,17 +1380,17 @@ namespace TradeSharp.Data
         //drop the data provider specific tables and indexes
         foreach (var dataProvider in m_configurationService.DataProviders)
         {
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableFundamentals));
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalAssociations));
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalValues));
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations));
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalValues));
+          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableFundamentals));
+          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations));
+          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalValues));
+          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations));
+          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalValues));
           foreach (Resolution resolution in s_SupportedResolutions)
           {
-            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentData, resolution));
-            DropIndex(GetDataProviderDBName(dataProvider.Key, c_IndexInstrumentData, resolution));
-            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentDataSynthetic, resolution));
-            DropIndex(GetDataProviderDBName(dataProvider.Key, c_IndexInstrumentDataSynthetic, resolution));
+            DropTable(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentData, resolution));
+            DropIndex(GetDataProviderDBName(dataProvider.Value, c_IndexInstrumentData, resolution));
+            DropTable(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentDataSynthetic, resolution));
+            DropIndex(GetDataProviderDBName(dataProvider.Value, c_IndexInstrumentDataSynthetic, resolution));
           }
         }
 
@@ -1719,18 +1720,32 @@ namespace TradeSharp.Data
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableFundamentals}");
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableCountryFundamentalValues)}");
-        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentFundamentalValues)}");
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, Data.SqliteDataStoreService.c_TableCountryFundamentalValues)}");
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, Data.SqliteDataStoreService.c_TableInstrumentFundamentalValues)}");
 
         foreach (Resolution resolution in SupportedDataResolutions)
         {
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentData, resolution)}");
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentDataSynthetic, resolution)}");
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, Data.SqliteDataStoreService.c_TableInstrumentData, resolution)}");
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, Data.SqliteDataStoreService.c_TableInstrumentDataSynthetic, resolution)}");
         }
       }
 
       return result;
     }
+
+    ///// <summary>
+    ///// Generate unique table name from a data provider type name.
+    ///// </summary>
+    //protected string uniqueTableName(string dataProviderName)
+    //{
+    //  //currently only use the final part of the data provider type name as the table name since in most cases
+    //  //this should be unique enough - a hash could be generated from the type name to make sure it is always unique based
+    //  //on the namespace as well
+    //  string typename = dataProviderName;
+    //  if (typename.Contains(",")) typename = typename.Substring(0, typename.IndexOf(","));
+    //  string[] nameComponents = typename.Split('.');
+    //  return nameComponents[nameComponents.Length - 1];
+    //}
 
     public string GetDataProviderDBName(string dataProviderName, string name)
     {
@@ -1929,10 +1944,35 @@ namespace TradeSharp.Data
     /// </summary>
     private Guid? GetCountryFundamentalAssociationId(string dataProviderName, Guid fundamentalId, Guid countryId)
     {
-      Guid? result = null;
       AssociationCacheEntry? cacheEntry;
-      if (m_countryFundamentalAssociations.TryGetValue(dataProviderName, out cacheEntry) && cacheEntry.TryGetValue(fundamentalId.GetHashCode() + countryId.GetHashCode(), out Guid associationId)) result = associationId;
-      return result;
+
+      int associationHash = fundamentalId.GetHashCode() + countryId.GetHashCode();
+
+      //search for primary value under the given data provider name
+      if (m_countryFundamentalAssociations.TryGetValue(dataProviderName, out cacheEntry) && cacheEntry.TryGetValue(fundamentalId.GetHashCode() + countryId.GetHashCode(), out Guid associationId)) 
+        return associationId;
+      
+      //fallback to searching in all data providers
+      foreach (var entry in m_countryFundamentalAssociations)
+      {
+        if (entry.Key == dataProviderName) continue;
+
+        if (entry.Value.TryGetValue(associationHash, out associationId))
+        {
+          if (cacheEntry != null)
+            cacheEntry[associationHash] = associationId;          
+          else
+          {
+            cacheEntry = new AssociationCacheEntry();
+            cacheEntry[associationHash] = associationId;
+            m_countryFundamentalAssociations[dataProviderName] = cacheEntry;
+          }
+
+          return associationId;
+        }
+      }
+
+      return null;
     }
 
     /// <summary>
@@ -1940,10 +1980,35 @@ namespace TradeSharp.Data
     /// </summary>
     private Guid? GetInstrumentFundamentalAssociationId(string dataProviderName, Guid fundamentalId, Guid instrumentId)
     {
-      Guid? result = null;
       AssociationCacheEntry? cacheEntry;
-      if (m_instrumentFundamentalAssociations.TryGetValue(dataProviderName, out cacheEntry) && cacheEntry.TryGetValue(fundamentalId.GetHashCode() + instrumentId.GetHashCode(), out Guid associationId)) result = associationId;
-      return result;
+
+      int associationHash = fundamentalId.GetHashCode() + instrumentId.GetHashCode();
+
+      //search for primary value under the given data provider name
+      if (m_instrumentFundamentalAssociations.TryGetValue(dataProviderName, out cacheEntry) && cacheEntry.TryGetValue(associationHash, out Guid associationId)) 
+        return associationId;
+
+      //fallback to searching in all data providers
+      foreach (var entry in m_instrumentFundamentalAssociations)
+      {
+        if (entry.Key == dataProviderName) continue;
+
+        if (entry.Value.TryGetValue(associationHash, out associationId))
+        {
+          if (cacheEntry != null)
+            cacheEntry[associationHash] = associationId;
+          else
+          {
+            cacheEntry = new AssociationCacheEntry();
+            cacheEntry[associationHash] = associationId;
+            m_instrumentFundamentalAssociations[dataProviderName] = cacheEntry;
+          }
+
+          return associationId;
+        }
+      }
+
+      return null;
     }
   }
 }
