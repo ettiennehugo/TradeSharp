@@ -365,19 +365,19 @@ namespace TradeSharp.Data.Testing
         switch (resolution)
         {
           case Resolution.Minute:
-            currentDateTime = currentDateTime.AddMinutes(1);
+            currentDateTime = m_fromDateTime.AddMinutes(index);
             break;
           case Resolution.Hour:
-            currentDateTime = currentDateTime.AddHours(1);
+            currentDateTime = m_fromDateTime.AddHours(index);
             break;
           case Resolution.Day:
-            currentDateTime = currentDateTime.AddDays(1);
+            currentDateTime = m_fromDateTime.AddDays(index);
             break;
           case Resolution.Week:
-            currentDateTime = currentDateTime.AddDays(7);
+            currentDateTime = m_fromDateTime.AddDays(index * 7);
             break;
           case Resolution.Month:
-            currentDateTime = currentDateTime.AddMonths(1);
+            currentDateTime = m_fromDateTime.AddMonths(index);
             break;
         }
       }
@@ -1786,8 +1786,8 @@ namespace TradeSharp.Data.Testing
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = IConfigurationService.TimeZone.UTC;
       createTestDataNoPersist(DateTime.Now.ToUniversalTime(), 10000);    //increase this bar count and the totals used below to increase the test time and potential update conflicts
 
-      (IInstrument, IDataManagerService, IDataStoreService.BarData, Resolution, int, int, int) task1Parameters = new (m_instrument, m_dataManager, m_testBarData[resolution], resolution, 5000, 2500, 2500);
-      (IInstrument, IDataManagerService, IDataStoreService.BarData, Resolution, int, int, int) task2Parameters = new (m_instrument, m_dataManager, m_testBarData[resolution], resolution, 3000, 4000, 3000);
+      (IInstrument, IDataManagerService, IDataStoreService.BarData, Resolution, int, int, int) task1Parameters = new(m_instrument, m_dataManager, m_testBarData[resolution], resolution, 5000, 2500, 2500);
+      (IInstrument, IDataManagerService, IDataStoreService.BarData, Resolution, int, int, int) task2Parameters = new(m_instrument, m_dataManager, m_testBarData[resolution], resolution, 3000, 4000, 3000);
       Task task1 = new(persistPriceData, task1Parameters);
       Task task2 = new(persistPriceData, task2Parameters);
       task1.Start();
