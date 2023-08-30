@@ -20,10 +20,6 @@ using static TradeSharp.Data.IDataStoreService;
 
 namespace TradeSharp.Data
 {
-  //TODO: Determine how to use the observer pattern in C#.
-  // * Strategies and indicators are observable as well so that charts and portfolio's can observe them and update the chart when the strategy or indicator changes.
-  // * TBD: How will playback work on a chart??? Maybe introduce a playback layer that records object states over time and allows playback, this playback layer would be observable by the charts/portfolios/screeners to update their associated state. 
-
   /// <summary>
   /// DataManager to support the data model, it's main purpose is to efficiently load the data, store it in memory where appropriate and make sure the data model stays intact when it's modified.
   /// IMPORTANT: Do NOT keep references of objects in the data manager if you're going to call Refresh on the data manager, the Refresh method will replace all objects in the data manager with new objects
@@ -217,7 +213,7 @@ namespace TradeSharp.Data
     public IHoliday Create(ICountry country, string name, Months month, int dayOfMonth, MoveWeekendHoliday moveWeekendHoliday)
     {
       Holiday holiday = new Holiday(m_dataStore, this, country, name, month, dayOfMonth, moveWeekendHoliday);
-      holiday.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, holiday.Name);
+      holiday.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, holiday.Name);
       m_dataStore.CreateHoliday(new IDataStoreService.Holiday(holiday.Id, country.Id, holiday.NameTextId, holiday.Name, holiday.Type, holiday.Month, holiday.DayOfMonth, 0, 0, holiday.MoveWeekendHoliday));
 
       if (country is Country)
@@ -234,7 +230,7 @@ namespace TradeSharp.Data
     public IHoliday Create(ICountry country, string name, Months month, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth, MoveWeekendHoliday moveWeekendHoliday)
     {
       Holiday holiday = new Holiday(m_dataStore, this, country, name, month, dayOfWeek, weekOfMonth, moveWeekendHoliday);
-      holiday.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, holiday.Name);
+      holiday.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, holiday.Name);
       m_dataStore.CreateHoliday(new IDataStoreService.Holiday(holiday.Id, country.Id, holiday.NameTextId, holiday.Name, holiday.Type, holiday.Month, 0, holiday.DayOfWeek, holiday.WeekOfMonth, holiday.MoveWeekendHoliday));
 
       if (country is Country)
@@ -252,7 +248,7 @@ namespace TradeSharp.Data
     {
       Exchange exchange = new Exchange(m_dataStore, this, country, name, timeZone);
       exchange.Country = country;
-      exchange.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, exchange.Name);
+      exchange.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, exchange.Name);
       m_dataStore.CreateExchange(new IDataStoreService.Exchange(exchange.Id, exchange.Country.Id, exchange.NameTextId, exchange.Name, exchange.TimeZone));
 
       if (country is Country)
@@ -270,7 +266,7 @@ namespace TradeSharp.Data
     {
       ExchangeHoliday holiday = new ExchangeHoliday(m_dataStore, this, exchange, name, month, dayOfMonth, moveWeekendHoliday);
       holiday.Exchange = exchange;
-      holiday.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, holiday.Name);
+      holiday.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, holiday.Name);
       m_dataStore.CreateHoliday(new IDataStoreService.Holiday(holiday.Id, exchange.Id, holiday.NameTextId, holiday.Name, holiday.Type, holiday.Month, holiday.DayOfMonth, 0, 0, holiday.MoveWeekendHoliday));
       m_holidays.Add(holiday.Id, holiday);
 
@@ -288,7 +284,7 @@ namespace TradeSharp.Data
     {
       ExchangeHoliday holiday = new ExchangeHoliday(m_dataStore, this, exchange, name, month, dayOfWeek, weekOfMonth, moveWeekendHoliday);
       holiday.Exchange = exchange;
-      holiday.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, holiday.Name);
+      holiday.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, holiday.Name);
       m_dataStore.CreateHoliday(new IDataStoreService.Holiday(holiday.Id, exchange.Id, holiday.NameTextId, holiday.Name, holiday.Type, holiday.Month, 0, holiday.DayOfWeek, holiday.WeekOfMonth, holiday.MoveWeekendHoliday));
       m_holidays.Add(holiday.Id, holiday);
 
@@ -306,7 +302,7 @@ namespace TradeSharp.Data
     {
       Session session = new Session(m_dataStore, this, exchange, day, name, start, end);
       session.Exchange = exchange;
-      session.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, session.Name);
+      session.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, session.Name);
       m_dataStore.CreateSession(new IDataStoreService.Session(session.Id, session.NameTextId, session.Name, session.Exchange.Id, session.Day, session.Start, session.End));
 
       if (exchange is Exchange)
@@ -323,8 +319,8 @@ namespace TradeSharp.Data
     public IInstrument Create(IExchange exchange, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate)
     {
       Instrument instrument = new Instrument(m_dataStore, this, exchange, type, ticker, name, description, inceptionDate);
-      instrument.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, instrument.Name);
-      instrument.DescriptionTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, instrument.Description);
+      instrument.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, instrument.Name);
+      instrument.DescriptionTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, instrument.Description);
       m_dataStore.CreateInstrument(new IDataStoreService.Instrument(instrument.Id, instrument.Type, instrument.Ticker, instrument.NameTextId, instrument.Name, instrument.DescriptionTextId, instrument.Description, instrument.InceptionDate, new List<Guid>(), instrument.PrimaryExchange.Id, new List<Guid>()));
 
       if (exchange is Exchange)
@@ -360,8 +356,8 @@ namespace TradeSharp.Data
     public IFundamental Create(string name, string description, FundamentalCategory category, FundamentalReleaseInterval releaseInterval)
     {
       Fundamental fundamental = new Fundamental(m_dataStore, this, name, description, category, releaseInterval);
-      fundamental.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, fundamental.Name);
-      fundamental.DescriptionTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, fundamental.Description);
+      fundamental.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, fundamental.Name);
+      fundamental.DescriptionTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, fundamental.Description);
       m_dataStore.CreateFundamental(new IDataStoreService.Fundamental(fundamental.Id, fundamental.NameTextId, fundamental.Name, fundamental.DescriptionTextId, fundamental.Description, fundamental.Category, fundamental.ReleaseInterval));
 
       m_fundamentals.Add(fundamental.Id, fundamental);
@@ -406,8 +402,8 @@ namespace TradeSharp.Data
     public IInstrumentGroup Create(string name, string description, IInstrumentGroup? parent = null)
     {
       InstrumentGroup instrumentGroup = new InstrumentGroup(m_dataStore, this, name, description, parent ?? InstrumentGroupRoot);
-      instrumentGroup.NameTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, instrumentGroup.Name);
-      instrumentGroup.DescriptionTextId = m_dataStore.CreateText(Configuration.CultureInfo.ThreeLetterISOLanguageName, instrumentGroup.Description);
+      instrumentGroup.NameTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, instrumentGroup.Name);
+      instrumentGroup.DescriptionTextId = m_dataStore.CreateText(m_configuration.CultureInfo.ThreeLetterISOLanguageName, instrumentGroup.Description);
       m_dataStore.CreateInstrumentGroup(new IDataStoreService.InstrumentGroup(instrumentGroup.Id, instrumentGroup.Parent.Id, instrumentGroup.NameTextId, instrumentGroup.Name, instrumentGroup.DescriptionTextId, instrumentGroup.Description, Array.Empty<Guid>()));
 
       if (parent is InstrumentGroup)
@@ -899,14 +895,13 @@ namespace TradeSharp.Data
         else
           m_priceChangeObservers.TryRemove(observerKV.Key, out _);  //observer no longer reachable through weak reference, remove it from the dictionary
 
-      DataFeed newDataFeed = new DataFeed(m_dataStore, this, instrument, resolution, interval, from, to, toDateMode, priceDataType);
+      DataFeed newDataFeed = new DataFeed(m_configuration, m_dataStore, this, instrument, resolution, interval, from, to, toDateMode, priceDataType);
       Subscribe(newDataFeed);
 
       return newDataFeed;
     }
 
     //properties
-    public IConfigurationService Configuration { get { return m_configuration; } }
     public IList<ICountry> Countries { get { refreshModel(); return m_countries.Values.ToList<ICountry>(); } }
     public IList<IExchange> Exchanges { get { refreshModel(); return m_exchanges.Values.ToList<IExchange>(); } }
     public IList<IInstrumentGroup> InstrumentGroups { get { refreshModel(); return m_instrumentGroup.Values.ToList<IInstrumentGroup>(); } }

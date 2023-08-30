@@ -32,6 +32,7 @@ namespace TradeSharp.Data
 
 
     //attributes
+    protected IConfigurationService m_configuration;
     protected IDataStoreService m_dataStore;
     protected IDataManagerService m_dataManager;
     protected DataStream<DateTime> m_dateTime;
@@ -64,12 +65,13 @@ namespace TradeSharp.Data
     protected List<PriceChange> m_priceChanges;
 
     //constructors
-    public DataFeed(IDataStoreService dataStore, IDataManagerService dataManager, IInstrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode, PriceDataType priceDataType) : base()
+    public DataFeed(IConfigurationService configuration, IDataStoreService dataStore, IDataManagerService dataManager, IInstrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode, PriceDataType priceDataType) : base()
     {
       if (interval == 0) throw new ArgumentOutOfRangeException(nameof(interval), "Interval must be greater than zero.");
       if (from > to) throw new ArgumentOutOfRangeException(nameof(from), "From must be less than or equal to To.");
 
       //set general attributes
+      m_configuration = configuration;
       m_dataStore = dataStore;
       m_dataManager = dataManager;
       Instrument = instrument;
@@ -222,7 +224,7 @@ namespace TradeSharp.Data
     protected void refreshDataCache()
     {
       DataCache dataCache = m_dataStore.GetInstrumentData(m_dataManager.DataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
-      IConfigurationService.TimeZone timeZone = (IConfigurationService.TimeZone)m_dataManager.Configuration.General[IConfigurationService.GeneralConfiguration.TimeZone];
+      IConfigurationService.TimeZone timeZone = (IConfigurationService.TimeZone)m_configuration.General[IConfigurationService.GeneralConfiguration.TimeZone];
 
       switch (Resolution)
       {

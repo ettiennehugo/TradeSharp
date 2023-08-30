@@ -88,7 +88,6 @@ namespace TradeSharp.Data.Testing
       m_dataManager = new Mock<IDataManagerService>().SetupAllProperties();
       m_dataManager.SetupGet(x => x.DataProvider).Returns(m_dataProvider1.Object);
       m_dataManager.SetupGet(x => x.DataProviders).Returns(m_dataProviders);
-      m_dataManager.SetupGet(x => x.Configuration).Returns(m_configuration.Object);
 
       m_dataStore = new TradeSharp.Data.SqliteDataStoreService(m_configuration.Object);
 

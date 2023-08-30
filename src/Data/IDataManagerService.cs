@@ -30,7 +30,6 @@ namespace TradeSharp.Data
 
 
     //properties
-    public IConfigurationService Configuration { get; }
     public IList<ICountry> Countries { get; }
     public IList<IExchange> Exchanges { get; }
     public IList<IInstrumentGroup> InstrumentGroups { get; }

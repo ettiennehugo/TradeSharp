@@ -1058,7 +1058,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void Update_ObjectNameCurrentCultureExplicit_Success()
     {
-      m_dataManager.Update((IName)m_instrument, "NewTestInstrument", m_dataManager.Configuration.CultureInfo);
+      m_dataManager.Update((IName)m_instrument, "NewTestInstrument", m_configuration.Object.CultureInfo);
       Assert.AreEqual(1, m_modelChangeObserverCount, "Model change observer count is not correct");
       Assert.AreEqual("NewTestInstrument", m_instrument.Name, "Instance name not updated");
 
@@ -1099,7 +1099,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void Update_ObjectDescriptionCurrentCultureExplicit_Success()
     {
-      m_dataManager.Update((IDescription)m_instrument, "NewTestInstrumentDescription", m_dataManager.Configuration.CultureInfo);
+      m_dataManager.Update((IDescription)m_instrument, "NewTestInstrumentDescription", m_configuration.Object.CultureInfo);
       Assert.AreEqual(1, m_modelChangeObserverCount, "Model change observer count is not correct");
       Assert.AreEqual("NewTestInstrumentDescription", m_instrument.Description, "Instance description not updated");
 
