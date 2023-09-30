@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 
 namespace TradeSharp.Common
 {
@@ -45,9 +46,12 @@ namespace TradeSharp.Common
     public IDictionary<string, string> Extensions { get; internal set; }
 
     //constructors
-    public ConfigurationService(IConfiguration configuration)
+    public ConfigurationService()
     {
-      m_configuration = configuration;
+      string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
+      string configFile = string.Format("{0}\\{1}\\{2}", tradeSharpHome, Constants.ConfigurationDir, "tradesharp.json");
+      IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile(configFile, false, true);
+      m_configuration = builder.Build();
       CultureInfo = CultureInfo.CurrentCulture;
       RegionInfo = new RegionInfo(CultureInfo.LCID);
       General = new Dictionary<string, object>();
@@ -86,12 +90,6 @@ namespace TradeSharp.Common
     /// <summary>
     /// Load the configuration from the configuration object.
     /// </summary>
-
-
-    //TODO: Allow use of environment variables in the configuration.
-    // https://learn.microsoft.com/en-us/dotnet/api/system.environment.getenvironmentvariable?view=net-7.0
-
-
     protected void loadConfiguration()
     {
       var generalSection = m_configuration.GetSection(c_tokenGeneral);
@@ -104,8 +102,8 @@ namespace TradeSharp.Common
             case IConfigurationService.GeneralConfiguration.CultureFallback:
               CultureFallback.Clear();
               foreach (var culture in generalSetting.Value!.Split(','))
-                CultureFallback.Add(new CultureInfo(culture));
-              if (CultureFallback.Count == 0) throw new ArgumentException(string.Format(Resources.ParameterNotFound, IConfigurationService.GeneralConfiguration.CultureFallback));
+                CultureFallback.Add(CultureInfo.GetCultureInfo(culture));
+              if (CultureFallback.Count == 0) throw new ArgumentException("No culture fallback defined.");
               CultureInfo = CultureFallback[0];
               break;
             case IConfigurationService.GeneralConfiguration.TimeZone:
@@ -115,7 +113,7 @@ namespace TradeSharp.Common
               var setting = new IConfigurationService.DataStoreConfiguration();
 
               foreach (IConfigurationSection subSetting in generalSetting.GetChildren())
-                switch (subSetting.Key)
+                switch (subSetting.Key.ToLower())
                 {
                   case c_tokenDataStoreTypename:
                     setting.Typename = subSetting.Value!;

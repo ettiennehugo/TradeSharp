@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="TradeSharp.WinDataManager.Views.HolidayView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TradeSharp.WinDataManager.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"
+    mc:Ignorable="d"
+    Loaded="Page_Loaded">
+  <Page.Resources>
+    <wincoreuicommon:EnumValueConverter x:Key="EnumValueConverter"/>
+    <wincoreuicommon:EnumValueDescriptionConverter x:Key="EnumValueDescriptionConverter"/>
+    <wincoreuicommon:DayValueConverter x:Key="DayValueConverter"/>
+    <wincoreuicommon:MonthValueConverter x:Key="MonthValueConverter"/>
+    <wincoreuicommon:WeekOfMonthValueConverter x:Key="WeekOfMonthValueConverter"/>
+  </Page.Resources>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="auto"/>
+      <ColumnDefinition Width="auto"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+    </Grid.RowDefinitions>
+    <TextBlock x:Name="m_holidayTypeLbl" Text="Holiday Type" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="0"/>
+    <TextBlock x:Name="m_nameLbl" Text="Name" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="1"/>
+    <TextBlock x:Name="m_monthLbl" Text="Month" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="2"/>
+    <TextBlock x:Name="m_dayOfMonthLbl" Text="Day of Month" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="3"/>
+    <TextBlock x:Name="m_dayOfWeekLbl" Text="Day of Week" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="4"/>
+    <TextBlock x:Name="m_weekOfMonthLbl" Text="Week of Month" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="5"/>
+    <TextBlock x:Name="m_moveWeekendHolidayLbl" Text="Move Weekend Holiday" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="6"/>
+    <ComboBox x:Name="m_holidayType" SelectedIndex="{x:Bind Holiday.Type, Mode=TwoWay, Converter={StaticResource EnumValueDescriptionConverter}}" SelectionChanged="m_holidayType_SelectionChanged" Grid.Column="1" Grid.Row="0"/>
+    <TextBox x:Name="m_name" Text="{x:Bind Holiday.Name, Mode=TwoWay}" Grid.Column="1" Grid.Row="1"/>
+    <ComboBox x:Name="m_month" SelectedIndex="{x:Bind Holiday.Month, Mode=TwoWay, Converter={StaticResource MonthValueConverter}}" SelectionChanged="m_month_SelectionChanged" Grid.Column="1" Grid.Row="2"/>
+    <ComboBox x:Name="m_dayOfMonth" SelectedIndex="{x:Bind Holiday.DayOfMonth, Mode=TwoWay, Converter={StaticResource DayValueConverter}}" Grid.Column="1" Grid.Row="3"/>
+    <ComboBox x:Name="m_dayOfWeek" SelectedIndex="{x:Bind Holiday.DayOfWeek, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="4"/>
+    <ComboBox x:Name="m_weekOfMonth" SelectedIndex="{x:Bind Holiday.WeekOfMonth, Mode=TwoWay, Converter={StaticResource WeekOfMonthValueConverter}}" Grid.Column="1" Grid.Row="5"/>
+    <ComboBox x:Name="m_moveWeekendHoliday" SelectedIndex="{x:Bind Holiday.MoveWeekendHoliday, Mode=TwoWay, Converter={StaticResource EnumValueDescriptionConverter}}" Grid.Column="1" Grid.Row="6"/>
+  </Grid>
+</Page>

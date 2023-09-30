@@ -1,0 +1,99 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TradeSharp.CoreUI.Repositories;
+using TradeSharp.Data;
+
+namespace TradeSharp.CoreUI.Services
+{
+  /// <summary>
+  /// Observable service class for holiday objects.
+  /// </summary>
+  public partial class HolidayService : ObservableObject, IItemsService<Holiday>
+  {
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+    private IHolidayRepository m_holidayRepository;
+    private Guid m_parent;
+    [ObservableProperty] private Holiday? m_selectedItem;
+    [ObservableProperty] private ObservableCollection<Holiday> m_items;
+
+    //constructors
+    public HolidayService(IHolidayRepository holidayRepository)
+    {
+      m_parent = Guid.Empty;
+      m_holidayRepository = holidayRepository;
+      m_items = new ObservableCollection<Holiday>();
+    }
+
+    //finalizers
+
+
+    //interface implementations
+
+
+    //properties
+    public Guid ParentId
+    {
+      get => m_parent;
+      set
+      {
+        if (m_parent != value)
+        {
+          m_parent = value;
+          m_holidayRepository.ParentId = value;
+          OnPropertyChanged();
+          _ = RefreshAsync();
+        }
+      }
+    }
+
+    public event EventHandler<Holiday>? SelectedItemChanged;
+
+    //methods
+    public async Task<Holiday> AddAsync(Holiday item)
+    {
+      var result = await m_holidayRepository.AddAsync(item);
+      SelectedItem = result;
+      SelectedItemChanged?.Invoke(this, SelectedItem);
+      return result;
+    }
+
+    public async Task<bool> DeleteAsync(Holiday item)
+    {
+      bool result = await m_holidayRepository.DeleteAsync(item.Id);
+      if (item == SelectedItem)
+      {
+        SelectedItemChanged?.Invoke(this, SelectedItem);
+        SelectedItem = null;
+      }
+      return result;
+    }
+
+    public async Task RefreshAsync()
+    {
+      var result = await m_holidayRepository.GetItemsAsync();
+      Items.Clear();
+      SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
+      foreach (var item in result) Items.Add(item);
+      if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+    }
+
+    public Task<Holiday> UpdateAsync(Holiday item)
+    {
+      return m_holidayRepository.UpdateAsync(item);
+    }
+  }
+}

@@ -28,7 +28,7 @@ namespace TradeSharp.Analysis
 
     //interface implementations
     public Portfolio Portfolio => throw new NotImplementedException();
-    
+
     //properties
 
 

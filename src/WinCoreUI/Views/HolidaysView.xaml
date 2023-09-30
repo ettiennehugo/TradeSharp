@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="TradeSharp.WinCoreUI.Views.HolidaysView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tsdata="using:TradeSharp.Data"
+    xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"
+    xmlns:coreuivm="using:TradeSharp.CoreUI.ViewModels"
+    mc:Ignorable="d">
+  <UserControl.Resources>
+    <wincoreuicommon:EnumValueDescriptionConverter x:Key="EnumValueDescriptionConverter"/>
+    <DataTemplate x:Key="HolidayHeaderTemplate">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="0.75*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="Name" Grid.Column="0"/>
+        <TextBlock Text="Type" Grid.Column="1"/>
+        <TextBlock Text="Month" Grid.Column="2"/>
+        <TextBlock Text="Day of Month" Grid.Column="3"/>
+        <TextBlock Text="Day of Week" Grid.Column="4"/>
+        <TextBlock Text="Week of Month" Grid.Column="5"/>
+        <TextBlock Text="Move Weekend Holiday" Grid.Column="6"/>
+      </Grid>
+    </DataTemplate>
+    <DataTemplate x:Key="HolidayItemTemplate" x:DataType="tsdata:Holiday">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="0.75*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{x:Bind Name, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="0"/>
+        <TextBlock Text="{x:Bind Type, Mode=OneWay, Converter={StaticResource EnumValueDescriptionConverter}}" Margin="20, 1, 1, 1" Grid.Column="1"/>
+        <TextBlock Text="{x:Bind Month, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="2"/>
+        <TextBlock Text="{x:Bind DayOfMonth, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="3"/>
+        <TextBlock Text="{x:Bind DayOfWeek, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="4"/>
+        <TextBlock Text="{x:Bind WeekOfMonth, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="5"/>
+        <TextBlock Text="{x:Bind MoveWeekendHoliday, Mode=OneWay, Converter={StaticResource EnumValueDescriptionConverter}}" Margin="20, 1, 1, 1" Grid.Column="6"/>
+      </Grid>
+    </DataTemplate>
+  </UserControl.Resources>
+  <StackPanel x:Name="m_main" Orientation="Vertical">
+    <StackPanel x:Name="m_toolbar" Orientation="Horizontal">
+      <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" Label="Refresh" IsCompact="True"/>
+      <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" Label="Add holiday" IsCompact="True"/>
+      <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" Label="Update holiday" IsCompact="True"/>
+      <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Label="Delete holiday" IsCompact="True"/>
+    </StackPanel>
+    <ListView x:Name="m_countries" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" HeaderTemplate="{StaticResource HolidayHeaderTemplate}" ItemTemplate="{StaticResource HolidayItemTemplate}"/>
+  </StackPanel>
+</UserControl>

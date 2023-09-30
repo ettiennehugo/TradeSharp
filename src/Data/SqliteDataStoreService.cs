@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Reflection.PortableExecutable;
 using TradeSharp.Common;
 using static TradeSharp.Data.IDataStoreService;
 
@@ -16,9 +17,6 @@ namespace TradeSharp.Data
   public class SqliteDataStoreService : IDataStoreService
   {
     //constants
-    public const string c_TableLanguageText = "LanguageText";
-
-    public const string c_IndexLanguageText = "ILanguageText";
     public const string c_TableCountry = "Country";
     public const string c_TableHoliday = "Holiday";
     public const string c_TableExchange = "Exchange";
@@ -59,10 +57,10 @@ namespace TradeSharp.Data
 
     //attributes
     private IConfigurationService m_configurationService;
+    private IDataProvider m_dataProvider;
     private string m_databaseFile;
     private string m_connectionString;
     private SqliteConnection m_connection;
-    private Dictionary<string, IList<Text>> m_texts;
     private AssociationCache m_countryFundamentalAssociations;
     private AssociationCache m_instrumentFundamentalAssociations;
 
@@ -73,7 +71,6 @@ namespace TradeSharp.Data
       m_databaseFile = "";
       m_connectionString = "";
       m_connection = new SqliteConnection();
-      m_texts = new Dictionary<string, IList<Text>>();
       m_countryFundamentalAssociations = new AssociationCache();
       m_instrumentFundamentalAssociations = new AssociationCache();
 
@@ -84,7 +81,8 @@ namespace TradeSharp.Data
       //validate database type and setup the database connection
       IConfigurationService.DataStoreConfiguration dataStoreConfiguration = (IConfigurationService.DataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.DataStore];
       Trace.Assert(dataStoreConfiguration.Typename != this.GetType().Name, $"Incorrect data store \"{this.GetType().Name}\" instatiated against data store configuration \"{dataStoreConfiguration.Typename}\"");
-      m_databaseFile = dataStoreConfiguration.ConnectionString;
+      string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
+      m_databaseFile = string.Format("{0}\\{1}\\{2}", tradeSharpHome, Constants.DataDir, dataStoreConfiguration.ConnectionString);
 
       m_connectionString = new SqliteConnectionStringBuilder()
       {
@@ -100,7 +98,6 @@ namespace TradeSharp.Data
 
       //create the data store schema
       CreateSchema();
-      LoadTexts();
     }
 
     //finalizers
@@ -125,27 +122,105 @@ namespace TradeSharp.Data
         ExecuteCommand("ROLLBACK TRANSACTION");
     }
 
-    public Guid CreateText(string isoLang, string text)
-    {
-      Guid id = Guid.NewGuid();
-      string escapedText = text.Replace("'", "''");
-      ExecuteCommand($"INSERT INTO {c_TableLanguageText} VALUES ('{id.ToString()}', '{isoLang}', '{escapedText}')");
-      return id;
-    }
-
-    public void CreateCountry(IDataStoreService.Country country)
+    public void CreateCountry(Country country)
     {
       ExecuteCommand($"INSERT OR REPLACE INTO {c_TableCountry} VALUES('{country.Id.ToString()}', '{country.IsoCode}')");
     }
 
-    public void CreateHoliday(IDataStoreService.Holiday holiday)
+    public Country? GetCountry(Guid id)
+    {
+      Country? result = null;
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableCountry} WHERE Id = '{id.ToString()}'"))
+        if (reader.Read()) result = new Country(reader.GetGuid(0), reader.GetString(1));
+
+      return result;
+    }
+
+
+    public IList<Country> GetCountries()
+    {
+      var result = new List<Country>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableCountry}"))
+        while (reader.Read()) result.Add(new Country(reader.GetGuid(0), reader.GetString(1)));
+
+      return result;
+    }
+
+    public int DeleteCountry(Guid id)
+    {
+      int result = 0;
+
+      result = Delete(c_TableCountry, id);
+      foreach (var holidayId in GetAssociatedIds(c_TableHoliday, id, "ParentId")) result += DeleteHoliday(holidayId);
+      foreach (var exchangeId in GetAssociatedIds(c_TableExchange, id, "CountryId")) result += DeleteExchange(exchangeId);
+
+      foreach (var dataProvider in m_configurationService.DataProviders)
+      {
+        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations)} WHERE CountryId = '{id.ToString()}'"))
+          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+        result += Delete(GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations), id, "CountryId");
+        CacheCountryFundamentalAssociations(dataProvider.Value);
+      }
+
+      return result;
+    }
+
+    public void CreateExchange(Exchange exchange)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableHoliday} (Id, ParentId, NameTextId, HolidayType, Month, DayOfMonth, WeekOfMonth, DayOfWeek, MoveWeekendHoliday) " +
+        $"INSERT OR REPLACE INTO {c_TableExchange} (Id, CountryId, Name, TimeZone) " +
+          $"VALUES (" +
+            $"'{exchange.Id.ToString()}', " +
+            $"'{exchange.CountryId.ToString()}', " +
+            $"'{sqlSafeString(exchange.Name)}', " +
+            $"'{exchange.TimeZone.ToSerializedString()}'" +
+          $")"
+      );
+    }
+
+    public Exchange? GetExchange(Guid id)
+    {
+      Exchange? result = null;
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange} WHERE Id = '{id.ToString()}'"))
+        if (reader.Read())
+          result = new Exchange(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), TimeZoneInfo.FromSerializedString(reader.GetString(3)));
+
+      return result;
+    }    
+    
+    public IList<Exchange> GetExchanges()
+    {
+      var result = new List<Exchange>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange}"))
+        while (reader.Read())
+          result.Add(new Exchange(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), TimeZoneInfo.FromSerializedString(reader.GetString(3))));
+
+      return result;
+    }
+
+    public int DeleteExchange(Guid id)
+    {
+      int result = Delete(c_TableExchange, id);
+      foreach (var holidayId in GetAssociatedIds(c_TableHoliday, id, "ParentId")) result += DeleteHoliday(holidayId);
+      using (var instrumentRows = GetAssociatedRows(c_TableInstrument, id, "PrimaryExchangeId", "Id, Ticker"))
+        while (instrumentRows.Read()) result += DeleteInstrument(instrumentRows.GetGuid(0), instrumentRows.GetString(1));
+      result += Delete(c_TableInstrumentSecondaryExchange, id, "ExchangeId");
+      foreach (var sessionId in GetAssociatedIds(c_TableExchangeSession, id, "ExchangeId")) result += DeleteSession(sessionId);
+      return result;
+    }
+
+    public void CreateHoliday(Holiday holiday)
+    {
+      ExecuteCommand(
+        $"INSERT OR REPLACE INTO {c_TableHoliday} (Id, ParentId, Name, HolidayType, Month, DayOfMonth, WeekOfMonth, DayOfWeek, MoveWeekendHoliday) " +
           $"VALUES (" +
             $"'{holiday.Id.ToString()}', " +
             $"'{holiday.ParentId.ToString()}', " +
-            $"'{holiday.NameTextId.ToString()}', " +
+            $"'{sqlSafeString(holiday.Name)}', " +
             $"{(int)holiday.Type}, " +
             $"{(int)holiday.Month}, " +
             $"{(int)holiday.DayOfMonth}, " +
@@ -156,26 +231,69 @@ namespace TradeSharp.Data
       );
     }
 
-    public void CreateExchange(IDataStoreService.Exchange exchange)
+    public Holiday? GetHoliday(Guid id)
+    {
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} WHERE Id = '{id.ToString()}'"))
+      {
+        if (reader.Read())
+          return new Holiday(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8));
+
+        return null;
+      }
+    }
+
+    public IList<Holiday> GetHolidays(Guid parentId)
+    {
+      var result = new List<Holiday>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} WHERE ParentId = '{parentId.ToString()}'"))
+        while (reader.Read())
+          result.Add(new Holiday(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8))); ;
+
+      return result;
+    }
+
+    public IList<Holiday> GetHolidays()
+    {
+      var result = new List<Holiday>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday}"))
+        while (reader.Read())
+          result.Add(new Holiday(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8))); ;
+
+      return result;
+    }
+
+    public void UpdateHoliday(Holiday holiday)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableExchange} (Id, CountryId, NameTextId, TimeZone) " +
-          $"VALUES (" +
-            $"'{exchange.Id.ToString()}', " +
-            $"'{exchange.CountryId.ToString()}', " +
-            $"'{exchange.NameTextId.ToString()}', " +
-            $"'{exchange.TimeZone.ToSerializedString()}'" +
-          $")"
+        $"UPDATE OR FAIL {c_TableHoliday} " +
+          $"SET ParentId = '{holiday.ParentId.ToString()}', " +
+              $"Name = '{sqlSafeString(holiday.Name)}', " +
+              $"HolidayType = {(int)holiday.Type}, " +
+              $"Month = {(int)holiday.Month}, " +
+              $"DayOfMonth = {(int)holiday.DayOfMonth}, " +
+              $"WeekOfMonth = {(int)holiday.WeekOfMonth}, " +
+              $"DayOfWeek = {(int)holiday.DayOfWeek}, " +
+              $"MoveWeekendHoliday = {(int)holiday.MoveWeekendHoliday} " +
+          $"WHERE Id = '{holiday.Id.ToString()}'"
       );
     }
 
-    public void CreateSession(IDataStoreService.Session session)
+    public int DeleteHoliday(Guid id)
+    {
+      return Delete(c_TableHoliday, id);
+    }
+
+
+
+    public void CreateSession(Session session)
     {
       ExecuteCommand(
-      $"INSERT OR REPLACE INTO {c_TableExchangeSession} (Id, NameTextId, ExchangeId, DayOfWeek, StartTime, EndTime) " +
+      $"INSERT OR REPLACE INTO {c_TableExchangeSession} (Id, Name, ExchangeId, DayOfWeek, StartTime, EndTime) " +
         $"VALUES (" +
           $"'{session.Id.ToString()}', " +
-          $"'{session.NameTextId.ToString()}', " +
+          $"'{sqlSafeString(session.Name)}', " +
           $"'{session.ExchangeId.ToString()}', " +
           $"{(int)session.DayOfWeek}, " +
           $"{session.Start.Ticks}, " +
@@ -184,10 +302,321 @@ namespace TradeSharp.Data
       );
     }
 
-    public void CreateCountryFundamental(ref IDataStoreService.CountryFundamental fundamental)
+    public IList<Session> GetSessions()
     {
-      fundamental.AssociationId = Guid.NewGuid();
+      var result = new List<Session>();
 
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession}"))
+        while (reader.Read())
+          result.Add(new Session(reader.GetGuid(0), reader.GetString(1), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5))));
+
+      return result;
+    }
+
+    public void UpdateSession(Guid id, DayOfWeek day, TimeOnly start, TimeOnly end)
+    {
+      ExecuteCommand(
+        $"UPDATE OR FAIL {c_TableExchangeSession} " +
+          $"SET DayOfWeek = {(int)day}, " +
+              $"StartTime = {start.Ticks}, " +
+              $"EndTime = {end.Ticks} " +
+          $"WHERE Id = '{id.ToString()}'"
+      );
+    }
+
+    public int DeleteSession(Guid id)
+    {
+      return Delete(c_TableExchangeSession, id);
+    }
+
+
+
+    public void CreateInstrumentGroup(InstrumentGroup instrumentGroup)
+    {
+      ExecuteCommand(
+      $"INSERT OR REPLACE INTO {c_TableInstrumentGroup} (Id, ParentId, Name, Description) " +
+        $"VALUES (" +
+          $"'{instrumentGroup.Id.ToString()}', " +
+          $"'{instrumentGroup.ParentId.ToString()}', " +
+          $"'{sqlSafeString(instrumentGroup.Name)}', " +
+          $"'{sqlSafeString(instrumentGroup.Description)}'" +
+        $")"
+      );
+
+      foreach (Guid instrumentId in instrumentGroup.Instruments) CreateInstrumentGroupInstrument(instrumentGroup.Id, instrumentId);
+    }
+
+    public void CreateInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId)
+    {
+      ExecuteCommand(
+        $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
+          $"VALUES (" +
+            $"'{instrumentGroupId.ToString()}', " +
+            $"'{instrumentId.ToString()}' " +
+        $")"
+      );
+    }
+
+    public IList<InstrumentGroup> GetInstrumentGroups()
+    {
+      List<InstrumentGroup> result = new List<InstrumentGroup>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrumentGroup}"))
+      {
+        while (reader.Read())
+        {
+          Guid id = reader.GetGuid(0);
+          IList<Guid> instruments = GetInstrumentGroupInstruments(id);
+          result.Add(new InstrumentGroup(id, reader.GetGuid(1), reader.GetString(2), reader.GetString(3), instruments));
+        }
+      }
+
+      return result;
+    }
+
+    public IList<Guid> GetInstrumentGroupInstruments(Guid instrumentGroupId)
+    {
+      List<Guid> result = new List<Guid>();
+
+      using (var reader = ExecuteReader($"SELECT InstrumentId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}'"))
+        while (reader.Read()) result.Add(reader.GetGuid(0));
+
+      return result;
+    }
+
+    public void UpdateInstrumentGroup(Guid id, Guid parentId)
+    {
+      //Id and ParentId must be unique in combination
+      ExecuteCommand(
+        $"UPDATE OR FAIL {c_TableInstrumentGroup} SET " +
+            $"ParentId = '{parentId.ToString()}' " +
+          $"WHERE Id = '{id.ToString()}'"
+      );
+    }
+
+    public void UpdateInstrumentGroup(Guid id, string name, string description)
+    {
+      ExecuteCommand(
+        $"UPDATE OR FAIL {c_TableInstrumentGroup} SET " +
+            $"Name = '{name}' " +
+            $"Description = '{description}' " +
+          $"WHERE Id = '{id.ToString()}'"
+      );
+    }
+
+    public void DeleteInstrumentGroup(Guid id)
+    {
+      using (var reader = ExecuteReader($"SELECT Id FROM {c_TableInstrumentGroup} WHERE ParentId = '{id.ToString()}'"))
+        while (reader.Read()) DeleteInstrumentGroup(reader.GetGuid(0));
+
+      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{id.ToString()}'");
+      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroup} WHERE Id = '{id.ToString()}'");
+    }
+
+    public void DeleteInstrumentGroupChild(Guid parentId, Guid childId)
+    {
+      //NOTE: We do not use the parentId for Sqlite, we just reset the parentId on the instrument group table for the given child.
+      ExecuteCommand($"UPDATE OR IGNORE {c_TableInstrumentGroup} SET ParentId = '{InstrumentGroup.InstrumentGroupRoot.ToString()}' WHERE Id = '{childId.ToString()}'");
+    }
+
+    public void DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId)
+    {
+      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' AND InstrumentId = '{instrumentId.ToString()}'");
+    }
+
+
+
+    public void CreateInstrument(Instrument instrument)
+    {
+      ExecuteCommand(
+        $"INSERT OR REPLACE INTO {c_TableInstrument} (Id, Type, Ticker, Name, Description, PrimaryExchangeId, InceptionDate) " +
+          $"VALUES (" +
+            $"'{instrument.Id.ToString()}', " +
+            $"{(int)instrument.Type}, " +
+            $"'{instrument.Ticker}', " +
+            $"'{sqlSafeString(instrument.Name)}', " +
+            $"'{sqlSafeString(instrument.Description)}', " +
+            $"'{instrument.PrimaryExchangeId.ToString()}', " +
+            $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}" +
+          $")"
+      );
+
+      foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
+      {
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
+            $"VALUES (" +
+              $"'{instrument.Id.ToString()}', " +
+              $"'{otherExchangeId.ToString()}'" +
+            $")"
+        );
+      }
+    }
+
+    public void AddInstrumentToExchange(Guid instrumentId, Guid exchangeId)
+    {
+      ExecuteCommand(
+        $"INSERT OR IGNORE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
+          $"VALUES (" +
+            $"'{instrumentId.ToString()}', " +
+            $"'{exchangeId.ToString()}' " +
+          $")"
+      );
+    }
+
+    public IList<Instrument> GetInstruments()
+    {
+      var result = new List<Instrument>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument}"))
+        while (reader.Read())
+        {
+          List<Guid> secondaryExchangeIds = new List<Guid>();
+          Guid instrumentId = reader.GetGuid(0);
+
+          using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
+            while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
+
+          List<Guid> instrumentGroupIds = new List<Guid>();
+
+          using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{instrumentId.ToString()}'"))
+            while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
+          
+          result.Add(new Instrument(instrumentId, (InstrumentType)reader.GetInt32(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), DateTime.FromBinary(reader.GetInt64(6)), instrumentGroupIds, reader.GetGuid(5), secondaryExchangeIds));
+        }
+
+      return result;
+    }
+
+    public IList<Instrument> GetInstruments(InstrumentType instrumentType)
+    {
+      var result = new List<Instrument>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType}"))
+        while (reader.Read())
+        {
+          List<Guid> secondaryExchangeIds = new List<Guid>();
+          Guid instrumentId = reader.GetGuid(0);
+
+          using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
+            while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
+
+          List<Guid> instrumentGroupIds = new List<Guid>();
+
+          using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{instrumentId.ToString()}'"))
+            while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
+
+          result.Add(new Instrument(instrumentId, (InstrumentType)reader.GetInt32(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), DateTime.FromBinary(reader.GetInt64(6)), instrumentGroupIds, reader.GetGuid(5), secondaryExchangeIds));
+        }
+
+      return result;
+    }
+
+    public void UpdateInstrument(Guid id, Guid exchangeId, string ticker, DateTime inceptionDate)
+    {
+      ExecuteCommand(
+        $"UPDATE OR FAIL {c_TableInstrument} " +
+          $"SET Ticker = '{ticker}', PrimaryExchangeId = '{exchangeId.ToString()}', " +
+              $"InceptionDate = {inceptionDate.ToUniversalTime().ToBinary()} " +
+          $"WHERE Id = '{id.ToString()}'"
+      );
+    }
+
+    public int DeleteInstrument(Guid id, string ticker)
+    {
+      int result = 0;
+
+      result = Delete(c_TableInstrument, id);
+      result += Delete(c_TableInstrumentSecondaryExchange, id, "InstrumentId");
+      result += Delete(c_TableInstrumentGroupInstrument, id, "InstrumentId");
+
+      foreach (var dataProvider in m_configurationService.DataProviders)
+      {
+        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations)} WHERE InstrumentId = '{id.ToString()}'"))
+          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+        result += Delete(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations), id, "InstrumentId");
+        result += deleteData(dataProvider.Value, ticker, null);
+        CacheInstrumentFundamentalAssociations(dataProvider.Value);
+      }
+
+      return result;
+    }
+
+    public int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId)
+    {
+      return ExecuteCommand($"DELETE FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}' AND ExchangeId = '{exchangeId.ToString()}'");
+    }
+
+
+
+    public void CreateFundamental(Fundamental fundamental)
+    {
+      ExecuteCommand(
+        $"INSERT OR REPLACE INTO {c_TableFundamentals} (Id, Name, Description, Category, ReleaseInterval)" +
+          $"VALUES (" +
+            $"'{fundamental.Id.ToString()}', " +
+            $"'{sqlSafeString(fundamental.Name)}', " +
+            $"'{sqlSafeString(fundamental.Description)}', " +
+            $"{(int)fundamental.Category}, " +
+            $"{(int)fundamental.ReleaseInterval}" +
+        $")"
+      );
+    }
+
+    public IList<Fundamental> GetFundamentals()
+    {
+      var result = new List<Fundamental>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableFundamentals}"))
+        while (reader.Read())
+          result.Add(new Fundamental(reader.GetGuid(0), reader.GetString(1), reader.GetString(2), (FundamentalCategory)reader.GetInt32(3), (FundamentalReleaseInterval)reader.GetInt32(4)));
+
+      return result;
+    }
+
+    public int DeleteFundamental(Guid id)
+    {
+      int result = 0;
+
+      result = DeleteFundamentalValues(id);
+      result += Delete(c_TableFundamentals, id);
+
+      foreach (var dataProvider in m_configurationService.DataProviders)
+      {
+        CacheCountryFundamentalAssociations(dataProvider.Value);
+        CacheInstrumentFundamentalAssociations(dataProvider.Value);
+      }
+      return result;
+    }
+
+    public int DeleteFundamentalValues(Guid id)
+    {
+      int result = 0;
+      foreach (var dataProvider in m_configurationService.DataProviders) result += DeleteFundamentalValues(dataProvider.Value, id);
+      return result;
+    }
+
+    public int DeleteFundamentalValues(string dataProviderName, Guid id)
+    {
+      int result = 0;
+
+      using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations)} WHERE FundamentalId = '{id.ToString()}'"))
+        while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+
+      using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations)} WHERE FundamentalId = '{id.ToString()}'"))
+        while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+
+      foreach (var dataProvider in m_configurationService.DataProviders)
+      {
+        CacheCountryFundamentalAssociations(dataProvider.Value);
+        CacheInstrumentFundamentalAssociations(dataProvider.Value);
+      }
+
+      return result;
+    }
+
+    public void CreateCountryFundamental(CountryFundamental fundamental)
+    {
       ExecuteCommand(
         $"INSERT OR REPLACE INTO {GetDataProviderDBName(fundamental.DataProviderName, c_TableCountryFundamentalAssociations)} (Id, FundamentalId, CountryId) " +
           $"VALUES (" +
@@ -207,10 +636,82 @@ namespace TradeSharp.Data
       }
     }
 
-    public void CreateInstrumentFundamental(ref IDataStoreService.InstrumentFundamental fundamental)
+    public IList<CountryFundamental> GetCountryFundamentals(string dataProviderName)
     {
-      fundamental.AssociationId = Guid.NewGuid();
+      var result = new List<CountryFundamental>();
 
+      //load basic fundamental and country associations
+      string dataProviderAssociationTable = GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations);
+      string selectQuery =
+        $"SELECT * FROM {dataProviderAssociationTable} " +
+          $"INNER JOIN {c_TableFundamentals} ON {dataProviderAssociationTable}.FundamentalId = {c_TableFundamentals}.Id " +
+          $"WHERE {c_TableFundamentals}.Category = {(int)FundamentalCategory.Country} " +
+          $"ORDER BY {dataProviderAssociationTable}.FundamentalId ASC, {dataProviderAssociationTable}.CountryId ASC";
+
+      using (var reader = ExecuteReader(selectQuery))
+        while (reader.Read()) result.Add(new CountryFundamental(dataProviderName, reader.GetGuid(0), reader.GetGuid(1), reader.GetGuid(2)));
+
+      //load fundamental values
+      string dataProviderValueTable = GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues);
+      selectQuery = $"SELECT * FROM {dataProviderValueTable} ORDER BY AssociationId, DateTime ASC";
+
+      using (var reader = ExecuteReader(selectQuery))
+        while (reader.Read())
+        {
+          Guid associationId = reader.GetGuid(0);
+          DateTime dateTime = DateTime.FromBinary(reader.GetInt64(1));
+          double value = reader.GetDouble(2);
+
+          foreach (var countryFundamental in result)
+            if (countryFundamental.AssociationId == associationId)
+            {
+              countryFundamental.AddValue(dateTime, value);
+              break;
+            }
+        }
+
+      return result;
+    }
+
+    public void UpdateCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime, double value)
+    {
+      Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
+      if (!associationId.HasValue) throw new ArgumentException($"Country ({countryId}) is not associated with fundamental ({fundamentalId}).");
+
+      ExecuteCommand(
+        $"INSERT OR REPLACE INTO {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} (AssociationId, DateTime, Value) " +
+          $"VALUES (" +
+            $"'{associationId!.Value.ToString()}', " +
+            $"{dateTime.ToUniversalTime().ToBinary()}, " +
+            $"{value.ToString()}" +
+        $")"
+      );
+    }
+
+    public int DeleteCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId)
+    {
+      Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
+      if (!associationId.HasValue) return 0;
+
+      int result = ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations)} WHERE Id = '{associationId.ToString()}'");
+      result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}'");
+
+      CacheCountryFundamentalAssociations(dataProviderName);
+
+      return result;
+    }
+
+    public int DeleteCountryFundamentalValue(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime)
+    {
+      Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
+
+      if (!associationId.HasValue) return 0;  //no association, nothing to remove
+
+      return ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}"); ;
+    }
+
+    public void CreateInstrumentFundamental(InstrumentFundamental fundamental)
+    {
       ExecuteCommand(
         $"INSERT OR REPLACE INTO {GetDataProviderDBName(fundamental.DataProviderName, c_TableInstrumentFundamentalAssociations)} (Id, FundamentalId, InstrumentId) " +
           $"VALUES (" +
@@ -230,108 +731,41 @@ namespace TradeSharp.Data
       }
     }
 
-    public void CreateInstrumentGroup(IDataStoreService.InstrumentGroup instrumentGroup)
+    public IList<InstrumentFundamental> GetInstrumentFundamentals(string dataProviderName)
     {
-      ExecuteCommand(
-      $"INSERT OR REPLACE INTO {c_TableInstrumentGroup} (Id, ParentId, NameTextId, DescriptionTextId) " +
-        $"VALUES (" +
-          $"'{instrumentGroup.Id.ToString()}', " +
-          $"'{instrumentGroup.ParentId.ToString()}', " +
-          $"'{instrumentGroup.NameTextId.ToString()}', " +
-          $"'{instrumentGroup.DescriptionTextId.ToString()}'" +
-        $")"
-      );
+      var result = new List<InstrumentFundamental>();
 
-      foreach (Guid instrumentId in instrumentGroup.Instruments) CreateInstrumentGroupInstrument(instrumentGroup.Id, instrumentId);
-    }
+      //load basic fundamental and instrument associations
+      string dataProviderAssociationTable = GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations);
+      string selectQuery =
+        $"SELECT * FROM {dataProviderAssociationTable} " +
+          $"INNER JOIN {c_TableFundamentals} ON {dataProviderAssociationTable}.FundamentalId = {c_TableFundamentals}.Id " +
+          $"WHERE {c_TableFundamentals}.Category = {(int)FundamentalCategory.Instrument} " +
+          $"ORDER BY {dataProviderAssociationTable}.FundamentalId ASC, {dataProviderAssociationTable}.InstrumentId ASC";
 
-    public void CreateInstrument(IDataStoreService.Instrument instrument)
-    {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableInstrument} (Id, Type, Ticker, NameTextId, DescriptionTextId, PrimaryExchangeId, InceptionDate) " +
-          $"VALUES (" +
-            $"'{instrument.Id.ToString()}', " +
-            $"{(int)instrument.Type}, " +
-            $"'{instrument.Ticker}', " +
-            $"'{instrument.NameTextId.ToString()}', " +
-            $"'{instrument.DescriptionTextId.ToString()}', " +
-            $"'{instrument.PrimaryExchangeId.ToString()}', " +
-            $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}" +
-          $")"
-      );
+      using (var reader = ExecuteReader(selectQuery))
+        while (reader.Read()) result.Add(new InstrumentFundamental(dataProviderName, reader.GetGuid(0), reader.GetGuid(1), reader.GetGuid(2)));
 
-      foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
-      {
-        ExecuteCommand(
-          $"INSERT OR REPLACE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
-            $"VALUES (" +
-              $"'{instrument.Id.ToString()}', " +
-              $"'{otherExchangeId.ToString()}'" +
-            $")"
-        );
-      }
-    }
+      //load fundamental values
+      string dataProviderValueTable = GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues);
+      selectQuery = $"SELECT * FROM {dataProviderValueTable} ORDER BY AssociationId, DateTime ASC";
 
-    public void CreateInstrument(Guid instrumentId, Guid exchangeId)
-    {
-      ExecuteCommand(
-        $"INSERT OR IGNORE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
-          $"VALUES (" +
-            $"'{instrumentId.ToString()}', " +
-            $"'{exchangeId.ToString()}' " +
-          $")"
-      );
-    }
+      using (var reader = ExecuteReader(selectQuery))
+        while (reader.Read())
+        {
+          Guid associationId = reader.GetGuid(0);
+          DateTime dateTime = DateTime.FromBinary(reader.GetInt64(1));
+          double value = reader.GetDouble(2);
 
-    public void CreateFundamental(IDataStoreService.Fundamental fundamental)
-    {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableFundamentals} (Id, NameTextId, DescriptionTextId, Category, ReleaseInterval)" +
-          $"VALUES (" +
-            $"'{fundamental.Id.ToString()}', " +
-            $"'{fundamental.NameTextId.ToString()}', " +
-            $"'{fundamental.DescriptionTextId.ToString()}', " +
-            $"{(int)fundamental.Category}, " +
-            $"{(int)fundamental.ReleaseInterval}" +
-        $")"
-      );
-    }
+          foreach (var countryFundamental in result)
+            if (countryFundamental.AssociationId == associationId)
+            {
+              countryFundamental.AddValue(dateTime, value);
+              break;
+            }
+        }
 
-    public void UpdateSession(Guid id, DayOfWeek day, TimeOnly start, TimeOnly end)
-    {
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableExchangeSession} " +
-          $"SET DayOfWeek = {(int)day}, " +
-              $"StartTime = {start.Ticks}, " +
-              $"EndTime = {end.Ticks} " +
-          $"WHERE Id = '{id.ToString()}'"
-      );
-    }
-
-    public void UpdateInstrument(Guid id, Guid exchangeId, string ticker, DateTime inceptionDate)
-    {
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableInstrument} " +
-          $"SET Ticker = '{ticker}', " +
-              $"PrimaryExchangeId = '{exchangeId.ToString()}', " +
-              $"InceptionDate = {inceptionDate.ToUniversalTime().ToBinary()} " +
-          $"WHERE Id = '{id.ToString()}'"
-      );
-    }
-
-    public void UpdateCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime, double value)
-    {
-      Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
-      if (!associationId.HasValue) throw new ArgumentException($"Country ({countryId}) is not associated with fundamental ({fundamentalId}).");
-
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} (AssociationId, DateTime, Value) " +
-          $"VALUES (" +
-            $"'{associationId!.Value.ToString()}', " +
-            $"{dateTime.ToUniversalTime().ToBinary()}, " +
-            $"{value.ToString()}" +
-        $")"
-      );
+      return result;
     }
 
     public void UpdateInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime, double value)
@@ -349,42 +783,29 @@ namespace TradeSharp.Data
       );
     }
 
-    public void UpdateInstrumentGroup(Guid id, Guid parentId)
+    public int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId)
     {
-      //Id and ParentId must be unique in combination
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableInstrumentGroup} SET " +
-            $"ParentId = '{parentId.ToString()}' " +
-          $"WHERE Id = '{id.ToString()}'"
-      );
+      Guid? associationId = GetInstrumentFundamentalAssociationId(dataProviderName, fundamentalId, instrumentId);
+      if (!associationId.HasValue) return 0;
+
+      int result = ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations)} WHERE Id = '{associationId.ToString()}'");
+      result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}'");
+
+      CacheInstrumentFundamentalAssociations(dataProviderName);
+
+      return result;
     }
 
-    public void UpdateInstrumentGroup(Guid id, string name, string description)
+    public int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime)
     {
-      Guid? nameTextId = GetNameTextId(c_TableInstrumentGroup, id);
-      Guid? descriptionTextId = GetDescriptionTextId(c_TableInstrumentGroup, id);
+      Guid? associationId = GetInstrumentFundamentalAssociationId(dataProviderName, fundamentalId, instrumentId);
 
-      if (nameTextId == null || descriptionTextId == null) throw new ArgumentException($"Instrument '{id}' does not have an associated name and/or description text id.");
+      if (!associationId.HasValue) return 0;  //no association, nothing to remove
 
-      UpdateText(nameTextId.Value, m_configurationService.CultureInfo.ThreeLetterISOLanguageName, name);
-      UpdateText(descriptionTextId.Value, m_configurationService.CultureInfo.ThreeLetterISOLanguageName, description);
+      return ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}");
     }
 
-    public void UpdateStockGroups(Guid id, Guid parentSectorId, Guid parentIndustryGroupId, Guid parentIndustryId, Guid parentSubIndustryId)
-    {
-      throw new NotImplementedException();
-    }
 
-    public void CreateInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId)
-    {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
-          $"VALUES (" +
-            $"'{instrumentGroupId.ToString()}', " +
-            $"'{instrumentId.ToString()}' " +
-        $")"
-      );
-    }
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume, bool synthetic)
     {
@@ -416,7 +837,7 @@ namespace TradeSharp.Data
       ExecuteCommand(command);
     }
 
-    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IDataStoreService.BarData bars)
+    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, BarData bars)
     {
       //level 1 data can not be updated by his method
       if (resolution == Resolution.Level1) throw new ArgumentException("Update for bar data can not update Level 1 data.");
@@ -458,7 +879,7 @@ namespace TradeSharp.Data
       }
     }
 
-    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, IDataStoreService.Level1Data level1Data)
+    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Level1Data level1Data)
     {
       if (level1Data.Count == 0) throw new ArgumentException("Update data count should not be zero.");
 
@@ -497,186 +918,6 @@ namespace TradeSharp.Data
 
         transaction.Commit();
       }
-    }
-
-    public int DeleteText(Guid id)
-    {
-      return ExecuteCommand($"DELETE FROM {c_TableLanguageText} WHERE Id = '{id.ToString()}'");
-    }
-
-    public int DeleteText(Guid id, string isoLang)
-    {
-      return ExecuteCommand($"DELETE FROM {c_TableLanguageText} WHERE Id = '{id.ToString()}' AND IsoLang = '{isoLang}'");
-    }
-
-    public int DeleteCountry(Guid id)
-    {
-      int result = 0;
-
-      result = Delete(c_TableCountry, id);
-      foreach (var holidayId in GetAssociatedIds(c_TableHoliday, id, "ParentId")) result += DeleteHoliday(holidayId);
-      foreach (var exchangeId in GetAssociatedIds(c_TableExchange, id, "CountryId")) result += DeleteExchange(exchangeId);
-
-      foreach (var dataProvider in m_configurationService.DataProviders)
-      {
-        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations)} WHERE CountryId = '{id.ToString()}'"))
-          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
-        result += Delete(GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations), id, null, null, "CountryId");
-        CacheCountryFundamentalAssociations(dataProvider.Value);
-      }
-
-      return result;
-    }
-
-    public int DeleteHoliday(Guid id)
-    {
-      return Delete(c_TableHoliday, id, GetNameTextId(c_TableHoliday, id));
-    }
-
-    public int DeleteExchange(Guid id)
-    {
-      int result = Delete(c_TableExchange, id, GetNameTextId(c_TableExchange, id));
-      foreach (var holidayId in GetAssociatedIds(c_TableHoliday, id, "ParentId")) result += DeleteHoliday(holidayId);
-      using (var instrumentRows = GetAssociatedRows(c_TableInstrument, id, "PrimaryExchangeId", "Id, Ticker"))
-        while (instrumentRows.Read()) result += DeleteInstrument(instrumentRows.GetGuid(0), instrumentRows.GetString(1));
-      result += Delete(c_TableInstrumentSecondaryExchange, id, null, null, "ExchangeId");
-      foreach (var sessionId in GetAssociatedIds(c_TableExchangeSession, id, "ExchangeId")) result += DeleteSession(sessionId);
-      return result;
-    }
-
-    public int DeleteSession(Guid id)
-    {
-      return Delete(c_TableExchangeSession, id, GetNameTextId(c_TableExchangeSession, id));
-    }
-
-    public int DeleteInstrument(Guid id, string ticker)
-    {
-      int result = 0;
-
-      result = Delete(c_TableInstrument, id, GetNameTextId(c_TableInstrument, id), GetDescriptionTextId(c_TableInstrument, id));
-      result += Delete(c_TableInstrumentSecondaryExchange, id, null, null, "InstrumentId");
-      result += Delete(c_TableInstrumentGroupInstrument, id, null, null, "InstrumentId");
-
-      foreach (var dataProvider in m_configurationService.DataProviders)
-      {
-        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations)} WHERE InstrumentId = '{id.ToString()}'"))
-          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
-        result += Delete(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations), id, null, null, "InstrumentId");
-        result += deleteData(dataProvider.Value, ticker, null);
-        CacheInstrumentFundamentalAssociations(dataProvider.Value);
-      }
-
-      return result;
-    }
-
-    public int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId)
-    {
-      return ExecuteCommand($"DELETE FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}' AND ExchangeId = '{exchangeId.ToString()}'");
-    }
-
-    public void DeleteInstrumentGroup(Guid id)
-    {
-      using (var reader = ExecuteReader($"SELECT Id FROM {c_TableInstrumentGroup} WHERE ParentId = '{id.ToString()}'"))
-        while (reader.Read()) DeleteInstrumentGroup(reader.GetGuid(0));
-
-      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{id.ToString()}'");
-      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroup} WHERE Id = '{id.ToString()}'");
-    }
-
-    public void DeleteInstrumentGroupChild(Guid parentId, Guid childId)
-    {
-      //NOTE: We do not use the parentId for Sqlite, we just reset the parentId on the instrument group table for the given child.
-      ExecuteCommand($"UPDATE OR IGNORE {c_TableInstrumentGroup} SET ParentId = '{InstrumentGroupRoot.Instance.Id.ToString()}' WHERE Id = '{childId.ToString()}'");
-    }
-
-    public void DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId)
-    {
-      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' AND InstrumentId = '{instrumentId.ToString()}'");
-    }
-
-    public int DeleteFundamental(Guid id)
-    {
-      int result = 0;
-
-      result = DeleteFundamentalValues(id);
-      result += Delete(c_TableFundamentals, id, GetNameTextId(c_TableFundamentals, id), GetDescriptionTextId(c_TableFundamentals, id));
-
-      foreach (var dataProvider in m_configurationService.DataProviders)
-      {
-        CacheCountryFundamentalAssociations(dataProvider.Value);
-        CacheInstrumentFundamentalAssociations(dataProvider.Value);
-      }
-      return result;
-    }
-
-    public int DeleteFundamentalValues(Guid id)
-    {
-      int result = 0;
-      foreach (var dataProvider in m_configurationService.DataProviders) result += DeleteFundamentalValues(dataProvider.Value, id);
-      return result;
-    }
-
-    public int DeleteFundamentalValues(string dataProviderName, Guid id)
-    {
-      int result = 0;
-
-      using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations)} WHERE FundamentalId = '{id.ToString()}'"))
-        while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
-
-      using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations)} WHERE FundamentalId = '{id.ToString()}'"))
-        while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
-
-      foreach (var dataProvider in m_configurationService.DataProviders)
-      {
-        CacheCountryFundamentalAssociations(dataProvider.Value);
-        CacheInstrumentFundamentalAssociations(dataProvider.Value);
-      }
-
-      return result;
-    }
-
-    public int DeleteCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId)
-    {
-      Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
-      if (!associationId.HasValue) return 0;
-
-      int result = ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations)} WHERE Id = '{associationId.ToString()}'");
-      result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}'");
-
-      CacheCountryFundamentalAssociations(dataProviderName);
-
-      return result;
-    }
-
-    public int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId)
-    {
-      Guid? associationId = GetInstrumentFundamentalAssociationId(dataProviderName, fundamentalId, instrumentId);
-      if (!associationId.HasValue) return 0;
-
-      int result = ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations)} WHERE Id = '{associationId.ToString()}'");
-      result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}'");
-
-      CacheInstrumentFundamentalAssociations(dataProviderName);
-
-      return result;
-    }
-
-    public int DeleteCountryFundamentalValue(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime)
-    {
-      Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
-
-      if (!associationId.HasValue) return 0;  //no association, nothing to remove
-
-      return ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}"); ;
-    }
-
-    public int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime)
-    {
-      Guid? associationId = GetInstrumentFundamentalAssociationId(dataProviderName, fundamentalId, instrumentId);
-
-      if (!associationId.HasValue) return 0;  //no association, nothing to remove
-
-      return ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}");
     }
 
     public int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime, bool? synthetic = null)
@@ -799,260 +1040,9 @@ namespace TradeSharp.Data
       return result;
     }
 
-    public IList<Text> GetTexts()
-    {
-      var result = new List<Text>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableLanguageText}"))
-        while (reader.Read()) result.Add(new Text(reader.GetGuid(0), reader.GetString(1), reader.GetString(2)));
 
-      return result;
-    }
 
-    public IList<Text> GetTexts(string isoLang)
-    {
-      var result = new List<Text>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableLanguageText} WHERE IsoLang = '{isoLang}'"))
-        while (reader.Read()) result.Add(new Text(reader.GetGuid(0), reader.GetString(1), reader.GetString(2)));
-
-      return result;
-    }
-
-    public string GetText(Guid id, string isoLang)
-    {
-      string result = "";
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableLanguageText} WHERE Id = '{id.ToString()}' AND IsoLang = '{isoLang}'"))
-        if (reader.Read()) result = reader.GetString(2);
-
-      if (result.Length != 0)
-        return result;
-
-      return TradeSharp.Common.Resources.NoTextAvailable;
-    }
-
-    public IList<IDataStoreService.Country> GetCountries()
-    {
-      var result = new List<IDataStoreService.Country>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableCountry}"))
-        while (reader.Read()) result.Add(new IDataStoreService.Country(reader.GetGuid(0), reader.GetString(1)));
-
-      return result;
-    }
-
-    public IList<IDataStoreService.Holiday> GetHolidays()
-    {
-      var result = new List<IDataStoreService.Holiday>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday}"))
-        while (reader.Read())
-        {
-          Guid nameTextId = reader.GetGuid(2);
-          result.Add(new IDataStoreService.Holiday(reader.GetGuid(0), reader.GetGuid(1), nameTextId, GetText(nameTextId), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8))); ;
-        }
-
-      return result;
-    }
-
-    public IList<IDataStoreService.Exchange> GetExchanges()
-    {
-      var result = new List<IDataStoreService.Exchange>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange}"))
-        while (reader.Read())
-        {
-          Guid nameTextId = reader.GetGuid(2);
-          result.Add(new IDataStoreService.Exchange(reader.GetGuid(0), reader.GetGuid(1), nameTextId, GetText(nameTextId), TimeZoneInfo.FromSerializedString(reader.GetString(3))));
-        }
-
-      return result;
-    }
-
-    public IList<IDataStoreService.Session> GetSessions()
-    {
-      var result = new List<IDataStoreService.Session>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession}"))
-        while (reader.Read())
-        {
-          Guid nameTextId = reader.GetGuid(1);
-          result.Add(new IDataStoreService.Session(reader.GetGuid(0), nameTextId, GetText(nameTextId), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5))));
-        }
-
-      return result;
-    }
-
-    public IList<IDataStoreService.Instrument> GetInstruments()
-    {
-      var result = new List<IDataStoreService.Instrument>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument}"))
-        while (reader.Read())
-        {
-          List<Guid> secondaryExchangeIds = new List<Guid>();
-          Guid instrumentId = reader.GetGuid(0);
-
-          using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
-            while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
-
-          List<Guid> instrumentGroupIds = new List<Guid>();
-
-          using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{instrumentId.ToString()}'"))
-            while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
-
-          Guid nameTextId = reader.GetGuid(3);
-          Guid descriptionTextId = reader.GetGuid(4);
-          result.Add(new IDataStoreService.Instrument(instrumentId, (InstrumentType)reader.GetInt32(1), reader.GetString(2), nameTextId, GetText(nameTextId), descriptionTextId, GetText(descriptionTextId), DateTime.FromBinary(reader.GetInt64(6)), instrumentGroupIds, reader.GetGuid(5), secondaryExchangeIds));
-        }
-
-      return result;
-    }
-
-    public IList<IDataStoreService.Instrument> GetInstruments(InstrumentType instrumentType)
-    {
-      var result = new List<IDataStoreService.Instrument>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType}"))
-        while (reader.Read())
-        {
-          List<Guid> secondaryExchangeIds = new List<Guid>();
-          Guid instrumentId = reader.GetGuid(0);
-
-          using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
-            while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
-
-          List<Guid> instrumentGroupIds = new List<Guid>();
-
-          using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{instrumentId.ToString()}'"))
-            while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
-
-          Guid nameTextId = reader.GetGuid(3);
-          Guid descriptionTextId = reader.GetGuid(4);
-          result.Add(new IDataStoreService.Instrument(instrumentId, (InstrumentType)reader.GetInt32(1), reader.GetString(2), nameTextId, GetText(nameTextId), descriptionTextId, GetText(descriptionTextId), DateTime.FromBinary(reader.GetInt64(6)), instrumentGroupIds, reader.GetGuid(5), secondaryExchangeIds));
-        }
-
-      return result;
-    }
-
-    public IList<IDataStoreService.Fundamental> GetFundamentals()
-    {
-      var result = new List<IDataStoreService.Fundamental>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableFundamentals}"))
-        while (reader.Read())
-        {
-          Guid nameTextId = reader.GetGuid(1);
-          Guid descriptionTextId = reader.GetGuid(2);
-          result.Add(new IDataStoreService.Fundamental(reader.GetGuid(0), nameTextId, GetText(nameTextId), descriptionTextId, GetText(descriptionTextId), (FundamentalCategory)reader.GetInt32(3), (FundamentalReleaseInterval)reader.GetInt32(4)));
-        }
-
-      return result;
-    }
-
-    public IList<IDataStoreService.CountryFundamental> GetCountryFundamentals(string dataProviderName)
-    {
-      var result = new List<IDataStoreService.CountryFundamental>();
-
-      //load basic fundamental and country associations
-      string dataProviderAssociationTable = GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations);
-      string selectQuery =
-        $"SELECT * FROM {dataProviderAssociationTable} " +
-          $"INNER JOIN {c_TableFundamentals} ON {dataProviderAssociationTable}.FundamentalId = {c_TableFundamentals}.Id " +
-          $"WHERE {c_TableFundamentals}.Category = {(int)FundamentalCategory.Country} " +
-          $"ORDER BY {dataProviderAssociationTable}.FundamentalId ASC, {dataProviderAssociationTable}.CountryId ASC";
-
-      using (var reader = ExecuteReader(selectQuery))
-        while (reader.Read()) result.Add(new IDataStoreService.CountryFundamental(dataProviderName, reader.GetGuid(0), reader.GetGuid(1), reader.GetGuid(2)));
-
-      //load fundamental values
-      string dataProviderValueTable = GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues);
-      selectQuery = $"SELECT * FROM {dataProviderValueTable} ORDER BY AssociationId, DateTime ASC";
-
-      using (var reader = ExecuteReader(selectQuery))
-        while (reader.Read())
-        {
-          Guid associationId = reader.GetGuid(0);
-          DateTime dateTime = DateTime.FromBinary(reader.GetInt64(1));
-          double value = reader.GetDouble(2);
-
-          foreach (var countryFundamental in result)
-            if (countryFundamental.AssociationId == associationId)
-            {
-              countryFundamental.AddValue(dateTime, value);
-              break;
-            }
-        }
-
-      return result;
-    }
-
-    public IList<IDataStoreService.InstrumentFundamental> GetInstrumentFundamentals(string dataProviderName)
-    {
-      var result = new List<IDataStoreService.InstrumentFundamental>();
-
-      //load basic fundamental and instrument associations
-      string dataProviderAssociationTable = GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations);
-      string selectQuery =
-        $"SELECT * FROM {dataProviderAssociationTable} " +
-          $"INNER JOIN {c_TableFundamentals} ON {dataProviderAssociationTable}.FundamentalId = {c_TableFundamentals}.Id " +
-          $"WHERE {c_TableFundamentals}.Category = {(int)FundamentalCategory.Instrument} " +
-          $"ORDER BY {dataProviderAssociationTable}.FundamentalId ASC, {dataProviderAssociationTable}.InstrumentId ASC";
-
-      using (var reader = ExecuteReader(selectQuery))
-        while (reader.Read()) result.Add(new IDataStoreService.InstrumentFundamental(dataProviderName, reader.GetGuid(0), reader.GetGuid(1), reader.GetGuid(2)));
-
-      //load fundamental values
-      string dataProviderValueTable = GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues);
-      selectQuery = $"SELECT * FROM {dataProviderValueTable} ORDER BY AssociationId, DateTime ASC";
-
-      using (var reader = ExecuteReader(selectQuery))
-        while (reader.Read())
-        {
-          Guid associationId = reader.GetGuid(0);
-          DateTime dateTime = DateTime.FromBinary(reader.GetInt64(1));
-          double value = reader.GetDouble(2);
-
-          foreach (var countryFundamental in result)
-            if (countryFundamental.AssociationId == associationId)
-            {
-              countryFundamental.AddValue(dateTime, value);
-              break;
-            }
-        }
-
-      return result;
-    }
-
-    public IList<IDataStoreService.InstrumentGroup> GetInstrumentGroups()
-    {
-      List<IDataStoreService.InstrumentGroup> result = new List<IDataStoreService.InstrumentGroup>();
-
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrumentGroup}"))
-      {
-        while (reader.Read())
-        {
-          Guid id = reader.GetGuid(0);
-          IList<Guid> instruments = GetInstrumentGroupInstruments(id);
-          Guid nameTextId = reader.GetGuid(2);
-          Guid descriptionTextId = reader.GetGuid(3);
-          result.Add(new IDataStoreService.InstrumentGroup(id, reader.GetGuid(1), nameTextId, GetText(nameTextId), descriptionTextId, GetText(descriptionTextId), instruments));
-        }
-      }
-
-      return result;
-    }
-
-    public IList<Guid> GetInstrumentGroupInstruments(Guid instrumentGroupId)
-    {
-      List<Guid> result = new List<Guid>();
-
-      using (var reader = ExecuteReader($"SELECT InstrumentId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}'"))
-        while (reader.Read()) result.Add(reader.GetGuid(0));
-
-      return result;
-    }
 
     public DataCache GetBarData(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, Resolution resolution, PriceDataType priceDataType)
     {
@@ -1269,15 +1259,9 @@ namespace TradeSharp.Data
     /// <summary>
     /// Generic utility method to support deletion of objects using a specific id fieldname in the database. Returns the number of rows deleted.
     /// </summary>
-    protected int Delete(string tableName, Guid id, Guid? nameTextId = null, Guid? descriptionTextId = null, string idFieldname = "Id")
+    protected int Delete(string tableName, Guid id, string idFieldname = "Id")
     {
-      int rowsDeleted = ExecuteCommand($"DELETE FROM {tableName} WHERE {idFieldname} = '{id.ToString()}'");
-
-      //delete associated texts if main delete was successfull and we have id's to work with
-      if (rowsDeleted > 0 && nameTextId.HasValue) rowsDeleted += DeleteText(nameTextId.Value);
-      if (rowsDeleted > 0 && descriptionTextId.HasValue) rowsDeleted += DeleteText(descriptionTextId.Value);
-
-      return rowsDeleted;
+      return ExecuteCommand($"DELETE FROM {tableName} WHERE {idFieldname} = '{id.ToString()}'");
     }
 
     /// <summary>
@@ -1315,7 +1299,6 @@ namespace TradeSharp.Data
         StartTransaction();
 
         //create general data tables if required
-        CreateLanguageTextTable();
         CreateCountryTable();
         CreateHolidayTable();
         CreateExchangeTable();
@@ -1361,8 +1344,6 @@ namespace TradeSharp.Data
       {
         StartTransaction();
 
-        DropTable(c_TableLanguageText);
-        DropIndex(c_IndexLanguageText);
         DropTable(c_TableCountry);
         DropTable(c_TableHoliday);
         DropTable(c_TableExchange);
@@ -1403,23 +1384,6 @@ namespace TradeSharp.Data
       }
     }
 
-    /// <summary>
-    /// Create the language text table to supports multiple languages.
-    /// </summary>
-    private void CreateLanguageTextTable()
-    {
-      //defines a string table for translatable texts used for any text data entered into the database
-      //once an entry is created only the text can be updated (conflict fail on IsoLang)
-      CreateTable(c_TableLanguageText,
-      @"
-        Id TEXT,
-        IsoLang TEXT,
-        Value TEXT,
-        PRIMARY KEY(Id, IsoLang) ON CONFLICT REPLACE
-      ");
-      CreateIndex(c_IndexLanguageText, c_TableLanguageText, true, "Id,IsoLang");
-    }
-
     private void CreateCountryTable()
     {
       CreateTable(c_TableCountry,
@@ -1435,7 +1399,7 @@ namespace TradeSharp.Data
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
         ParentId TEXT,
-        NameTextId TEXT,
+        Name TEXT,
         HolidayType INTEGER,
         Month INTEGER,
         DayOfMonth INTEGER DEFAULT(-1),
@@ -1451,7 +1415,7 @@ namespace TradeSharp.Data
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
         CountryId TEXT,
-        NameTextId TEXT,
+        Name TEXT,
         TimeZone TEXT
       ");
     }
@@ -1461,7 +1425,7 @@ namespace TradeSharp.Data
       CreateTable(c_TableExchangeSession,
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
-        NameTextId TEXT,
+        Name TEXT,
         ExchangeId TEXT,
         DayOfWeek INTEGER,
         StartTime INTEGER,
@@ -1476,8 +1440,8 @@ namespace TradeSharp.Data
       @"
         Id TEXT,
         ParentId TEXT,
-        NameTextId TEXT,
-        DescriptionTextId TEXT,
+        Name TEXT,
+        Description TEXT,
         PRIMARY KEY(Id, ParentId) ON CONFLICT REPLACE
       ");
     }
@@ -1501,8 +1465,8 @@ namespace TradeSharp.Data
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
         Type INTEGER,
         Ticker TEXT,
-        NameTextId TEXT,
-        DescriptionTextId TEXT,
+        Name TEXT,
+        Description TEXT,
         PrimaryExchangeId TEXT,
         InceptionDate TYPE INTEGER
       ");
@@ -1525,8 +1489,8 @@ namespace TradeSharp.Data
       CreateTable(c_TableFundamentals,
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
-        NameTextId TEXT,
-        DescriptionTextId TEXT,
+        Name TEXT,
+        Description TEXT,
         Category INTEGER,
         ReleaseInterval INTEGER
       ");
@@ -1708,8 +1672,7 @@ namespace TradeSharp.Data
     /// </summary>
     public int ClearDatabase()
     {
-      int result = ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableLanguageText}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableCountry}");
+      int result = ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableCountry}");
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableHoliday}");
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableExchange}");
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableExchangeSession}");
@@ -1732,20 +1695,11 @@ namespace TradeSharp.Data
 
       return result;
     }
-
-    ///// <summary>
-    ///// Generate unique table name from a data provider type name.
-    ///// </summary>
-    //protected string uniqueTableName(string dataProviderName)
-    //{
-    //  //currently only use the final part of the data provider type name as the table name since in most cases
-    //  //this should be unique enough - a hash could be generated from the type name to make sure it is always unique based
-    //  //on the namespace as well
-    //  string typename = dataProviderName;
-    //  if (typename.Contains(",")) typename = typename.Substring(0, typename.IndexOf(","));
-    //  string[] nameComponents = typename.Split('.');
-    //  return nameComponents[nameComponents.Length - 1];
-    //}
+    
+    protected string sqlSafeString(string value)
+    {
+      return value.Replace("\'","\'\'");
+    }
 
     public string GetDataProviderDBName(string dataProviderName, string name)
     {
@@ -1850,61 +1804,6 @@ namespace TradeSharp.Data
     {
       //https://sqlite.org/lang_dropindex.html
       ExecuteCommand($"DROP INDEX IF EXISTS {name}");
-    }
-
-    public void UpdateText(Guid id, string isoLang, string value)
-    {
-      string escapedText = value.Replace("'", "''");
-      ExecuteCommand($"INSERT OR REPLACE INTO {c_TableLanguageText} (Id, IsoLang, Value) VALUES ('{id.ToString()}', '{isoLang}', '{escapedText}')");
-    }
-
-    private void LoadTexts()
-    {
-      foreach (var culture in m_configurationService.CultureFallback)
-        if (culture.ThreeLetterISOLanguageName != CultureInfo.InvariantCulture.ThreeLetterISOLanguageName && !m_texts.ContainsKey(culture.ThreeLetterISOLanguageName))
-          m_texts.Add(culture.ThreeLetterISOLanguageName, GetTexts(culture.ThreeLetterISOLanguageName));
-    }
-
-    public string GetText(Guid id)
-    {
-      //try to find the text according to the set of culture fallbacks
-      foreach (var culture in m_configurationService.CultureFallback)
-        foreach (var text in m_texts[culture.ThreeLetterISOLanguageName])
-          if (text.Id == id) return text.Value;
-
-      //try to find text in ANY language
-      using (var reader = ExecuteReader($"SELECT Value FROM {c_TableLanguageText} WHERE Id = '{id}' LIMIT 1"))
-        if (reader.Read()) return reader.GetString(0);
-
-      return TradeSharp.Common.Resources.NoTextAvailable;
-    }
-
-    /// <summary>
-    /// Retrieves the name text Id for a given ObjectWithId in a specific database table.
-    /// </summary>
-    private Guid? GetNameTextId(string tableName, Guid id)
-    {
-      var command = m_connection.CreateCommand();
-      command.CommandText = $"SELECT NameTextId FROM {tableName} WHERE Id = '{id.ToString()}'";
-
-      using (var reader = command.ExecuteReader())
-        if (reader.Read()) return reader.GetGuid(0);
-
-      return null;
-    }
-
-    /// <summary>
-    /// Retrieves the description text Id for a given ObjectWithId in a specific database table.
-    /// </summary>
-    private Guid? GetDescriptionTextId(string tableName, Guid id)
-    {
-      var command = m_connection.CreateCommand();
-      command.CommandText = $"SELECT DescriptionTextId FROM {tableName} WHERE Id = '{id.ToString()}'";
-
-      using (var reader = command.ExecuteReader())
-        if (reader.Read()) return reader.GetGuid(0);
-
-      return null;
     }
 
     /// <summary>

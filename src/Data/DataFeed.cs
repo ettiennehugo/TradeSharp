@@ -33,8 +33,8 @@ namespace TradeSharp.Data
 
     //attributes
     protected IConfigurationService m_configuration;
+    protected IDataProvider m_dataProvider;
     protected IDataStoreService m_dataStore;
-    protected IDataManagerService m_dataManager;
     protected DataStream<DateTime> m_dateTime;
     protected DateTime[] m_dateTimeData;
     protected DataStream<double> m_open;
@@ -61,11 +61,9 @@ namespace TradeSharp.Data
     protected long[] m_lastVolumeData;
     protected DataStream<bool> m_synthetic;
     protected bool[] m_syntheticData;
-    protected ConcurrentDictionary<int, WeakReference<Common.IObserver<PriceChange>>> m_priceChangeObservers;
-    protected List<PriceChange> m_priceChanges;
 
     //constructors
-    public DataFeed(IConfigurationService configuration, IDataStoreService dataStore, IDataManagerService dataManager, IInstrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode, PriceDataType priceDataType) : base()
+    public DataFeed(IConfigurationService configuration, IDataStoreService dataStore, IDataProvider dataProvider, Instrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode, PriceDataType priceDataType) : base()
     {
       if (interval == 0) throw new ArgumentOutOfRangeException(nameof(interval), "Interval must be greater than zero.");
       if (from > to) throw new ArgumentOutOfRangeException(nameof(from), "From must be less than or equal to To.");
@@ -73,7 +71,7 @@ namespace TradeSharp.Data
       //set general attributes
       m_configuration = configuration;
       m_dataStore = dataStore;
-      m_dataManager = dataManager;
+      m_dataProvider = dataProvider;
       Instrument = instrument;
       From = from;
       To = to;
@@ -82,9 +80,7 @@ namespace TradeSharp.Data
       CurrentBar = 0;
       Interval = interval;
       PriceDataType = priceDataType;
-      m_priceChangeObservers = new ConcurrentDictionary<int, WeakReference<Common.IObserver<PriceChange>>>();
-      m_priceChanges = new List<PriceChange>();
-  
+
       //create/initialize the data streams and associated data buffers
       m_dateTime = new DataStream<DateTime>();
       m_dateTimeData = Array.Empty<DateTime>();
@@ -120,8 +116,6 @@ namespace TradeSharp.Data
     //finalizers
     public void Dispose()
     {
-      m_dataManager.Unsubscribe(this);
-      m_priceChangeObservers.Clear();
       m_dateTime.Dispose();
       m_open.Dispose();
       m_high.Dispose();
@@ -138,65 +132,56 @@ namespace TradeSharp.Data
     }
 
     //interface implementations
-    public void Subscribe(Common.IObserver<PriceChange> observer)
-    {
-      m_priceChangeObservers.TryAdd(observer.GetHashCode(), new WeakReference<Common.IObserver<PriceChange>>(observer));
-    }
 
-    public void Unsubscribe(Common.IObserver<PriceChange> observer)
-    {
-      m_priceChangeObservers.TryRemove(observer.GetHashCode(), out _);
-    }
+    //public void OnChange(IEnumerable<PriceChange> changes)
+    //{
+    //  //merge in the price changes received
+    //  bool refreshRequired = false;
+    //  DateTime fromDate = System.DateTime.MinValue;
+    //  DateTime toDate = System.DateTime.MaxValue;
+    //  foreach (PriceChange change in changes)
+    //    if (change.Instrument.Id == Instrument.Id && change.Resolution == Resolution && change.From >= From && (change.To <= To || ToDateMode == ToDateMode.Open))
+    //    {
+    //      //flag that data update is required
+    //      refreshRequired = true;
+    //      if (ToDateMode == ToDateMode.Open && change.To > To) To = change.To; //adjust to date if change is beyond current to date with open to date mode
 
-    public void OnChange(IEnumerable<PriceChange> changes)
-    {
-      //merge in the price changes received
-      bool refreshRequired = false;
-      DateTime fromDate = System.DateTime.MinValue;
-      DateTime toDate = System.DateTime.MaxValue;
-      foreach (PriceChange change in changes)
-        if (change.Instrument.Id == Instrument.Id && change.Resolution == Resolution && change.From >= From && (change.To <= To || ToDateMode == ToDateMode.Open))
-        {
-          //flag that data update is required
-          refreshRequired = true;
-          if (ToDateMode == ToDateMode.Open && change.To > To) To = change.To; //adjust to date if change is beyond current to date with open to date mode
+    //      //record from/to dates for observer updates
+    //      if (fromDate == System.DateTime.MinValue && toDate == System.DateTime.MaxValue)
+    //      {
+    //        fromDate = change.From;
+    //        toDate = change.To;
+    //      }
+    //      else if (change.From < fromDate) fromDate = change.From;
+    //      else if (change.To > toDate) toDate = change.To;
+    //    }
 
-          //record from/to dates for observer updates
-          if (fromDate == System.DateTime.MinValue && toDate == System.DateTime.MaxValue)
-          {
-            fromDate = change.From;
-            toDate = change.To;
-          }
-          else if (change.From < fromDate) fromDate = change.From;
-          else if (change.To > toDate) toDate = change.To;
-        }
+    //  //refresh the data caches
+    //  if (refreshRequired)
+    //  {
+    //    PriceChange priceChange = new PriceChange();
+    //    priceChange.ChangeType = PriceChangeType.Update;
+    //    priceChange.Instrument = Instrument;
+    //    priceChange.Resolution = Resolution;
+    //    priceChange.From = fromDate;
+    //    priceChange.To = toDate;
+    //    m_priceChanges.Add(priceChange);
+    //    refreshDataCache();
+    //  }
 
-      //refresh the data caches
-      if (refreshRequired)
-      {
-        PriceChange priceChange = new PriceChange();
-        priceChange.ChangeType = PriceChangeType.Update;
-        priceChange.Instrument = Instrument;
-        priceChange.Resolution = Resolution;
-        priceChange.From = fromDate;
-        priceChange.To = toDate;
-        m_priceChanges.Add(priceChange);
-        refreshDataCache();
-      }
+    //  //notify any observers of the price changes if required
+    //  if (m_priceChanges.Count > 0)
+    //    foreach (var observerKV in m_priceChangeObservers)
+    //      if (observerKV.Value.TryGetTarget(out var observer))
+    //        observer.OnChange(m_priceChanges);
+    //      else
+    //        m_priceChangeObservers.TryRemove(observerKV.Key, out _);
 
-      //notify any observers of the price changes if required
-      if (m_priceChanges.Count > 0)
-        foreach (var observerKV in m_priceChangeObservers)
-          if (observerKV.Value.TryGetTarget(out var observer))
-            observer.OnChange(m_priceChanges);
-          else
-            m_priceChangeObservers.TryRemove(observerKV.Key, out _);
-
-      m_priceChanges.Clear();
-    }
+    //  m_priceChanges.Clear();
+    //}
 
     //properties
-    public IInstrument Instrument { get; }
+    public Instrument Instrument { get; }
     public DateTime From { get; }
     public DateTime To { get; internal set; }
     public ToDateMode ToDateMode { get; }
@@ -223,8 +208,9 @@ namespace TradeSharp.Data
     //methods
     protected void refreshDataCache()
     {
-      DataCache dataCache = m_dataStore.GetInstrumentData(m_dataManager.DataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
+      DataCache dataCache = m_dataStore.GetInstrumentData(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
       IConfigurationService.TimeZone timeZone = (IConfigurationService.TimeZone)m_configuration.General[IConfigurationService.GeneralConfiguration.TimeZone];
+
 
       switch (Resolution)
       {
@@ -258,7 +244,8 @@ namespace TradeSharp.Data
                   barDataDateTime = barDataDateTime.ToLocalTime();
                   break;
                 case IConfigurationService.TimeZone.Exchange:
-                  barDataDateTime = TimeZoneInfo.ConvertTimeFromUtc(barDataDateTime, Instrument.PrimaryExchange.TimeZone);
+                  Exchange exchange = m_dataStore.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
+                  barDataDateTime = TimeZoneInfo.ConvertTimeFromUtc(barDataDateTime, exchange.TimeZone);
                   break;
               }
 
@@ -286,7 +273,7 @@ namespace TradeSharp.Data
                 m_highData[index] = Math.Max(barData.High[barDataIndex], m_highData[index]);
                 m_lowData[index] = Math.Min(barData.Low[barDataIndex], m_lowData[index]);
                 m_volumeData[index] += barData.Volume[barDataIndex];
-                m_syntheticData[index] |= barData.Synthetic[barDataIndex]; 
+                m_syntheticData[index] |= barData.Synthetic[barDataIndex];
               }
 
               m_closeData[index] = barData.Close[barDataIndex];
@@ -318,13 +305,13 @@ namespace TradeSharp.Data
             m_lastVolume.Data = m_lastVolumeData = m_volumeData;
             m_synthetic.Data = m_syntheticData;
 
-            m_bidPriceData = Array.Empty<double>(); 
+            m_bidPriceData = Array.Empty<double>();
             m_bidPrice.Data = m_bidPriceData;
-            m_bidVolumeData = Array.Empty<long>(); 
+            m_bidVolumeData = Array.Empty<long>();
             m_bidVolume.Data = m_bidVolumeData;
-            m_askPriceData = Array.Empty<double>(); 
+            m_askPriceData = Array.Empty<double>();
             m_askPrice.Data = m_askPriceData;
-            m_askVolumeData = Array.Empty<long>(); 
+            m_askVolumeData = Array.Empty<long>();
             m_askVolume.Data = m_askVolumeData;
           }
           break;
@@ -339,7 +326,8 @@ namespace TradeSharp.Data
                   level1Data.DateTime[i] = level1Data.DateTime[i].ToLocalTime();
                   break;
                 case IConfigurationService.TimeZone.Exchange:
-                  level1Data.DateTime[i] = TimeZoneInfo.ConvertTimeFromUtc(level1Data.DateTime[i], Instrument.PrimaryExchange.TimeZone);
+                  Exchange exchange = m_dataStore.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
+                  level1Data.DateTime[i] = TimeZoneInfo.ConvertTimeFromUtc(level1Data.DateTime[i], exchange.TimeZone);
                   break;
               }
 
@@ -366,7 +354,7 @@ namespace TradeSharp.Data
                   m_dateTimeData[index] = level1Data.DateTime[level1DataIndex];
                   m_openData[index] = level1Data.Last[level1DataIndex];
                   m_highData[index] = level1Data.Last[level1DataIndex];
-                  m_lowData[index] = level1Data.Last[level1DataIndex]; 
+                  m_lowData[index] = level1Data.Last[level1DataIndex];
                   m_volumeData[index] = level1Data.LastSize[level1DataIndex];
                   m_syntheticData[index] = level1Data.Synthetic[level1DataIndex];
                 }
@@ -502,420 +490,422 @@ namespace TradeSharp.Data
 
       return false;
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    //OLD CODE FOR PRICE CHANGE MERGING
-    //protected void mergePriceChange(PriceChange priceChange)
-    //{
-    //  if (Resolution == Resolution.Level1 && Interval == 1 && priceChange.ChangeType == PriceChangeType.Update)
-    //    mergeL1I1Update(priceChange);
-    //  else if (Resolution == Resolution.Level1 && Interval > 1 && priceChange.ChangeType == PriceChangeType.Update)
-    //    mergeL1INUpdate(priceChange);
-    //  else if (Resolution != Resolution.Level1 && Interval == 1 && priceChange.ChangeType == PriceChangeType.Update)
-    //    mergeBarI1Update(priceChange);
-    //  else if (Resolution != Resolution.Level1 && Interval > 1 && priceChange.ChangeType == PriceChangeType.Update)
-    //    mergeBarINUpdate(priceChange);
-    //  else if (Resolution == Resolution.Level1 && Interval == 1 && priceChange.ChangeType == PriceChangeType.Delete)
-    //    mergeL1I1Delete(priceChange);
-    //  else if (Resolution == Resolution.Level1 && Interval > 1 && priceChange.ChangeType == PriceChangeType.Delete)
-    //    mergeL1INDelete(priceChange);
-    //  else if (Resolution != Resolution.Level1 && Interval == 1 && priceChange.ChangeType == PriceChangeType.Delete)
-    //    mergeBarI1Delete(priceChange);
-    //  else if (Resolution != Resolution.Level1 && Interval > 1 && priceChange.ChangeType == PriceChangeType.Delete)
-    //    mergeBarINDelete(priceChange);
-    //  else
-    //    throw new NotImplementedException("Unknown price change type update received");
-    //}
-
-    //protected void mergeL1I1Update(PriceChange priceChange)
-    //{
-    //  //handle single vs multi tick updates
-    //  if (priceChange.From == priceChange.To)
-    //  {
-    //    for (int i = 0; i < m_dateTimeData.Length; i++)
-    //      if (m_dateTimeData[i] == priceChange.From)
-    //      {
-    //        m_openData[i] = priceChange.Last;
-    //        m_highData[i] = priceChange.Last;
-    //        m_lowData[i] = priceChange.Last;
-    //        m_closeData[i] = priceChange.Last;
-    //        m_volumeData[i] = priceChange.LastSize;
-    //        m_bidPriceData[i] = priceChange.Bid;
-    //        m_bidVolumeData[i] = priceChange.BidSize;
-    //        m_askPriceData[i] = priceChange.Ask;
-    //        m_askVolumeData[i] = priceChange.AskSize;
-    //        m_lastPriceData[i] = priceChange.Last;
-    //        m_lastVolumeData[i] = priceChange.LastSize;
-    //        m_syntheticData[i] = priceChange.Synthetic;
-    //        return;
-    //      }
-
-    //    //bar not found, add new bar if To date is not pinned
-    //    if (ToDateMode == ToDateMode.Open)
-    //    {
-    //      addToDataBuffers(priceChange);
-    //      To = priceChange.To;
-    //    }
-    //  }
-    //  else
-    //  {
-
-        
-    //    //TODO
 
 
-    //  }
-    //}
 
-    //private void mergeL1INUpdate(PriceChange priceChange)
-    //{
-    //  throw new NotImplementedException();
-    //}
 
-    //private void mergeBarI1Update(PriceChange priceChange)
-    //{
-    //  //try to find bar in current data to update
-    //  for (int i = 0; i < m_dateTimeData.Count(); i++)
-    //    if (m_dateTimeData[i] == priceChange.From)
-    //    {
-    //      m_openData[i] = priceChange.Open;
-    //      m_highData[i] = priceChange.High;
-    //      m_lowData[i] = priceChange.Low;
-    //      m_closeData[i] = priceChange.Close;
-    //      m_volumeData[i] = priceChange.Volume;
-    //      m_bidPriceData[i] = priceChange.Bid;
-    //      m_bidVolumeData[i] = priceChange.BidSize;
-    //      m_askPriceData[i] = priceChange.Ask;
-    //      m_askVolumeData[i] = priceChange.AskSize;
-    //      m_lastPriceData[i] = priceChange.Last;
-    //      m_lastVolumeData[i] = priceChange.LastSize;
-    //      m_syntheticData[i] = priceChange.Synthetic;
-    //      return;
-    //    }
 
-    //  //bar not found, add new bar if To date is not pinned
-    //  if (ToDateMode == ToDateMode.Open)
-    //  {
-    //    addToDataBuffers(priceChange);
-    //    To = priceChange.To;
-    //  }
-    //}
 
-    //private void mergeBarINUpdate(PriceChange priceChange)
-    //{
-    //  throw new NotImplementedException();
-    //}
 
-    //private void mergeL1I1Delete(PriceChange priceChange)
-    //{
-    //  //handle single vs multi tick deletes
-    //  if (priceChange.From == priceChange.To)
-    //  {
-    //    for (int i = 0; i < m_dateTimeData.Length; i++)
-    //      if (m_dateTimeData[i] == priceChange.From)
-    //        removeFromBuffers(i);
-    //  }
-    //  else
-    //  {
-    //    int start = -1;
-    //    for (int i = 0; i < m_dateTimeData.Length; i++)
-    //    {
-    //      if (start == -1)
-    //      {
-    //        if (m_dateTimeData[i] == priceChange.From)
-    //          start = i;
-    //      }
-    //      else
-    //      {
-    //        //delete from start to i, if i is the last tick, delete to end
-    //        if (m_dateTimeData[i] == priceChange.To || i == m_dateTimeData.Length - 1)
-    //        {
-    //          removeFromBuffers(start, i);
-    //          if (ToDateMode == ToDateMode.Open)
-    //            To = m_dateTimeData[m_dateTimeData.Length - 1];
-    //          return;
-    //        }
-    //      }
-    //    }
-    //  }
-    //}
 
-    //private void mergeL1INDelete(PriceChange priceChange)
-    //{
-    //  throw new NotImplementedException();
-    //}
 
-    //private void mergeBarI1Delete(PriceChange priceChange)
-    //{
-    //  //check single vs multi bar deletes
-    //  if (priceChange.From == priceChange.To)
-    //  {
-    //    for (int i = 0; i < m_dateTimeData.Length; i++)
-    //      if (m_dateTimeData[i] == priceChange.From)
-    //        removeFromBuffers(i);
-    //  }
-    //  else
-    //  {
-    //    int start = -1;
-    //    for (int i = 0; i < m_dateTimeData.Length; i++)
-    //    {
-    //      if (start == -1)
-    //      {
-    //        if (m_dateTimeData[i] == priceChange.From)
-    //          start = i;
-    //      }
-    //      else
-    //      {
-    //        //delete from start to i, if i is the last bar, delete to end
-    //        if (m_dateTimeData[i] == priceChange.To || i == m_dateTimeData.Length - 1)
-    //        {
-    //          removeFromBuffers(start, i);
-    //          if (ToDateMode == ToDateMode.Open)
-    //            To = m_dateTimeData[m_dateTimeData.Length - 1];
-    //          return;
-    //        }
-    //      }
-    //    }
-    //  }
-    //}
 
-    //private void mergeBarINDelete(PriceChange priceChange)
-    //{
-    //  throw new NotImplementedException();
-    //}
 
-    ////TBD: This is pretty expensive to do, might need to optimize this a bit.
-    //private void addToDataBuffers(PriceChange priceChange)
-    //{
-    //  long newLength = m_dateTimeData.Length + 1;
-    //  DateTime[] dateTimeData = new DateTime[newLength];
-    //  double[] openData = new double[newLength];
-    //  double[] highData = new double[newLength];
-    //  double[] lowData = new double[newLength];
-    //  double[] closeData = new double[newLength];
-    //  long[] volumeData = new long[newLength];
-    //  double[] bidPriceData = new double[newLength];
-    //  long[] bidVolumeData = new long[newLength];
-    //  double[] askPriceData = new double[newLength];
-    //  long[] askVolumeData = new long[newLength];
-    //  double[] lastPriceData = new double[newLength];
-    //  long[] lastVolumeData = new long[newLength];
-    //  bool[] syntheticData = new bool[newLength];
 
-    //  m_dateTimeData.CopyTo(dateTimeData, 0);
-    //  m_openData.CopyTo(openData, 0);
-    //  m_highData.CopyTo(highData, 0);
-    //  m_lowData.CopyTo(lowData, 0);
-    //  m_closeData.CopyTo(closeData, 0);
-    //  m_volumeData.CopyTo(volumeData, 0);
-    //  m_bidPriceData.CopyTo(bidPriceData, 0);
-    //  m_bidVolumeData.CopyTo(bidVolumeData, 0);
-    //  m_askPriceData.CopyTo(askPriceData, 0);
-    //  m_askVolumeData.CopyTo(askVolumeData, 0);
-    //  m_lastPriceData.CopyTo(lastPriceData, 0);
-    //  m_lastVolumeData.CopyTo(lastVolumeData, 0);
-    //  m_syntheticData.CopyTo(syntheticData, 0);
 
-    //  dateTimeData[newLength - 1] = priceChange.From;
-    //  openData[newLength - 1] = priceChange.Open;
-    //  highData[newLength - 1] = priceChange.High;
-    //  lowData[newLength - 1] = priceChange.Low;
-    //  closeData[newLength - 1] = priceChange.Close;
-    //  volumeData[newLength - 1] = priceChange.Volume;
-    //  bidPriceData[newLength - 1] = priceChange.Bid;
-    //  bidVolumeData[newLength - 1] = priceChange.BidSize;
-    //  askPriceData[newLength - 1] = priceChange.Ask;
-    //  askVolumeData[newLength - 1] = priceChange.AskSize;
-    //  lastPriceData[newLength - 1] = priceChange.Last;
-    //  lastVolumeData[newLength - 1] = priceChange.LastSize;
-    //  syntheticData[newLength - 1] = priceChange.Synthetic;
 
-    //  m_dateTimeData = dateTimeData;
-    //  m_openData = openData;
-    //  m_highData = highData;
-    //  m_lowData = lowData;
-    //  m_closeData = closeData;
-    //  m_volumeData = volumeData;
-    //  m_bidPriceData = bidPriceData;
-    //  m_bidVolumeData = bidVolumeData;
-    //  m_askPriceData = askPriceData;
-    //  m_askVolumeData = askVolumeData;
-    //  m_lastPriceData = lastPriceData;
-    //  m_lastVolumeData = lastVolumeData;
-    //  m_syntheticData = syntheticData;
 
-    //  m_dateTime.Data = m_dateTimeData;
-    //  m_open.Data = m_openData;
-    //  m_high.Data = m_highData;
-    //  m_low.Data = m_lowData;
-    //  m_close.Data = m_closeData;
-    //  m_volume.Data = m_volumeData;
-    //  m_bidPrice.Data = m_bidPriceData;
-    //  m_bidVolume.Data = m_bidVolumeData;
-    //  m_askPrice.Data = m_askPriceData;
-    //  m_askVolume.Data = m_askVolumeData;
-    //  m_lastPrice.Data = m_lastPriceData;
-    //  m_lastVolume.Data = m_lastVolumeData;
-    //  m_synthetic.Data = m_syntheticData;
-    //}
 
-    ////TBD: This is pretty expensive to do, might need to optimize this a bit.
-    //private void removeFromBuffers(int i)
-    //{
-    //  long newLength = m_dateTimeData.Length - 1;
-    //  DateTime[] dateTimeData = new DateTime[newLength];
-    //  double[] openData = new double[newLength];
-    //  double[] highData = new double[newLength];
-    //  double[] lowData = new double[newLength];
-    //  double[] closeData = new double[newLength];
-    //  long[] volumeData = new long[newLength];
-    //  double[] bidPriceData = new double[newLength];
-    //  long[] bidVolumeData = new long[newLength];
-    //  double[] askPriceData = new double[newLength];
-    //  long[] askVolumeData = new long[newLength];
-    //  double[] lastPriceData = new double[newLength];
-    //  long[] lastVolumeData = new long[newLength];
-    //  bool[] syntheticData = new bool[newLength];
 
-    //  int k = 0;
-    //  for (int j = 0; j < m_dateTimeData.Count(); j++)
-    //  {
-    //    if (j == i) continue;
-    //    openData[k] = m_openData[j];
-    //    highData[k] = m_highData[j];
-    //    lowData[k] = m_lowData[j];
-    //    closeData[k] = m_closeData[j];
-    //    volumeData[k] = m_volumeData[j];
-    //    bidPriceData[k] = m_bidPriceData[j];
-    //    bidVolumeData[k] = m_bidVolumeData[j];
-    //    askPriceData[k] = m_askPriceData[j];
-    //    askVolumeData[k] = m_askVolumeData[j];
-    //    lastPriceData[k] = m_lastPriceData[j];
-    //    lastVolumeData[k] = m_lastVolumeData[j];
-    //    syntheticData[k] = m_syntheticData[j];
-    //    k++;
-    //  }
 
-    //  m_openData = openData;
-    //  m_highData = highData;
-    //  m_lowData = lowData;
-    //  m_closeData = closeData;
-    //  m_volumeData = volumeData;
-    //  m_bidPriceData = bidPriceData;
-    //  m_bidVolumeData = bidVolumeData;
-    //  m_askPriceData = askPriceData;
-    //  m_askVolumeData = askVolumeData;
-    //  m_lastPriceData = lastPriceData;
-    //  m_lastVolumeData = lastVolumeData;
-    //  m_syntheticData = syntheticData;
 
-    //  m_dateTime.Data = m_dateTimeData;
-    //  m_open.Data = m_openData;
-    //  m_high.Data = m_highData;
-    //  m_low.Data = m_lowData;
-    //  m_close.Data = m_closeData;
-    //  m_volume.Data = m_volumeData;
-    //  m_bidPrice.Data = m_bidPriceData;
-    //  m_bidVolume.Data = m_bidVolumeData;
-    //  m_askPrice.Data = m_askPriceData;
-    //  m_askVolume.Data = m_askVolumeData;
-    //  m_lastPrice.Data = m_lastPriceData;
-    //  m_lastVolume.Data = m_lastVolumeData;
-    //  m_synthetic.Data = m_syntheticData;
-    //}
 
-    //private void removeFromBuffers(int from, int to)
-    //{
-    //  long newLength = m_dateTimeData.Length - (to - from);
-    //  DateTime[] dateTimeData = new DateTime[newLength];
-    //  double[] openData = new double[newLength];
-    //  double[] highData = new double[newLength];
-    //  double[] lowData = new double[newLength];
-    //  double[] closeData = new double[newLength];
-    //  long[] volumeData = new long[newLength];
-    //  double[] bidPriceData = new double[newLength];
-    //  long[] bidVolumeData = new long[newLength];
-    //  double[] askPriceData = new double[newLength];
-    //  long[] askVolumeData = new long[newLength];
-    //  double[] lastPriceData = new double[newLength];
-    //  long[] lastVolumeData = new long[newLength];
-    //  bool[] syntheticData = new bool[newLength];
 
-    //  int k = 0;
-    //  for (int j = 0; j < m_dateTimeData.Count(); j++)
-    //  {
-    //    if (j >= from && j <= to) continue;
-    //    openData[k] = m_openData[j];
-    //    highData[k] = m_highData[j];
-    //    lowData[k] = m_lowData[j];
-    //    closeData[k] = m_closeData[j];
-    //    volumeData[k] = m_volumeData[j];
-    //    bidPriceData[k] = m_bidPriceData[j];
-    //    bidVolumeData[k] = m_bidVolumeData[j];
-    //    askPriceData[k] = m_askPriceData[j];
-    //    askVolumeData[k] = m_askVolumeData[j];
-    //    lastPriceData[k] = m_lastPriceData[j];
-    //    lastVolumeData[k] = m_lastVolumeData[j];
-    //    syntheticData[k] = m_syntheticData[j];
-    //    k++;
-    //  }
 
-    //  m_openData = openData;
-    //  m_highData = highData;
-    //  m_lowData = lowData;
-    //  m_closeData = closeData;
-    //  m_volumeData = volumeData;
-    //  m_bidPriceData = bidPriceData;
-    //  m_bidVolumeData = bidVolumeData;
-    //  m_askPriceData = askPriceData;
-    //  m_askVolumeData = askVolumeData;
-    //  m_lastPriceData = lastPriceData;
-    //  m_lastVolumeData = lastVolumeData;
-    //  m_syntheticData = syntheticData;
 
-    //  m_dateTime.Data = m_dateTimeData;
-    //  m_open.Data = m_openData;
-    //  m_high.Data = m_highData;
-    //  m_low.Data = m_lowData;
-    //  m_close.Data = m_closeData;
-    //  m_volume.Data = m_volumeData;
-    //  m_bidPrice.Data = m_bidPriceData;
-    //  m_bidVolume.Data = m_bidVolumeData;
-    //  m_askPrice.Data = m_askPriceData;
-    //  m_askVolume.Data = m_askVolumeData;
-    //  m_lastPrice.Data = m_lastPriceData;
-    //  m_lastVolume.Data = m_lastVolumeData;
-    //  m_synthetic.Data = m_syntheticData;
-    //}
+
+
+
+
+
+
+
+
+//    //OLD CODE FOR PRICE CHANGE MERGING
+//    //protected void mergePriceChange(PriceChange priceChange)
+//    //{
+//    //  if (Resolution == Resolution.Level1 && Interval == 1 && priceChange.ChangeType == PriceChangeType.Update)
+//    //    mergeL1I1Update(priceChange);
+//    //  else if (Resolution == Resolution.Level1 && Interval > 1 && priceChange.ChangeType == PriceChangeType.Update)
+//    //    mergeL1INUpdate(priceChange);
+//    //  else if (Resolution != Resolution.Level1 && Interval == 1 && priceChange.ChangeType == PriceChangeType.Update)
+//    //    mergeBarI1Update(priceChange);
+//    //  else if (Resolution != Resolution.Level1 && Interval > 1 && priceChange.ChangeType == PriceChangeType.Update)
+//    //    mergeBarINUpdate(priceChange);
+//    //  else if (Resolution == Resolution.Level1 && Interval == 1 && priceChange.ChangeType == PriceChangeType.Delete)
+//    //    mergeL1I1Delete(priceChange);
+//    //  else if (Resolution == Resolution.Level1 && Interval > 1 && priceChange.ChangeType == PriceChangeType.Delete)
+//    //    mergeL1INDelete(priceChange);
+//    //  else if (Resolution != Resolution.Level1 && Interval == 1 && priceChange.ChangeType == PriceChangeType.Delete)
+//    //    mergeBarI1Delete(priceChange);
+//    //  else if (Resolution != Resolution.Level1 && Interval > 1 && priceChange.ChangeType == PriceChangeType.Delete)
+//    //    mergeBarINDelete(priceChange);
+//    //  else
+//    //    throw new NotImplementedException("Unknown price change type update received");
+//    //}
+
+//    //protected void mergeL1I1Update(PriceChange priceChange)
+//    //{
+//    //  //handle single vs multi tick updates
+//    //  if (priceChange.From == priceChange.To)
+//    //  {
+//    //    for (int i = 0; i < m_dateTimeData.Length; i++)
+//    //      if (m_dateTimeData[i] == priceChange.From)
+//    //      {
+//    //        m_openData[i] = priceChange.Last;
+//    //        m_highData[i] = priceChange.Last;
+//    //        m_lowData[i] = priceChange.Last;
+//    //        m_closeData[i] = priceChange.Last;
+//    //        m_volumeData[i] = priceChange.LastSize;
+//    //        m_bidPriceData[i] = priceChange.Bid;
+//    //        m_bidVolumeData[i] = priceChange.BidSize;
+//    //        m_askPriceData[i] = priceChange.Ask;
+//    //        m_askVolumeData[i] = priceChange.AskSize;
+//    //        m_lastPriceData[i] = priceChange.Last;
+//    //        m_lastVolumeData[i] = priceChange.LastSize;
+//    //        m_syntheticData[i] = priceChange.Synthetic;
+//    //        return;
+//    //      }
+
+//    //    //bar not found, add new bar if To date is not pinned
+//    //    if (ToDateMode == ToDateMode.Open)
+//    //    {
+//    //      addToDataBuffers(priceChange);
+//    //      To = priceChange.To;
+//    //    }
+//    //  }
+//    //  else
+//    //  {
+
+
+//    //    //TODO
+
+
+//    //  }
+//    //}
+
+//    //private void mergeL1INUpdate(PriceChange priceChange)
+//    //{
+//    //  throw new NotImplementedException();
+//    //}
+
+//    //private void mergeBarI1Update(PriceChange priceChange)
+//    //{
+//    //  //try to find bar in current data to update
+//    //  for (int i = 0; i < m_dateTimeData.Count(); i++)
+//    //    if (m_dateTimeData[i] == priceChange.From)
+//    //    {
+//    //      m_openData[i] = priceChange.Open;
+//    //      m_highData[i] = priceChange.High;
+//    //      m_lowData[i] = priceChange.Low;
+//    //      m_closeData[i] = priceChange.Close;
+//    //      m_volumeData[i] = priceChange.Volume;
+//    //      m_bidPriceData[i] = priceChange.Bid;
+//    //      m_bidVolumeData[i] = priceChange.BidSize;
+//    //      m_askPriceData[i] = priceChange.Ask;
+//    //      m_askVolumeData[i] = priceChange.AskSize;
+//    //      m_lastPriceData[i] = priceChange.Last;
+//    //      m_lastVolumeData[i] = priceChange.LastSize;
+//    //      m_syntheticData[i] = priceChange.Synthetic;
+//    //      return;
+//    //    }
+
+//    //  //bar not found, add new bar if To date is not pinned
+//    //  if (ToDateMode == ToDateMode.Open)
+//    //  {
+//    //    addToDataBuffers(priceChange);
+//    //    To = priceChange.To;
+//    //  }
+//    //}
+
+//    //private void mergeBarINUpdate(PriceChange priceChange)
+//    //{
+//    //  throw new NotImplementedException();
+//    //}
+
+//    //private void mergeL1I1Delete(PriceChange priceChange)
+//    //{
+//    //  //handle single vs multi tick deletes
+//    //  if (priceChange.From == priceChange.To)
+//    //  {
+//    //    for (int i = 0; i < m_dateTimeData.Length; i++)
+//    //      if (m_dateTimeData[i] == priceChange.From)
+//    //        removeFromBuffers(i);
+//    //  }
+//    //  else
+//    //  {
+//    //    int start = -1;
+//    //    for (int i = 0; i < m_dateTimeData.Length; i++)
+//    //    {
+//    //      if (start == -1)
+//    //      {
+//    //        if (m_dateTimeData[i] == priceChange.From)
+//    //          start = i;
+//    //      }
+//    //      else
+//    //      {
+//    //        //delete from start to i, if i is the last tick, delete to end
+//    //        if (m_dateTimeData[i] == priceChange.To || i == m_dateTimeData.Length - 1)
+//    //        {
+//    //          removeFromBuffers(start, i);
+//    //          if (ToDateMode == ToDateMode.Open)
+//    //            To = m_dateTimeData[m_dateTimeData.Length - 1];
+//    //          return;
+//    //        }
+//    //      }
+//    //    }
+//    //  }
+//    //}
+
+//    //private void mergeL1INDelete(PriceChange priceChange)
+//    //{
+//    //  throw new NotImplementedException();
+//    //}
+
+//    //private void mergeBarI1Delete(PriceChange priceChange)
+//    //{
+//    //  //check single vs multi bar deletes
+//    //  if (priceChange.From == priceChange.To)
+//    //  {
+//    //    for (int i = 0; i < m_dateTimeData.Length; i++)
+//    //      if (m_dateTimeData[i] == priceChange.From)
+//    //        removeFromBuffers(i);
+//    //  }
+//    //  else
+//    //  {
+//    //    int start = -1;
+//    //    for (int i = 0; i < m_dateTimeData.Length; i++)
+//    //    {
+//    //      if (start == -1)
+//    //      {
+//    //        if (m_dateTimeData[i] == priceChange.From)
+//    //          start = i;
+//    //      }
+//    //      else
+//    //      {
+//    //        //delete from start to i, if i is the last bar, delete to end
+//    //        if (m_dateTimeData[i] == priceChange.To || i == m_dateTimeData.Length - 1)
+//    //        {
+//    //          removeFromBuffers(start, i);
+//    //          if (ToDateMode == ToDateMode.Open)
+//    //            To = m_dateTimeData[m_dateTimeData.Length - 1];
+//    //          return;
+//    //        }
+//    //      }
+//    //    }
+//    //  }
+//    //}
+
+//    //private void mergeBarINDelete(PriceChange priceChange)
+//    //{
+//    //  throw new NotImplementedException();
+//    //}
+
+//    ////TBD: This is pretty expensive to do, might need to optimize this a bit.
+//    //private void addToDataBuffers(PriceChange priceChange)
+//    //{
+//    //  long newLength = m_dateTimeData.Length + 1;
+//    //  DateTime[] dateTimeData = new DateTime[newLength];
+//    //  double[] openData = new double[newLength];
+//    //  double[] highData = new double[newLength];
+//    //  double[] lowData = new double[newLength];
+//    //  double[] closeData = new double[newLength];
+//    //  long[] volumeData = new long[newLength];
+//    //  double[] bidPriceData = new double[newLength];
+//    //  long[] bidVolumeData = new long[newLength];
+//    //  double[] askPriceData = new double[newLength];
+//    //  long[] askVolumeData = new long[newLength];
+//    //  double[] lastPriceData = new double[newLength];
+//    //  long[] lastVolumeData = new long[newLength];
+//    //  bool[] syntheticData = new bool[newLength];
+
+//    //  m_dateTimeData.CopyTo(dateTimeData, 0);
+//    //  m_openData.CopyTo(openData, 0);
+//    //  m_highData.CopyTo(highData, 0);
+//    //  m_lowData.CopyTo(lowData, 0);
+//    //  m_closeData.CopyTo(closeData, 0);
+//    //  m_volumeData.CopyTo(volumeData, 0);
+//    //  m_bidPriceData.CopyTo(bidPriceData, 0);
+//    //  m_bidVolumeData.CopyTo(bidVolumeData, 0);
+//    //  m_askPriceData.CopyTo(askPriceData, 0);
+//    //  m_askVolumeData.CopyTo(askVolumeData, 0);
+//    //  m_lastPriceData.CopyTo(lastPriceData, 0);
+//    //  m_lastVolumeData.CopyTo(lastVolumeData, 0);
+//    //  m_syntheticData.CopyTo(syntheticData, 0);
+
+//    //  dateTimeData[newLength - 1] = priceChange.From;
+//    //  openData[newLength - 1] = priceChange.Open;
+//    //  highData[newLength - 1] = priceChange.High;
+//    //  lowData[newLength - 1] = priceChange.Low;
+//    //  closeData[newLength - 1] = priceChange.Close;
+//    //  volumeData[newLength - 1] = priceChange.Volume;
+//    //  bidPriceData[newLength - 1] = priceChange.Bid;
+//    //  bidVolumeData[newLength - 1] = priceChange.BidSize;
+//    //  askPriceData[newLength - 1] = priceChange.Ask;
+//    //  askVolumeData[newLength - 1] = priceChange.AskSize;
+//    //  lastPriceData[newLength - 1] = priceChange.Last;
+//    //  lastVolumeData[newLength - 1] = priceChange.LastSize;
+//    //  syntheticData[newLength - 1] = priceChange.Synthetic;
+
+//    //  m_dateTimeData = dateTimeData;
+//    //  m_openData = openData;
+//    //  m_highData = highData;
+//    //  m_lowData = lowData;
+//    //  m_closeData = closeData;
+//    //  m_volumeData = volumeData;
+//    //  m_bidPriceData = bidPriceData;
+//    //  m_bidVolumeData = bidVolumeData;
+//    //  m_askPriceData = askPriceData;
+//    //  m_askVolumeData = askVolumeData;
+//    //  m_lastPriceData = lastPriceData;
+//    //  m_lastVolumeData = lastVolumeData;
+//    //  m_syntheticData = syntheticData;
+
+//    //  m_dateTime.Data = m_dateTimeData;
+//    //  m_open.Data = m_openData;
+//    //  m_high.Data = m_highData;
+//    //  m_low.Data = m_lowData;
+//    //  m_close.Data = m_closeData;
+//    //  m_volume.Data = m_volumeData;
+//    //  m_bidPrice.Data = m_bidPriceData;
+//    //  m_bidVolume.Data = m_bidVolumeData;
+//    //  m_askPrice.Data = m_askPriceData;
+//    //  m_askVolume.Data = m_askVolumeData;
+//    //  m_lastPrice.Data = m_lastPriceData;
+//    //  m_lastVolume.Data = m_lastVolumeData;
+//    //  m_synthetic.Data = m_syntheticData;
+//    //}
+
+//    ////TBD: This is pretty expensive to do, might need to optimize this a bit.
+//    //private void removeFromBuffers(int i)
+//    //{
+//    //  long newLength = m_dateTimeData.Length - 1;
+//    //  DateTime[] dateTimeData = new DateTime[newLength];
+//    //  double[] openData = new double[newLength];
+//    //  double[] highData = new double[newLength];
+//    //  double[] lowData = new double[newLength];
+//    //  double[] closeData = new double[newLength];
+//    //  long[] volumeData = new long[newLength];
+//    //  double[] bidPriceData = new double[newLength];
+//    //  long[] bidVolumeData = new long[newLength];
+//    //  double[] askPriceData = new double[newLength];
+//    //  long[] askVolumeData = new long[newLength];
+//    //  double[] lastPriceData = new double[newLength];
+//    //  long[] lastVolumeData = new long[newLength];
+//    //  bool[] syntheticData = new bool[newLength];
+
+//    //  int k = 0;
+//    //  for (int j = 0; j < m_dateTimeData.Count(); j++)
+//    //  {
+//    //    if (j == i) continue;
+//    //    openData[k] = m_openData[j];
+//    //    highData[k] = m_highData[j];
+//    //    lowData[k] = m_lowData[j];
+//    //    closeData[k] = m_closeData[j];
+//    //    volumeData[k] = m_volumeData[j];
+//    //    bidPriceData[k] = m_bidPriceData[j];
+//    //    bidVolumeData[k] = m_bidVolumeData[j];
+//    //    askPriceData[k] = m_askPriceData[j];
+//    //    askVolumeData[k] = m_askVolumeData[j];
+//    //    lastPriceData[k] = m_lastPriceData[j];
+//    //    lastVolumeData[k] = m_lastVolumeData[j];
+//    //    syntheticData[k] = m_syntheticData[j];
+//    //    k++;
+//    //  }
+
+//    //  m_openData = openData;
+//    //  m_highData = highData;
+//    //  m_lowData = lowData;
+//    //  m_closeData = closeData;
+//    //  m_volumeData = volumeData;
+//    //  m_bidPriceData = bidPriceData;
+//    //  m_bidVolumeData = bidVolumeData;
+//    //  m_askPriceData = askPriceData;
+//    //  m_askVolumeData = askVolumeData;
+//    //  m_lastPriceData = lastPriceData;
+//    //  m_lastVolumeData = lastVolumeData;
+//    //  m_syntheticData = syntheticData;
+
+//    //  m_dateTime.Data = m_dateTimeData;
+//    //  m_open.Data = m_openData;
+//    //  m_high.Data = m_highData;
+//    //  m_low.Data = m_lowData;
+//    //  m_close.Data = m_closeData;
+//    //  m_volume.Data = m_volumeData;
+//    //  m_bidPrice.Data = m_bidPriceData;
+//    //  m_bidVolume.Data = m_bidVolumeData;
+//    //  m_askPrice.Data = m_askPriceData;
+//    //  m_askVolume.Data = m_askVolumeData;
+//    //  m_lastPrice.Data = m_lastPriceData;
+//    //  m_lastVolume.Data = m_lastVolumeData;
+//    //  m_synthetic.Data = m_syntheticData;
+//    //}
+
+//    //private void removeFromBuffers(int from, int to)
+//    //{
+//    //  long newLength = m_dateTimeData.Length - (to - from);
+//    //  DateTime[] dateTimeData = new DateTime[newLength];
+//    //  double[] openData = new double[newLength];
+//    //  double[] highData = new double[newLength];
+//    //  double[] lowData = new double[newLength];
+//    //  double[] closeData = new double[newLength];
+//    //  long[] volumeData = new long[newLength];
+//    //  double[] bidPriceData = new double[newLength];
+//    //  long[] bidVolumeData = new long[newLength];
+//    //  double[] askPriceData = new double[newLength];
+//    //  long[] askVolumeData = new long[newLength];
+//    //  double[] lastPriceData = new double[newLength];
+//    //  long[] lastVolumeData = new long[newLength];
+//    //  bool[] syntheticData = new bool[newLength];
+
+//    //  int k = 0;
+//    //  for (int j = 0; j < m_dateTimeData.Count(); j++)
+//    //  {
+//    //    if (j >= from && j <= to) continue;
+//    //    openData[k] = m_openData[j];
+//    //    highData[k] = m_highData[j];
+//    //    lowData[k] = m_lowData[j];
+//    //    closeData[k] = m_closeData[j];
+//    //    volumeData[k] = m_volumeData[j];
+//    //    bidPriceData[k] = m_bidPriceData[j];
+//    //    bidVolumeData[k] = m_bidVolumeData[j];
+//    //    askPriceData[k] = m_askPriceData[j];
+//    //    askVolumeData[k] = m_askVolumeData[j];
+//    //    lastPriceData[k] = m_lastPriceData[j];
+//    //    lastVolumeData[k] = m_lastVolumeData[j];
+//    //    syntheticData[k] = m_syntheticData[j];
+//    //    k++;
+//    //  }
+
+//    //  m_openData = openData;
+//    //  m_highData = highData;
+//    //  m_lowData = lowData;
+//    //  m_closeData = closeData;
+//    //  m_volumeData = volumeData;
+//    //  m_bidPriceData = bidPriceData;
+//    //  m_bidVolumeData = bidVolumeData;
+//    //  m_askPriceData = askPriceData;
+//    //  m_askVolumeData = askVolumeData;
+//    //  m_lastPriceData = lastPriceData;
+//    //  m_lastVolumeData = lastVolumeData;
+//    //  m_syntheticData = syntheticData;
+
+//    //  m_dateTime.Data = m_dateTimeData;
+//    //  m_open.Data = m_openData;
+//    //  m_high.Data = m_highData;
+//    //  m_low.Data = m_lowData;
+//    //  m_close.Data = m_closeData;
+//    //  m_volume.Data = m_volumeData;
+//    //  m_bidPrice.Data = m_bidPriceData;
+//    //  m_bidVolume.Data = m_bidVolumeData;
+//    //  m_askPrice.Data = m_askPriceData;
+//    //  m_askVolume.Data = m_askVolumeData;
+//    //  m_lastPrice.Data = m_lastPriceData;
+//    //  m_lastVolume.Data = m_lastVolumeData;
+//    //  m_synthetic.Data = m_syntheticData;
+//    //}
+
+
 
   }
 }

@@ -13,7 +13,7 @@
   /// Interface to be supported by data feeds. It observers the data manager price changes, potentially modifies them based on the feed attributes
   /// and then propagates them to the subscribers - so it's both an observer and an observable.
   /// </summary>
-  public interface IDataFeed : Common.IObserver<PriceChange>, Common.IObservable<PriceChange>, IDisposable
+  public interface IDataFeed : IDisposable
   { 
     //constants
 
@@ -28,7 +28,7 @@
 
 
     //properties
-    IInstrument Instrument { get; }
+    Instrument Instrument { get; }
     Resolution Resolution { get; }
     DateTime From { get; }
     DateTime To { get; }

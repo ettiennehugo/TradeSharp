@@ -1,6 +1,6 @@
 {
   "General": {
-    "CultureFallback": "en-US, fr-FR",
+    "CultureFallback": "en-US",
     "TimeZone": "Local",
     "DataStore": {
       "Typename": "TradeSharp.Data.SqliteDataStore,TradeSharp.Data.dll",

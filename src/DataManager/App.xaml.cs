@@ -1,41 +1,25 @@
 ﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Microsoft.Extensions.Hosting;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using TradeSharp.Common;
 using TradeSharp.Data;
+using TradeSharp.CoreUI.Services;
+using TradeSharp.WinDataManager.Services;
+using TradeSharp.WinDataManager.ViewModels;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using System.Security.AccessControl;
-
+using TradeSharp.CoreUI.ViewModels;
+using TradeSharp.CoreUI.Repositories;
+using Microsoft.UI.Xaml.Controls;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace DataManager
+namespace TradeSharp.WinDataManager
 {
   /// <summary>
-  /// Provides application-specific behavior to supplement the default Application class.
+  /// Creates the default application with the required services for the data manager.
   /// </summary>
   public partial class App : Application
   {
-
     //constants
 
 
@@ -65,36 +49,30 @@ namespace DataManager
       m_window.Activate();
     }
 
-
     //properties
-    public IHost ServiceHost { get; private set; }
+
 
     //methods
     private void registerServices()
     {
-      string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException(string.Format(TradeSharp.Common.Resources.HomeDirectoryMissing, Constants.TradeSharpHome));
-      string configDir = string.Format("{0}\\{1}", tradeSharpHome, Constants.ConfigurationDir);
-
-      ServiceHost = Host.CreateDefaultBuilder()
-          .ConfigureAppConfiguration(config =>
-          {
-            config.SetBasePath(configDir);
-            config.AddJsonFile(Constants.ConfigurationFile);
-          }).Build();
-
-
-//          .ConfigureLogging(logging =>
-//          {
-//#if DEBUG
-//            logging.AddDebug();
-//#endif
-//          })
-//          .ConfigureServices(services =>
-//          {
-//            services.AddSingleton<IConfigurationService, ConfigurationService>();
-//            services.AddSingleton<IDataStoreService, SqliteDataStoreService>();    //Sqlite currently the only supported data store, if this changes we need to base this off configuration
-//            services.AddSingleton<IDataManagerService, DataManagerService>();
-//          }).Build();
+      Ioc.Default.ConfigureServices(
+        new ServiceCollection()
+          .AddSingleton<IConfigurationService, ConfigurationService>()
+          .AddSingleton<IDataStoreService, SqliteDataStoreService>()    //Sqlite is currently the only supported data store, if this changes we need to base this off configuration and add the services dynamically`
+          .AddSingleton<IDialogService, DialogService>()
+          .AddSingleton<INavigationService, NavigationService>()
+          .AddSingleton<InitNavigationService>()
+          .AddScoped<MainWindowViewModel>()
+          .AddScoped<ICountryRepository, CountryRepository>()
+          .AddScoped<IHolidayRepository, HolidayRepository>()
+          .AddScoped<IItemsService<Country>, CountryService>()
+          .AddScoped<IItemsService<Holiday>, HolidayService>()
+          .AddScoped<CountryViewModel>()
+          .AddScoped<CountryItemViewModel>()
+          .AddScoped<HolidayViewModel>()
+          .AddScoped<HolidayItemViewModel>()
+          .BuildServiceProvider()
+      );
     }
   }
 }

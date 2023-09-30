@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TradeSharp.Data
 {
+  /// This file defines the basic interface to be maintained by data services used to store data for the trading system.
 
+  /// <summary>
+  /// Price data types to return for price queries.
+  /// </summary>
   public enum PriceDataType
   {
     Actual,
@@ -14,6 +19,480 @@ namespace TradeSharp.Data
     Both
   }
 
+  /// <summary>
+  /// Type of a tradeable instrument.
+  /// </summary>
+  public enum InstrumentType
+  {
+    None = 0,   //only used for initialization
+    Stock,
+    Forex,
+    Crypto,
+    Future,
+    Option,
+  }
+
+  /// <summary>
+  /// Encapsualtes the supported categories of fundamentals that can be associated with a specific tradeable instrument. E.g. fundamentals for
+  /// Forex and futures would be based on country specific economic indicators/fundamental factors like GDP while a stock would be based on
+  /// company specific fundamental factors like revenue.
+  /// </summary>
+  public enum FundamentalCategory
+  {
+    None,
+    Country,
+    Instrument,
+  }
+
+  /// <summary>
+  /// Encapsulates the release interval for fundamental data.
+  /// </summary>
+  public enum FundamentalReleaseInterval
+  {
+    Unknown,
+    Daily,
+    Weekly,
+    Monthly,
+    Quarterly,
+  }
+
+  /// <summary>
+  /// Storage class for country data.
+  /// </summary>
+  public partial class Country : ObservableObject, IEquatable<Country>
+  {
+    public Country(Guid id, string isoCode)
+    {
+      Id = id;
+      IsoCode = isoCode;
+    }
+
+    [ObservableProperty] private Guid m_id;
+    [ObservableProperty] private string m_isoCode;
+    bool IEquatable<Country>.Equals(Country? country)
+    {
+      return country != null && IsoCode == country.IsoCode;
+    }
+
+    public override int GetHashCode()
+    {
+      return HashCode.Combine(Id, IsoCode);
+    }
+  }
+
+  /// <summary>
+  /// Storage class for country/exchange holidays.
+  /// </summary>
+  public partial class Holiday : ObservableObject, IEquatable<Holiday>
+  {
+    public Holiday(Guid id, Guid parentId, string name, HolidayType type, Months month, int dayOfMonth, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth, MoveWeekendHoliday moveWeekendHoliday)
+    {
+      Type = type;
+      Id = id;
+      ParentId = parentId;
+      Name = name;
+      Month = month;
+      DayOfMonth = dayOfMonth;
+      DayOfWeek = dayOfWeek;
+      WeekOfMonth = weekOfMonth;
+      MoveWeekendHoliday = moveWeekendHoliday;
+    }
+
+    [ObservableProperty] private Guid m_id;
+    [ObservableProperty] private Guid m_parentId;
+    [ObservableProperty] private HolidayType m_type;
+    [ObservableProperty] private string m_name;
+    [ObservableProperty] private Months m_month;
+    [ObservableProperty] private int m_dayOfMonth;
+    [ObservableProperty] private DayOfWeek m_dayOfWeek;
+    [ObservableProperty] private WeekOfMonth m_weekOfMonth;
+    [ObservableProperty] private MoveWeekendHoliday m_moveWeekendHoliday;
+
+    public DateOnly ForYear(int year)
+    {
+      switch (Type)
+      {
+        case HolidayType.DayOfMonth:
+          return getDayOfMonth(year, Month, DayOfMonth);
+        case HolidayType.DayOfWeek:
+          return getNthDayOfNthWeek(year, Month, DayOfWeek, WeekOfMonth);
+        default:
+          throw new NotImplementedException("Unknown holiday type.");
+      }
+    }
+
+    /// <summary>
+    /// Adjust computed holiday if it is required for holidays falling over the weekend. 
+    /// </summary>
+    protected DateTime adjustForWeekend(DateTime dateTime)
+    {
+      DateTime result = dateTime;
+
+      if (MoveWeekendHoliday != MoveWeekendHoliday.DontAdjust)
+      {
+        switch (result.DayOfWeek)
+        {
+          //TBD: This will not always work correctly if you have holidays close together, it will move the holiday to the previsou Friday or next Monday
+          //     but if those days are also holidays then it will be incorrect. For now this solution will do, to fix it you'd need to have the notion
+          //     of a holiday calendar that is a parent of this holiday object and this holiday object can then refer to it to get the other holidays to
+          //     adjust itself correctly.
+          case DayOfWeek.Saturday:
+            if (MoveWeekendHoliday == MoveWeekendHoliday.PreviousBusinessDay)
+              result = result.AddDays(-1);
+            else //NextBusinessDay
+              result = result.AddDays(2);
+            break;
+          case DayOfWeek.Sunday:
+            if (MoveWeekendHoliday == MoveWeekendHoliday.PreviousBusinessDay)
+              result = result.AddDays(-2);
+            else //NextMonday
+              result = result.AddDays(1);
+            break;
+        }
+      }
+
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the specific day of the month adjusted for weekends.
+    /// </summary>
+    protected DateOnly getDayOfMonth(int year, Months month, int day)
+    {
+      DateTime result = new DateTime(year, (int)month, day);
+      result = adjustForWeekend(result);
+      return DateOnly.FromDateTime(result);
+    }
+
+    /// <summary>
+    /// Specify which day of which week of a month and this function will get the date 
+    /// this function uses the month and year of the date provided
+    /// </summary>
+    protected DateOnly getNthDayOfNthWeek(int year, Months month, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth)
+    {
+      DateTime firstOfMonth = new DateTime(year, (int)month, 1); //get first date of month
+      DateTime result = firstOfMonth.AddDays(6 - (double)firstOfMonth.AddDays(-((int)dayOfWeek + 1)).DayOfWeek); //get first dayOfWeek of month
+      result = result.AddDays(((int)weekOfMonth - 1) * 7);  //get the correct week
+      if (result >= firstOfMonth.AddMonths(1)) result = result.AddDays(-7);   //if day is past end of month then adjust backwards a week
+      result = adjustForWeekend(result);
+      return DateOnly.FromDateTime(result);
+    }
+
+    public bool Equals(Holiday? other)
+    {
+      //compare most fields but we don't care about the name
+      return other != null &&
+             other.ParentId == ParentId &&
+             other.Month == Month &&
+             other.DayOfMonth == DayOfMonth &&
+             other.DayOfWeek == DayOfWeek &&
+             other.WeekOfMonth == WeekOfMonth &&
+             other.MoveWeekendHoliday == MoveWeekendHoliday;
+    }
+  }
+
+  /// <summary>
+  /// Storage class for exchange data.
+  /// </summary>
+  public partial class Exchange : ObservableObject, IEquatable<Exchange>
+  {
+    public Exchange(Guid id, Guid countryId, string name, TimeZoneInfo timeZone)
+    {
+      Id = id;
+      CountryId = countryId;
+      Name = name;
+      TimeZone = timeZone;
+    }
+
+    [ObservableProperty] private Guid m_id;
+    [ObservableProperty] private Guid m_countryId;
+    [ObservableProperty] private string m_name;
+    [ObservableProperty] private TimeZoneInfo m_timeZone;
+
+    public bool Equals(Exchange? other)
+    {
+      return other != null && other.Id == Id;
+    }
+  }
+
+  /// <summary>
+  /// Storage class for exchange session data.
+  /// </summary>
+  public partial class Session : ObservableObject, IEquatable<Session>
+  {
+    public Session(Guid id, string name, Guid exchangeId, DayOfWeek dayOfWeek, TimeOnly start, TimeOnly end)
+    {
+      Id = id;
+      Name = name;
+      ExchangeId = exchangeId;
+      DayOfWeek = dayOfWeek;
+      Start = start;
+      End = end;
+    }
+
+    [ObservableProperty] private Guid m_id;
+    [ObservableProperty] private string m_name;
+    [ObservableProperty] private Guid m_exchangeId;
+    [ObservableProperty] private DayOfWeek m_dayOfWeek;
+    [ObservableProperty] private TimeOnly m_start;
+    [ObservableProperty] private TimeOnly m_end;
+
+    public bool Equals(Session? other)
+    {
+      return other != null && other.Id == Id;
+    }
+  }
+
+  /// <summary>
+  /// Storage base class for instrument data.
+  /// </summary>
+  public partial class Instrument : ObservableObject, IEquatable<Instrument>
+  {
+    public Instrument(Guid id, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, IList<Guid> instrumentGroupId, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds)
+    {
+      Id = id;
+      Type = type;
+      Ticker = ticker;
+      Name = name;
+      Description = description;
+      InceptionDate = inceptionDate;
+      InstrumentGroupIds = instrumentGroupId;
+      PrimaryExchangeId = primaryExhangeId;
+      SecondaryExchangeIds = secondaryExchangeIds;
+    }
+
+    [ObservableProperty] private Guid m_id;
+    [ObservableProperty] private InstrumentType m_type;
+    [ObservableProperty] private string m_ticker;
+    [ObservableProperty] private string m_name;
+    [ObservableProperty] private string m_description;
+    [ObservableProperty] private DateTime m_inceptionDate;
+    [ObservableProperty] private IList<Guid> m_InstrumentGroupIds;
+    [ObservableProperty] private Guid m_primaryExchangeId;
+    [ObservableProperty] private IList<Guid> m_secondaryExchangeIds;
+
+    public bool Equals(Instrument? other)
+    {
+      return other != null && other.Id == Id;
+    }
+  }
+
+  /// <summary>
+  /// Storage class for general instrument grouping definition.
+  /// </summary>
+  public partial class InstrumentGroup : ObservableObject, IEquatable<InstrumentGroup>
+  {
+    public static Guid InstrumentGroupRoot = Guid.Empty;
+
+    public InstrumentGroup(Guid id, Guid parentId, string name, string description, IList<Guid> instruments)
+    {
+      Id = id;
+      ParentId = parentId;
+      Name = name;
+      Description = description;
+      Instruments = instruments;
+    }
+
+    [ObservableProperty] private Guid m_id;
+    [ObservableProperty] private Guid m_parentId;
+    [ObservableProperty] private string m_name;
+    [ObservableProperty] private string m_description;
+    [ObservableProperty] private IList<Guid> m_instruments;
+
+    bool IEquatable<InstrumentGroup>.Equals(InstrumentGroup? other)
+    {
+      return other != null && other.Id == Id;
+    }
+  }
+
+  /// <summary>
+  /// Storage structure for fundamental definitions.
+  /// </summary>
+  public partial class Fundamental : ObservableObject, IEquatable<Fundamental>
+  {
+    public Fundamental(Guid id, string name, string description, FundamentalCategory category, FundamentalReleaseInterval releaseInterval)
+    {
+      Id = id;
+      Name = name;
+      Description = description;
+      Category = category;
+      ReleaseInterval = releaseInterval;
+    }
+
+    [ObservableProperty] private Guid m_id;
+    [ObservableProperty] private string m_name;
+    [ObservableProperty] private string m_description;
+    [ObservableProperty] private FundamentalCategory m_category;
+    [ObservableProperty] private FundamentalReleaseInterval m_releaseInterval;
+
+    public bool Equals(Fundamental? other)
+    {
+      return other != null && other.Id == Id;
+    }
+  }
+
+  /// <summary>
+  /// Storage structure for country fundamental values.
+  /// </summary>
+  public partial class CountryFundamental : ObservableObject, IEquatable<CountryFundamental>
+  {
+    public CountryFundamental(string dataProviderName, Guid associationId, Guid fundamentalId, Guid countryId)
+    {
+      DataProviderName = dataProviderName;
+      AssociationId = associationId;
+      FundamentalId = fundamentalId;
+      CountryId = countryId;
+      Values = new List<Tuple<DateTime, double>>();
+    }
+
+    [ObservableProperty] private string m_DataProviderName;
+    [ObservableProperty] private Guid m_AssociationId;
+    [ObservableProperty] private Guid m_FundamentalId;
+    [ObservableProperty] private Guid m_CountryId;
+    [ObservableProperty] private IList<Tuple<DateTime, double>> m_values;
+
+    public void AddValue(DateTime dateTime, double value) { Values.Add(new Tuple<DateTime, double>(dateTime, value)); }
+
+    public bool Equals(CountryFundamental? other)
+    {
+      return other != null && other.AssociationId == AssociationId;
+    }
+  }
+
+  /// <summary>
+  /// Storage structure for instrument fundamental values.
+  /// </summary>
+  public partial class InstrumentFundamental : ObservableObject, IEquatable<InstrumentFundamental>
+  {
+    public InstrumentFundamental(string dataProviderName, Guid associationId, Guid fundamentalId, Guid instrumentId)
+    {
+      DataProviderName = dataProviderName;
+      AssociationId = associationId;
+      FundamentalId = fundamentalId;
+      InstrumentId = instrumentId;
+      Values = new List<Tuple<DateTime, double>>();
+    }
+
+    [ObservableProperty] private string m_DataProviderName;
+    [ObservableProperty] private Guid m_AssociationId;
+    [ObservableProperty] private Guid m_FundamentalId;
+    [ObservableProperty] private Guid m_InstrumentId;
+    [ObservableProperty] private IList<Tuple<DateTime, double>> m_values;
+
+    public void AddValue(DateTime dateTime, double value) { Values.Add(new Tuple<DateTime, double>(dateTime, value)); }
+
+    public bool Equals(InstrumentFundamental? other)
+    {
+      return other != null && other.AssociationId == AssociationId;
+    }
+  }
+
+
+  //TBD: Determine whether it is necessary to make these objects observable since it might become super slow.
+
+  /// <summary>
+  /// Represents the data cache around price bar data.
+  /// </summary>
+  public class BarData
+  {
+    public BarData(int count)
+    {
+      Count = count;
+      DateTime = new DateTime[count];
+      Open = new double[count];
+      High = new double[count];
+      Low = new double[count];
+      Close = new double[count];
+      Volume = new long[count];
+      Synthetic = new bool[count];
+    }
+
+    public int Count;
+    public IList<DateTime> DateTime;
+    public IList<double> Open;
+    public IList<double> High;
+    public IList<double> Low;
+    public IList<double> Close;
+    public IList<long> Volume;
+    public IList<bool> Synthetic;
+  }
+
+  /// <summary>
+  /// Represents the data cache around level 1 market data (tick data).
+  /// NOTE: The underlying List type could become a problem if huge amounts of tick data is processed per instrument, in that
+  ///       case the underlying storage structure would need to be adjusted - would probably need some custom memory implementation
+  ///       that implements the IList interface.
+  /// </summary>
+  public class Level1Data
+
+  {
+    public Level1Data(int count)
+    {
+      Count = count;
+      DateTime = new DateTime[count];
+      Bid = new double[count];
+      BidSize = new long[count];
+      Ask = new double[count];
+      AskSize = new long[count];
+      Last = new double[count];
+      LastSize = new long[count];
+      Synthetic = new bool[count];
+    }
+
+    public int Count;
+    public IList<DateTime> DateTime;
+    public IList<double> Bid;
+    public IList<long> BidSize;
+    public IList<double> Ask;
+    public IList<long> AskSize;
+    public IList<double> Last;
+    public IList<long> LastSize;
+    public IList<bool> Synthetic;
+  }
+
+  /// <summary>
+  /// Generic cache entry used by the DataManager to store loaded/cached data.
+  /// </summary>
+  public class DataCache
+  {
+    public DataCache(string dataProviderName, Guid instrumentId, Resolution resolution, PriceDataType priceDataType, DateTime from, DateTime to, int count)
+    {
+      DataProviderName = dataProviderName;
+      InstrumentId = instrumentId;
+      Resolution = resolution;
+      PriceDataType = priceDataType;
+      From = from;
+      To = to;
+      Count = count;
+      Resolution = resolution;
+      Data = default!;  //null forgiving, will create data below
+
+      switch (Resolution)
+      {
+        //candlestick data
+        case Resolution.Minute:
+        case Resolution.Hour:
+        case Resolution.Day:
+        case Resolution.Week:
+        case Resolution.Month:
+          Data = new BarData(count);
+          break;
+        //tick data
+        case Resolution.Level1:
+          Data = new Level1Data(count);
+          break;
+      }
+    }
+
+    public string DataProviderName { get; }
+    public Guid InstrumentId { get; }
+    public Resolution Resolution { get; }
+    public PriceDataType PriceDataType { get; }
+    public DateTime From { get; }
+    public DateTime To { get; }
+    public int Count { get; set; }
+    public object Data { get; set; } //data stored based on the Resolution field
+  }
 
   /// <summary>
   /// Interface to be implemented by objects used to store data. The general design is a Bridge pattern where the implementing class
@@ -33,351 +512,7 @@ namespace TradeSharp.Data
 
 
     //types
-    /// <summary>
-    /// Language specific texts, all ISO language codes are three letter codes.
-    /// </summary>
-    public struct Text
-    {
-      public Text(Guid id, string isoLang, string value)
-      {
-        Id = id;
-        IsoLang = isoLang;
-        Value = value;
-      }
 
-      public Guid Id { get; }
-      public string IsoLang { get; }
-      public string Value { get; }
-    }
-
-    /// <summary>
-    /// Storage class for country data.
-    /// </summary>
-    public struct Country
-    {
-      public Country(Guid id, string isoCode)
-      {
-        Id = id;
-        IsoCode = isoCode;
-      }
-
-      public Guid Id { get; }
-      public string IsoCode { get; }
-    }
-
-    /// <summary>
-    /// Storage class for country/exchange holidays.
-    /// </summary>
-    public struct Holiday
-    {
-      public Holiday(Guid id, Guid parentId, Guid nameTextId, string name, HolidayType type, Months month, int dayOfMonth, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth, MoveWeekendHoliday moveWeekendHoliday)
-      {
-        Type = type;
-        Id = id;
-        ParentId = parentId;
-        NameTextId = nameTextId;
-        Name = name;
-        Month = month;
-        DayOfMonth = dayOfMonth;
-        DayOfWeek = dayOfWeek;
-        WeekOfMonth = weekOfMonth;
-        MoveWeekendHoliday = moveWeekendHoliday;
-      }
-
-      public Guid Id { get; }
-      public Guid ParentId { get; }
-      public HolidayType Type { get; }
-      public Guid NameTextId { get; }
-      public string Name { get; }
-      public Months Month { get; }
-      public int DayOfMonth { get; }
-      public DayOfWeek DayOfWeek { get; }
-      public WeekOfMonth WeekOfMonth { get; }
-      public MoveWeekendHoliday MoveWeekendHoliday { get; }
-    }
-
-    /// <summary>
-    /// Storage class for exchange data.
-    /// </summary>
-    public struct Exchange
-    {
-      public Exchange(Guid id, Guid countryId, Guid nameTextId, string name, TimeZoneInfo timeZone)
-      {
-        Id = id;
-        CountryId = countryId;
-        NameTextId = nameTextId;
-        Name = name;
-        TimeZone = timeZone;
-      }
-
-      public Guid Id { get; }
-      public Guid CountryId { get; }
-      public Guid NameTextId { get; }
-      public string Name { get; }
-      public TimeZoneInfo TimeZone { get; }
-    }
-
-    /// <summary>
-    /// Storage class for exchange session data.
-    /// </summary>
-    public struct Session
-    {
-      public Session(Guid id, Guid nameTextId, string name, Guid exchangeId, DayOfWeek dayOfWeek, TimeOnly start, TimeOnly end)
-      {
-        Id = id;
-        NameTextId = nameTextId;
-        Name = name;
-        ExchangeId = exchangeId;
-        DayOfWeek = dayOfWeek;
-        Start = start;
-        End = end;
-      }
-
-      public Guid Id { get; }
-      public Guid NameTextId { get; }
-      public string Name { get; }
-      public Guid ExchangeId { get; }
-      public DayOfWeek DayOfWeek { get; }
-      public TimeOnly Start { get; }
-      public TimeOnly End { get; }
-    }
-
-    /// <summary>
-    /// Storage base class for instrument data.
-    /// </summary>
-    public struct Instrument
-    {
-      public Instrument(Guid id, InstrumentType type, string ticker, Guid nameTextId, string name, Guid descriptionTextId, string description, DateTime inceptionDate, IList<Guid> instrumentGroupId, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds)
-      {
-        Id = id;
-        Type = type;
-        Ticker = ticker;
-        NameTextId = nameTextId;
-        Name = name;
-        DescriptionTextId = descriptionTextId;
-        Description = description;
-        InceptionDate = inceptionDate;
-        InstrumentGroupIds = instrumentGroupId;
-        PrimaryExchangeId = primaryExhangeId;
-        SecondaryExchangeIds = secondaryExchangeIds;
-      }
-
-      public Guid Id { get; }
-      public InstrumentType Type { get; }
-      public string Ticker { get; }
-      public Guid NameTextId { get; }
-      public string Name { get; }
-      public Guid DescriptionTextId { get; }
-      public string Description { get; }
-      public DateTime InceptionDate { get; }
-      public IList<Guid> InstrumentGroupIds { get; }
-      public Guid PrimaryExchangeId { get; }
-      public IList<Guid> SecondaryExchangeIds { get; }
-    }
-
-    /// <summary>
-    /// Storage class for general instrument grouping definition.
-    /// </summary>
-    public struct InstrumentGroup
-    {
-      public InstrumentGroup(Guid id, Guid parentId, Guid nameTextId, string name, Guid descriptionTextId, string description, IList<Guid> instruments)
-      {
-        Id = id;
-        ParentId = parentId;
-        NameTextId = nameTextId;
-        Name = name;
-        DescriptionTextId = descriptionTextId;
-        Description = description;
-        Instruments = instruments;
-      }
-
-      public Guid Id { get; }
-      public Guid ParentId { get; }
-      public Guid NameTextId { get; }
-      public string Name { get; }
-      public Guid DescriptionTextId { get; }
-      public string Description { get; }
-      public IList<Guid> Instruments { get; }
-    }
-
-    /// <summary>
-    /// Storage structure for fundamental definitions.
-    /// </summary>
-    public struct Fundamental
-    {
-      public Fundamental(Guid id, Guid nameTextId, string name, Guid descriptionTextId, string description, FundamentalCategory category, FundamentalReleaseInterval releaseInterval)
-      {
-        Id = id;
-        Name = name;
-        Description = description;
-        NameTextId = nameTextId;
-        DescriptionTextId = descriptionTextId;
-        Category = category;
-        ReleaseInterval = releaseInterval;
-      }
-
-      public Guid Id { get; }
-      public string Name { get; }
-      public Guid NameTextId { get; }
-      public string Description { get; }
-      public Guid DescriptionTextId { get; }
-      public FundamentalCategory Category { get; }
-      public FundamentalReleaseInterval ReleaseInterval { get; }
-    }
-
-    /// <summary>
-    /// Storage structure for country fundamental values.
-    /// </summary>
-    public struct CountryFundamental
-    {
-      public CountryFundamental(string dataProviderName, Guid associationId, Guid fundamentalId, Guid countryId)
-      {
-        DataProviderName = dataProviderName;
-        AssociationId = associationId;
-        FundamentalId = fundamentalId;
-        CountryId = countryId;
-        Values = new List<Tuple<DateTime, double>>();
-      }
-
-      public CountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId) : this(dataProviderName, Guid.Empty, fundamentalId, countryId) { }
-
-      public string DataProviderName { get; }
-      public Guid AssociationId { get; set; }
-      public Guid FundamentalId { get; }
-      public Guid CountryId { get; }
-      public IList<Tuple<DateTime, double>> Values { get; }
-
-      public void AddValue(DateTime dateTime, double value) { Values.Add(new Tuple<DateTime, double>(dateTime, value)); }
-    }
-
-    /// <summary>
-    /// Storage structure for instrument fundamental values.
-    /// </summary>
-    public struct InstrumentFundamental
-    {
-      public InstrumentFundamental(string dataProviderName, Guid associationId, Guid fundamentalId, Guid instrumentId)
-      {
-        DataProviderName = dataProviderName;
-        AssociationId = associationId;
-        FundamentalId = fundamentalId;
-        InstrumentId = instrumentId;
-        Values = new List<Tuple<DateTime, double>>();
-      }
-
-      public InstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId) : this(dataProviderName, Guid.Empty, fundamentalId, instrumentId) { }
-
-      public string DataProviderName { get; }
-      public Guid AssociationId { get; set; }
-      public Guid FundamentalId { get; }
-      public Guid InstrumentId { get; }
-      public IList<Tuple<DateTime, double>> Values { get; }
-
-      public void AddValue(DateTime dateTime, double value) { Values.Add(new Tuple<DateTime, double>(dateTime, value)); }
-    }
-
-    /// <summary>
-    /// Represents the data cache around price bar data.
-    /// </summary>
-    public struct BarData
-    {
-      public BarData(int count)
-      {
-        Count = count;
-        DateTime = new DateTime[count];
-        Open = new double[count];
-        High = new double[count];
-        Low = new double[count];
-        Close = new double[count];
-        Volume = new long[count];
-        Synthetic = new bool[count];
-      }
-
-      public int Count;
-      public IList<DateTime> DateTime;
-      public IList<double> Open;
-      public IList<double> High;
-      public IList<double> Low;
-      public IList<double> Close;
-      public IList<long> Volume;
-      public IList<bool> Synthetic;
-    }
-
-    /// <summary>
-    /// Represents the data cache around level 1 market data (tick data).
-    /// NOTE: The underlying List type could become a problem if huge amounts of tick data is processed per instrument, in that
-    ///       case the underlying storage structure would need to be adjusted - would probably need some custom memory implementation
-    ///       that implements the IList interface.
-    /// </summary>
-    public struct Level1Data
-
-    {
-      public Level1Data(int count)
-      {
-        Count = count;
-        DateTime = new DateTime[count];
-        Bid = new double[count];
-        BidSize = new long[count];
-        Ask = new double[count];
-        AskSize = new long[count];
-        Last = new double[count];
-        LastSize = new long[count];
-        Synthetic = new bool[count];
-      }
-
-      public int Count;
-      public IList<DateTime> DateTime;
-      public IList<double> Bid;
-      public IList<long> BidSize;
-      public IList<double> Ask;
-      public IList<long> AskSize;
-      public IList<double> Last;
-      public IList<long> LastSize;
-      public IList<bool> Synthetic;
-    }
-
-    /// <summary>
-    /// Generic cache entry used by the DataManager to store loaded/cached data.
-    /// </summary>
-    public struct DataCache
-    {
-      public DataCache(string dataProviderName, Guid instrumentId, Resolution resolution, PriceDataType priceDataType, DateTime from, DateTime to, int count)
-      {
-        DataProviderName = dataProviderName;
-        InstrumentId = instrumentId;
-        Resolution = resolution;
-        PriceDataType = priceDataType;
-        From = from;
-        To = to;
-        Count = count;
-        Resolution = resolution;
-        Data = default!;  //null forgiving, will create data below
-
-        switch (Resolution)
-        {
-          //candlestick data
-          case Resolution.Minute:
-          case Resolution.Hour:
-          case Resolution.Day:
-          case Resolution.Week:
-          case Resolution.Month:
-            Data = new BarData(count);
-            break;
-          //tick data
-          case Resolution.Level1:
-            Data = new Level1Data(count);
-            break;
-        }
-      }
-
-      public string DataProviderName { get; }
-      public Guid InstrumentId { get; }
-      public Resolution Resolution { get; }
-      public PriceDataType PriceDataType { get; }
-      public DateTime From { get; }
-      public DateTime To { get; }
-      public int Count { get; set; }
-      public object Data { get; set; } //data stored based on the Resolution field
-    }
 
     //attributes
 
@@ -396,87 +531,89 @@ namespace TradeSharp.Data
     void EndTransaction(bool success);
 
     /// <summary>
-    /// Creates a specific text in a given language and returns the guid identifier to identify it uniquely.
-    /// </summary>
-    public Guid CreateText(string isoLang, string text);
-
-    /// <summary>
-    /// Create/update a new country definition.
+    /// Country definition interface.
     /// </summary>
     public void CreateCountry(Country country);
+    public Country? GetCountry(Guid id);
+    public IList<Country> GetCountries();
+    public int DeleteCountry(Guid id);
 
     /// <summary>
-    /// Create/update a holiday associated with a given country based on a very specific day within a given month. 
-    /// </summary>
-    public void CreateHoliday(Holiday holiday);
-
-    /// <summary>
-    /// Create/update an PrimaryExchange definition within a given timezone.
+    /// Exchange definition interface.
     /// </summary>
     public void CreateExchange(Exchange exchange);
+    public Exchange? GetExchange(Guid id);
+    public IList<Exchange> GetExchanges();
+
+    //UPDATE??
+
+    public int DeleteExchange(Guid id);
+
+    /// <summary>
+    /// Country and exchange holiday inerface.
+    /// </summary>
+    public void CreateHoliday(Holiday holiday);
+    public Holiday? GetHoliday(Guid id);
+    public IList<Holiday> GetHolidays(Guid parentId);
+    public IList<Holiday> GetHolidays();
+    public void UpdateHoliday(Holiday holiday);
+    public int DeleteHoliday(Guid id);
 
     /// <summary>
     /// Create/update a trading session definition on a given PrimaryExchange.
     /// </summary>
     public void CreateSession(Session session);
+    public IList<Session> GetSessions();
+    public void UpdateSession(Guid id, DayOfWeek day, TimeOnly start, TimeOnly end);
+    public int DeleteSession(Guid id);
 
     /// <summary>
-    /// Create an instrument group definition.
+    /// Instrument group definition interface.
     /// </summary>
     public void CreateInstrumentGroup(InstrumentGroup instrumentGroup);
-
-    /// <summary>
-    /// Create/update an instrument being traded on a given PrimaryExchange (primary PrimaryExchange).
-    /// </summary>
-    public void CreateInstrument(Instrument instrument);
-
-    /// <summary>
-    /// Create/update an instrument to be listed on a secondary PrimaryExchange.
-    /// </summary>
-    public void CreateInstrument(Guid instrument, Guid exchange);
-
-    /// <summary>
-    /// Create/update a fundamental factor that can be used to measure the performance of a country/instrument at a given interval.
-    /// </summary>
-    public void CreateFundamental(Fundamental fundamental);
-
-    /// <summary>
-    /// Associate a given fundamental with a given country or instrument.
-    /// </summary>
-    public void CreateCountryFundamental(ref CountryFundamental fundamental);
-    public void CreateInstrumentFundamental(ref InstrumentFundamental fundamental);
-
-    /// <summary>
-    /// Add the given instrument to the instrument group.
-    /// </summary>
     public void CreateInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
-
-    /// <summary>
-    /// Create/update a text entry in the database for a given language text. 
-    /// </summary>
-    public void UpdateText(Guid id, string isoLang, string value);
-
-    /// <summary>
-    /// Updates the session information.
-    /// </summary>
-    public void UpdateSession(Guid id, DayOfWeek day, TimeOnly start, TimeOnly end);
-
-    /// <summary>
-    /// Updates the instrument information.
-    /// </summary>
-    public void UpdateInstrument(Guid id, Guid exchangeId, string ticker, DateTime inceptionDate);
-
-    /// <summary>
-    /// Create/update a fundamental factor value from a given DataProvider on a given date.
-    /// </summary>
-    public void UpdateCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime, double value);
-    public void UpdateInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime, double value);
-
-    /// <summary>
-    /// Update an instrument group definition.
-    /// </summary>
+    public IList<InstrumentGroup> GetInstrumentGroups();
+    public IList<Guid> GetInstrumentGroupInstruments(Guid instrumentGroupId);
     public void UpdateInstrumentGroup(Guid id, Guid parentId);
     public void UpdateInstrumentGroup(Guid id, string name, string description);
+    public void DeleteInstrumentGroup(Guid id);
+    public void DeleteInstrumentGroupChild(Guid parentId, Guid childId);
+    public void DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
+
+    /// <summary>
+    /// Instrument definition interface.
+    /// </summary>
+    public void CreateInstrument(Instrument instrument);
+    public void AddInstrumentToExchange(Guid instrument, Guid exchange);
+    public IList<Instrument> GetInstruments();
+    public IList<Instrument> GetInstruments(InstrumentType instrumentType);
+    public void UpdateInstrument(Guid id, Guid exchangeId, string ticker, DateTime inceptionDate);
+    public int DeleteInstrument(Guid id, string ticker);
+    public int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId);
+
+    /// <summary>
+    /// Fundamental definition interface.
+    /// </summary>
+    public void CreateFundamental(Fundamental fundamental);
+    public IList<Fundamental> GetFundamentals();
+
+    //UPDATE??
+
+    public int DeleteFundamental(Guid id);
+    public int DeleteFundamentalValues(Guid id);
+    public int DeleteFundamentalValues(string dataProviderName, Guid id);
+
+    public void CreateCountryFundamental(CountryFundamental fundamental);
+    public IList<CountryFundamental> GetCountryFundamentals(string dataProviderName);
+    public void UpdateCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime, double value);
+    public int DeleteCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId);
+    public int DeleteCountryFundamentalValue(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime);
+
+    public void CreateInstrumentFundamental(InstrumentFundamental fundamental);
+    public IList<InstrumentFundamental> GetInstrumentFundamentals(string dataProviderName);
+    public void UpdateInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime, double value);
+    public int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId);
+    public int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime);
 
     /// <summary>
     /// Create/update price data from a given DataProvider for a given instrument. Synthetic data that was generated can be set for a given instrument as well in the event that the specific
@@ -485,156 +622,8 @@ namespace TradeSharp.Data
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume, bool synthetic);
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, BarData bars);
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Level1Data bars);
-
-    /// <summary>
-    /// Delete text entries for a specific Id and optionally a specific langauge.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteText(Guid id);
-    public int DeleteText(Guid id, string isoLang);
-
-    /// <summary>
-    /// Delete a country definition.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteCountry(Guid id);
-
-    /// <summary>
-    /// Delete a holiday.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteHoliday(Guid id);
-
-    /// <summary>
-    /// Delete an exchange.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteExchange(Guid id);
-
-    /// <summary>
-    /// Delete a session from an exchange.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteSession(Guid id);
-
-    /// <summary>
-    /// Delete an instrument/stock/Forex definition and it's associated data.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteInstrument(Guid id, string ticker);
-
-    /// <summary>
-    /// Delete an instrument from a secondary PrimaryExchange.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId);
-
-    /// <summary>
-    /// Delete an instrument group definition.
-    /// </summary>
-    public void DeleteInstrumentGroup(Guid id);
-
-    /// <summary>
-    /// Remove child instrument group from a given parent instrument group.
-    /// </summary>
-    public void DeleteInstrumentGroupChild(Guid parentId, Guid childId);
-
-    /// <summary>
-    /// Delete the given instrument from the instrument group.
-    /// </summary>
-    public void DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
-
-    /// <summary>
-    /// Delete a fundamental defintion.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteFundamental(Guid id);
-
-    /// <summary>
-    /// Delete only the fundamental values associated with a given fundamental either for all the data providers or for a specific data provider.
-    /// </summary>
-    public int DeleteFundamentalValues(Guid id);
-    public int DeleteFundamentalValues(string dataProviderName, Guid id);
-
-    /// <summary>
-    /// Delete the fundamental values for a given fundamental and a given country/instrument.
-    /// </summary>
-    public int DeleteCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId);
-    public int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId);
-
-    /// <summary>
-    /// Delete a fundamental value for a specific data provider, given date and given country/instrument.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
-    public int DeleteCountryFundamentalValue(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime);
-    public int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime);
-
-    /// <summary>
-    /// Delete a specific price data.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
     public int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime, bool? synthetic = null);
-
-    /// <summary>
-    /// Delete a set of price data entries.
-    /// </summary>
-    /// <returns>Number of data rows/entries removed</returns>
     public int DeleteData(string dataProviderName, string ticker, Resolution? resolution = null, DateTime? from = null, DateTime? to = null, bool? synthetic = null);
-
-    /// <summary>
-    /// Get language texts.
-    /// </summary>
-    public IList<Text> GetTexts();
-    public IList<Text> GetTexts(string isoLang);
-    public string GetText(Guid id);
-    public string GetText(Guid id, string isoLang);
-
-    /// <summary>
-    /// Returns the set of defined countries.
-    /// </summary>
-    public IList<Country> GetCountries();
-
-    /// <summary>
-    /// Returns country and exchange holidays.
-    /// </summary>
-    public IList<Holiday> GetHolidays();
-
-    /// <summary>
-    /// Returns exchange definitions.
-    /// </summary>
-    public IList<Exchange> GetExchanges();
-
-    /// <summary>
-    /// Returns exchange session data.
-    /// </summary>
-    public IList<Session> GetSessions();
-
-    /// <summary>
-    /// Returns instrument related data, overload to return instruments of a specific type.
-    /// </summary>
-    public IList<Instrument> GetInstruments();
-    public IList<Instrument> GetInstruments(InstrumentType instrumentType);
-
-    /// <summary>
-    /// Returns country and company related fundamental definitions and values.
-    /// </summary>
-    public IList<Fundamental> GetFundamentals();
-    public IList<CountryFundamental> GetCountryFundamentals(string dataProviderName);
-    public IList<InstrumentFundamental> GetInstrumentFundamentals(string dataProviderName);
-
-    /// <summary>
-    /// Returns the set of defined instrument groups.
-    /// </summary>
-    public IList<InstrumentGroup> GetInstrumentGroups();
-
-    /// <summary>
-    /// Returns the set of instruments assigned to an instrument group.
-    /// </summary>
-    public IList<Guid> GetInstrumentGroupInstruments(Guid instrumentGroupId);
-
-    /// <summary>
-    /// Get the bar data from a given data providers tables.
-    /// </summary>
     public DataCache GetInstrumentData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);
 
   }

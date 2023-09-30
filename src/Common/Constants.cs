@@ -17,7 +17,6 @@ namespace TradeSharp.Common
     public const string TradeSharpHome = "TradeSharpHome";
     public const string ConfigurationDir = "config";
     public const string ConfigurationFile = "tradesharp.json";
-
     public const string DataDir = "data";
   }
 }
