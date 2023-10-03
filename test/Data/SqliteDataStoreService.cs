@@ -309,11 +309,11 @@ namespace TradeSharp.Data.Testing
         $"AND ReleaseInterval = {(int)fundamental.ReleaseInterval}")
       , "Fundamental not persisted to database.");
     }
-    
+
     [TestMethod]
     public void UpdateHoliday_PersistChanges_Success()
     {
-      Holiday holiday = new Holiday(Guid.NewGuid(), m_country.Id, "TestHoliday", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust); 
+      Holiday holiday = new Holiday(Guid.NewGuid(), m_country.Id, "TestHoliday", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
 
       m_dataStore.CreateHoliday(holiday);
 
@@ -325,7 +325,7 @@ namespace TradeSharp.Data.Testing
       holiday.MoveWeekendHoliday = MoveWeekendHoliday.PreviousBusinessDay;
 
       m_dataStore.UpdateHoliday(holiday);
-      
+
       Holiday? holidayFromDB = m_dataStore.GetHoliday(holiday.Id);
 
       Assert.IsNotNull(holidayFromDB, "Holiday returned as null");
@@ -338,6 +338,34 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
+    public void UpdateExchange_PersistChanges_Success()
+    {
+      m_dataStore.CreateExchange(m_exchange);
+
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableExchange,
+        $"Id = '{m_exchange.Id.ToString()}' " +
+        $"AND CountryId = '{m_country.Id.ToString()}' " +
+        $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
+      , "Exchange not persisted to database.");
+
+      Country germany = new Country(Guid.NewGuid(), "de-DE");
+      TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+
+      m_exchange.Name = "New Exchange";
+      m_exchange.CountryId = germany.Id;
+      m_exchange.TimeZone = timeZone;
+
+      m_dataStore.UpdateExchange(m_exchange);
+
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableExchange,
+        $"Id = '{m_exchange.Id.ToString()}' " +
+        $"AND Name = '{m_exchange.Name}' " +
+        $"AND CountryId = '{germany.Id.ToString()}' " +
+        $"AND TimeZone = '{timeZone.ToSerializedString()}'")
+      , "Exchange not updated in database.");
+    }
+
+    [TestMethod]
     public void UpdateSession_ChangeDayAndTime_Success()
     {
       TimeOnly startTime = new TimeOnly(9, 30);
@@ -346,10 +374,16 @@ namespace TradeSharp.Data.Testing
 
       m_dataStore.CreateSession(session);
 
-      m_dataStore.UpdateSession(session.Id, DayOfWeek.Tuesday, startTime.AddMinutes(5), endTime.AddMinutes(5));
+      session.Name = "New Name";
+      session.DayOfWeek = DayOfWeek.Tuesday;
+      session.Start = startTime.AddMinutes(5);
+      session.End = endTime.AddMinutes(5);
+
+      m_dataStore.UpdateSession(session);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableExchangeSession,
         $"Id = '{session.Id.ToString()}' " +
+        $"AND Name = '{m_dataStore.SqlSafeString(session.Name)}' " +
         $"AND ExchangeId = '{session.ExchangeId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Tuesday} " +
         $"AND StartTime = {startTime.AddMinutes(5).Ticks} " +
@@ -434,7 +468,7 @@ namespace TradeSharp.Data.Testing
       double close = 4.0;
       long volume = 5;
 
-      m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id,m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume, priceDataType == PriceDataType.Synthetic);
+      m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume, priceDataType == PriceDataType.Synthetic);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(m_dataStore.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDataStoreService.c_TableInstrumentDataSynthetic : Data.SqliteDataStoreService.c_TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
@@ -542,13 +576,13 @@ namespace TradeSharp.Data.Testing
     {
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       BarData barData = new BarData(5);
-      barData.DateTime = new List<DateTime>{ dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5) };
+      barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5) };
       barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0 };
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0 };
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155 };
-      barData.Synthetic = new List<bool> { priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic};
+      barData.Synthetic = new List<bool> { priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic };
 
       m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
@@ -1210,12 +1244,12 @@ namespace TradeSharp.Data.Testing
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
       , "Instrument fundamental value 2 present in database after delete operation.");
-    } 
+    }
 
     [TestMethod]
     public void UpdateInstrumentGroup_ChangeParent_Success()
     {
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", Array.Empty<Guid>()); 
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", Array.Empty<Guid>());
       InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName2", "TestInstrumentGroupDescription2", Array.Empty<Guid>());
 
       m_dataStore.CreateInstrumentGroup(instrumentGroup1);
@@ -1344,7 +1378,7 @@ namespace TradeSharp.Data.Testing
       InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
 
       m_dataStore.CreateInstrumentGroup(instrumentGroup);
-      m_dataStore.CreateInstrument(m_instrument);      
+      m_dataStore.CreateInstrument(m_instrument);
       m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, Resolution.Day, barData);
 
       Fundamental fundamental = new Fundamental(Guid.NewGuid(), "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
@@ -1542,12 +1576,95 @@ namespace TradeSharp.Data.Testing
       IList<Exchange> exchanges = m_dataStore.GetExchanges();
       Assert.AreEqual(3, exchanges.Count, "Returned exchange holiday count is not correct.");
       Assert.IsNotNull(exchanges.Where(x => x.Id == m_exchange.Id && x.CountryId == m_exchange.CountryId && x.TimeZone.Id == m_exchange.TimeZone.Id).Single(), "m_exchange not returned in stored data.");
-      Assert.IsNotNull(exchanges.Where(x => x.Id == secondExchange.Id&& x.CountryId == secondExchange.CountryId && x.TimeZone.Id == secondExchange.TimeZone.Id).Single(), "secondExchange not returned in stored data.");
+      Assert.IsNotNull(exchanges.Where(x => x.Id == secondExchange.Id && x.CountryId == secondExchange.CountryId && x.TimeZone.Id == secondExchange.TimeZone.Id).Single(), "secondExchange not returned in stored data.");
       Assert.IsNotNull(exchanges.Where(x => x.Id == thirdExchange.Id && x.CountryId == thirdExchange.CountryId && x.TimeZone.Id == thirdExchange.TimeZone.Id).Single(), "thirdExchange not returned in stored data.");
     }
 
     [TestMethod]
-    public void GetSessions_ReturnPersistedData_Success()
+    public void GetSession_ReturnsPersistedData_Success()
+    {
+      TimeOnly preMarketStartTime = new TimeOnly(6, 0);
+      TimeOnly preMarketEndTime = new TimeOnly(9, 29);
+      TimeOnly mainStartTime = new TimeOnly(9, 30);
+      TimeOnly mainEndTime = new TimeOnly(15, 59);
+      TimeOnly postMarketStartTime = new TimeOnly(16, 0);
+      TimeOnly postMarketEndTime = new TimeOnly(21, 00);
+
+      Session preMarketSession = new Session(Guid.NewGuid(), "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainSession = new Session(Guid.NewGuid(), "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postMarketSession = new Session(Guid.NewGuid(), "Post-market Session", m_exchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+
+      m_dataStore.CreateSession(preMarketSession);
+      m_dataStore.CreateSession(mainSession);
+      m_dataStore.CreateSession(postMarketSession);
+
+      Session? mainPersistedSession = m_dataStore.GetSession(mainSession.Id);
+
+      Assert.IsNotNull(mainPersistedSession, "Data store did not return main session.");
+      Assert.AreEqual(mainSession.Id, mainPersistedSession.Id, "Id is not the same");
+      Assert.AreEqual(mainSession.ExchangeId, mainPersistedSession.ExchangeId, "ExchangeId is not the same");
+      Assert.AreEqual(mainSession.Name, mainPersistedSession.Name, "Name is not the same");
+      Assert.AreEqual(mainSession.DayOfWeek, mainPersistedSession.DayOfWeek, "DayOfWeek is not the same");
+      Assert.AreEqual(mainSession.Start, mainPersistedSession.Start, "Start time is not the same");
+      Assert.AreEqual(mainSession.End, mainPersistedSession.End, "End time is not the same");
+    }
+
+
+    [TestMethod]
+    public void GetSessions_ReturnsSessionsByExchange_Success()
+    {
+      TimeOnly preMarketStartTime = new TimeOnly(6, 0);
+      TimeOnly preMarketEndTime = new TimeOnly(9, 29);
+      TimeOnly mainStartTime = new TimeOnly(9, 30);
+      TimeOnly mainEndTime = new TimeOnly(15, 59);
+      TimeOnly postMarketStartTime = new TimeOnly(16, 0);
+      TimeOnly postMarketEndTime = new TimeOnly(21, 00);
+
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Second test exchange", m_timeZone);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Third test exchange", m_timeZone);
+
+      Session preFirstMarketSession = new Session(Guid.NewGuid(), "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainFirstSession = new Session(Guid.NewGuid(), "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postFirstMarketSession = new Session(Guid.NewGuid(), "Post-market Session", m_exchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+
+      Session preSecondMondayMarketSession = new Session(Guid.NewGuid(), "Pre-market Session", secondExchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainSecondMondaySession = new Session(Guid.NewGuid(), "Main Session", secondExchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postSecondMondayMarketSession = new Session(Guid.NewGuid(), "Post-market Session", secondExchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+      Session preSecondTuesdayMarketSession = new Session(Guid.NewGuid(), "Pre-market Session", secondExchange.Id, DayOfWeek.Tuesday, preMarketStartTime, preMarketEndTime);
+      Session mainSecondTuesdaySession = new Session(Guid.NewGuid(), "Main Session", secondExchange.Id, DayOfWeek.Tuesday, mainStartTime, mainEndTime);
+      Session postSecondTuesdayMarketSession = new Session(Guid.NewGuid(), "Post-market Session", secondExchange.Id, DayOfWeek.Tuesday, postMarketStartTime, postMarketEndTime);
+
+      Session preThirdMarketSession = new Session(Guid.NewGuid(), "Pre-market Session", thirdExchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainThirdSession = new Session(Guid.NewGuid(), "Main Session", thirdExchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postThirdMarketSession = new Session(Guid.NewGuid(), "Post-market Session", thirdExchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+
+      m_dataStore.CreateSession(preFirstMarketSession);
+      m_dataStore.CreateSession(mainFirstSession);
+      m_dataStore.CreateSession(postFirstMarketSession);
+
+      m_dataStore.CreateSession(preSecondMondayMarketSession);
+      m_dataStore.CreateSession(mainSecondMondaySession);
+      m_dataStore.CreateSession(postSecondMondayMarketSession);
+      m_dataStore.CreateSession(preSecondTuesdayMarketSession);
+      m_dataStore.CreateSession(mainSecondTuesdaySession);
+      m_dataStore.CreateSession(postSecondTuesdayMarketSession);
+
+      m_dataStore.CreateSession(preThirdMarketSession);
+      m_dataStore.CreateSession(mainThirdSession);
+      m_dataStore.CreateSession(postThirdMarketSession);
+
+      IList<Session> sessions = m_dataStore.GetSessions(secondExchange.Id);
+      Assert.AreEqual(6, sessions.Count, "Returned exchange session count is not correct.");
+      Assert.IsNotNull(sessions.Where(x => x.ExchangeId == secondExchange.Id && x.DayOfWeek == DayOfWeek.Monday && x.Name == "Pre-market Session").Single(), "Pre-market Monday session not returned in stored data.");
+      Assert.IsNotNull(sessions.Where(x => x.ExchangeId == secondExchange.Id && x.DayOfWeek == DayOfWeek.Monday && x.Name == "Main Session").Single(), "Main Monday session not returned in stored data.");
+      Assert.IsNotNull(sessions.Where(x => x.ExchangeId == secondExchange.Id && x.DayOfWeek == DayOfWeek.Monday && x.Name == "Post-market Session").Single(), "Post-market Monday session not returned in stored data.");
+      Assert.IsNotNull(sessions.Where(x => x.ExchangeId == secondExchange.Id && x.DayOfWeek == DayOfWeek.Tuesday && x.Name == "Pre-market Session").Single(), "Pre-market Tuesday session not returned in stored data.");
+      Assert.IsNotNull(sessions.Where(x => x.ExchangeId == secondExchange.Id && x.DayOfWeek == DayOfWeek.Tuesday && x.Name == "Main Session").Single(), "Main Tuesday session not returned in stored data.");
+      Assert.IsNotNull(sessions.Where(x => x.ExchangeId == secondExchange.Id && x.DayOfWeek == DayOfWeek.Tuesday && x.Name == "Post-market Session").Single(), "Post-market Tuesday session not returned in stored data.");
+    }
+
+    [TestMethod]
+    public void GetSessions_ReturnsAllPersistedSessions_Success()
     {
       TimeOnly preMarketStartTime = new TimeOnly(6, 0);
       TimeOnly preMarketEndTime = new TimeOnly(9, 29);
@@ -1786,7 +1903,7 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(barData.Count / 2, dataResult.Count, "GetBarData did not return the correct number of bars.");
 
       BarData dataResultDetails = (BarData)dataResult.Data;
-      for (int index = 0; index < barData.Count; index++) 
+      for (int index = 0; index < barData.Count; index++)
       {
         if ((priceDataType == PriceDataType.Synthetic && !barData.Synthetic[index]) || (priceDataType == PriceDataType.Actual && barData.Synthetic[index])) continue;
         Assert.IsTrue(dataResultDetails.DateTime.Contains(barData.DateTime[index]), string.Format("Bar data {0} not found.", barData.DateTime[index]));

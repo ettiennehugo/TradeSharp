@@ -100,7 +100,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<Holiday> ShowUpdateHolidayAsync(Holiday holiday)
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      Views.HolidayView view = new Views.HolidayView(holiday);
+      Views.HolidayView view = new Views.HolidayView((Holiday)holiday.Clone());
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -114,7 +114,10 @@ namespace TradeSharp.WinDataManager.Services
       ContentDialogResult result = await dialog.ShowAsync();
 
       if (result == ContentDialogResult.Primary)
-        return view.Holiday;
+      {
+        holiday.Update(view.Holiday);
+        return null;
+      }
       else
         return null;
     }

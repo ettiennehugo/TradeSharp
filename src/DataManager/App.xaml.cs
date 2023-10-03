@@ -70,7 +70,6 @@ namespace TradeSharp.WinDataManager
           .AddScoped<CountryViewModel>()
           .AddScoped<CountryItemViewModel>()
           .AddScoped<HolidayViewModel>()
-          .AddScoped<HolidayItemViewModel>()
           .BuildServiceProvider()
       );
     }

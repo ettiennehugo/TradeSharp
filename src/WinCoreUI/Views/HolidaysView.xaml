@@ -5,16 +5,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:tsdata="using:TradeSharp.Data"
+    xmlns:data="using:TradeSharp.Data"
     xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"
-    xmlns:coreuivm="using:TradeSharp.CoreUI.ViewModels"
     mc:Ignorable="d">
   <UserControl.Resources>
     <wincoreuicommon:EnumValueDescriptionConverter x:Key="EnumValueDescriptionConverter"/>
     <DataTemplate x:Key="HolidayHeaderTemplate">
-      <Grid>
+      <Grid ColumnSpacing="10">
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="0.75*"/>
+          <ColumnDefinition Width="2*"/>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="*"/>
@@ -31,10 +30,10 @@
         <TextBlock Text="Move Weekend Holiday" Grid.Column="6"/>
       </Grid>
     </DataTemplate>
-    <DataTemplate x:Key="HolidayItemTemplate" x:DataType="tsdata:Holiday">
-      <Grid>
+    <DataTemplate x:Key="HolidayItemTemplate" x:DataType="data:Holiday">
+      <Grid ColumnSpacing="10">
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="0.75*"/>
+          <ColumnDefinition Width="2*"/>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="*"/>
@@ -59,6 +58,6 @@
       <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" Label="Update holiday" IsCompact="True"/>
       <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Label="Delete holiday" IsCompact="True"/>
     </StackPanel>
-    <ListView x:Name="m_countries" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" HeaderTemplate="{StaticResource HolidayHeaderTemplate}" ItemTemplate="{StaticResource HolidayItemTemplate}"/>
+    <ListView x:Name="m_holidays" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" HeaderTemplate="{StaticResource HolidayHeaderTemplate}" ItemTemplate="{StaticResource HolidayItemTemplate}"/>
   </StackPanel>
 </UserControl>

@@ -174,7 +174,7 @@ namespace TradeSharp.Data
           $"VALUES (" +
             $"'{exchange.Id.ToString()}', " +
             $"'{exchange.CountryId.ToString()}', " +
-            $"'{sqlSafeString(exchange.Name)}', " +
+            $"'{SqlSafeString(exchange.Name)}', " +
             $"'{exchange.TimeZone.ToSerializedString()}'" +
           $")"
       );
@@ -202,6 +202,17 @@ namespace TradeSharp.Data
       return result;
     }
 
+    public void UpdateExchange(Exchange exchange)
+    {
+      ExecuteCommand(
+        $"UPDATE OR FAIL {c_TableExchange} " +
+          $"SET CountryId = '{exchange.CountryId.ToString()}', " +
+              $"Name = '{SqlSafeString(exchange.Name)}', " +
+              $"TimeZone = '{exchange.TimeZone.ToSerializedString()}' " +
+          $"WHERE Id = '{exchange.Id.ToString()}'"
+      );
+    }
+
     public int DeleteExchange(Guid id)
     {
       int result = Delete(c_TableExchange, id);
@@ -220,7 +231,7 @@ namespace TradeSharp.Data
           $"VALUES (" +
             $"'{holiday.Id.ToString()}', " +
             $"'{holiday.ParentId.ToString()}', " +
-            $"'{sqlSafeString(holiday.Name)}', " +
+            $"'{SqlSafeString(holiday.Name)}', " +
             $"{(int)holiday.Type}, " +
             $"{(int)holiday.Month}, " +
             $"{(int)holiday.DayOfMonth}, " +
@@ -269,7 +280,7 @@ namespace TradeSharp.Data
       ExecuteCommand(
         $"UPDATE OR FAIL {c_TableHoliday} " +
           $"SET ParentId = '{holiday.ParentId.ToString()}', " +
-              $"Name = '{sqlSafeString(holiday.Name)}', " +
+              $"Name = '{SqlSafeString(holiday.Name)}', " +
               $"HolidayType = {(int)holiday.Type}, " +
               $"Month = {(int)holiday.Month}, " +
               $"DayOfMonth = {(int)holiday.DayOfMonth}, " +
@@ -293,13 +304,32 @@ namespace TradeSharp.Data
       $"INSERT OR REPLACE INTO {c_TableExchangeSession} (Id, Name, ExchangeId, DayOfWeek, StartTime, EndTime) " +
         $"VALUES (" +
           $"'{session.Id.ToString()}', " +
-          $"'{sqlSafeString(session.Name)}', " +
+          $"'{SqlSafeString(session.Name)}', " +
           $"'{session.ExchangeId.ToString()}', " +
           $"{(int)session.DayOfWeek}, " +
           $"{session.Start.Ticks}, " +
           $"{session.End.Ticks}" +
         $")"
       );
+    }
+
+    public Session? GetSession(Guid id)
+    {
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession} WHERE Id = '{id.ToString()}'"))
+        if (reader.Read()) return new Session(reader.GetGuid(0), reader.GetString(1), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5)));
+
+      return null;
+    }
+
+    public IList<Session> GetSessions(Guid exchangeId)
+    {
+      var result = new List<Session>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession} WHERE ExchangeId = '{exchangeId.ToString()}'"))
+        while (reader.Read())
+          result.Add(new Session(reader.GetGuid(0), reader.GetString(1), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5))));
+
+      return result;
     }
 
     public IList<Session> GetSessions()
@@ -313,14 +343,16 @@ namespace TradeSharp.Data
       return result;
     }
 
-    public void UpdateSession(Guid id, DayOfWeek day, TimeOnly start, TimeOnly end)
+    public void UpdateSession(Session session)
     {
       ExecuteCommand(
         $"UPDATE OR FAIL {c_TableExchangeSession} " +
-          $"SET DayOfWeek = {(int)day}, " +
-              $"StartTime = {start.Ticks}, " +
-              $"EndTime = {end.Ticks} " +
-          $"WHERE Id = '{id.ToString()}'"
+          $"SET Name = '{SqlSafeString(session.Name)}', " +
+              $"ExchangeId = '{session.ExchangeId.ToString()}', " +
+              $"DayOfWeek = {(int)session.DayOfWeek}, " +
+              $"StartTime = {session.Start.Ticks}, " +
+              $"EndTime = {session.End.Ticks} " +
+          $"WHERE Id = '{session.Id.ToString()}'"
       );
     }
 
@@ -329,8 +361,6 @@ namespace TradeSharp.Data
       return Delete(c_TableExchangeSession, id);
     }
 
-
-
     public void CreateInstrumentGroup(InstrumentGroup instrumentGroup)
     {
       ExecuteCommand(
@@ -338,8 +368,8 @@ namespace TradeSharp.Data
         $"VALUES (" +
           $"'{instrumentGroup.Id.ToString()}', " +
           $"'{instrumentGroup.ParentId.ToString()}', " +
-          $"'{sqlSafeString(instrumentGroup.Name)}', " +
-          $"'{sqlSafeString(instrumentGroup.Description)}'" +
+          $"'{SqlSafeString(instrumentGroup.Name)}', " +
+          $"'{SqlSafeString(instrumentGroup.Description)}'" +
         $")"
       );
 
@@ -434,8 +464,8 @@ namespace TradeSharp.Data
             $"'{instrument.Id.ToString()}', " +
             $"{(int)instrument.Type}, " +
             $"'{instrument.Ticker}', " +
-            $"'{sqlSafeString(instrument.Name)}', " +
-            $"'{sqlSafeString(instrument.Description)}', " +
+            $"'{SqlSafeString(instrument.Name)}', " +
+            $"'{SqlSafeString(instrument.Description)}', " +
             $"'{instrument.PrimaryExchangeId.ToString()}', " +
             $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}" +
           $")"
@@ -555,8 +585,8 @@ namespace TradeSharp.Data
         $"INSERT OR REPLACE INTO {c_TableFundamentals} (Id, Name, Description, Category, ReleaseInterval)" +
           $"VALUES (" +
             $"'{fundamental.Id.ToString()}', " +
-            $"'{sqlSafeString(fundamental.Name)}', " +
-            $"'{sqlSafeString(fundamental.Description)}', " +
+            $"'{SqlSafeString(fundamental.Name)}', " +
+            $"'{SqlSafeString(fundamental.Description)}', " +
             $"{(int)fundamental.Category}, " +
             $"{(int)fundamental.ReleaseInterval}" +
         $")"
@@ -1696,7 +1726,7 @@ namespace TradeSharp.Data
       return result;
     }
     
-    protected string sqlSafeString(string value)
+    public string SqlSafeString(string value)
     {
       return value.Replace("\'","\'\'");
     }

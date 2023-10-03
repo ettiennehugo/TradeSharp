@@ -55,14 +55,6 @@ namespace TradeSharp.WinDataManager.Views
       ViewModel.RefreshCommand.Execute(null);
     }
 
-    private void m_countries_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-      if (ViewModel.SelectedItem != null)
-        m_holidayView.ParentId = ViewModel.SelectedItem.Id;
-      else
-        m_holidayView.ParentId = Guid.Empty;  //clear holiday view
-    }
-
     //methods
 
 

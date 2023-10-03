@@ -83,7 +83,7 @@ namespace TradeSharp.Data
   /// <summary>
   /// Storage class for country/exchange holidays.
   /// </summary>
-  public partial class Holiday : ObservableObject, IEquatable<Holiday>
+  public partial class Holiday : ObservableObject, IEquatable<Holiday>, ICloneable, IUpdateable<Holiday>
   {
     public Holiday(Guid id, Guid parentId, string name, HolidayType type, Months month, int dayOfMonth, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth, MoveWeekendHoliday moveWeekendHoliday)
     {
@@ -107,6 +107,35 @@ namespace TradeSharp.Data
     [ObservableProperty] private DayOfWeek m_dayOfWeek;
     [ObservableProperty] private WeekOfMonth m_weekOfMonth;
     [ObservableProperty] private MoveWeekendHoliday m_moveWeekendHoliday;
+
+    public bool Equals(Holiday? other)
+    {
+      //compare most fields but we don't care about the name
+      return other != null &&
+             other.ParentId == ParentId &&
+             other.Month == Month &&
+             other.DayOfMonth == DayOfMonth &&
+             other.DayOfWeek == DayOfWeek &&
+             other.WeekOfMonth == WeekOfMonth &&
+             other.MoveWeekendHoliday == MoveWeekendHoliday;
+    }
+
+    public object Clone()
+    {
+      return new Holiday(Id, ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
+    }
+
+    public void Update(Holiday item)
+    {
+      ParentId = item.ParentId;
+      Name = item.Name;
+      Type = item.Type;
+      Month = item.Month;
+      DayOfMonth = item.DayOfMonth;
+      DayOfWeek = item.DayOfWeek;
+      WeekOfMonth = item.WeekOfMonth;
+      MoveWeekendHoliday = item.MoveWeekendHoliday;
+    }
 
     public DateOnly ForYear(int year)
     {
@@ -177,24 +206,12 @@ namespace TradeSharp.Data
       result = adjustForWeekend(result);
       return DateOnly.FromDateTime(result);
     }
-
-    public bool Equals(Holiday? other)
-    {
-      //compare most fields but we don't care about the name
-      return other != null &&
-             other.ParentId == ParentId &&
-             other.Month == Month &&
-             other.DayOfMonth == DayOfMonth &&
-             other.DayOfWeek == DayOfWeek &&
-             other.WeekOfMonth == WeekOfMonth &&
-             other.MoveWeekendHoliday == MoveWeekendHoliday;
-    }
   }
 
   /// <summary>
   /// Storage class for exchange data.
   /// </summary>
-  public partial class Exchange : ObservableObject, IEquatable<Exchange>
+  public partial class Exchange : ObservableObject, IEquatable<Exchange>, ICloneable, IUpdateable<Exchange>
   {
     public Exchange(Guid id, Guid countryId, string name, TimeZoneInfo timeZone)
     {
@@ -213,12 +230,24 @@ namespace TradeSharp.Data
     {
       return other != null && other.Id == Id;
     }
+
+    public object Clone()
+    {
+      return new Exchange(Id, CountryId, Name, TimeZone);
+    }
+
+    public void Update(Exchange item)
+    {
+      CountryId = item.CountryId;
+      Name = item.Name;
+      TimeZone = item.TimeZone;
+    }
   }
 
   /// <summary>
   /// Storage class for exchange session data.
   /// </summary>
-  public partial class Session : ObservableObject, IEquatable<Session>
+  public partial class Session : ObservableObject, IEquatable<Session>, ICloneable, IUpdateable<Session>
   {
     public Session(Guid id, string name, Guid exchangeId, DayOfWeek dayOfWeek, TimeOnly start, TimeOnly end)
     {
@@ -241,12 +270,26 @@ namespace TradeSharp.Data
     {
       return other != null && other.Id == Id;
     }
+
+    public object Clone()
+    {
+      return new Session(Id, Name, ExchangeId, DayOfWeek, Start, End);
+    }
+
+    public void Update(Session item)
+    {
+      Name = item.Name;
+      ExchangeId = item.ExchangeId;
+      DayOfWeek = item.DayOfWeek;
+      Start = item.Start;
+      End = item.End;
+    }
   }
 
   /// <summary>
   /// Storage base class for instrument data.
   /// </summary>
-  public partial class Instrument : ObservableObject, IEquatable<Instrument>
+  public partial class Instrument : ObservableObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>
   {
     public Instrument(Guid id, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, IList<Guid> instrumentGroupId, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds)
     {
@@ -267,7 +310,7 @@ namespace TradeSharp.Data
     [ObservableProperty] private string m_name;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private DateTime m_inceptionDate;
-    [ObservableProperty] private IList<Guid> m_InstrumentGroupIds;
+    [ObservableProperty] private IList<Guid> m_instrumentGroupIds;
     [ObservableProperty] private Guid m_primaryExchangeId;
     [ObservableProperty] private IList<Guid> m_secondaryExchangeIds;
 
@@ -275,12 +318,29 @@ namespace TradeSharp.Data
     {
       return other != null && other.Id == Id;
     }
+
+    public object Clone()
+    {
+      return new Instrument(Id, Type, Ticker, Name, Description, InceptionDate, InstrumentGroupIds, PrimaryExchangeId, SecondaryExchangeIds);
+    }
+
+    public void Update(Instrument item)
+    {
+      Type = item.Type;
+      Ticker = item.Ticker;
+      Name = item.Name;
+      Description = item.Description;
+      InceptionDate = item.InceptionDate;
+      InstrumentGroupIds = item.InstrumentGroupIds;
+      PrimaryExchangeId = item.PrimaryExchangeId;
+      SecondaryExchangeIds = item.SecondaryExchangeIds;
+    }
   }
 
   /// <summary>
   /// Storage class for general instrument grouping definition.
   /// </summary>
-  public partial class InstrumentGroup : ObservableObject, IEquatable<InstrumentGroup>
+  public partial class InstrumentGroup : ObservableObject, IEquatable<InstrumentGroup>, ICloneable, IUpdateable<InstrumentGroup>
   {
     public static Guid InstrumentGroupRoot = Guid.Empty;
 
@@ -303,12 +363,25 @@ namespace TradeSharp.Data
     {
       return other != null && other.Id == Id;
     }
+
+    public object Clone()
+    {
+      return new InstrumentGroup(Id, ParentId, Name, Description, Instruments);
+    }
+
+    public void Update(InstrumentGroup item)
+    {
+      ParentId = item.ParentId;
+      Name = item.Name;
+      Description = item.Description;
+      Instruments = item.Instruments;
+    }
   }
 
   /// <summary>
   /// Storage structure for fundamental definitions.
   /// </summary>
-  public partial class Fundamental : ObservableObject, IEquatable<Fundamental>
+  public partial class Fundamental : ObservableObject, IEquatable<Fundamental>, ICloneable, IUpdateable<Fundamental>
   {
     public Fundamental(Guid id, string name, string description, FundamentalCategory category, FundamentalReleaseInterval releaseInterval)
     {
@@ -329,12 +402,25 @@ namespace TradeSharp.Data
     {
       return other != null && other.Id == Id;
     }
+
+    public object Clone()
+    {
+      return new Fundamental(Id, Name, Description, Category, ReleaseInterval);
+    }
+
+    public void Update(Fundamental item)
+    {
+      Name = item.Name;
+      Description = item.Description;
+      Category = item.Category;
+      ReleaseInterval = item.ReleaseInterval;
+    }
   }
 
   /// <summary>
   /// Storage structure for country fundamental values.
   /// </summary>
-  public partial class CountryFundamental : ObservableObject, IEquatable<CountryFundamental>
+  public partial class CountryFundamental : ObservableObject, IEquatable<CountryFundamental>, ICloneable, IUpdateable<CountryFundamental>
   {
     public CountryFundamental(string dataProviderName, Guid associationId, Guid fundamentalId, Guid countryId)
     {
@@ -357,12 +443,24 @@ namespace TradeSharp.Data
     {
       return other != null && other.AssociationId == AssociationId;
     }
+
+    public object Clone()
+    {
+      return new CountryFundamental(DataProviderName, AssociationId, FundamentalId, CountryId);
+    }
+
+    public void Update(CountryFundamental item)
+    {
+      DataProviderName = item.DataProviderName;
+      FundamentalId = item.FundamentalId;
+      CountryId = item.CountryId;
+    }
   }
 
   /// <summary>
   /// Storage structure for instrument fundamental values.
   /// </summary>
-  public partial class InstrumentFundamental : ObservableObject, IEquatable<InstrumentFundamental>
+  public partial class InstrumentFundamental : ObservableObject, IEquatable<InstrumentFundamental>, ICloneable, IUpdateable<InstrumentFundamental>
   {
     public InstrumentFundamental(string dataProviderName, Guid associationId, Guid fundamentalId, Guid instrumentId)
     {
@@ -384,6 +482,18 @@ namespace TradeSharp.Data
     public bool Equals(InstrumentFundamental? other)
     {
       return other != null && other.AssociationId == AssociationId;
+    }
+
+    public object Clone()
+    {
+      return new InstrumentFundamental(DataProviderName, AssociationId, FundamentalId, InstrumentId);
+    }
+
+    public void Update(InstrumentFundamental item)
+    {
+      DataProviderName = item.DataProviderName;
+      FundamentalId = item.FundamentalId;
+      InstrumentId = item.InstrumentId;
     }
   }
 
@@ -544,9 +654,7 @@ namespace TradeSharp.Data
     public void CreateExchange(Exchange exchange);
     public Exchange? GetExchange(Guid id);
     public IList<Exchange> GetExchanges();
-
-    //UPDATE??
-
+    public void UpdateExchange(Exchange exchange);
     public int DeleteExchange(Guid id);
 
     /// <summary>
@@ -563,8 +671,10 @@ namespace TradeSharp.Data
     /// Create/update a trading session definition on a given PrimaryExchange.
     /// </summary>
     public void CreateSession(Session session);
+    public Session? GetSession(Guid id);
+    public IList<Session> GetSessions(Guid exchangeId);
     public IList<Session> GetSessions();
-    public void UpdateSession(Guid id, DayOfWeek day, TimeOnly start, TimeOnly end);
+    public void UpdateSession(Session session);
     public int DeleteSession(Guid id);
 
     /// <summary>

@@ -12,7 +12,6 @@ namespace TradeSharp.CoreUI.Repositories
   /// </summary>
   public class HolidayRepository : IHolidayRepository
   {
-
     //constants
 
 
@@ -37,12 +36,6 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
-
-
-    //properties
-    public Guid ParentId { get; set; }
-
-    //methods
     public Task<Holiday> AddAsync(Holiday item)
     {
       return Task.Run(() => { m_dataStore.CreateHoliday(item); return item; });
@@ -70,5 +63,12 @@ namespace TradeSharp.CoreUI.Repositories
     {
       return Task.Run(() => { m_dataStore.UpdateHoliday(item); return item; });
     }
+
+    //properties
+    public Guid ParentId { get; set; }
+
+    //methods
+
+
   }
 }

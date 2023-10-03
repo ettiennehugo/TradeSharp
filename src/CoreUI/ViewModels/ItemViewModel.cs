@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
@@ -10,7 +11,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model base class to display items in read-only mode (no editing operations, see EditableItemViewModel for editable item).
   /// </summary>
-  public abstract class ItemViewModel<T> : ViewModelBase, IItemViewModel<T>
+  public abstract partial class ItemViewModel<T> : ViewModelBase, IItemViewModel<T>
   {
 
     //constants
@@ -23,7 +24,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    private T? m_item;
+    [ObservableProperty] private T? m_item;
 
     //constructors
     public ItemViewModel(T? item, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
@@ -38,11 +39,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-    public virtual T? Item
-    {
-      get => m_item;
-      set => SetProperty(ref m_item, value);
-    }
+
 
     //methods
 

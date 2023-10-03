@@ -9,13 +9,13 @@ using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
-    /// <summary>
-    /// Base class for models that support viewing items in a master view list and then selecting an item for a detailed view using the specific item view model. Commands are
-    /// exposed to add/delete items from the master list and refresh the list.
-    /// </summary>
-    public abstract class MasterDetailViewModel<TItemViewModel, TItem> : ViewModelBase
-    where TItemViewModel : IItemViewModel<TItem>
+  /// <summary>
+  /// Base class for models that support viewing items in a master view list and then selecting an item for a detailed view using the specific item view model. Commands are
+  /// exposed to add/delete items from the master list and refresh the list.
+  /// </summary>
+  public abstract class MasterDetailViewModel<TItemViewModel, TItem> : ListViewModel<TItem>
     where TItem : class
+    where TItemViewModel : IItemViewModel<TItem>
   {
     //constants
 
@@ -27,23 +27,15 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    protected readonly IItemsService<TItem> m_itemsService;
-    protected TItemViewModel? m_selectedItemViewModel;
+
 
     //constructors
-    public MasterDetailViewModel(IItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
+    public MasterDetailViewModel(IItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
-      m_itemsService = itemsService;
       m_itemsService.Items.CollectionChanged += (sender, e) =>
       {
         OnPropertyChanged(nameof(ItemsViewModels));
       };
-
-      AddCommand = new RelayCommand(OnAdd);
-      UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
-      DeleteCommand = new RelayCommand(OnDelete, () => SelectedItem != null);
-      RefreshCommand = new RelayCommand(OnRefresh);
-      RefreshCommandAsync = new AsyncRelayCommand(OnRefreshAsync);
     }
 
     //finalizers
@@ -53,51 +45,9 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-    public RelayCommand AddCommand { get; internal set; }
-    public RelayCommand UpdateCommand { get; internal set; }
-    public RelayCommand DeleteCommand { get; internal set; }
-    public RelayCommand RefreshCommand { get; internal set; }
-    public AsyncRelayCommand RefreshCommandAsync { get; internal set; }
-
-    public Guid ParentId 
-    {
-      get => m_itemsService.ParentId;
-      set
-      {
-        if (m_itemsService.ParentId != value)
-        {
-          m_itemsService.ParentId = value;
-          AddCommand.NotifyCanExecuteChanged();
-          UpdateCommand.NotifyCanExecuteChanged();
-          DeleteCommand.NotifyCanExecuteChanged();
-          RefreshCommand.NotifyCanExecuteChanged();
-          RefreshCommandAsync.NotifyCanExecuteChanged();
-          OnPropertyChanged();
-        }
-      }
-    }
-    
-    public ObservableCollection<TItem> Items => m_itemsService.Items;
-    public virtual IEnumerable<TItemViewModel> ItemsViewModels => Items.Select(item => ToViewModel(item));
-
-    public virtual TItem? SelectedItem
-    {
-      get => m_itemsService.SelectedItem;
-      set
-      {
-        if (!EqualityComparer<TItem>.Default.Equals(m_itemsService.SelectedItem, value))
-        {
-          m_itemsService.SelectedItem = value;
-          OnPropertyChanged();
-          AddCommand.NotifyCanExecuteChanged();
-          UpdateCommand.NotifyCanExecuteChanged();
-          DeleteCommand.NotifyCanExecuteChanged();
-          RefreshCommand.NotifyCanExecuteChanged();
-          RefreshCommandAsync.NotifyCanExecuteChanged();
-        }
-      }
-    }
-
+    /// <summary>
+    /// Returns the selected item view model for the detailed view.
+    /// </summary>
     public virtual TItemViewModel? SelectedItemViewModel
     {
       get
@@ -117,25 +67,12 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
+    /// <summary>
+    /// Returns the list of item view models for the detailed item views.
+    /// </summary>
+    public virtual IEnumerable<TItemViewModel> ItemsViewModels => Items.Select(item => ToViewModel(item));
+
     //methods
     protected abstract TItemViewModel ToViewModel(TItem item);
-
-    public async void OnRefresh()
-    {
-      using (StartInProgress())
-      {
-        await OnRefreshAsync();
-      }
-    }
-
-    protected async Task OnRefreshAsync()
-    {
-      StartInProgress();
-      await m_itemsService.RefreshAsync();
-    }
-
-    public abstract void OnAdd();
-    public abstract void OnUpdate();
-    public abstract void OnDelete();
   }
 }

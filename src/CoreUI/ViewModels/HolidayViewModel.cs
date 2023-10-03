@@ -10,9 +10,9 @@ using CommunityToolkit.Mvvm.Input;
 namespace TradeSharp.CoreUI.ViewModels
 {
   /// <summary>
-  /// View model for a list of holidays with their details using the associated item view model.
+  /// View model for a list of holidays associated with a country of exchange specified as the parent Id of the base class.
   /// </summary>
-  public partial class HolidayViewModel : MasterDetailViewModel<HolidayItemViewModel, Holiday>
+  public partial class HolidayViewModel : ListViewModel<Holiday>
   {
     //constants
 
@@ -80,11 +80,6 @@ namespace TradeSharp.CoreUI.ViewModels
         m_itemsService.DeleteAsync(item);
         SelectedItem = Items.FirstOrDefault();
       }
-    }
-
-    protected override HolidayItemViewModel ToViewModel(Holiday item)
-    {
-      return new HolidayItemViewModel(item, m_navigationService, m_dialogService);
     }
   }
 }
