@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.CoreUI.Repositories;
-using Microsoft.UI.Xaml.Controls;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -65,13 +64,32 @@ namespace TradeSharp.WinDataManager
           .AddScoped<MainWindowViewModel>()
           .AddScoped<ICountryRepository, CountryRepository>()
           .AddScoped<IHolidayRepository, HolidayRepository>()
+          .AddScoped<IExchangeRepository, ExchangeRepository>()
+          .AddScoped<ISessionRepository, SessionRepository>()
           .AddScoped<IItemsService<Country>, CountryService>()
           .AddScoped<IItemsService<Holiday>, HolidayService>()
+          .AddScoped<IItemsService<Exchange>, ExchangeService>()
+          .AddScoped<IItemsService<Session>, SessionService>()
           .AddScoped<CountryViewModel>()
           .AddScoped<CountryItemViewModel>()
           .AddScoped<HolidayViewModel>()
+          .AddScoped<ExchangeViewModel>()
+          .AddScoped<ExchangeItemViewModel>()
+          .AddScoped<SessionViewModel>()
           .BuildServiceProvider()
       );
     }
+
+
+
+    //void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    //{
+    //  // process unhandled exception
+
+    //  //TODO
+
+    //  // prevent default unhandled exception processing
+    //  e.Handled = true;
+    //}
   }
 }

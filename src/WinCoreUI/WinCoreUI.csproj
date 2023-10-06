@@ -9,7 +9,13 @@
   <ItemGroup>
     <None Remove="Styles\ColorStyles.xaml" />
     <None Remove="Templates\ControlTemplates.xaml" />
+    <None Remove="Views\CountriesView.xaml" />
+    <None Remove="Views\CountrySelectorView.xaml" />
+    <None Remove="Views\ExchangesView.xaml" />
+    <None Remove="Views\ExchangeView.xaml" />
     <None Remove="Views\HolidaysView.xaml" />
+    <None Remove="Views\SessionsView.xaml" />
+    <None Remove="Views\SessionView.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,7 +45,46 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Update="Views\SessionsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\ExchangesView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\CountriesView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\CountrySelectorView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\HolidaysView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\HolidayView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <CustomAdditionalCompileInputs Remove="Views\ExchangeView.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Remove="Views\ExchangeView.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\SessionView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

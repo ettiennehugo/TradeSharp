@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="TradeSharp.WinCoreUI.Views.ExchangesView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:coreuivm="using:TradeSharp.CoreUI.ViewModels"
+    xmlns:wincoreui="using:TradeSharp.WinCoreUI.Views"
+    xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="Page_Loaded">
+  <Page.Resources>
+    <wincoreuicommon:CountryIdToDisplayNameConverter x:Key="CountryIdToDisplayNameConverter"/>
+    <DataTemplate x:Key="ExchangeHeaderTemplate">
+      <Grid ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="Name" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0"/>
+        <TextBlock Text="Country" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1"/>
+        <TextBlock Text="Time Zone" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2"/>
+      </Grid>
+    </DataTemplate>
+    <DataTemplate x:Key="ExchangeItemTemplate" x:DataType="coreuivm:ExchangeItemViewModel">
+      <Grid ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{x:Bind Item.Name, Mode=OneWay}" Margin="1,1" VerticalAlignment="Center" Grid.Column="0"/>
+        <TextBlock Text="{x:Bind Item.CountryId, Mode=OneWay, Converter={StaticResource CountryIdToDisplayNameConverter}}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="1"/>
+        <TextBlock Text="{x:Bind Item.TimeZone.DisplayName, Mode=OneWay}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="2"/>
+      </Grid>
+    </DataTemplate>
+  </Page.Resources>
+  <Grid x:Name="m_main">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="2*"/>
+      <RowDefinition Height="3*"/>
+    </Grid.RowDefinitions>
+    <StackPanel x:Name="m_toolbar" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
+      <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" Label="Refresh" IsCompact="True"/>
+      <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" Label="Add Exchange" IsCompact="True"/>
+      <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" Label="Update Exchange" IsCompact="True"/>
+      <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Label="Delete Exchange" IsCompact="True"/>
+    </StackPanel>
+    <ListView x:Name="m_exchanges" ItemsSource="{x:Bind ViewModel.ItemsViewModels, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItemViewModel, Mode=TwoWay}" HeaderTemplate="{StaticResource ExchangeHeaderTemplate}" ItemTemplate="{StaticResource ExchangeItemTemplate}" Grid.Row="1" Grid.Column="0"/>
+    <TabView x:Name="m_tabView" TabWidthMode="Equal" SelectedIndex="0" IsAddTabButtonVisible="False" Grid.Row="2" Grid.Column="0">
+      <TabViewItem x:Name="m_sessionTab" IsClosable="False">
+        <TabViewItem.Header>
+          <StackPanel Orientation="Horizontal">
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7AC;" />
+            <TextBlock Text="Sessions" VerticalAlignment="Center" Margin="10,0,0,0" />
+          </StackPanel>
+        </TabViewItem.Header>
+        <wincoreui:SessionsView x:Name="m_sessionsView" ParentId="{x:Bind ViewModel.SelectedItemViewModel.Item.Id, Mode=OneWay}"/>
+      </TabViewItem>
+      <TabViewItem x:Name="m_holidaysTab" IsClosable="False">
+        <TabViewItem.Header>
+          <StackPanel Orientation="Horizontal">
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE787;" />
+            <TextBlock Text="Holidays" VerticalAlignment="Center" Margin="10,0,0,0" />
+          </StackPanel>
+        </TabViewItem.Header>
+        <wincoreui:HolidaysView x:Name="m_holidayView" ParentId="{x:Bind ViewModel.SelectedItemViewModel.Item.Id, Mode=OneWay}"/>
+      </TabViewItem>
+    </TabView>
+  </Grid>
+</Page>

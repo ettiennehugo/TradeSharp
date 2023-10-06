@@ -26,7 +26,7 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //properties
-
+    Guid ParentId { get; set; }
 
     //methods
 

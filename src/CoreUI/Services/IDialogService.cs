@@ -30,24 +30,17 @@ namespace TradeSharp.CoreUI.Services
 
 
     //methods
-    /// <summary>
-    /// Show a message to the user.
-    /// </summary>
     Task ShowMessageAsync(string message);
 
-    /// <summary>
-    /// Get a country iso-code from the user and return it.
-    /// </summary>
     Task<CountryInfo?> ShowSelectCountryAsync();
 
-    /// <summary>
-    /// Creates a new holiday object for the given parent and returns it.
-    /// </summary>
-    Task<Holiday> ShowCreateHolidayAsync(Guid parentId);    
+    Task<Holiday?> ShowCreateHolidayAsync(Guid parentId);
+    Task<Holiday?> ShowUpdateHolidayAsync(Holiday holiday);
 
-    /// <summary>
-    /// Update existing holiday object and returns the updated object.
-    /// </summary>
-    Task<Holiday> ShowUpdateHolidayAsync(Holiday holiday);    
+    Task<Exchange?> ShowCreateExchangeAsync();
+    Task<Exchange?> ShowUpdateExchangeAsync(Exchange exchange);
+
+    Task<Session?> ShowCreateSessionAsync(Guid parentId);
+    Task<Session?> ShowUpdateSessionAsync(Session session);
   }
 }

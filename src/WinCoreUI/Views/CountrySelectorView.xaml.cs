@@ -18,7 +18,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.CoreUI.ViewModels;
 using Windows.Media.Capture.Frames;
 
-namespace TradeSharp.WinDataManager.Views
+namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
   /// View that allows the user to select a country.

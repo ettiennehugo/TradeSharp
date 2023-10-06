@@ -38,6 +38,7 @@ namespace TradeSharp.CoreUI.Services
         Task<T> AddAsync(T item);
         Task<T> UpdateAsync(T item);
         Task<bool> DeleteAsync(T item);
+        Task<T> CopyAsync(T item);
 
     }
 }

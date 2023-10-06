@@ -13,9 +13,6 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Views\BlankView.xaml" />
-    <None Remove="Views\CountriesView.xaml" />
-    <None Remove="Views\CountrySelectorView.xaml" />
-    <None Remove="Views\HolidayView.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,16 +50,6 @@
     <ProjectReference Include="$(TradeSharpSrc)\Data\Data.csproj" />
     <ProjectReference Include="..\Analysis\Analysis.csproj" />
     <ProjectReference Include="..\WinCoreUI\WinCoreUI.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Views\CountrySelectorView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Views\CountriesView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\BlankView.xaml">

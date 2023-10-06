@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using TradeSharp.Common;
 
 namespace TradeSharp.Data
 {
@@ -65,10 +66,12 @@ namespace TradeSharp.Data
     {
       Id = id;
       IsoCode = isoCode;
+      CountryInfo = CountryInfo.GetCountryInfo(IsoCode);
     }
 
     [ObservableProperty] private Guid m_id;
     [ObservableProperty] private string m_isoCode;
+    public CountryInfo? CountryInfo { get; internal set; }
     bool IEquatable<Country>.Equals(Country? country)
     {
       return country != null && IsoCode == country.IsoCode;

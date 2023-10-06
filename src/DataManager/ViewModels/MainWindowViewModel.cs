@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.CoreUI.ViewModels;
+using TradeSharp.WinCoreUI.Views;
 using TradeSharp.WinDataManager.Services;
 using TradeSharp.WinDataManager.Views;
 
@@ -35,8 +36,8 @@ namespace TradeSharp.WinDataManager.ViewModels
     {
       { INavigationService.DataManager.Brokers, typeof(BlankView) },
       { INavigationService.DataManager.DataProviders, typeof(BlankView) },
-      { INavigationService.DataManager.Countries, typeof(CountriesView) },
-      { INavigationService.DataManager.Exchanges, typeof(BlankView) },
+      { INavigationService.DataManager.Countries, typeof(WinCoreUI.Views.CountriesView) },
+      { INavigationService.DataManager.Exchanges, typeof(WinCoreUI.Views.ExchangesView) },
       { INavigationService.DataManager.Fundamentals, typeof(BlankView) },
       { INavigationService.DataManager.Instruments, typeof(BlankView) },
       { INavigationService.DataManager.InstrumentGroups, typeof(BlankView) },

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="TradeSharp.WinCoreUI.Views.SessionView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TradeSharp.WinCoreUI.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"
+    Loaded="Page_Loaded"
+    mc:Ignorable="d">
+  <Page.Resources>
+    <wincoreuicommon:EnumValueConverter x:Key="EnumValueConverter"/>
+    <wincoreuicommon:TimeOnlyToTimeSpanConverter x:Key="TimeOnlyToTimeSpanConverter"/>
+  </Page.Resources>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="auto"/>
+      <ColumnDefinition Width="auto"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
+    </Grid.RowDefinitions>
+    <TextBlock x:Name="m_nameLbl" Text="Name" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="0"/>
+    <TextBlock x:Name="m_dayOfWeekLbl" Text="Day Of Week" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="1"/>
+    <TextBlock x:Name="m_startTimeLbl" Text="Start Time" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="2"/>
+    <TextBlock x:Name="m_endTimeLbl" Text="End Time" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="3"/>
+    <TextBox x:Name="m_name" Text="{x:Bind Session.Name, Mode=TwoWay}" Grid.Column="1" Grid.Row="0"/>
+    <ComboBox x:Name="m_dayOfWeek" SelectedIndex="{x:Bind Session.DayOfWeek, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="1"/>
+    <TimePicker ClockIdentifier="24HourClock" Time="{x:Bind Session.Start, Mode=TwoWay, Converter={StaticResource TimeOnlyToTimeSpanConverter}}" Grid.Column="1" Grid.Row="2"/>
+    <TimePicker ClockIdentifier="24HourClock" Time="{x:Bind Session.End, Mode=TwoWay, Converter={StaticResource TimeOnlyToTimeSpanConverter}}" Grid.Column="1" Grid.Row="3"/>
+  </Grid>
+</Page>

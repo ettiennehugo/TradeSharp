@@ -15,7 +15,7 @@ using Windows.Foundation.Collections;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.CoreUI.ViewModels;
 
-namespace TradeSharp.WinDataManager.Views
+namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
   /// Displays the list of the defined countries and allow adding new countries.

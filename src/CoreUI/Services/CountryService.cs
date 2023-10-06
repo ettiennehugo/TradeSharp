@@ -71,6 +71,8 @@ namespace TradeSharp.CoreUI.Services
 
     public Task<Country> UpdateAsync(Country item) => m_countryRepository.UpdateAsync(item);
 
+    public Task<Country> CopyAsync(Country item) => throw new NotImplementedException();
+
     //properties
     public event EventHandler<Country>? SelectedItemChanged;
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } } //countries to not have a parent

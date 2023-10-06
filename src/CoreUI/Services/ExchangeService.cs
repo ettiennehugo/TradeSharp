@@ -1,19 +1,19 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.CoreUI.Repositories;
 using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
-  /// Observable service class for holiday objects.
+  /// Observable service class for exchange objects.
   /// </summary>
-  public partial class HolidayService : ObservableObject, IItemsService<Holiday>
+  public partial class ExchangeService : ObservableObject, IItemsService<Exchange>
   {
     //constants
 
@@ -25,17 +25,18 @@ namespace TradeSharp.CoreUI.Services
 
 
     //attributes
-    private IHolidayRepository m_holidayRepository;
+    private IExchangeRepository m_exchangeRepository;
     private Guid m_parent;
-    [ObservableProperty] private Holiday? m_selectedItem;
-    [ObservableProperty] private ObservableCollection<Holiday> m_items;
+    [ObservableProperty] private Exchange? m_selectedItem;
+    [ObservableProperty] private ObservableCollection<Exchange> m_items;
+
 
     //constructors
-    public HolidayService(IHolidayRepository holidayRepository)
+    public ExchangeService(IExchangeRepository exchangeRepository)
     {
       m_parent = Guid.Empty;
-      m_holidayRepository = holidayRepository;
-      m_items = new ObservableCollection<Holiday>();
+      m_exchangeRepository = exchangeRepository;
+      m_items = new ObservableCollection<Exchange>();
     }
 
     //finalizers
@@ -53,27 +54,26 @@ namespace TradeSharp.CoreUI.Services
         if (m_parent != value)
         {
           m_parent = value;
-          m_holidayRepository.ParentId = value;
           OnPropertyChanged();
           _ = RefreshAsync();
         }
       }
     }
 
-    public event EventHandler<Holiday>? SelectedItemChanged;
+    public event EventHandler<Exchange>? SelectedItemChanged;
 
     //methods
-    public async Task<Holiday> AddAsync(Holiday item)
+    public async Task<Exchange> AddAsync(Exchange item)
     {
-      var result = await m_holidayRepository.AddAsync(item);
+      var result = await m_exchangeRepository.AddAsync(item);
       SelectedItem = result;
       SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
     }
 
-    public async Task<bool> DeleteAsync(Holiday item)
+    public async Task<bool> DeleteAsync(Exchange item)
     {
-      bool result = await m_holidayRepository.DeleteAsync(item.Id);
+      bool result = await m_exchangeRepository.DeleteAsync(item.Id);
       if (item == SelectedItem)
       {
         SelectedItemChanged?.Invoke(this, SelectedItem);
@@ -84,19 +84,19 @@ namespace TradeSharp.CoreUI.Services
 
     public async Task RefreshAsync()
     {
-      var result = await m_holidayRepository.GetItemsAsync();
+      var result = await m_exchangeRepository.GetItemsAsync();
       Items.Clear();
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
-    public Task<Holiday> UpdateAsync(Holiday item)
+    public Task<Exchange> UpdateAsync(Exchange item)
     {
-      return m_holidayRepository.UpdateAsync(item);
+      return m_exchangeRepository.UpdateAsync(item);
     }
 
-    public Task<Holiday> CopyAsync(Holiday item) => throw new NotImplementedException();
+    public Task<Exchange> CopyAsync(Exchange item) => throw new NotImplementedException();
 
   }
 }

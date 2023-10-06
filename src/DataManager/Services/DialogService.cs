@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.Common;
 using Windows.Globalization;
 using TradeSharp.CoreUI.ViewModels;
+using TradeSharp.CoreUI;
 using TradeSharp.Data;
 
 namespace TradeSharp.WinDataManager.Services
@@ -56,7 +57,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<CountryInfo?> ShowSelectCountryAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      Views.CountrySelectorView view = new Views.CountrySelectorView();
+      WinCoreUI.Views.CountrySelectorView view = new WinCoreUI.Views.CountrySelectorView();
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -69,16 +70,15 @@ namespace TradeSharp.WinDataManager.Services
 
       ContentDialogResult result = await dialog.ShowAsync();
 
-      if (result == ContentDialogResult.Primary)
-        return view.SelectedCountry;
-      else
-        return null;
+      if (result == ContentDialogResult.Primary) return view.SelectedCountry;
+
+      return null;
     }
 
     public async Task<Holiday> ShowCreateHolidayAsync(Guid parentId)
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      Views.HolidayView view = new Views.HolidayView(parentId);
+      WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView(parentId);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -91,16 +91,15 @@ namespace TradeSharp.WinDataManager.Services
 
       ContentDialogResult result = await dialog.ShowAsync();
 
-      if (result == ContentDialogResult.Primary)
-        return view.Holiday;
-      else
-        return null;
+      if (result == ContentDialogResult.Primary) return view.Holiday;
+
+      return null;
     }
 
-    public async Task<Holiday> ShowUpdateHolidayAsync(Holiday holiday)
+    public async Task<Holiday?> ShowUpdateHolidayAsync(Holiday holiday)
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      Views.HolidayView view = new Views.HolidayView((Holiday)holiday.Clone());
+      WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView((Holiday)holiday.Clone());
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -113,13 +112,93 @@ namespace TradeSharp.WinDataManager.Services
 
       ContentDialogResult result = await dialog.ShowAsync();
 
-      if (result == ContentDialogResult.Primary)
+      if (result == ContentDialogResult.Primary) return view.Holiday;
+
+      return null;
+    }
+
+    public async Task<Exchange?> ShowCreateExchangeAsync()
+    {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView();
+      ContentDialog dialog = new ContentDialog()
       {
-        holiday.Update(view.Holiday);
-        return null;
-      }
-      else
-        return null;
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Title = "Create Exchange",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+
+      if (result == ContentDialogResult.Primary) return view.Exchange;
+
+      return null;
+    }
+
+    public async Task<Exchange?> ShowUpdateExchangeAsync(Exchange exchange)
+    {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView((Exchange)exchange.Clone());
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Title = "Update Exchange",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+
+      if (result == ContentDialogResult.Primary) return view.Exchange;
+
+      return null;
+    }
+
+    public async Task<Session?> ShowCreateSessionAsync(Guid parentId)
+    {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.SessionView view = new WinCoreUI.Views.SessionView(parentId);
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Title = "Create Session",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+
+      if (result == ContentDialogResult.Primary) return view.Session;
+      
+      return null;
+    }
+
+    public async Task<Session?> ShowUpdateSessionAsync(Session session)
+    {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.SessionView view = new WinCoreUI.Views.SessionView((Session)session.Clone());
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Title = "Update Session",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+
+      if (result == ContentDialogResult.Primary) return view.Session;
+
+      return null;
     }
 
     //properties

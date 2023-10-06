@@ -14,16 +14,17 @@ using TradeSharp.Common;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using TradeSharp.Data;
+using TradeSharp.WinCoreUI.Common;
 using System.ComponentModel;
 using System.Reflection;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace TradeSharp.WinDataManager.Views
+namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
-  /// An empty page that can be used on its own or navigated to within a Frame.
+  /// Holiday definition view used to create/view/update a holiday.
   /// </summary>
   public sealed partial class HolidayView : Page
   {
@@ -44,6 +45,7 @@ namespace TradeSharp.WinDataManager.Views
     {
       this.InitializeComponent();
       m_parentId = parentId;
+      m_name.Text = "New Holiday";
       Holiday = new Holiday(Guid.NewGuid(), m_parentId, m_name.Text, HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
     }
 
@@ -54,7 +56,6 @@ namespace TradeSharp.WinDataManager.Views
       Holiday = holiday;
     }
 
-
     //finalizers
 
 
@@ -62,7 +63,6 @@ namespace TradeSharp.WinDataManager.Views
 
 
     //properties
-    //https://learn.microsoft.com/en-us/windows/uwp/xaml-platform/dependency-properties-overview
     public static readonly DependencyProperty s_holidayProperty = DependencyProperty.Register("Holiday", typeof(Holiday), typeof(HolidayView), new PropertyMetadata(null));
     public Holiday? Holiday
     {
@@ -73,34 +73,11 @@ namespace TradeSharp.WinDataManager.Views
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      populateComboBoxFromEnum(ref m_holidayType, typeof(HolidayType));
-      populateComboBoxFromEnum(ref m_month, typeof(Months));
-      populateComboBoxFromEnum(ref m_dayOfWeek, typeof(DayOfWeek));
-      populateComboBoxFromEnum(ref m_weekOfMonth, typeof(WeekOfMonth));
-      populateComboBoxFromEnum(ref m_moveWeekendHoliday, typeof(MoveWeekendHoliday));
-    }
-
-    private void populateComboBoxFromEnum(ref ComboBox comboBox, Type enumType)
-    {
-      comboBox.Items.Clear();
-
-      FieldInfo[] fieldsInfo = enumType.GetFields();
-
-      foreach (var value in Enum.GetValues(enumType)) 
-      {
-        string comboValue = value.ToString();
-
-        foreach (FieldInfo field in fieldsInfo)
-          if (field.Name == value.ToString())
-          {
-            DescriptionAttribute? description = (DescriptionAttribute?)field.GetCustomAttribute(typeof(DescriptionAttribute));
-            if (description != null)
-              comboValue = description.Description;
-            break;
-          }
-
-        comboBox.Items.Add(comboValue);
-      }
+      Utilities.populateComboBoxFromEnum(ref m_holidayType, typeof(HolidayType));
+      Utilities.populateComboBoxFromEnum(ref m_month, typeof(Months));
+      Utilities.populateComboBoxFromEnum(ref m_dayOfWeek, typeof(DayOfWeek));
+      Utilities.populateComboBoxFromEnum(ref m_weekOfMonth, typeof(WeekOfMonth));
+      Utilities.populateComboBoxFromEnum(ref m_moveWeekendHoliday, typeof(MoveWeekendHoliday));
     }
 
     private void m_holidayType_SelectionChanged(object sender, SelectionChangedEventArgs e)
