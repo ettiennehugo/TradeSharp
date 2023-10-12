@@ -5,51 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:data="using:TradeSharp.Data"
     xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"
+    xmlns:winui="using:CommunityToolkit.WinUI.UI.Controls"  
     mc:Ignorable="d">
   <UserControl.Resources>
     <wincoreuicommon:EnumValueDescriptionConverter x:Key="EnumValueDescriptionConverter"/>
-    <DataTemplate x:Key="HolidayHeaderTemplate">
-      <Grid ColumnSpacing="10">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="2*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="Name" Grid.Column="0"/>
-        <TextBlock Text="Type" Grid.Column="1"/>
-        <TextBlock Text="Month" Grid.Column="2"/>
-        <TextBlock Text="Day of Month" Grid.Column="3"/>
-        <TextBlock Text="Day of Week" Grid.Column="4"/>
-        <TextBlock Text="Week of Month" Grid.Column="5"/>
-        <TextBlock Text="Move Weekend Holiday" Grid.Column="6"/>
-      </Grid>
-    </DataTemplate>
-    <DataTemplate x:Key="HolidayItemTemplate" x:DataType="data:Holiday">
-      <Grid ColumnSpacing="10">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="2*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="{x:Bind Name, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="0"/>
-        <TextBlock Text="{x:Bind Type, Mode=OneWay, Converter={StaticResource EnumValueDescriptionConverter}}" Margin="20, 1, 1, 1" Grid.Column="1"/>
-        <TextBlock Text="{x:Bind Month, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="2"/>
-        <TextBlock Text="{x:Bind DayOfMonth, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="3"/>
-        <TextBlock Text="{x:Bind DayOfWeek, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="4"/>
-        <TextBlock Text="{x:Bind WeekOfMonth, Mode=OneWay}" Margin="20, 1, 1, 1" Grid.Column="5"/>
-        <TextBlock Text="{x:Bind MoveWeekendHoliday, Mode=OneWay, Converter={StaticResource EnumValueDescriptionConverter}}" Margin="20, 1, 1, 1" Grid.Column="6"/>
-      </Grid>
-    </DataTemplate>
   </UserControl.Resources>
   <StackPanel x:Name="m_main" Orientation="Vertical">
     <StackPanel x:Name="m_toolbar" Orientation="Horizontal">
@@ -58,6 +18,16 @@
       <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" Label="Update holiday" IsCompact="True"/>
       <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Label="Delete holiday" IsCompact="True"/>
     </StackPanel>
-    <ListView x:Name="m_holidays" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" HeaderTemplate="{StaticResource HolidayHeaderTemplate}" ItemTemplate="{StaticResource HolidayItemTemplate}"/>
+    <winui:DataGrid x:Name="m_holidays" DataContext="" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False">
+      <winui:DataGrid.Columns>
+        <winui:DataGridTextColumn x:Name="m_columnName" Width="Auto" Header="Name" Binding="{Binding Name}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnType" Width="Auto" Header="Type" Binding="{Binding Type, Converter={StaticResource EnumValueDescriptionConverter}}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnMonth" Width="Auto" Header="Month" Binding="{Binding Month, Converter={StaticResource EnumValueDescriptionConverter}}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnDayOfMonth" Width="Auto" Header="Day of Month" Binding="{Binding DayOfMonth, Converter={StaticResource EnumValueDescriptionConverter}}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnDayOfWeek" Width="Auto" Header="Day of Week" Binding="{Binding DayOfWeek}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnWeekOfMonth" Width="Auto" Header="Week of Month" Binding="{Binding WeekOfMonth, Converter={StaticResource EnumValueDescriptionConverter}}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnMoveWeekendHoliday" Width="Auto" Header="Move Weekend Holiday" Binding="{Binding MoveWeekendHoliday, Converter={StaticResource EnumValueDescriptionConverter}}" IsReadOnly="True"/>
+      </winui:DataGrid.Columns>
+    </winui:DataGrid>
   </StackPanel>
 </UserControl>

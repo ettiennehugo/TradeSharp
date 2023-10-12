@@ -1,28 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using WinRT.Interop;
 using System.Threading.Tasks;
 using Windows.UI.Popups;
 using System.Runtime.InteropServices;
 using TradeSharp.CoreUI.Services;
 using Microsoft.UI.Xaml.Controls;
-using Windows.Foundation;
-using System.Diagnostics.Eventing.Reader;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.Common;
-using Windows.Globalization;
-using TradeSharp.CoreUI.ViewModels;
-using TradeSharp.CoreUI;
 using TradeSharp.Data;
+using System.IO;
 
 namespace TradeSharp.WinDataManager.Services
 {
-    /// <summary>
-    /// Windows implementation of the dialog service.
-    /// </summary>
-    public class DialogService : IDialogService
+  /// <summary>
+  /// Windows implementation of the dialog service.
+  /// </summary>
+  public class DialogService : IDialogService
   {
 
     //constants
@@ -133,8 +126,32 @@ namespace TradeSharp.WinDataManager.Services
 
       ContentDialogResult result = await dialog.ShowAsync();
 
-      if (result == ContentDialogResult.Primary) return view.Exchange;
+      if (result == ContentDialogResult.Primary)
+      {
+        string logoFilename = Exchange.GetExchangeLogoPath(view.Exchange.LogoId);
+        if (view.ExchangeLogoPath != logoFilename)
+        {
+          bool removeCurrentLogo = true;
+          if (view.Exchange.LogoId == Guid.Empty)
+          {
+            removeCurrentLogo = false;  //no logo yet assigned so we don't want to delete the blank/empty logo used
+            view.Exchange.LogoId = Guid.NewGuid();
+          }
 
+          try
+          {
+            logoFilename = Exchange.CreateExchangeLogoPath(view.Exchange.LogoId, Path.GetExtension(view.ExchangeLogoPath));
+            if (removeCurrentLogo) File.Delete(logoFilename);    //ensure that we do not keep stale file around since new file extension can be different from current file extension
+            File.Copy(view.ExchangeLogoPath, logoFilename);
+          }
+          catch (Exception e)
+          {
+            await ShowMessageAsync(e.Message);
+          }
+        }
+
+        return view.Exchange;
+      }
       return null;
     }
 
@@ -154,8 +171,22 @@ namespace TradeSharp.WinDataManager.Services
 
       ContentDialogResult result = await dialog.ShowAsync();
 
-      if (result == ContentDialogResult.Primary) return view.Exchange;
+      if (result == ContentDialogResult.Primary)
+      {
+        try
+        {
+          string newLogoFilename = Exchange.CreateExchangeLogoPath(view.Exchange.LogoId, Path.GetExtension(view.ExchangeLogoPath));
+          if (view.Exchange.LogoPath != Exchange.BlankLogoPath && File.Exists(view.Exchange.LogoPath)) File.Delete(view.Exchange.LogoPath);    //ensure that we do not keep stale file around since new file extension can be different from current file extension
+          File.Copy(view.ExchangeLogoPath, newLogoFilename);
+          view.Exchange.LogoPath = newLogoFilename;
+        }
+        catch (Exception e)
+        {
+          await ShowMessageAsync(e.Message);
+        }
 
+        return view.Exchange;
+      }
       return null;
     }
 

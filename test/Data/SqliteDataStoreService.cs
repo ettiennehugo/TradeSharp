@@ -93,7 +93,7 @@ namespace TradeSharp.Data.Testing
       //create common attributes used for testing
       m_country = new Country(Guid.NewGuid(), "en-US");
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-      m_exchange = new Exchange(Guid.NewGuid(), m_country.Id, "TestExchange", m_timeZone);
+      m_exchange = new Exchange(Guid.NewGuid(), m_country.Id, "TestExchange", m_timeZone, Guid.Empty);
       m_instrument = new Instrument(Guid.NewGuid(), InstrumentType.Stock, "TEST", "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
     }
 
@@ -287,7 +287,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateInstrument_AdditionalExchangePersistData_Success()
     {
-      Exchange exchange = new Exchange(Guid.NewGuid(), m_country.Id, "SecondaryTestExchange", m_timeZone);
+      Exchange exchange = new Exchange(Guid.NewGuid(), m_country.Id, "SecondaryTestExchange", m_timeZone, Guid.Empty);
       m_dataStore.AddInstrumentToExchange(m_instrument.Id, exchange.Id);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentSecondaryExchange,
@@ -394,7 +394,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateInstrument_ChangeAllAttributes_Success()
     {
-      Exchange exchange = new Exchange(Guid.NewGuid(), m_country.Id, "SecondaryTestExchange", m_timeZone);
+      Exchange exchange = new Exchange(Guid.NewGuid(), m_country.Id, "SecondaryTestExchange", m_timeZone, Guid.Empty);
       InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group", "Test Instrument Group Description", Array.Empty<Guid>());
       DateTime dateTime = DateTime.Now.AddDays(3);
 
@@ -1566,8 +1566,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetExchanges_ReturnPersistedData_Success()
     {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Second test exchange", m_timeZone);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Third test exchange", m_timeZone);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
 
       m_dataStore.CreateExchange(m_exchange);
       m_dataStore.CreateExchange(secondExchange);
@@ -1620,8 +1620,8 @@ namespace TradeSharp.Data.Testing
       TimeOnly postMarketStartTime = new TimeOnly(16, 0);
       TimeOnly postMarketEndTime = new TimeOnly(21, 00);
 
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Second test exchange", m_timeZone);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Third test exchange", m_timeZone);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
 
       Session preFirstMarketSession = new Session(Guid.NewGuid(), "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
       Session mainFirstSession = new Session(Guid.NewGuid(), "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
@@ -1726,8 +1726,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstruments_ReturnsSecondaryExchanges_Success()
     {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Second test exchange", m_timeZone);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Third test exchange", m_timeZone);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
       m_instrument = new Instrument(Guid.NewGuid(), InstrumentType.Stock, "TEST", "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Array.Empty<Guid>(), m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
       m_dataStore.CreateInstrument(m_instrument);
 

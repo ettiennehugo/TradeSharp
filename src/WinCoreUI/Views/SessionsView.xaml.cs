@@ -65,6 +65,16 @@ namespace TradeSharp.WinCoreUI.Views
     public SessionViewModel ViewModel { get; }
     public bool Editable { get; set; }
 
+    private void m_sessions_AutoGeneratingColumn(object sender, CommunityToolkit.WinUI.UI.Controls.DataGridAutoGeneratingColumnEventArgs e)
+    {
+      if (e.Column.Header.ToString() == "Id")
+        e.Cancel = true;
+      else if (e.Column.Header.ToString() == "ExchangeId")
+        e.Cancel = true;
+      else if (e.Column.Header.ToString() == "DayOfWeek")
+        e.Column.Header = "Day of Week";
+    }
+
     //methods
 
 

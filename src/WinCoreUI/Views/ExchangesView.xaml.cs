@@ -13,6 +13,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI.UI.Controls;
 using TradeSharp.CoreUI.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -58,6 +59,18 @@ namespace TradeSharp.WinCoreUI.Views
     {
       ViewModel.RefreshCommand.Execute(null);
     }
+
+    //private void m_exchanges_AutoGeneratingColumn(object sender, CommunityToolkit.WinUI.UI.Controls.DataGridAutoGeneratingColumnEventArgs e)
+    //{
+    //  if (e.Column.Header.ToString() == "Id" || e.Column.Header.ToString() == "LogoId")
+    //    e.Cancel = true;
+    //  else if (e.Column.Header.ToString() == "LogoPath")
+    //    e.Column.Header = "";
+    //  else if (e.Column.Header.ToString() == "CountryId")
+    //    e.Column.Header = "Country";
+    //  else if (e.Column.Header.ToString() == "TimeZone")
+    //    e.Column.Header = "Time Zone";
+    //}
 
     //methods
 

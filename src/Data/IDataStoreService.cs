@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Drawing;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
@@ -216,18 +217,58 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class Exchange : ObservableObject, IEquatable<Exchange>, ICloneable, IUpdateable<Exchange>
   {
-    public Exchange(Guid id, Guid countryId, string name, TimeZoneInfo timeZone)
+    /// <summary>
+    /// Logo path representing the blank logo for exchanges that do not yet have a logo assignment.
+    /// </summary>
+    private static string s_blankLogoPath = GetExchangeLogoPath(Guid.Empty);
+    public static string BlankLogoPath { get => s_blankLogoPath;  }
+
+    /// <summary>
+    /// Create the logo path to use for logo with a given id and extension.
+    /// </summary>
+    public static string CreateExchangeLogoPath(Guid logoId, string extension)
+    {
+      string internalExtension = extension;
+      internalExtension = internalExtension.Replace('.', ' ');
+      internalExtension = internalExtension.Trim();
+      string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
+      return $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.{internalExtension}";
+    }
+
+    /// <summary>
+    /// Retrieves the logo path for an exchange logo.
+    /// </summary>
+    public static string GetExchangeLogoPath(Guid logoId)
+    {
+      string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
+      
+      //use fallback based on different image types, use jpg when possible since it is very compact
+      string logoFilename = $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.jpg";
+      if (File.Exists(logoFilename)) return logoFilename;
+      logoFilename = $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.jpeg";
+      if (File.Exists(logoFilename)) return logoFilename;
+      logoFilename = $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.png";
+      if (File.Exists(logoFilename)) return logoFilename;
+      return $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{Guid.Empty.ToString()}.png"; //return no logo image
+    }
+
+
+    public Exchange(Guid id, Guid countryId, string name, TimeZoneInfo timeZone, Guid logoId)
     {
       Id = id;
       CountryId = countryId;
       Name = name;
       TimeZone = timeZone;
+      LogoId = logoId;
+      LogoPath = GetExchangeLogoPath(logoId);
     }
 
     [ObservableProperty] private Guid m_id;
     [ObservableProperty] private Guid m_countryId;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private TimeZoneInfo m_timeZone;
+    [ObservableProperty] private Guid m_logoId; //logo Id is used for filename under assets\exchangeLogos
+    [ObservableProperty] private string m_logoPath;
 
     public bool Equals(Exchange? other)
     {
@@ -236,7 +277,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Exchange(Id, CountryId, Name, TimeZone);
+      return new Exchange(Id, CountryId, Name, TimeZone, LogoId);
     }
 
     public void Update(Exchange item)
@@ -244,6 +285,7 @@ namespace TradeSharp.Data
       CountryId = item.CountryId;
       Name = item.Name;
       TimeZone = item.TimeZone;
+      LogoId = item.LogoId;
     }
   }
 

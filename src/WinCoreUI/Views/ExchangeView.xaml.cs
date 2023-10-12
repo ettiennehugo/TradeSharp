@@ -1,20 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using TradeSharp.CoreUI.ViewModels;
+using Windows.Storage.Pickers;
+using System.Runtime.InteropServices;
+using WinRT.Interop;
+using Windows.Storage;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -37,16 +30,17 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private IDataStoreService m_dataStoreService;
+
 
     //constructors
     public ExchangeView()
     {
       loadCountries();
       loadTimeZones();
+      Exchange = new Exchange(Guid.NewGuid(), Guid.Empty, m_name.Text, TimeZoneInfo.Local, Guid.Empty);
+      ExchangeLogoPath = Data.Exchange.GetExchangeLogoPath(Guid.Empty);
       this.InitializeComponent();
       m_name.Text = "New Exchange";
-      Exchange = new Exchange(Guid.NewGuid(), Guid.Empty, m_name.Text, TimeZoneInfo.Local);
       m_countryId.SelectedIndex = 0; 
     }
 
@@ -54,8 +48,9 @@ namespace TradeSharp.WinCoreUI.Views
     {
       loadCountries();
       loadTimeZones();
-      this.InitializeComponent();
       Exchange = exchange;
+      ExchangeLogoPath = Exchange.LogoPath;
+      this.InitializeComponent();
 
       m_countryId.SelectedIndex = 0;  //default to first valid country
       for (int i = 0; i < Countries.Count; i++)
@@ -91,6 +86,13 @@ namespace TradeSharp.WinCoreUI.Views
       set => SetValue(s_exchangeProperty, value);
     }
 
+    public static readonly DependencyProperty s_exchangeLogoPathProperty = DependencyProperty.Register("ExchangeLogoPath", typeof(string), typeof(ExchangeView), new PropertyMetadata(null));
+    public string ExchangeLogoPath
+    {
+      get => (string)GetValue(s_exchangeLogoPathProperty);
+      set => SetValue(s_exchangeLogoPathProperty, value);
+    }
+
     //methods
     private void loadCountries()
     {
@@ -114,5 +116,26 @@ namespace TradeSharp.WinCoreUI.Views
     {
       Exchange.TimeZone = (TimeZoneInfo)m_timeZone.SelectedItem;
     }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetActiveWindow();
+
+    private async void m_logo_Click(object sender, RoutedEventArgs e)
+    {
+      //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
+      FileOpenPicker openPicker = new FileOpenPicker();
+      openPicker.ViewMode = PickerViewMode.Thumbnail;
+      openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      openPicker.FileTypeFilter.Add(".jpg");
+      openPicker.FileTypeFilter.Add(".jpeg");
+      openPicker.FileTypeFilter.Add(".png");
+
+      var hwnd = GetActiveWindow();
+      InitializeWithWindow.Initialize(openPicker, hwnd);
+
+      StorageFile file = await openPicker.PickSingleFileAsync();
+      if (file != null) ExchangeLogoPath = file.Path;
+    }
+
   }
 }

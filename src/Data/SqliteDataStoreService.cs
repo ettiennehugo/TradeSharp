@@ -1,13 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Configuration;
-using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using System.Globalization;
-using System.Net.Http.Headers;
-using System.Reflection.PortableExecutable;
 using TradeSharp.Common;
-using static TradeSharp.Data.IDataStoreService;
 
 namespace TradeSharp.Data
 {
@@ -142,7 +135,7 @@ namespace TradeSharp.Data
     {
       var result = new List<Country>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableCountry}"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableCountry} ORDER BY IsoCode ASC"))
         while (reader.Read()) result.Add(new Country(reader.GetGuid(0), reader.GetString(1)));
 
       return result;
@@ -170,12 +163,13 @@ namespace TradeSharp.Data
     public void CreateExchange(Exchange exchange)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableExchange} (Id, CountryId, Name, TimeZone) " +
+        $"INSERT OR REPLACE INTO {c_TableExchange} (Id, CountryId, Name, TimeZone, LogoId) " +
           $"VALUES (" +
             $"'{exchange.Id.ToString()}', " +
             $"'{exchange.CountryId.ToString()}', " +
             $"'{SqlSafeString(exchange.Name)}', " +
-            $"'{exchange.TimeZone.ToSerializedString()}'" +
+            $"'{exchange.TimeZone.ToSerializedString()}', " +
+            $"'{exchange.LogoId.ToString()}'" +
           $")"
       );
     }
@@ -186,7 +180,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange} WHERE Id = '{id.ToString()}'"))
         if (reader.Read())
-          result = new Exchange(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), TimeZoneInfo.FromSerializedString(reader.GetString(3)));
+          result = new Exchange(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), TimeZoneInfo.FromSerializedString(reader.GetString(3)), reader.GetGuid(4));
 
       return result;
     }    
@@ -195,9 +189,9 @@ namespace TradeSharp.Data
     {
       var result = new List<Exchange>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange}"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange} ORDER BY Name ASC"))
         while (reader.Read())
-          result.Add(new Exchange(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), TimeZoneInfo.FromSerializedString(reader.GetString(3))));
+          result.Add(new Exchange(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), TimeZoneInfo.FromSerializedString(reader.GetString(3)), reader.GetGuid(4)));
 
       return result;
     }
@@ -208,14 +202,30 @@ namespace TradeSharp.Data
         $"UPDATE OR FAIL {c_TableExchange} " +
           $"SET CountryId = '{exchange.CountryId.ToString()}', " +
               $"Name = '{SqlSafeString(exchange.Name)}', " +
-              $"TimeZone = '{exchange.TimeZone.ToSerializedString()}' " +
+              $"TimeZone = '{exchange.TimeZone.ToSerializedString()}', " +
+              $"LogoId = '{exchange.LogoId}' " +
           $"WHERE Id = '{exchange.Id.ToString()}'"
       );
     }
 
     public int DeleteExchange(Guid id)
     {
+      //get the exchange logo Id to delete the associated logo file
+      Guid logoId = Guid.Empty;
+      SqliteDataReader reader = ExecuteReader($"SELECT logoId FROM {c_TableExchange} WHERE Id = {id.ToString()}");
+      if (reader.Read()) logoId = reader.GetGuid(0);
+
+      //delete header entry
       int result = Delete(c_TableExchange, id);
+
+      //delete logo image file
+      if (logoId != Guid.Empty)
+      {
+        string logoFilename = Exchange.GetExchangeLogoPath(logoId);
+        if (logoFilename != string.Empty) File.Delete(logoFilename);
+      }
+
+      //delete rest of the associated objects
       foreach (var holidayId in GetAssociatedIds(c_TableHoliday, id, "ParentId")) result += DeleteHoliday(holidayId);
       using (var instrumentRows = GetAssociatedRows(c_TableInstrument, id, "PrimaryExchangeId", "Id, Ticker"))
         while (instrumentRows.Read()) result += DeleteInstrument(instrumentRows.GetGuid(0), instrumentRows.GetString(1));
@@ -257,7 +267,7 @@ namespace TradeSharp.Data
     {
       var result = new List<Holiday>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} WHERE ParentId = '{parentId.ToString()}'"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} WHERE ParentId = '{parentId.ToString()}' ORDER BY Name ASC"))
         while (reader.Read())
           result.Add(new Holiday(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8))); ;
 
@@ -268,7 +278,7 @@ namespace TradeSharp.Data
     {
       var result = new List<Holiday>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday}"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} ORDER BY Name ASC"))
         while (reader.Read())
           result.Add(new Holiday(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8))); ;
 
@@ -295,8 +305,6 @@ namespace TradeSharp.Data
     {
       return Delete(c_TableHoliday, id);
     }
-
-
 
     public void CreateSession(Session session)
     {
@@ -325,7 +333,7 @@ namespace TradeSharp.Data
     {
       var result = new List<Session>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession} WHERE ExchangeId = '{exchangeId.ToString()}'"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession} WHERE ExchangeId = '{exchangeId.ToString()}' ORDER BY DayOfWeek ASC, StartTime ASC, EndTime ASC"))
         while (reader.Read())
           result.Add(new Session(reader.GetGuid(0), reader.GetString(1), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5))));
 
@@ -336,7 +344,7 @@ namespace TradeSharp.Data
     {
       var result = new List<Session>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession}"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession}  ORDER BY ExchangeId ASC, DayOfWeek ASC, StartTime ASC, EndTime ASC"))
         while (reader.Read())
           result.Add(new Session(reader.GetGuid(0), reader.GetString(1), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5))));
 
@@ -391,7 +399,7 @@ namespace TradeSharp.Data
     {
       List<InstrumentGroup> result = new List<InstrumentGroup>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrumentGroup}"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrumentGroup} ORDER BY ParentId ASC, Name ASC, Description ASC"))
       {
         while (reader.Read())
         {
@@ -408,7 +416,7 @@ namespace TradeSharp.Data
     {
       List<Guid> result = new List<Guid>();
 
-      using (var reader = ExecuteReader($"SELECT InstrumentId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}'"))
+      using (var reader = ExecuteReader($"SELECT InstrumentId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' ORDER BY Name ASC, Description ASC"))
         while (reader.Read()) result.Add(reader.GetGuid(0));
 
       return result;
@@ -454,8 +462,6 @@ namespace TradeSharp.Data
       ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' AND InstrumentId = '{instrumentId.ToString()}'");
     }
 
-
-
     public void CreateInstrument(Instrument instrument)
     {
       ExecuteCommand(
@@ -498,7 +504,7 @@ namespace TradeSharp.Data
     {
       var result = new List<Instrument>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument}"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} ORDER BY Type ASC, Ticker ASC, Name ASC, Description ASC"))
         while (reader.Read())
         {
           List<Guid> secondaryExchangeIds = new List<Guid>();
@@ -522,7 +528,7 @@ namespace TradeSharp.Data
     {
       var result = new List<Instrument>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType}"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC"))
         while (reader.Read())
         {
           List<Guid> secondaryExchangeIds = new List<Guid>();
@@ -577,8 +583,6 @@ namespace TradeSharp.Data
       return ExecuteCommand($"DELETE FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}' AND ExchangeId = '{exchangeId.ToString()}'");
     }
 
-
-
     public void CreateFundamental(Fundamental fundamental)
     {
       ExecuteCommand(
@@ -597,7 +601,7 @@ namespace TradeSharp.Data
     {
       var result = new List<Fundamental>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableFundamentals}"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableFundamentals} ORDER BY Category ASC, Name ASC, Description ASC"))
         while (reader.Read())
           result.Add(new Fundamental(reader.GetGuid(0), reader.GetString(1), reader.GetString(2), (FundamentalCategory)reader.GetInt32(3), (FundamentalReleaseInterval)reader.GetInt32(4)));
 
@@ -676,7 +680,7 @@ namespace TradeSharp.Data
         $"SELECT * FROM {dataProviderAssociationTable} " +
           $"INNER JOIN {c_TableFundamentals} ON {dataProviderAssociationTable}.FundamentalId = {c_TableFundamentals}.Id " +
           $"WHERE {c_TableFundamentals}.Category = {(int)FundamentalCategory.Country} " +
-          $"ORDER BY {dataProviderAssociationTable}.FundamentalId ASC, {dataProviderAssociationTable}.CountryId ASC";
+          $"ORDER BY {c_TableFundamentals}.Name ASC, {c_TableFundamentals}.Description ASC, {dataProviderAssociationTable}.FundamentalId ASC, {dataProviderAssociationTable}.CountryId ASC";
 
       using (var reader = ExecuteReader(selectQuery))
         while (reader.Read()) result.Add(new CountryFundamental(dataProviderName, reader.GetGuid(0), reader.GetGuid(1), reader.GetGuid(2)));
@@ -771,7 +775,7 @@ namespace TradeSharp.Data
         $"SELECT * FROM {dataProviderAssociationTable} " +
           $"INNER JOIN {c_TableFundamentals} ON {dataProviderAssociationTable}.FundamentalId = {c_TableFundamentals}.Id " +
           $"WHERE {c_TableFundamentals}.Category = {(int)FundamentalCategory.Instrument} " +
-          $"ORDER BY {dataProviderAssociationTable}.FundamentalId ASC, {dataProviderAssociationTable}.InstrumentId ASC";
+          $"ORDER BY {c_TableFundamentals}.Name ASC, {c_TableFundamentals}.Description ASC, {dataProviderAssociationTable}.FundamentalId ASC, {dataProviderAssociationTable}.InstrumentId ASC";
 
       using (var reader = ExecuteReader(selectQuery))
         while (reader.Read()) result.Add(new InstrumentFundamental(dataProviderName, reader.GetGuid(0), reader.GetGuid(1), reader.GetGuid(2)));
@@ -834,8 +838,6 @@ namespace TradeSharp.Data
 
       return ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}");
     }
-
-
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume, bool synthetic)
     {
@@ -1070,10 +1072,6 @@ namespace TradeSharp.Data
       return result;
     }
 
-
-
-
-
     public DataCache GetBarData(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, Resolution resolution, PriceDataType priceDataType)
     {
       //validate inputs
@@ -1098,7 +1096,7 @@ namespace TradeSharp.Data
               $"Ticker = '{normalizedTicker}' " +
               $"AND DateTime >= {fromUtc.ToUniversalTime().ToBinary()} " +
               $"AND DateTime <= {toUtc.ToUniversalTime().ToBinary()} " +
-            $"ORDER BY DateTime";
+            $"ORDER BY DateTime ASC";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
@@ -1119,7 +1117,7 @@ namespace TradeSharp.Data
               $"Ticker = '{normalizedTicker}' " +
               $"AND DateTime >= {fromUtc.ToUniversalTime().ToBinary()} " +
               $"AND DateTime <= {toUtc.ToUniversalTime().ToBinary()} " +
-            $"ORDER BY DateTime";
+            $"ORDER BY DateTime ASC";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
@@ -1191,7 +1189,7 @@ namespace TradeSharp.Data
               $"Ticker = '{normalizedTicker}' " +
               $"AND DateTime >= {fromUtc.ToUniversalTime().ToBinary()} " +
               $"AND DateTime <= {toUtc.ToUniversalTime().ToBinary()} " +
-            $"ORDER BY DateTime";
+            $"ORDER BY DateTime ASC";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
@@ -1220,7 +1218,7 @@ namespace TradeSharp.Data
               $"Ticker = '{normalizedTicker}' " +
               $"AND DateTime >= {fromUtc.ToUniversalTime().ToBinary()} " +
               $"AND DateTime <= {toUtc.ToUniversalTime().ToBinary()} " +
-            $"ORDER BY DateTime";
+            $"ORDER BY DateTime ASC";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
@@ -1369,7 +1367,6 @@ namespace TradeSharp.Data
     public void DropSchema()
     {
       //https://sqlite.org/lang_droptable.html
-
       try
       {
         StartTransaction();
@@ -1446,7 +1443,8 @@ namespace TradeSharp.Data
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
         CountryId TEXT,
         Name TEXT,
-        TimeZone TEXT
+        TimeZone TEXT,
+        LogoId TEXT
       ");
     }
 

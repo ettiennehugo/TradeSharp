@@ -5,14 +5,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:common="using:TradeSharp.Common"
     xmlns:coreuivm="using:TradeSharp.CoreUI.ViewModels"
+    xmlns:winui="using:CommunityToolkit.WinUI.UI.Controls"  
     xmlns:wincoreui="using:TradeSharp.WinCoreUI.Views"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     Loaded="Page_Loaded">
   <Page.Resources>
-    <DataTemplate x:Key="CountryHeaderTemplate">
+    
+    
+    <!--<DataTemplate x:Key="CountryHeaderTemplate">
       <Grid ColumnSpacing="10">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
@@ -46,7 +48,10 @@
         <TextBlock Text="{x:Bind CountryInfo.RegionInfo.CurrencySymbol, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="4"/>
         <TextBlock Text="{x:Bind CountryInfo.RegionInfo.CurrencyEnglishName, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="5"/>
       </Grid>    
-    </DataTemplate>
+    </DataTemplate>-->
+
+
+
   </Page.Resources>
   <Grid x:Name="m_main">
     <Grid.RowDefinitions>
@@ -59,7 +64,27 @@
       <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" Label="Add Country" IsCompact="True"/>
       <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Label="Delete Country" IsCompact="True"/>
     </StackPanel>
-    <ListView x:Name="m_countries" ItemsSource="{x:Bind ViewModel.ItemsViewModels, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItemViewModel, Mode=TwoWay}" HeaderTemplate="{StaticResource CountryHeaderTemplate}" ItemTemplate="{StaticResource CountryItemTemplate}" Grid.Row="1" Grid.Column="0"/>
-    <wincoreui:HolidaysView x:Name="m_holidayView" ParentId="{x:Bind ViewModel.SelectedItemViewModel.Item.Id, Mode=OneWay}" Grid.Row="2" Grid.Column="0"/>
+    
+    
+    <!--<ListView x:Name="m_countries" ItemsSource="{x:Bind ViewModel.ItemsViewModels, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItemViewModel, Mode=TwoWay}" HeaderTemplate="{StaticResource CountryHeaderTemplate}" ItemTemplate="{StaticResource CountryItemTemplate}" Grid.Row="1" Grid.Column="0"/>-->
+
+    
+    <winui:DataGrid x:Name="m_countries" DataContext="" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" Grid.Row="1" Grid.Column="0">
+      <winui:DataGrid.Columns>
+        <winui:DataGridTemplateColumn x:Name="m_columnFlag" Width="Auto" Header="" IsReadOnly="True">
+          <winui:DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <Image x:Name="m_columnFlagTemplate" Source="{Binding CountryInfo.ImagePath}" MaxWidth="64" MaxHeight="32" Margin="5,5"/>
+            </DataTemplate>
+          </winui:DataGridTemplateColumn.CellTemplate>
+        </winui:DataGridTemplateColumn>
+        <winui:DataGridTextColumn x:Name="m_columnISORegionName" Width="Auto" Header="ISO Code" Binding="{Binding CountryInfo.RegionInfo.ThreeLetterISORegionName, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnRegion" Width="Auto" Header="Region" Binding="{Binding CountryInfo.RegionInfo.EnglishName, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnLanguage" Width="Auto" Header="Language" Binding="{Binding CountryInfo.CultureInfo.EnglishName, Mode=OneTime}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnCurrencySymbol" Width="Auto" Header="Currency Symbol" Binding="{Binding CountryInfo.RegionInfo.CurrencySymbol, Mode=OneTime}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnCurrencyName" Width="Auto" Header="Currency Name" Binding="{Binding CountryInfo.RegionInfo.CurrencyEnglishName, Mode=OneTime}" IsReadOnly="True"/>
+      </winui:DataGrid.Columns>
+    </winui:DataGrid>
+    <wincoreui:HolidaysView x:Name="m_holidayView" ParentId="{x:Bind ViewModel.SelectedItem.Id, Mode=OneWay}" Grid.Row="2" Grid.Column="0"/>
   </Grid>  
 </Page>

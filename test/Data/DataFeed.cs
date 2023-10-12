@@ -81,7 +81,7 @@ namespace TradeSharp.Data.Testing
       //create common attributes used for testing
       m_country = new Country(Guid.NewGuid(), "en-US");
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-      m_exchange = new Exchange(Guid.NewGuid(), m_country.Id, "TestExchange", m_timeZone);
+      m_exchange = new Exchange(Guid.NewGuid(), m_country.Id, "TestExchange", m_timeZone, Guid.Empty);
       m_instrumentInceptionDate = DateTime.Now.ToUniversalTime();
       m_instrument = new Instrument(Guid.NewGuid(), InstrumentType.Stock, "TEST", "TestInstrument", "TestInstrumentDescription", m_instrumentInceptionDate, Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
 
