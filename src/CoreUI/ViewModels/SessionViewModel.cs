@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -82,6 +78,10 @@ namespace TradeSharp.CoreUI.ViewModels
     public void OnCopy()
     {
       var item = SelectedItem;
+
+
+      //TODO: Implement the copy session logic
+
 
 
     }

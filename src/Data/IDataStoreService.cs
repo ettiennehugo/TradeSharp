@@ -220,13 +220,13 @@ namespace TradeSharp.Data
     /// <summary>
     /// Logo path representing the blank logo for exchanges that do not yet have a logo assignment.
     /// </summary>
-    private static string s_blankLogoPath = GetExchangeLogoPath(Guid.Empty);
+    private static string s_blankLogoPath = GetLogoPath(Guid.Empty);
     public static string BlankLogoPath { get => s_blankLogoPath;  }
 
     /// <summary>
     /// Create the logo path to use for logo with a given id and extension.
     /// </summary>
-    public static string CreateExchangeLogoPath(Guid logoId, string extension)
+    public static string CreateLogoPath(Guid logoId, string extension)
     {
       string internalExtension = extension;
       internalExtension = internalExtension.Replace('.', ' ');
@@ -238,7 +238,7 @@ namespace TradeSharp.Data
     /// <summary>
     /// Retrieves the logo path for an exchange logo.
     /// </summary>
-    public static string GetExchangeLogoPath(Guid logoId)
+    public static string GetLogoPath(Guid logoId)
     {
       string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
       
@@ -252,6 +252,16 @@ namespace TradeSharp.Data
       return $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{Guid.Empty.ToString()}.png"; //return no logo image
     }
 
+    /// <summary>
+    /// Replaces the exchange logo with the next given logo image.
+    /// </summary>
+    public static void ReplaceLogo(Exchange exchange, string newLogoImagePath)
+    {
+      if (exchange.LogoPath != Exchange.BlankLogoPath && File.Exists(exchange.LogoPath)) File.Delete(exchange.LogoPath);    //ensure that we do not keep stale file around since new file extension can be different from current file extension
+      exchange.LogoId = Guid.NewGuid();   //NOTE: We need to update the logo Id to get a new logo path otherwise bindings to it would not update in the UI
+      exchange.LogoPath = Exchange.CreateLogoPath(exchange.LogoId, Path.GetExtension(newLogoImagePath));
+      File.Copy(newLogoImagePath, exchange.LogoPath);
+    }
 
     public Exchange(Guid id, Guid countryId, string name, TimeZoneInfo timeZone, Guid logoId)
     {
@@ -260,7 +270,7 @@ namespace TradeSharp.Data
       Name = name;
       TimeZone = timeZone;
       LogoId = logoId;
-      LogoPath = GetExchangeLogoPath(logoId);
+      LogoPath = GetLogoPath(logoId);
     }
 
     [ObservableProperty] private Guid m_id;

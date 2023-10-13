@@ -1,11 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TradeSharp.CoreUI.Services;
+using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.ViewModels
 {

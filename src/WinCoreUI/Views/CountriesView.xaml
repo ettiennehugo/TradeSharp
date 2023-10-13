@@ -11,48 +11,6 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     Loaded="Page_Loaded">
-  <Page.Resources>
-    
-    
-    <!--<DataTemplate x:Key="CountryHeaderTemplate">
-      <Grid ColumnSpacing="10">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="ISO Code" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="1"/>
-        <TextBlock Text="Region" VerticalAlignment="Center" Grid.Column="2"/>
-        <TextBlock Text="Language" VerticalAlignment="Center" Grid.Column="3"/>
-        <TextBlock Text="Currency Symbol" VerticalAlignment="Center" Grid.Column="4"/>
-        <TextBlock Text="Currency Name" VerticalAlignment="Center" Grid.Column="5"/>
-      </Grid>
-    </DataTemplate>
-    <DataTemplate x:Key="CountryItemTemplate" x:DataType="coreuivm:CountryItemViewModel">
-      <Grid ColumnSpacing="10">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Image Source="{x:Bind CountryInfo.ImagePath, Mode=OneTime}" Margin="5,5" VerticalAlignment="Center" Grid.Column="0" Height="30" Width="48" Stretch="Uniform"/>
-        <TextBlock Text="{x:Bind CountryInfo.RegionInfo.ThreeLetterISORegionName, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="1"/>
-        <TextBlock Text="{x:Bind CountryInfo.RegionInfo.EnglishName, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="2"/>
-        <TextBlock Text="{x:Bind CountryInfo.CultureInfo.EnglishName, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="3"/>
-        <TextBlock Text="{x:Bind CountryInfo.RegionInfo.CurrencySymbol, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="4"/>
-        <TextBlock Text="{x:Bind CountryInfo.RegionInfo.CurrencyEnglishName, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="5"/>
-      </Grid>    
-    </DataTemplate>-->
-
-
-
-  </Page.Resources>
   <Grid x:Name="m_main">
     <Grid.RowDefinitions>
       <RowDefinition Height="auto"/>
@@ -60,15 +18,12 @@
       <RowDefinition Height="5*"/>
     </Grid.RowDefinitions>
     <StackPanel x:Name="m_toolbar" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
-      <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" Label="Refresh" IsCompact="True"/>
-      <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" Label="Add Country" IsCompact="True"/>
-      <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Label="Delete Country" IsCompact="True"/>
+      <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
+        <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add Country" IsCompact="True"/>
+        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" ToolTipService.ToolTip="Delete Country" IsCompact="True"/>
+      </CommandBar>
     </StackPanel>
-    
-    
-    <!--<ListView x:Name="m_countries" ItemsSource="{x:Bind ViewModel.ItemsViewModels, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItemViewModel, Mode=TwoWay}" HeaderTemplate="{StaticResource CountryHeaderTemplate}" ItemTemplate="{StaticResource CountryItemTemplate}" Grid.Row="1" Grid.Column="0"/>-->
-
-    
     <winui:DataGrid x:Name="m_countries" DataContext="" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" Grid.Row="1" Grid.Column="0">
       <winui:DataGrid.Columns>
         <winui:DataGridTemplateColumn x:Name="m_columnFlag" Width="Auto" Header="" IsReadOnly="True">

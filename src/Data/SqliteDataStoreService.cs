@@ -221,7 +221,7 @@ namespace TradeSharp.Data
       //delete logo image file
       if (logoId != Guid.Empty)
       {
-        string logoFilename = Exchange.GetExchangeLogoPath(logoId);
+        string logoFilename = Exchange.GetLogoPath(logoId);
         if (logoFilename != string.Empty) File.Delete(logoFilename);
       }
 

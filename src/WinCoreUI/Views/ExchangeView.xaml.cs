@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Data;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Windows.Storage.Pickers;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 using Windows.Storage;
+using System.ComponentModel;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -17,6 +20,7 @@ namespace TradeSharp.WinCoreUI.Views
   /// <summary>
   /// Exchange definition view used to create/view/update an exchange.
   /// </summary>
+  [INotifyPropertyChanged]
   public sealed partial class ExchangeView : Page
   {
 
@@ -37,10 +41,9 @@ namespace TradeSharp.WinCoreUI.Views
     {
       loadCountries();
       loadTimeZones();
-      Exchange = new Exchange(Guid.NewGuid(), Guid.Empty, m_name.Text, TimeZoneInfo.Local, Guid.Empty);
-      ExchangeLogoPath = Data.Exchange.GetExchangeLogoPath(Guid.Empty);
+      Exchange = new Exchange(Guid.NewGuid(), Guid.Empty, "New Exchange", TimeZoneInfo.Local, Guid.Empty);
+      ExchangeLogoPath = Data.Exchange.GetLogoPath(Guid.Empty);
       this.InitializeComponent();
-      m_name.Text = "New Exchange";
       m_countryId.SelectedIndex = 0; 
     }
 
@@ -78,20 +81,8 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public IList<Country> Countries { get; internal set; }
     public IList<TimeZoneInfo> TimeZones { get; internal set; }
-
-    public static readonly DependencyProperty s_exchangeProperty = DependencyProperty.Register("Exchange", typeof(Exchange), typeof(ExchangeView), new PropertyMetadata(null));
-    public Exchange? Exchange
-    {
-      get => (Exchange?)GetValue(s_exchangeProperty);
-      set => SetValue(s_exchangeProperty, value);
-    }
-
-    public static readonly DependencyProperty s_exchangeLogoPathProperty = DependencyProperty.Register("ExchangeLogoPath", typeof(string), typeof(ExchangeView), new PropertyMetadata(null));
-    public string ExchangeLogoPath
-    {
-      get => (string)GetValue(s_exchangeLogoPathProperty);
-      set => SetValue(s_exchangeLogoPathProperty, value);
-    }
+    [ObservableProperty] private Exchange? m_exchange;
+    [ObservableProperty] private string m_exchangeLogoPath;
 
     //methods
     private void loadCountries()

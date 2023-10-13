@@ -6,16 +6,41 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"
     xmlns:winui="using:CommunityToolkit.WinUI.UI.Controls">
+  <UserControl.Resources>
+    <wincoreuicommon:EnumValueDescriptionConverter x:Key="EnumValueDescriptionConverter"/>
+  </UserControl.Resources>
   <StackPanel x:Name="m_main" Orientation="Vertical">
     <StackPanel x:Name="m_toolbar" Orientation="Horizontal">
-      <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" Label="Refresh" IsCompact="True"/>
-      <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" Label="Add session" IsCompact="True"/>
-      <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" Label="Update session" IsCompact="True"/>
-      <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Label="Delete session" IsCompact="True"/>
-      <AppBarSeparator/>
-      <AppBarButton Icon="Copy" Label="Copy session" IsCompact="True"/>
+      <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
+        <AppBarButton x:Name="m_buttonRefresh" Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarButton x:Name="m_buttonAdd" Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add session" IsCompact="True"/>
+        <AppBarButton x:Name="m_buttonEdit" Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update session" IsCompact="True"/>
+        <AppBarButton x:Name="m_buttonDelete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" ToolTipService.ToolTip="Delete session" IsCompact="True"/>
+        <AppBarSeparator/>
+        <AppBarButton x:Name="m_buttonCopy"  Icon="Copy" Label="Copy session" IsCompact="True">
+          <AppBarButton.Flyout>
+            <MenuFlyout x:Name="m_copyFlyout">
+              <MenuFlyoutItem x:Name="m_menuItemMonday" Text="Monday" Command="{x:Bind ViewModel.CopyCommand}"/>
+              <MenuFlyoutItem x:Name="m_menuItemTuesday" Text="Tuesday" Command="{x:Bind ViewModel.CopyCommand}"/>
+              <MenuFlyoutItem x:Name="m_menuItemWednesday" Text="Wednesday" Command="{x:Bind ViewModel.CopyCommand}"/>
+              <MenuFlyoutItem x:Name="m_menuItemThursday" Text="Thursday" Command="{x:Bind ViewModel.CopyCommand}"/>
+              <MenuFlyoutItem x:Name="m_menuItemFriday" Text="Friday" Command="{x:Bind ViewModel.CopyCommand}"/>
+              <MenuFlyoutItem x:Name="m_menuItemSaturday" Text="Saturday" Command="{x:Bind ViewModel.CopyCommand}"/>
+              <MenuFlyoutItem x:Name="m_menuItemSunday" Text="Sunday" Command="{x:Bind ViewModel.CopyCommand}"/>
+            </MenuFlyout>
+          </AppBarButton.Flyout>
+        </AppBarButton>
+      </CommandBar>
     </StackPanel>
-    <winui:DataGrid x:Name="m_sessions" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="All" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="True" AutoGeneratingColumn="m_sessions_AutoGeneratingColumn"/>
+    <winui:DataGrid x:Name="m_sessions" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="All" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False">
+      <winui:DataGrid.Columns>
+        <winui:DataGridTextColumn x:Name="m_columnName" Width="Auto" Header="Name" Binding="{Binding Name}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnDayOfWeek" Width="Auto" Header="Day of Week" Binding="{Binding DayOfWeek}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnStartTime" Width="Auto" Header="Start Time" Binding="{Binding Start}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnEndTime" Width="Auto" Header="End Time" Binding="{Binding End}" IsReadOnly="True"/>
+      </winui:DataGrid.Columns>
+    </winui:DataGrid>
   </StackPanel>
 </UserControl> 

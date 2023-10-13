@@ -128,27 +128,16 @@ namespace TradeSharp.WinDataManager.Services
 
       if (result == ContentDialogResult.Primary)
       {
-        string logoFilename = Exchange.GetExchangeLogoPath(view.Exchange.LogoId);
+        string logoFilename = Exchange.GetLogoPath(view.Exchange.LogoId);
         if (view.ExchangeLogoPath != logoFilename)
-        {
-          bool removeCurrentLogo = true;
-          if (view.Exchange.LogoId == Guid.Empty)
-          {
-            removeCurrentLogo = false;  //no logo yet assigned so we don't want to delete the blank/empty logo used
-            view.Exchange.LogoId = Guid.NewGuid();
-          }
-
           try
           {
-            logoFilename = Exchange.CreateExchangeLogoPath(view.Exchange.LogoId, Path.GetExtension(view.ExchangeLogoPath));
-            if (removeCurrentLogo) File.Delete(logoFilename);    //ensure that we do not keep stale file around since new file extension can be different from current file extension
-            File.Copy(view.ExchangeLogoPath, logoFilename);
+            Exchange.ReplaceLogo(view.Exchange, view.ExchangeLogoPath);
           }
           catch (Exception e)
           {
             await ShowMessageAsync(e.Message);
           }
-        }
 
         return view.Exchange;
       }
@@ -175,10 +164,7 @@ namespace TradeSharp.WinDataManager.Services
       {
         try
         {
-          string newLogoFilename = Exchange.CreateExchangeLogoPath(view.Exchange.LogoId, Path.GetExtension(view.ExchangeLogoPath));
-          if (view.Exchange.LogoPath != Exchange.BlankLogoPath && File.Exists(view.Exchange.LogoPath)) File.Delete(view.Exchange.LogoPath);    //ensure that we do not keep stale file around since new file extension can be different from current file extension
-          File.Copy(view.ExchangeLogoPath, newLogoFilename);
-          view.Exchange.LogoPath = newLogoFilename;
+          Exchange.ReplaceLogo(view.Exchange, view.ExchangeLogoPath);
         }
         catch (Exception e)
         {
@@ -187,6 +173,7 @@ namespace TradeSharp.WinDataManager.Services
 
         return view.Exchange;
       }
+
       return null;
     }
 

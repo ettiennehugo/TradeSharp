@@ -12,7 +12,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of exchanges with their details.
   /// </summary>
-  public class ExchangeViewModel : MasterDetailViewModel<ExchangeItemViewModel, Exchange>
+  public class ExchangeViewModel : ListViewModel<Exchange>
   {
     //constants
 
@@ -73,11 +73,5 @@ namespace TradeSharp.CoreUI.ViewModels
         SelectedItem = Items.FirstOrDefault();
       }
     }
-
-    protected override ExchangeItemViewModel ToViewModel(Exchange item)
-    {
-      return new ExchangeItemViewModel(item, m_navigationService, m_dialogService);
-    }
-
   }
 }
