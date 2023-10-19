@@ -1,22 +1,10 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using TradeSharp.WinDataManager.ViewModels;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using TradeSharp.CoreUI.Events;
-using TradeSharp.Common;
+using TradeSharp.CoreUI.Services;
+using TradeSharp.WinDataManager.Services;
 
 namespace TradeSharp.WinDataManager
 {
@@ -41,8 +29,6 @@ namespace TradeSharp.WinDataManager
     public MainWindow()
     {
       this.InitializeComponent();
-      ViewModel = Ioc.Default.GetRequiredService<MainWindowViewModel>();
-      ViewModel.SetNavigationFrame(m_nvvMainContent);
     }
 
     //finalizers
@@ -52,7 +38,7 @@ namespace TradeSharp.WinDataManager
 
 
     //properties
-    public MainWindowViewModel ViewModel { get; }
+    public MainWindowViewModel ViewModel { get; internal set; }
 
     //methods
     // Send message to use navigation between views if the window size is not large enough to display a list view and the related detailed data.
@@ -64,6 +50,14 @@ namespace TradeSharp.WinDataManager
         UseNavigation = width < 1024
       });
       WeakReferenceMessenger.Default.Send(navigation);
+    }
+
+    private void Window_Activated(object sender, WindowActivatedEventArgs args)
+    {
+      ViewModel = Ioc.Default.GetRequiredService<MainWindowViewModel>();
+      ViewModel.SetNavigationFrame(m_nvvMainContent);
+      DialogService dialogService = (DialogService)Ioc.Default.GetRequiredService<IDialogService>();
+      dialogService.StatusBar = m_statusBar;
     }
   }
 }

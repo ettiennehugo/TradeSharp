@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Activated="Window_Activated"
     mc:Ignorable="d">
   <NavigationView x:Name="m_nvvMain" IsBackButtonVisible="Collapsed"
                   SelectionChanged="{x:Bind ViewModel.OnNavigationSelectionChanged, Mode=OneTime}">
@@ -58,12 +59,16 @@
         </NavigationViewItem.Icon>
       </NavigationViewItem>
     </NavigationView.MenuItems>
-    <Frame  x:Name="m_nvvMainContent" Margin="16">
-      <Frame.ContentTransitions>
-        <TransitionCollection>
-          <NavigationThemeTransition/>
-        </TransitionCollection>
-      </Frame.ContentTransitions>
-    </Frame>
+    <StackPanel Orientation="Vertical">
+      <Frame  x:Name="m_nvvMainContent" Margin="16">
+        <Frame.ContentTransitions>
+          <TransitionCollection>
+            <NavigationThemeTransition/>
+          </TransitionCollection>
+        </Frame.ContentTransitions>
+        <!--<TextBox x:Name="m_statusBar"/>-->
+      </Frame>
+      <InfoBar x:Name="m_statusBar" Title="Title" Message="Test message text" Severity="Warning"/>
+    </StackPanel>
   </NavigationView>
 </Window>

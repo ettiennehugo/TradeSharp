@@ -1,9 +1,11 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using TradeSharp.CoreUI.ViewModels;
+using TradeSharp.Data;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using TradeSharp.CoreUI.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -32,6 +34,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       this.InitializeComponent();
       ViewModel = Ioc.Default.GetRequiredService<SessionViewModel>();
+      ExchangeViewModel = Ioc.Default.GetRequiredService<ExchangeViewModel>();
     }
 
     //finalizers
@@ -53,37 +56,37 @@ namespace TradeSharp.WinCoreUI.Views
     }
 
     public SessionViewModel ViewModel { get; }
-
-
-
-    //TODO: Implement the logic to copy sessions between days and optionally between Exchanges.
-
+    public ExchangeViewModel ExchangeViewModel { get; }
 
     //methods
-    private void copySessionClick(object sender, RoutedEventArgs e)
+    private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-      if ((MenuFlyoutItem)sender == m_menuItemMonday)
-        copySessions(DayOfWeek.Monday);
-      else if ((MenuFlyoutItem)sender == m_menuItemTuesday)
-        copySessions(DayOfWeek.Tuesday);
-      else if ((MenuFlyoutItem)sender == m_menuItemWednesday)
-        copySessions(DayOfWeek.Wednesday);
-      else if ((MenuFlyoutItem)sender == m_menuItemThursday)
-        copySessions(DayOfWeek.Thursday);
-      else if ((MenuFlyoutItem)sender == m_menuItemFriday)
-        copySessions(DayOfWeek.Friday);
-      else if ((MenuFlyoutItem)sender == m_menuItemSaturday)
-        copySessions(DayOfWeek.Saturday);
-      else if ((MenuFlyoutItem)sender == m_menuItemSunday)
-        copySessions(DayOfWeek.Sunday);
-    }
+      m_copyToDayFlyout.Items.Clear();
 
-    private void copySessions(DayOfWeek dayOfWeek)
-    {
-      
-      foreach (var session in m_sessions.SelectedItems)
+      foreach (DayOfWeek dayOfWeek in typeof(DayOfWeek).GetEnumValues())
       {
-                  
+        MenuFlyoutItem menuItem = new MenuFlyoutItem
+        {
+          Text = dayOfWeek.ToString(),
+          Command = ViewModel.CopyCommand,
+          CommandParameter = new KeyValuePair<DayOfWeek, IList>(dayOfWeek, m_sessions.SelectedItems)
+        };
+
+        m_copyToDayFlyout.Items.Add(menuItem);
+      }
+
+      m_copyToExchangeFlyout.Items.Clear();
+
+      foreach (Data.Exchange exchange in ExchangeViewModel.Items)
+      {
+        MenuFlyoutItem menuItem = new MenuFlyoutItem
+        {
+          Text = exchange.Name,
+          Command = ViewModel.CopyCommand,
+          CommandParameter = new KeyValuePair<Guid, IList>(exchange.Id, m_sessions.SelectedItems)
+        };
+
+        m_copyToExchangeFlyout.Items.Add(menuItem);
       }
     }
   }

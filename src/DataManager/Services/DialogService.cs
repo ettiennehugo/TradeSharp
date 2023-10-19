@@ -8,7 +8,8 @@ using Microsoft.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.Common;
 using TradeSharp.Data;
-using System.IO;
+using Microsoft.UI.Dispatching;
+using static TradeSharp.CoreUI.Services.IDialogService;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -37,7 +38,7 @@ namespace TradeSharp.WinDataManager.Services
 
 
     //interface implementations
-    public async Task ShowMessageAsync(string message)
+    public async Task ShowPopupMessageAsync(string message)
     {
       MessageDialog dlg = new(message);
       var hwnd = GetActiveWindow();
@@ -45,6 +46,35 @@ namespace TradeSharp.WinDataManager.Services
         throw new InvalidOperationException();
       InitializeWithWindow.Initialize(dlg, hwnd);
       await dlg.ShowAsync();
+    }
+
+    public Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message)
+    {
+      StatusBar.DispatcherQueue.TryEnqueue(() =>
+      {
+        //NOTE: StatusBar should be set before calling this method. 
+        switch (severity)
+        {
+          case StatusMessageSeverity.Success:
+            StatusBar.Severity = InfoBarSeverity.Success;
+            break;
+          case StatusMessageSeverity.Information:
+            StatusBar.Severity = InfoBarSeverity.Informational;
+            break;
+          case StatusMessageSeverity.Warning:
+            StatusBar.Severity = InfoBarSeverity.Warning;
+            break;
+          case StatusMessageSeverity.Error:
+            StatusBar.Severity = InfoBarSeverity.Error;
+            break;
+        }
+
+        StatusBar.Title = title;
+        StatusBar.Message = message;
+        StatusBar.IsOpen = true;
+      });
+
+      return Task.CompletedTask;
     }
 
     public async Task<CountryInfo?> ShowSelectCountryAsync()
@@ -136,7 +166,7 @@ namespace TradeSharp.WinDataManager.Services
           }
           catch (Exception e)
           {
-            await ShowMessageAsync(e.Message);
+            await ShowPopupMessageAsync(e.Message);
           }
 
         return view.Exchange;
@@ -168,7 +198,7 @@ namespace TradeSharp.WinDataManager.Services
         }
         catch (Exception e)
         {
-          await ShowMessageAsync(e.Message);
+          await ShowPopupMessageAsync(e.Message);
         }
 
         return view.Exchange;
@@ -220,7 +250,7 @@ namespace TradeSharp.WinDataManager.Services
     }
 
     //properties
-
+    public InfoBar StatusBar { get; set; }
 
     //methods
     [DllImport("user32.dll")]

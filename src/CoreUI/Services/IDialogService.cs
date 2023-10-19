@@ -18,7 +18,16 @@ namespace TradeSharp.CoreUI.Services
 
 
     //enums
-
+    /// <summary>
+    /// Severity used for status messages.
+    /// </summary>
+    public enum StatusMessageSeverity 
+    {
+      Success,
+      Information,
+      Warning,
+      Error
+    }
 
     //types
     
@@ -30,7 +39,8 @@ namespace TradeSharp.CoreUI.Services
 
 
     //methods
-    Task ShowMessageAsync(string message);
+    Task ShowPopupMessageAsync(string message);
+    Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
 
     Task<CountryInfo?> ShowSelectCountryAsync();
 

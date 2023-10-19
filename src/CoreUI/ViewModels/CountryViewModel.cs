@@ -40,7 +40,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         var newCountry = new Country(Guid.NewGuid(), country.RegionInfo.ThreeLetterISORegionName);
         if (m_itemsService.Items.Contains(newCountry))
-          await m_dialogService.ShowMessageAsync("The country you are trying to add already exists in the database.");
+          await m_dialogService.ShowPopupMessageAsync("The country you are trying to add already exists in the database.");
         else
         {
           await m_itemsService.AddAsync(newCountry);

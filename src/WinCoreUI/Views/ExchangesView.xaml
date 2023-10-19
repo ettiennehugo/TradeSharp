@@ -28,7 +28,7 @@
         <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" ToolTipService.ToolTip="Delete Exchange" IsCompact="True"/>
       </CommandBar>
     </StackPanel>
-    <winui:DataGrid x:Name="m_exchanges" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" Grid.Row="1" Grid.Column="0">
+    <winui:DataGrid x:Name="m_exchanges" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False"  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Grid.Row="1" Grid.Column="0">
       <winui:DataGrid.Columns>
         <winui:DataGridTemplateColumn x:Name="m_columnImage" Width="Auto" Header="" IsReadOnly="True">
           <winui:DataGridTemplateColumn.CellTemplate>

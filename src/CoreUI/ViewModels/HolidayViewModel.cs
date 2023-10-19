@@ -48,7 +48,7 @@ namespace TradeSharp.CoreUI.ViewModels
       if (newHoliday != null)
       {
         if (m_itemsService.Items.Contains(newHoliday))
-          await m_dialogService.ShowMessageAsync("The holiday you are trying to add already exists in the database.");
+          await m_dialogService.ShowPopupMessageAsync("The holiday you are trying to add already exists in the database.");
         else
         {
           await m_itemsService.AddAsync(newHoliday);
