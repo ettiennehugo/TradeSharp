@@ -32,10 +32,6 @@ namespace TradeSharp.CoreUI.ViewModels
     //constructors
     public MasterDetailViewModel(IItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
-
-      UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
-      DeleteCommand = new RelayCommand(OnDelete, () => SelectedItem != null);
-
       m_itemsService.Items.CollectionChanged += (sender, e) =>
       {
         OnPropertyChanged(nameof(ItemsViewModels));

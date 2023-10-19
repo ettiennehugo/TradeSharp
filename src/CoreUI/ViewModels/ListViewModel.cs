@@ -1,5 +1,7 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Collections;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 
@@ -30,7 +32,7 @@ namespace TradeSharp.CoreUI.ViewModels
       m_itemsService = itemsService;
       AddCommand = new RelayCommand(OnAdd);
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
-      DeleteCommand = new RelayCommand(OnDelete, () => SelectedItem != null);
+      DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
       RefreshCommand = new RelayCommand(OnRefresh);
       RefreshCommandAsync = new AsyncRelayCommand(OnRefreshAsync);
     }
@@ -44,7 +46,7 @@ namespace TradeSharp.CoreUI.ViewModels
     //properties
     public RelayCommand AddCommand { get; internal set; }
     public RelayCommand UpdateCommand { get; internal set; }
-    public RelayCommand DeleteCommand { get; internal set; }
+    public RelayCommand<object?> DeleteCommand { get; internal set; }
     public RelayCommand RefreshCommand { get; internal set; }
     public AsyncRelayCommand RefreshCommandAsync { get; internal set; }
 
@@ -112,6 +114,33 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public abstract void OnAdd();
     public abstract void OnUpdate();
-    public abstract void OnDelete();
+
+    public async void OnDelete(object? target)
+    {
+      int count = 0;
+      if (target is TItem)
+      {
+        TItem item = (TItem)target;
+        Items.Remove(item);
+        await m_itemsService.DeleteAsync(item);
+        SelectedItem = Items.FirstOrDefault();
+        count++;
+      }
+      else if (target is IList)
+      {
+        IList items = (IList)target;
+        foreach (TItem item in items)
+        {
+          await m_itemsService.DeleteAsync(item);
+          count++;
+        }
+
+        await OnRefreshAsync();
+        SelectedItem = Items.FirstOrDefault();
+      }
+
+      IDialogService dialogService = Ioc.Default.GetRequiredService<IDialogService>();
+      await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} items");
+    }
   }
 }

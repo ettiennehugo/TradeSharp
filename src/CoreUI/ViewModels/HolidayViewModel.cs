@@ -54,6 +54,7 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_itemsService.AddAsync(newHoliday);
           Items.Add(newHoliday);
           SelectedItem = newHoliday;
+          await OnRefreshAsync();
         }
       }
     }
@@ -68,17 +69,6 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_itemsService.UpdateAsync(updatedHoliday);
           await OnRefreshAsync();
         }
-      }
-    }
-
-    public override void OnDelete()
-    {
-      if (SelectedItem != null)
-      {
-        var item = SelectedItem;
-        Items.Remove(SelectedItem);
-        m_itemsService.DeleteAsync(item);
-        SelectedItem = Items.FirstOrDefault();
       }
     }
   }

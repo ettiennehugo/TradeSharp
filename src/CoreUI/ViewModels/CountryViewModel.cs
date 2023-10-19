@@ -12,6 +12,12 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of countries with their details using the associated item view model.
   /// </summary>
+
+
+
+  //TODO: Make this a ListViewModel
+
+
   public class CountryViewModel : MasterDetailViewModel<CountryItemViewModel, Country>
   {
     //constants
@@ -46,6 +52,7 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_itemsService.AddAsync(newCountry);
           SelectedItem = newCountry;
           Items.Add(newCountry);
+          await OnRefreshAsync();
         }
       }
     }
@@ -53,17 +60,6 @@ namespace TradeSharp.CoreUI.ViewModels
     public override void OnUpdate()
     {
       throw new NotImplementedException("Update not supported for countries.");
-    }
-
-    public override void OnDelete()
-    {
-      if (SelectedItem != null)
-      {
-        var item = SelectedItem;
-        Items.Remove(SelectedItem);
-        m_itemsService.DeleteAsync(item);
-        SelectedItem = Items.FirstOrDefault();
-      }
     }
 
     protected override CountryItemViewModel ToViewModel(Country item)

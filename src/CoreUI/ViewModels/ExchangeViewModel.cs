@@ -47,6 +47,8 @@ namespace TradeSharp.CoreUI.ViewModels
         await m_itemsService.AddAsync(exchange);
         SelectedItem = exchange;
         Items.Add(exchange);
+        await OnRefreshAsync();
+
       }
     }
 
@@ -60,17 +62,6 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_itemsService.UpdateAsync(updatedExchange);
           await OnRefreshAsync();
         }
-      }
-    }
-
-    public override void OnDelete()
-    {
-      if (SelectedItem != null)
-      {
-        var item = SelectedItem;
-        Items.Remove(SelectedItem);
-        m_itemsService.DeleteAsync(item);
-        SelectedItem = Items.FirstOrDefault();
       }
     }
   }

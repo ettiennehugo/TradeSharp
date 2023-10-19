@@ -19,7 +19,7 @@
         <AppBarButton x:Name="m_buttonRefresh" Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonAdd" Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add session" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonEdit" Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update session" IsCompact="True"/>
-        <AppBarButton x:Name="m_buttonDelete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" ToolTipService.ToolTip="Delete session" IsCompact="True"/>
+        <AppBarButton x:Name="m_buttonDelete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" CommandParameter="{x:Bind m_sessions.SelectedItems}" ToolTipService.ToolTip="Delete session" IsCompact="True"/>
         <AppBarSeparator/>
         <AppBarButton x:Name="m_buttonCopy"  Icon="Copy" Label="Copy session" IsCompact="True">
           <AppBarButton.Flyout>
@@ -31,7 +31,7 @@
         </AppBarButton>
       </CommandBar>
     </StackPanel>
-    <winui:DataGrid x:Name="m_sessions" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="All" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+    <winui:DataGrid x:Name="m_sessions" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
       <winui:DataGrid.Columns>
         <winui:DataGridTextColumn x:Name="m_columnName" Width="Auto" Header="Name" Binding="{Binding Name}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnDayOfWeek" Width="Auto" Header="Day of Week" Binding="{Binding DayOfWeek}" IsReadOnly="True"/>

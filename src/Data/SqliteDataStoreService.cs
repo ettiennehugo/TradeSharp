@@ -212,18 +212,15 @@ namespace TradeSharp.Data
     {
       //get the exchange logo Id to delete the associated logo file
       Guid logoId = Guid.Empty;
-      SqliteDataReader reader = ExecuteReader($"SELECT logoId FROM {c_TableExchange} WHERE Id = {id.ToString()}");
+      SqliteDataReader reader = ExecuteReader($"SELECT logoId FROM {c_TableExchange} WHERE Id = '{id.ToString()}'");
       if (reader.Read()) logoId = reader.GetGuid(0);
 
       //delete header entry
       int result = Delete(c_TableExchange, id);
 
       //delete logo image file
-      if (logoId != Guid.Empty)
-      {
-        string logoFilename = Exchange.GetLogoPath(logoId);
-        if (logoFilename != string.Empty) File.Delete(logoFilename);
-      }
+      string logoFilename = Exchange.GetLogoPath(logoId);
+      if (logoFilename != Exchange.BlankLogoPath) File.Delete(logoFilename);
 
       //delete rest of the associated objects
       foreach (var holidayId in GetAssociatedIds(c_TableHoliday, id, "ParentId")) result += DeleteHoliday(holidayId);

@@ -60,13 +60,12 @@
       </NavigationViewItem>
     </NavigationView.MenuItems>
     <StackPanel Orientation="Vertical">
-      <Frame  x:Name="m_nvvMainContent" Margin="16">
+      <Frame x:Name="m_nvvMainContent" Margin="16">
         <Frame.ContentTransitions>
           <TransitionCollection>
             <NavigationThemeTransition/>
           </TransitionCollection>
         </Frame.ContentTransitions>
-        <!--<TextBox x:Name="m_statusBar"/>-->
       </Frame>
       <InfoBar x:Name="m_statusBar" Title="Title" Message="Test message text" Severity="Warning"/>
     </StackPanel>

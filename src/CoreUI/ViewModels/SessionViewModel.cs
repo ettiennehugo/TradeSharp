@@ -28,7 +28,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public SessionViewModel(IItemsService<Session> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       AddCommand = new RelayCommand(OnAdd, () => ParentId != Guid.Empty);
-      CopyCommand = new RelayCommand<object>(OnCopy, (object? x) => ParentId != Guid.Empty && SelectedItem != null);
+      CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => ParentId != Guid.Empty && SelectedItem != null);
     }
 
     //finalizers
@@ -38,7 +38,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-    public RelayCommand<object> CopyCommand { get; internal set; }
+    public RelayCommand<object?> CopyCommand { get; internal set; }
 
     //methods
     public async override void OnAdd()
@@ -49,6 +49,7 @@ namespace TradeSharp.CoreUI.ViewModels
         await m_itemsService.AddAsync(newSession);
         Items.Add(newSession);
         SelectedItem = newSession;
+        await OnRefreshAsync();
       }
     }
 
@@ -62,22 +63,6 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_itemsService.UpdateAsync(updatedSession);
           await OnRefreshAsync();
         }
-      }
-    }
-
-    public override void OnDelete()
-    {
-
-
-      //TODO: Check whether you can make this work on the list of selected sessions.
-
-
-      if (SelectedItem != null)
-      {
-        var item = SelectedItem;
-        Items.Remove(SelectedItem);
-        m_itemsService.DeleteAsync(item);
-        SelectedItem = Items.FirstOrDefault();
       }
     }
 
@@ -123,7 +108,7 @@ namespace TradeSharp.CoreUI.ViewModels
       }
 
       IDialogService dialogService = Ioc.Default.GetRequiredService<IDialogService>();
-      await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Copied {copiedCount} sessions");
+      await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Copied {copiedCount} items");
     }
   }
 }
