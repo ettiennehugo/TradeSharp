@@ -13,7 +13,7 @@ namespace TradeSharp.Data
     public const string c_TableCountry = "Country";
     public const string c_TableHoliday = "Holiday";
     public const string c_TableExchange = "Exchange";
-    public const string c_TableExchangeSession = "ExchangeSession";
+    public const string c_TableSession = "ExchangeSession";
     public const string c_TableInstrumentGroup = "InstrumentGroup";
     public const string c_TableInstrumentGroupInstrument = "InstrumentGroupInstrument";
     public const string c_TableInstrument = "Instrument";
@@ -91,6 +91,9 @@ namespace TradeSharp.Data
 
       //create the data store schema
       CreateSchema();
+
+      //create static required objects
+      CreateDefaultObjects();
     }
 
     //finalizers
@@ -117,7 +120,7 @@ namespace TradeSharp.Data
 
     public void CreateCountry(Country country)
     {
-      ExecuteCommand($"INSERT OR REPLACE INTO {c_TableCountry} VALUES('{country.Id.ToString()}', '{country.IsoCode}')");
+      ExecuteCommand($"INSERT OR REPLACE INTO {c_TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet},'{country.IsoCode}')");
     }
 
     public Country? GetCountry(Guid id)
@@ -125,7 +128,7 @@ namespace TradeSharp.Data
       Country? result = null;
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableCountry} WHERE Id = '{id.ToString()}'"))
-        if (reader.Read()) result = new Country(reader.GetGuid(0), reader.GetString(1));
+        if (reader.Read()) result = new Country(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2));
 
       return result;
     }
@@ -136,7 +139,7 @@ namespace TradeSharp.Data
       var result = new List<Country>();
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableCountry} ORDER BY IsoCode ASC"))
-        while (reader.Read()) result.Add(new Country(reader.GetGuid(0), reader.GetString(1)));
+        while (reader.Read()) result.Add(new Country(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2)));
 
       return result;
     }
@@ -163,9 +166,10 @@ namespace TradeSharp.Data
     public void CreateExchange(Exchange exchange)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableExchange} (Id, CountryId, Name, TimeZone, LogoId) " +
+        $"INSERT OR REPLACE INTO {c_TableExchange} (Id, AttributeSet, CountryId, Name, TimeZone, LogoId) " +
           $"VALUES (" +
             $"'{exchange.Id.ToString()}', " +
+            $"{(long)exchange.AttributeSet}, " +
             $"'{exchange.CountryId.ToString()}', " +
             $"'{SqlSafeString(exchange.Name)}', " +
             $"'{exchange.TimeZone.ToSerializedString()}', " +
@@ -180,7 +184,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange} WHERE Id = '{id.ToString()}'"))
         if (reader.Read())
-          result = new Exchange(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), TimeZoneInfo.FromSerializedString(reader.GetString(3)), reader.GetGuid(4));
+          result = new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetGuid(2), reader.GetString(3), TimeZoneInfo.FromSerializedString(reader.GetString(4)), reader.GetGuid(5));
 
       return result;
     }    
@@ -191,7 +195,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange} ORDER BY Name ASC"))
         while (reader.Read())
-          result.Add(new Exchange(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), TimeZoneInfo.FromSerializedString(reader.GetString(3)), reader.GetGuid(4)));
+          result.Add(new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetGuid(2), reader.GetString(3), TimeZoneInfo.FromSerializedString(reader.GetString(4)), reader.GetGuid(5)));
 
       return result;
     }
@@ -202,6 +206,7 @@ namespace TradeSharp.Data
         $"UPDATE OR FAIL {c_TableExchange} " +
           $"SET CountryId = '{exchange.CountryId.ToString()}', " +
               $"Name = '{SqlSafeString(exchange.Name)}', " +
+              $"AttributeSet = {(long)exchange.AttributeSet}, " +
               $"TimeZone = '{exchange.TimeZone.ToSerializedString()}', " +
               $"LogoId = '{exchange.LogoId}' " +
           $"WHERE Id = '{exchange.Id.ToString()}'"
@@ -227,16 +232,17 @@ namespace TradeSharp.Data
       using (var instrumentRows = GetAssociatedRows(c_TableInstrument, id, "PrimaryExchangeId", "Id, Ticker"))
         while (instrumentRows.Read()) result += DeleteInstrument(instrumentRows.GetGuid(0), instrumentRows.GetString(1));
       result += Delete(c_TableInstrumentSecondaryExchange, id, "ExchangeId");
-      foreach (var sessionId in GetAssociatedIds(c_TableExchangeSession, id, "ExchangeId")) result += DeleteSession(sessionId);
+      foreach (var sessionId in GetAssociatedIds(c_TableSession, id, "ExchangeId")) result += DeleteSession(sessionId);
       return result;
     }
 
     public void CreateHoliday(Holiday holiday)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableHoliday} (Id, ParentId, Name, HolidayType, Month, DayOfMonth, WeekOfMonth, DayOfWeek, MoveWeekendHoliday) " +
+        $"INSERT OR REPLACE INTO {c_TableHoliday} (Id, AttributeSet, ParentId, Name, HolidayType, Month, DayOfMonth, WeekOfMonth, DayOfWeek, MoveWeekendHoliday) " +
           $"VALUES (" +
             $"'{holiday.Id.ToString()}', " +
+            $"{(long)holiday.AttributeSet}, " +
             $"'{holiday.ParentId.ToString()}', " +
             $"'{SqlSafeString(holiday.Name)}', " +
             $"{(int)holiday.Type}, " +
@@ -254,7 +260,7 @@ namespace TradeSharp.Data
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} WHERE Id = '{id.ToString()}'"))
       {
         if (reader.Read())
-          return new Holiday(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8));
+          return new Holiday(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetGuid(2), reader.GetString(3), (HolidayType)reader.GetInt64(4), (Months)reader.GetInt64(5), reader.GetInt32(6), (DayOfWeek)reader.GetInt64(7), (WeekOfMonth)reader.GetInt64(8), (MoveWeekendHoliday)reader.GetInt64(9));
 
         return null;
       }
@@ -266,7 +272,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} WHERE ParentId = '{parentId.ToString()}' ORDER BY Name ASC"))
         while (reader.Read())
-          result.Add(new Holiday(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8))); ;
+          result.Add(new Holiday(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetGuid(2), reader.GetString(3), (HolidayType)reader.GetInt64(4), (Months)reader.GetInt64(5), reader.GetInt32(6), (DayOfWeek)reader.GetInt64(7), (WeekOfMonth)reader.GetInt64(8), (MoveWeekendHoliday)reader.GetInt64(9)));
 
       return result;
     }
@@ -277,7 +283,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} ORDER BY Name ASC"))
         while (reader.Read())
-          result.Add(new Holiday(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), (HolidayType)reader.GetInt64(3), (Months)reader.GetInt64(4), reader.GetInt32(5), (DayOfWeek)reader.GetInt64(6), (WeekOfMonth)reader.GetInt64(7), (MoveWeekendHoliday)reader.GetInt64(8))); ;
+          result.Add(new Holiday(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetGuid(2), reader.GetString(3), (HolidayType)reader.GetInt64(4), (Months)reader.GetInt64(5), reader.GetInt32(6), (DayOfWeek)reader.GetInt64(7), (WeekOfMonth)reader.GetInt64(8), (MoveWeekendHoliday)reader.GetInt64(9))); ;
 
       return result;
     }
@@ -288,6 +294,7 @@ namespace TradeSharp.Data
         $"UPDATE OR FAIL {c_TableHoliday} " +
           $"SET ParentId = '{holiday.ParentId.ToString()}', " +
               $"Name = '{SqlSafeString(holiday.Name)}', " +
+              $"AttributeSet = {(long)holiday.AttributeSet}, " +
               $"HolidayType = {(int)holiday.Type}, " +
               $"Month = {(int)holiday.Month}, " +
               $"DayOfMonth = {(int)holiday.DayOfMonth}, " +
@@ -306,9 +313,10 @@ namespace TradeSharp.Data
     public void CreateSession(Session session)
     {
       ExecuteCommand(
-      $"INSERT OR REPLACE INTO {c_TableExchangeSession} (Id, Name, ExchangeId, DayOfWeek, StartTime, EndTime) " +
+      $"INSERT OR REPLACE INTO {c_TableSession} (Id, AttributeSet, Name, ExchangeId, DayOfWeek, StartTime, EndTime) " +
         $"VALUES (" +
           $"'{session.Id.ToString()}', " +
+          $"{(long)session.AttributeSet}, " +
           $"'{SqlSafeString(session.Name)}', " +
           $"'{session.ExchangeId.ToString()}', " +
           $"{(int)session.DayOfWeek}, " +
@@ -320,8 +328,8 @@ namespace TradeSharp.Data
 
     public Session? GetSession(Guid id)
     {
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession} WHERE Id = '{id.ToString()}'"))
-        if (reader.Read()) return new Session(reader.GetGuid(0), reader.GetString(1), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5)));
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableSession} WHERE Id = '{id.ToString()}'"))
+        if (reader.Read()) return new Session(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), (DayOfWeek)reader.GetInt32(4), new TimeOnly(reader.GetInt64(5)), new TimeOnly(reader.GetInt64(6)));
 
       return null;
     }
@@ -330,9 +338,9 @@ namespace TradeSharp.Data
     {
       var result = new List<Session>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession} WHERE ExchangeId = '{exchangeId.ToString()}' ORDER BY DayOfWeek ASC, StartTime ASC, EndTime ASC"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableSession} WHERE ExchangeId = '{exchangeId.ToString()}' ORDER BY DayOfWeek ASC, StartTime ASC, EndTime ASC"))
         while (reader.Read())
-          result.Add(new Session(reader.GetGuid(0), reader.GetString(1), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5))));
+          result.Add(new Session(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), (DayOfWeek)reader.GetInt32(4), new TimeOnly(reader.GetInt64(5)), new TimeOnly(reader.GetInt64(6))));
 
       return result;
     }
@@ -341,9 +349,9 @@ namespace TradeSharp.Data
     {
       var result = new List<Session>();
 
-      using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchangeSession}  ORDER BY ExchangeId ASC, DayOfWeek ASC, StartTime ASC, EndTime ASC"))
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableSession}  ORDER BY ExchangeId ASC, DayOfWeek ASC, StartTime ASC, EndTime ASC"))
         while (reader.Read())
-          result.Add(new Session(reader.GetGuid(0), reader.GetString(1), reader.GetGuid(2), (DayOfWeek)reader.GetInt32(3), new TimeOnly(reader.GetInt64(4)), new TimeOnly(reader.GetInt64(5))));
+          result.Add(new Session(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), (DayOfWeek)reader.GetInt32(4), new TimeOnly(reader.GetInt64(5)), new TimeOnly(reader.GetInt64(6))));
 
       return result;
     }
@@ -351,9 +359,10 @@ namespace TradeSharp.Data
     public void UpdateSession(Session session)
     {
       ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableExchangeSession} " +
+        $"UPDATE OR FAIL {c_TableSession} " +
           $"SET Name = '{SqlSafeString(session.Name)}', " +
               $"ExchangeId = '{session.ExchangeId.ToString()}', " +
+              $"AttributeSet = {(long)session.AttributeSet}, " +
               $"DayOfWeek = {(int)session.DayOfWeek}, " +
               $"StartTime = {session.Start.Ticks}, " +
               $"EndTime = {session.End.Ticks} " +
@@ -363,15 +372,19 @@ namespace TradeSharp.Data
 
     public int DeleteSession(Guid id)
     {
-      return Delete(c_TableExchangeSession, id);
+      return Delete(c_TableSession, id);
     }
+
+
+    //TODO: Needs to Update, Delete using the object instance. Also, needs to set the AttributeSet.
 
     public void CreateInstrumentGroup(InstrumentGroup instrumentGroup)
     {
       ExecuteCommand(
-      $"INSERT OR REPLACE INTO {c_TableInstrumentGroup} (Id, ParentId, Name, Description) " +
+      $"INSERT OR REPLACE INTO {c_TableInstrumentGroup} (Id, AttributeSet, ParentId, Name, Description) " +
         $"VALUES (" +
           $"'{instrumentGroup.Id.ToString()}', " +
+          $"{(long)instrumentGroup.AttributeSet}, " +
           $"'{instrumentGroup.ParentId.ToString()}', " +
           $"'{SqlSafeString(instrumentGroup.Name)}', " +
           $"'{SqlSafeString(instrumentGroup.Description)}'" +
@@ -402,7 +415,7 @@ namespace TradeSharp.Data
         {
           Guid id = reader.GetGuid(0);
           IList<Guid> instruments = GetInstrumentGroupInstruments(id);
-          result.Add(new InstrumentGroup(id, reader.GetGuid(1), reader.GetString(2), reader.GetString(3), instruments));
+          result.Add(new InstrumentGroup(id, (Attributes)reader.GetInt64(1), reader.GetGuid(2), reader.GetString(3), reader.GetString(4), instruments));
         }
       }
 
@@ -413,8 +426,8 @@ namespace TradeSharp.Data
     {
       List<Guid> result = new List<Guid>();
 
-      using (var reader = ExecuteReader($"SELECT InstrumentId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' ORDER BY Name ASC, Description ASC"))
-        while (reader.Read()) result.Add(reader.GetGuid(0));
+      using (var reader = ExecuteReader($"SELECT InstrumentGroupId, InstrumentId, Name, Description FROM {c_TableInstrumentGroupInstrument} INNER JOIN {c_TableInstrumentGroup} ON InstrumentGroupId == Id WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' ORDER BY Name ASC, Description ASC"))
+        while (reader.Read()) result.Add(reader.GetGuid(1));
 
       return result;
     }
@@ -459,12 +472,18 @@ namespace TradeSharp.Data
       ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' AND InstrumentId = '{instrumentId.ToString()}'");
     }
 
+
+
+
+    //TODO: Needs to Update, Delete using the object instance. Also, needs to set the AttributeSet.
+
     public void CreateInstrument(Instrument instrument)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableInstrument} (Id, Type, Ticker, Name, Description, PrimaryExchangeId, InceptionDate) " +
+        $"INSERT OR REPLACE INTO {c_TableInstrument} (Id, AttributeSet, Type, Ticker, Name, Description, PrimaryExchangeId, InceptionDate) " +
           $"VALUES (" +
             $"'{instrument.Id.ToString()}', " +
+            $"{(long)instrument.AttributeSet}, " +
             $"{(int)instrument.Type}, " +
             $"'{instrument.Ticker}', " +
             $"'{SqlSafeString(instrument.Name)}', " +
@@ -515,7 +534,7 @@ namespace TradeSharp.Data
           using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
           
-          result.Add(new Instrument(instrumentId, (InstrumentType)reader.GetInt32(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), DateTime.FromBinary(reader.GetInt64(6)), instrumentGroupIds, reader.GetGuid(5), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), (InstrumentType)reader.GetInt32(2), reader.GetString(3), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), instrumentGroupIds, reader.GetGuid(6), secondaryExchangeIds));
         }
 
       return result;
@@ -539,7 +558,7 @@ namespace TradeSharp.Data
           using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (InstrumentType)reader.GetInt32(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), DateTime.FromBinary(reader.GetInt64(6)), instrumentGroupIds, reader.GetGuid(5), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), (InstrumentType)reader.GetInt32(2), reader.GetString(3), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), instrumentGroupIds, reader.GetGuid(6), secondaryExchangeIds));
         }
 
       return result;
@@ -583,9 +602,10 @@ namespace TradeSharp.Data
     public void CreateFundamental(Fundamental fundamental)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableFundamentals} (Id, Name, Description, Category, ReleaseInterval)" +
+        $"INSERT OR REPLACE INTO {c_TableFundamentals} (Id, AttributeSet, Name, Description, Category, ReleaseInterval)" +
           $"VALUES (" +
             $"'{fundamental.Id.ToString()}', " +
+            $"{(long)fundamental.AttributeSet}, " +
             $"'{SqlSafeString(fundamental.Name)}', " +
             $"'{SqlSafeString(fundamental.Description)}', " +
             $"{(int)fundamental.Category}, " +
@@ -600,7 +620,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableFundamentals} ORDER BY Category ASC, Name ASC, Description ASC"))
         while (reader.Read())
-          result.Add(new Fundamental(reader.GetGuid(0), reader.GetString(1), reader.GetString(2), (FundamentalCategory)reader.GetInt32(3), (FundamentalReleaseInterval)reader.GetInt32(4)));
+          result.Add(new Fundamental(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetString(3), (FundamentalCategory)reader.GetInt32(4), (FundamentalReleaseInterval)reader.GetInt32(5)));
 
       return result;
     }
@@ -1327,7 +1347,7 @@ namespace TradeSharp.Data
         CreateCountryTable();
         CreateHolidayTable();
         CreateExchangeTable();
-        CreateExchangeSessionTable();
+        CreateSessionTable();
         CreateInstrumentGroupTable();
         CreateInstrumentGroupInstrumentTable();
         CreateInstrumentTable();
@@ -1359,6 +1379,22 @@ namespace TradeSharp.Data
     }
 
     /// <summary>
+    /// Creates the default objects used for the data model that can not be removed.
+    /// </summary>
+    public void CreateDefaultObjects()
+    {
+      if (GetRowCount(c_TableCountry, $"Id == '{Country.InternationalId.ToString()}'") == 0) CreateCountry(new Country(Country.InternationalId, Attributes.None, Country.InternationalIsoCode));
+      if (GetRowCount(c_TableExchange, $"Id == '{Exchange.InternationalId.ToString()}'") == 0) CreateExchange(new Exchange(Exchange.InternationalId, Attributes.None, Country.InternationalId, "Global Exchange", TimeZoneInfo.Utc, Exchange.InternationalId));
+      if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Monday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "Monday", Exchange.InternationalId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+      if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Tuesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "Tuesday", Exchange.InternationalId, DayOfWeek.Tuesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+      if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Wednesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "Wednesday", Exchange.InternationalId, DayOfWeek.Wednesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+      if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Thursday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "Thursday", Exchange.InternationalId, DayOfWeek.Thursday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+      if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Friday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "Friday", Exchange.InternationalId, DayOfWeek.Friday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+      if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Saturday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "Saturday", Exchange.InternationalId, DayOfWeek.Saturday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+      if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Sunday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "Sunday", Exchange.InternationalId, DayOfWeek.Sunday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+    }
+
+    /// <summary>
     /// Drops the database schema.
     /// </summary>
     public void DropSchema()
@@ -1371,7 +1407,7 @@ namespace TradeSharp.Data
         DropTable(c_TableCountry);
         DropTable(c_TableHoliday);
         DropTable(c_TableExchange);
-        DropTable(c_TableExchangeSession);
+        DropTable(c_TableSession);
         DropTable(c_TableInstrumentGroup);
         DropTable(c_TableInstrumentGroupInstrument);
         DropTable(c_TableFundamentals);
@@ -1413,6 +1449,7 @@ namespace TradeSharp.Data
       CreateTable(c_TableCountry,
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
+        AttributeSet INTEGER DEFAULT(0),
         IsoCode TEXT
       ");
     }
@@ -1422,6 +1459,7 @@ namespace TradeSharp.Data
       CreateTable(c_TableHoliday,
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
+        AttributeSet INTEGER DEFAULT(0),
         ParentId TEXT,
         Name TEXT,
         HolidayType INTEGER,
@@ -1438,6 +1476,7 @@ namespace TradeSharp.Data
       CreateTable(c_TableExchange,
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
+        AttributeSet INTEGER DEFAULT(0),
         CountryId TEXT,
         Name TEXT,
         TimeZone TEXT,
@@ -1445,11 +1484,12 @@ namespace TradeSharp.Data
       ");
     }
 
-    private void CreateExchangeSessionTable()
+    private void CreateSessionTable()
     {
-      CreateTable(c_TableExchangeSession,
+      CreateTable(c_TableSession,
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
+        AttributeSet INTEGER DEFAULT(0),
         Name TEXT,
         ExchangeId TEXT,
         DayOfWeek INTEGER,
@@ -1464,6 +1504,7 @@ namespace TradeSharp.Data
       CreateTable(c_TableInstrumentGroup,
       @"
         Id TEXT,
+        AttributeSet INTEGER DEFAULT(0),
         ParentId TEXT,
         Name TEXT,
         Description TEXT,
@@ -1488,6 +1529,7 @@ namespace TradeSharp.Data
       CreateTable(c_TableInstrument,
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
+        AttributeSet INTEGER DEFAULT(0),
         Type INTEGER,
         Ticker TEXT,
         Name TEXT,
@@ -1514,6 +1556,7 @@ namespace TradeSharp.Data
       CreateTable(c_TableFundamentals,
       @"
         Id TEXT PRIMARY KEY ON CONFLICT REPLACE,
+        AttributeSet INTEGER DEFAULT(0),
         Name TEXT,
         Description TEXT,
         Category INTEGER,
@@ -1700,7 +1743,7 @@ namespace TradeSharp.Data
       int result = ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableCountry}");
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableHoliday}");
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableExchange}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableExchangeSession}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableSession}");
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableInstrumentGroup}");
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument}");
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableInstrument}");

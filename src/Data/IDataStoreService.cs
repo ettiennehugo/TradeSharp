@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
+using static TradeSharp.Data.Country;
 
 namespace TradeSharp.Data
 {
@@ -59,18 +60,96 @@ namespace TradeSharp.Data
   }
 
   /// <summary>
-  /// Storage class for country data.
+  /// Control attributes used for DataObject type classes.
   /// </summary>
-  public partial class Country : ObservableObject, IEquatable<Country>
+  [Flags]
+  public enum Attributes : long
   {
-    public Country(Guid id, string isoCode)
+    None = 0,
+    Editable = 1 << 0,
+    Deletable = 1 << 1,
+  }
+
+  /// <summary>
+  /// Base class for data store service objects.
+  /// </summary>
+  public partial class DataObject : ObservableObject
+  {
+    public const Attributes DefaultAttributeSet = Attributes.Editable | Attributes.Deletable;
+
+    public DataObject(Guid id, Attributes attributeSet)
     {
       Id = id;
+      AttributeSet = attributeSet;
+    }
+
+    [ObservableProperty] private Guid m_id;
+    [ObservableProperty] private Attributes m_attributeSet;
+
+    public bool HasAttribute(Attributes attribute)
+    {
+      return (AttributeSet & attribute) == attribute;
+    }
+
+    public void SetAttribute(Attributes attribute)
+    {
+      AttributeSet = AttributeSet | attribute;
+    }
+
+    public void ResetAttribute(Attributes attribute)
+    {
+      AttributeSet = AttributeSet & ~attribute; 
+    }
+
+    /// <summary>
+    /// Toggle attribute and return it's new value.
+    /// </summary>
+    public bool ToggleAttribute(Attributes attribute)
+    {
+      if (HasAttribute(attribute))
+        ResetAttribute(attribute);
+      else
+        SetAttribute(attribute);
+      return HasAttribute(attribute);
+    }
+  }
+
+
+  /// <summary>
+  /// Storage class for country data.
+  /// </summary>
+  public partial class Country : DataObject, IEquatable<Country>
+  {
+    /// <summary>
+    /// Special Id for international "country" used for objects that require international access.
+    /// </summary>
+    public static Guid InternationalId { get => Guid.Empty; }
+    public static string s_internationalIsoCode = "999";
+    public static string InternationalIsoCode { get => s_internationalIsoCode; } //three letter iso codes use alphabetical characters so using numbers should be good
+
+    /// <summary>
+    /// Return the flag image path to use for the given country code.
+    /// </summary>
+    public static string GetFlagPath(string isoCode)
+    {
+      string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
+
+      //use fallback based on different image types, use png when possible since it supports proper transparency
+      string logoFilename = $"{tradeSharpHome}\\data\\countryflags\\w80\\{isoCode}.png";
+      if (File.Exists(logoFilename)) return logoFilename;
+      logoFilename = $"{tradeSharpHome}\\data\\countryflags\\w80\\{isoCode}.jpg";
+      if (File.Exists(logoFilename)) return logoFilename;
+      logoFilename = $"{tradeSharpHome}\\data\\countryflags\\w80\\{isoCode}.jpeg";
+      if (File.Exists(logoFilename)) return logoFilename;
+      return $"{tradeSharpHome}\\data\\countryflags\\w80\\{s_internationalIsoCode}.png"; //return no logo image
+    }
+
+    public Country(Guid id, Attributes attributeSet, string isoCode) : base(id, attributeSet)
+    {
       IsoCode = isoCode;
       CountryInfo = CountryInfo.GetCountryInfo(IsoCode);
     }
 
-    [ObservableProperty] private Guid m_id;
     [ObservableProperty] private string m_isoCode;
     public CountryInfo? CountryInfo { get; internal set; }
     bool IEquatable<Country>.Equals(Country? country)
@@ -87,12 +166,11 @@ namespace TradeSharp.Data
   /// <summary>
   /// Storage class for country/exchange holidays.
   /// </summary>
-  public partial class Holiday : ObservableObject, IEquatable<Holiday>, ICloneable, IUpdateable<Holiday>
+  public partial class Holiday : DataObject, IEquatable<Holiday>, ICloneable, IUpdateable<Holiday>
   {
-    public Holiday(Guid id, Guid parentId, string name, HolidayType type, Months month, int dayOfMonth, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth, MoveWeekendHoliday moveWeekendHoliday)
+    public Holiday(Guid id, Attributes attributeSet, Guid parentId, string name, HolidayType type, Months month, int dayOfMonth, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth, MoveWeekendHoliday moveWeekendHoliday): base(id, attributeSet)
     {
       Type = type;
-      Id = id;
       ParentId = parentId;
       Name = name;
       Month = month;
@@ -102,7 +180,6 @@ namespace TradeSharp.Data
       MoveWeekendHoliday = moveWeekendHoliday;
     }
 
-    [ObservableProperty] private Guid m_id;
     [ObservableProperty] private Guid m_parentId;
     [ObservableProperty] private HolidayType m_type;
     [ObservableProperty] private string m_name;
@@ -126,7 +203,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Holiday(Id, ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
+      return new Holiday(Id, AttributeSet, ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
     }
 
     public void Update(Holiday item)
@@ -215,13 +292,22 @@ namespace TradeSharp.Data
   /// <summary>
   /// Storage class for exchange data.
   /// </summary>
-  public partial class Exchange : ObservableObject, IEquatable<Exchange>, ICloneable, IUpdateable<Exchange>
+  public partial class Exchange : DataObject, IEquatable<Exchange>, ICloneable, IUpdateable<Exchange>
   {
     /// <summary>
     /// Logo path representing the blank logo for exchanges that do not yet have a logo assignment.
     /// </summary>
     private static string s_blankLogoPath = GetLogoPath(Guid.Empty);
     public static string BlankLogoPath { get => s_blankLogoPath;  }
+
+    /// <summary>
+    /// International Exchange used as the default parent for all unassigned children.
+    /// </summary>
+    private static string s_internationalIdStr = "11111111-1111-1111-1111-111111111111";
+    private static Guid s_internationalId = Guid.Parse(s_internationalIdStr);
+    public static Guid InternationalId { get => s_internationalId; }
+    private static string s_internationalLogoPath = GetLogoPath(s_internationalId);
+    public static string InternationalLogoPath { get => s_internationalLogoPath; }
 
     /// <summary>
     /// Create the logo path to use for logo with a given id and extension.
@@ -241,13 +327,13 @@ namespace TradeSharp.Data
     public static string GetLogoPath(Guid logoId)
     {
       string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
-      
-      //use fallback based on different image types, use jpg when possible since it is very compact
-      string logoFilename = $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.jpg";
+
+      //use fallback based on different image types, use png when possible since it supports proper transparency
+      string logoFilename = $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.png";
+      if (File.Exists(logoFilename)) return logoFilename;
+      logoFilename = $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.jpg";
       if (File.Exists(logoFilename)) return logoFilename;
       logoFilename = $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.jpeg";
-      if (File.Exists(logoFilename)) return logoFilename;
-      logoFilename = $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{logoId.ToString()}.png";
       if (File.Exists(logoFilename)) return logoFilename;
       return $"{tradeSharpHome}\\data\\assets\\exchangelogos\\{Guid.Empty.ToString()}.png"; //return no logo image
     }
@@ -263,9 +349,8 @@ namespace TradeSharp.Data
       File.Copy(newLogoImagePath, exchange.LogoPath);
     }
 
-    public Exchange(Guid id, Guid countryId, string name, TimeZoneInfo timeZone, Guid logoId)
+    public Exchange(Guid id, Attributes attributeSet, Guid countryId, string name, TimeZoneInfo timeZone, Guid logoId): base(id, attributeSet)
     {
-      Id = id;
       CountryId = countryId;
       Name = name;
       TimeZone = timeZone;
@@ -273,7 +358,6 @@ namespace TradeSharp.Data
       LogoPath = GetLogoPath(logoId);
     }
 
-    [ObservableProperty] private Guid m_id;
     [ObservableProperty] private Guid m_countryId;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private TimeZoneInfo m_timeZone;
@@ -287,7 +371,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Exchange(Id, CountryId, Name, TimeZone, LogoId);
+      return new Exchange(Id, AttributeSet, CountryId, Name, TimeZone, LogoId);
     }
 
     public void Update(Exchange item)
@@ -302,11 +386,10 @@ namespace TradeSharp.Data
   /// <summary>
   /// Storage class for exchange session data.
   /// </summary>
-  public partial class Session : ObservableObject, IEquatable<Session>, ICloneable, IUpdateable<Session>
+  public partial class Session : DataObject, IEquatable<Session>, ICloneable, IUpdateable<Session>
   {
-    public Session(Guid id, string name, Guid exchangeId, DayOfWeek dayOfWeek, TimeOnly start, TimeOnly end)
+    public Session(Guid id, Attributes attributeSet, string name, Guid exchangeId, DayOfWeek dayOfWeek, TimeOnly start, TimeOnly end): base(id, attributeSet)
     {
-      Id = id;
       Name = name;
       ExchangeId = exchangeId;
       DayOfWeek = dayOfWeek;
@@ -314,7 +397,6 @@ namespace TradeSharp.Data
       End = end;
     }
 
-    [ObservableProperty] private Guid m_id;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private Guid m_exchangeId;
     [ObservableProperty] private DayOfWeek m_dayOfWeek;
@@ -328,7 +410,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Session(Id, Name, ExchangeId, DayOfWeek, Start, End);
+      return new Session(Id, AttributeSet, Name, ExchangeId, DayOfWeek, Start, End);
     }
 
     public void Update(Session item)
@@ -344,11 +426,10 @@ namespace TradeSharp.Data
   /// <summary>
   /// Storage base class for instrument data.
   /// </summary>
-  public partial class Instrument : ObservableObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>
+  public partial class Instrument : DataObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>
   {
-    public Instrument(Guid id, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, IList<Guid> instrumentGroupId, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds)
+    public Instrument(Guid id, Attributes attributeSet, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, IList<Guid> instrumentGroupId, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds): base(id, attributeSet)
     {
-      Id = id;
       Type = type;
       Ticker = ticker;
       Name = name;
@@ -359,7 +440,6 @@ namespace TradeSharp.Data
       SecondaryExchangeIds = secondaryExchangeIds;
     }
 
-    [ObservableProperty] private Guid m_id;
     [ObservableProperty] private InstrumentType m_type;
     [ObservableProperty] private string m_ticker;
     [ObservableProperty] private string m_name;
@@ -376,7 +456,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Instrument(Id, Type, Ticker, Name, Description, InceptionDate, InstrumentGroupIds, PrimaryExchangeId, SecondaryExchangeIds);
+      return new Instrument(Id, AttributeSet, Type, Ticker, Name, Description, InceptionDate, InstrumentGroupIds, PrimaryExchangeId, SecondaryExchangeIds);
     }
 
     public void Update(Instrument item)
@@ -395,20 +475,18 @@ namespace TradeSharp.Data
   /// <summary>
   /// Storage class for general instrument grouping definition.
   /// </summary>
-  public partial class InstrumentGroup : ObservableObject, IEquatable<InstrumentGroup>, ICloneable, IUpdateable<InstrumentGroup>
+  public partial class InstrumentGroup : DataObject, IEquatable<InstrumentGroup>, ICloneable, IUpdateable<InstrumentGroup>
   {
     public static Guid InstrumentGroupRoot = Guid.Empty;
 
-    public InstrumentGroup(Guid id, Guid parentId, string name, string description, IList<Guid> instruments)
+    public InstrumentGroup(Guid id, Attributes attributeSet, Guid parentId, string name, string description, IList<Guid> instruments): base(id, attributeSet)
     {
-      Id = id;
       ParentId = parentId;
       Name = name;
       Description = description;
       Instruments = instruments;
     }
 
-    [ObservableProperty] private Guid m_id;
     [ObservableProperty] private Guid m_parentId;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private string m_description;
@@ -421,7 +499,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new InstrumentGroup(Id, ParentId, Name, Description, Instruments);
+      return new InstrumentGroup(Id, AttributeSet, ParentId, Name, Description, Instruments);
     }
 
     public void Update(InstrumentGroup item)
@@ -436,18 +514,16 @@ namespace TradeSharp.Data
   /// <summary>
   /// Storage structure for fundamental definitions.
   /// </summary>
-  public partial class Fundamental : ObservableObject, IEquatable<Fundamental>, ICloneable, IUpdateable<Fundamental>
+  public partial class Fundamental : DataObject, IEquatable<Fundamental>, ICloneable, IUpdateable<Fundamental>
   {
-    public Fundamental(Guid id, string name, string description, FundamentalCategory category, FundamentalReleaseInterval releaseInterval)
+    public Fundamental(Guid id, Attributes attributeSet, string name, string description, FundamentalCategory category, FundamentalReleaseInterval releaseInterval): base(id, attributeSet)
     {
-      Id = id;
       Name = name;
       Description = description;
       Category = category;
       ReleaseInterval = releaseInterval;
     }
 
-    [ObservableProperty] private Guid m_id;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private FundamentalCategory m_category;
@@ -460,7 +536,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Fundamental(Id, Name, Description, Category, ReleaseInterval);
+      return new Fundamental(Id, AttributeSet, Name, Description, Category, ReleaseInterval);
     }
 
     public void Update(Fundamental item)

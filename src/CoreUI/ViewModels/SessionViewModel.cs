@@ -28,6 +28,8 @@ namespace TradeSharp.CoreUI.ViewModels
     public SessionViewModel(IItemsService<Session> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       AddCommand = new RelayCommand(OnAdd, () => ParentId != Guid.Empty);
+      UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
+      DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
       CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => ParentId != Guid.Empty && SelectedItem != null);
     }
 
