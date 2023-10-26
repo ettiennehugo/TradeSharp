@@ -114,7 +114,6 @@ namespace TradeSharp.Data
     }
   }
 
-
   /// <summary>
   /// Storage class for country data.
   /// </summary>
@@ -123,8 +122,10 @@ namespace TradeSharp.Data
     /// <summary>
     /// Special Id for international "country" used for objects that require international access.
     /// </summary>
-    public static Guid InternationalId { get => Guid.Empty; }
-    public static string s_internationalIsoCode = "999";
+    private static string s_internationalIdStr = "11111111-1111-1111-1111-111111111111";
+    private static Guid s_internationalId = Guid.Parse(s_internationalIdStr);
+    public static Guid InternationalId { get => s_internationalId; }
+    private static string s_internationalIsoCode = CountryInfo.InternationalId;
     public static string InternationalIsoCode { get => s_internationalIsoCode; } //three letter iso codes use alphabetical characters so using numbers should be good
 
     /// <summary>

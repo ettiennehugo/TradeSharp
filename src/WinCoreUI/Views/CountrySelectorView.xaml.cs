@@ -42,9 +42,9 @@ namespace TradeSharp.WinCoreUI.Views
     {
       this.InitializeComponent();
       m_countries = new List<CountryInfo>();
-      foreach (var countryKey in CountryInfo.EnglishNameByIso2)
+      foreach (var countryKey in CountryInfo.CountryCodes)
       {
-        CountryInfo? country = CountryInfo.GetCountryInfo(countryKey.Key);
+        CountryInfo? country = CountryInfo.GetCountryInfo(countryKey.Item1);
         if (country != null) m_countries.Add(country);
       }
       SelectedCountry = null;

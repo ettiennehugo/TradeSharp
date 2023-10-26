@@ -5,19 +5,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:coreuivm="using:TradeSharp.CoreUI.ViewModels"
     xmlns:winui="using:CommunityToolkit.WinUI.UI.Controls"  
     xmlns:wincoreui="using:TradeSharp.WinCoreUI.Views"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     Loaded="Page_Loaded">
-  <Grid x:Name="m_main">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="auto"/>
-      <RowDefinition Height="4*"/>
-      <RowDefinition Height="5*"/>
-    </Grid.RowDefinitions>
-    <StackPanel x:Name="m_toolbar" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
+  <Grid x:Name="m_main" RowDefinitions="Auto, 300, *">
+    <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
         <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
         <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add Country" IsCompact="True"/>
@@ -33,7 +27,7 @@
             </DataTemplate>
           </winui:DataGridTemplateColumn.CellTemplate>
         </winui:DataGridTemplateColumn>
-        <winui:DataGridTextColumn x:Name="m_columnISORegionName" Width="Auto" Header="ISO Code" Binding="{Binding CountryInfo.RegionInfo.ThreeLetterISORegionName, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnISORegionName" Width="Auto" Header="ISO Code" Binding="{Binding CountryInfo.RegionInfo.TwoLetterISORegionName, Mode=OneWay}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnRegion" Width="Auto" Header="Region" Binding="{Binding CountryInfo.RegionInfo.EnglishName, Mode=OneWay}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnLanguage" Width="Auto" Header="Language" Binding="{Binding CountryInfo.CultureInfo.EnglishName, Mode=OneTime}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnCurrencySymbol" Width="Auto" Header="Currency Symbol" Binding="{Binding CountryInfo.RegionInfo.CurrencySymbol, Mode=OneTime}" IsReadOnly="True"/>

@@ -88,7 +88,7 @@ namespace TradeSharp.Data.Testing
       m_dataStore = new TradeSharp.Data.SqliteDataStoreService(m_configuration.Object);
 
       //remove stale data from previous tests - this is to ensure proper test isolation
-      m_dataStore.ClearDatabase();
+      //m_dataStore.ClearDatabase();
 
       //create common attributes used for testing
       m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "en-US");
@@ -111,6 +111,51 @@ namespace TradeSharp.Data.Testing
 
 
     //methods
+    [TestMethod]
+    public void CreateDefaultObjects_InternationalCountry_Success()
+    {
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableCountry,
+        $"Id = '{Country.InternationalId.ToString()}'")
+      , "International country default object not created.");
+    }
+
+    [TestMethod]
+    public void CreateDefaultObjects_InternationalExchange_Success()
+    {
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableExchange,
+        $"Id = '{Exchange.InternationalId.ToString()}'")
+      , "International exchange default object not created.");
+
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
+        $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
+        $"AND DayOfWeek = {(int)DayOfWeek.Monday}")
+      , "International exchange default Monday session object not created.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
+        $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
+        $"AND DayOfWeek = {(int)DayOfWeek.Tuesday}")
+      , "International exchange default Tuesday session object not created.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
+        $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
+        $"AND DayOfWeek = {(int)DayOfWeek.Wednesday}")
+      , "International exchange default Wednesday session object not created.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
+        $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
+        $"AND DayOfWeek = {(int)DayOfWeek.Thursday}")
+      , "International exchange default Thursday session object not created.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
+        $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
+        $"AND DayOfWeek = {(int)DayOfWeek.Friday}")
+      , "International exchange default Friday session object not created.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
+        $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
+        $"AND DayOfWeek = {(int)DayOfWeek.Saturday}")
+      , "International exchange default Saturday session object not created.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
+        $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
+        $"AND DayOfWeek = {(int)DayOfWeek.Sunday}")
+      , "International exchange default Sunday session object not created.");
+    }
+
     [TestMethod]
     public void CreateCountryHoliday_DayOfMonth_Success()
     {

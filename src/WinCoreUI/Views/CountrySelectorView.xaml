@@ -9,12 +9,7 @@
     mc:Ignorable="d">
   <Page.Resources>
     <DataTemplate x:Key="CountryInfoComboBoxItem" x:DataType="common:CountryInfo">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="auto"/>
-          <ColumnDefinition Width="auto"/>
-          <ColumnDefinition Width="auto"/>
-        </Grid.ColumnDefinitions>
+      <Grid ColumnDefinitions="Auto, Auto, Auto">
         <Image Source="{x:Bind ImagePath, Mode=OneTime}" Margin="1,1,1,1" Grid.Column="0"/>
         <TextBlock Text="{x:Bind RegionInfo.EnglishName, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="2"/>
         <TextBlock Text="{x:Bind CultureInfo.EnglishName, Mode=OneTime}" Margin="20, 1, 1, 1" VerticalAlignment="Center" Grid.Column="1"/>

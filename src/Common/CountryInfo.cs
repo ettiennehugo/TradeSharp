@@ -1,16 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Drawing;
-using Microsoft.VisualBasic;
-using CommunityToolkit.Mvvm;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using static System.Net.WebRequestMethods;
-using System.Diagnostics;
+using System;
+using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Net;
 using System.Numerics;
@@ -20,6 +11,11 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Text;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.VisualBasic;
+using static System.Net.WebRequestMethods;
 
 namespace TradeSharp.Common
 {
@@ -30,261 +26,52 @@ namespace TradeSharp.Common
   {
     //constants
     /// <summary>
+    /// Default Id used for international objects - will default to the local system settings.
+    /// </summary>
+    public const string InternationalId = "999";
+
+    /// <summary>
     /// Set of defined countries with three letter iso-codes and English names.
     /// </summary>
-    private static readonly Dictionary<string, string> s_englishNameByIso2 = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    private static readonly List<(string, string, string, string)> s_countryCodes = new List<(string, string, string, string)>()
       {
-        //{"ABW", "Aruba"},
-        //{"AFG", "Afghanistan"},
-        //{"AGO", "Angola"},
-        //{"AIA", "Anguilla"},
-        //{"ALA", "Åland Islands"},
-        //{"ALB", "Albania"},
-        //{"AND", "Andorra"},
-        //{"ARE", "United Arab Emirates"},
-        //{"ARG", "Argentina"},
-        //{"ARM", "Armenia"},
-        //{"ASM", "American Samoa"},
-        //{"ATA", "Antarctica"},
-        //{"ATF", "French Southern Territories"},
-        //{"ATG", "Antigua and Barbuda"},
-        {"AUS", "Australia"},
-        //{"AUT", "Austria"},
-        //{"AZE", "Azerbaijan"},
-        //{"BDI", "Burundi"},
-        {"BEL", "Belgium"},
-        //{"BEN", "Benin"},
-        //{"BES", "Bonaire, Sint Eustatius and Saba"},
-        //{"BFA", "Burkina Faso"},
-        //{"BGD", "Bangladesh"},
-        //{"BGR", "Bulgaria"},
-        //{"BHR", "Bahrain"},
-        //{"BHS", "Bahamas"},
-        //{"BIH", "Bosnia and Herzegovina"},
-        //{"BLM", "Saint Barthélemy"},
-        //{"BLR", "Belarus"},
-        //{"BLZ", "Belize"},
-        //{"BMU", "Bermuda"},
-        //{"BOL", "Bolivia (Plurinational State of)"},
-        //{"BRA", "Brazil"},
-        //{"BRB", "Barbados"},
-        //{"BRN", "Brunei Darussalam"},
-        //{"BTN", "Bhutan"},
-        //{"BVT", "Bouvet Island"},
-        {"BWA", "Botswana"},
-        //{"CAF", "Central African Republic"},
-        {"CAN", "Canada"},
-        //{"CCK", "Cocos (Keeling) Islands"},
-        {"CHE", "Switzerland"},
-        //{"CHL", "Chile"},
-        {"CHN", "China"},
-        //{"CIV", "Côte d'Ivoire"},
-        //{"CMR", "Cameroon"},
-        //{"COD", "Congo, Democratic Republic of the"},
-        //{"COG", "Congo"},
-        //{"COK", "Cook Islands"},
-        //{"COL", "Colombia"},
-        //{"COM", "Comoros"},
-        //{"CPV", "Cabo Verde"},
-        //{"CRI", "Costa Rica"},
-        //{"CUB", "Cuba"},
-        //{"CUW", "Curaçao"},
-        //{"CXR", "Christmas Island"},
-        {"CYM", "Cayman Islands"},
-        {"CYP", "Cyprus"},
-        //{"CZE", "Czechia"},
-        {"DEU", "Germany"},
-        //{"DJI", "Djibouti"},
-        //{"DMA", "Dominica"},
-        {"DNK", "Denmark"},
-        //{"DOM", "Dominican Republic"},
-        //{"DZA", "Algeria"},
-        //{"ECU", "Ecuador"},
-        //{"EGY", "Egypt"},
-        //{"ERI", "Eritrea"},
-        //{"ESH", "Western Sahara"},
-        {"ESP", "Spain"},
-        //{"EST", "Estonia"},
-        //{"ETH", "Ethiopia"},
-        {"FIN", "Finland"},
-        //{"FJI", "Fiji"},
-        //{"FLK", "Falkland Islands (Malvinas)"},
-        {"FRA", "France"},
-        //{"FRO", "Faroe Islands"},
-        //{"FSM", "Micronesia (Federated States of)"},
-        //{"GAB", "Gabon"},
-        {"GBR", "United Kingdom of Great Britain and Northern Ireland"},
-        //{"GEO", "Georgia"},
-        //{"GGY", "Guernsey"},
-        //{"GHA", "Ghana"},
-        //{"GIB", "Gibraltar"},
-        //{"GIN", "Guinea"},
-        //{"GLP", "Guadeloupe"},
-        //{"GMB", "Gambia"},
-        //{"GNB", "Guinea-Bissau"},
-        //{"GNQ", "Equatorial Guinea"},
-        {"GRC", "Greece"},
-        //{"GRD", "Grenada"},
-        //{"GRL", "Greenland"},
-        //{"GTM", "Guatemala"},
-        //{"GUF", "French Guiana"},
-        //{"GUM", "Guam"},
-        //{"GUY", "Guyana"},
-        {"HKG", "Hong Kong"},
-        //{"HMD", "Heard Island and McDonald Islands"},
-        //{"HND", "Honduras"},
-        //{"HRV", "Croatia"},
-        //{"HTI", "Haiti"},
-        {"HUN", "Hungary"},
-        //{"IDN", "Indonesia"},
-        //{"IMN", "Isle of Man"},
-        {"IND", "India"},
-        //{"IOT", "British Indian Ocean Territory"},
-        {"IRL", "Ireland"},
-        {"IRN", "Iran"},
-        //{"IRQ", "Iraq"},
-        {"ISL", "Iceland"},
-        {"ISR", "Israel"},
-        {"ITA", "Italy"},
-        //{"JAM", "Jamaica"},
-        //{"JEY", "Jersey"},
-        {"JOR", "Jordan"},
-        {"JPN", "Japan"},
-        //{"KAZ", "Kazakhstan"},
-        //{"KEN", "Kenya"},
-        //{"KGZ", "Kyrgyzstan"},
-        //{"KHM", "Cambodia"},
-        //{"KIR", "Kiribati"},
-        //{"KNA", "Saint Kitts and Nevis"},
-        //{"KOR", "Korea, Republic of"},
-        //{"KWT", "Kuwait"},
-        //{"LAO", "Lao People's Democratic Republic"},
-        //{"LBN", "Lebanon"},
-        //{"LBR", "Liberia"},
-        //{"LBY", "Libya"},
-        //{"LCA", "Saint Lucia"},
-        //{"LIE", "Liechtenstein"},
-        //{"LKA", "Sri Lanka"},
-        //{"LSO", "Lesotho"},
-        //{"LTU", "Lithuania"},
-        //{"LUX", "Luxembourg"},
-        //{"LVA", "Latvia"},
-        //{"MAC", "Macao"},
-        //{"MAF", "Saint Martin (French part)"},
-        //{"MAR", "Morocco"},
-        //{"MCO", "Monaco"},
-        //{"MDA", "Moldova, Republic of"},
-        //{"MDG", "Madagascar"},
-        //{"MDV", "Maldives"},
-        {"MEX", "Mexico"},
-        //{"MHL", "Marshall Islands"},
-        //{"MKD", "North Macedonia"},
-        //{"MLI", "Mali"},
-        //{"MLT", "Malta"},
-        //{"MMR", "Myanmar"},
-        //{"MNE", "Montenegro"},
-        //{"MNG", "Mongolia"},
-        //{"MNP", "Northern Mariana Islands"},
-        //{"MOZ", "Mozambique"},
-        //{"MRT", "Mauritania"},
-        //{"MSR", "Montserrat"},
-        //{"MTQ", "Martinique"},
-        //{"MUS", "Mauritius"},
-        //{"MWI", "Malawi"},
-        //{"MYS", "Malaysia"},
-        //{"MYT", "Mayotte"},
-        //{"NAM", "Namibia"},
-        //{"NCL", "New Caledonia"},
-        //{"NER", "Niger"},
-        //{"NFK", "Norfolk Island"},
-        //{"NGA", "Nigeria"},
-        //{"NIC", "Nicaragua"},
-        //{"NIU", "Niue"},
-        {"NLD", "Netherlands"},
-        //{"NOR", "Norway"},
-        //{"NPL", "Nepal"},
-        //{"NRU", "Nauru"},
-        {"NZL", "New Zealand"},
-        //{"OMN", "Oman"},
-        {"PAK", "Pakistan"},
-        //{"PAN", "Panama"},
-        //{"PCN", "Pitcairn"},
-        //{"PER", "Peru"},
-        //{"PHL", "Philippines"},
-        //{"PLW", "Palau"},
-        //{"PNG", "Papua New Guinea"},
-        {"POL", "Poland"},
-        //{"PRI", "Puerto Rico"},
-        {"PRK", "South Korea"},
-        {"PRT", "Portugal"},
-        //{"PRY", "Paraguay"},
-        //{"PSE", "Palestine, State of"},
-        //{"PYF", "French Polynesia"},
-        //{"QAT", "Qatar"},
-        //{"REU", "Réunion"},
-        //{"ROU", "Romania"},
-        //{"RUS", "Russian Federation"},
-        //{"RWA", "Rwanda"},
-        {"SAU", "Saudi Arabia"},
-        //{"SDN", "Sudan"},
-        //{"SEN", "Senegal"},
-        //{"SGP", "Singapore"},
-        //{"SGS", "South Georgia and the South Sandwich Islands"},
-        //{"SHN", "Saint Helena, Ascension and Tristan da Cunha"},
-        //{"SJM", "Svalbard and Jan Mayen"},
-        //{"SLB", "Solomon Islands"},
-        //{"SLE", "Sierra Leone"},
-        //{"SLV", "El Salvador"},
-        //{"SMR", "San Marino"},
-        //{"SOM", "Somalia"},
-        //{"SPM", "Saint Pierre and Miquelon"},
-        //{"SRB", "Serbia"},
-        //{"SSD", "South Sudan"},
-        //{"STP", "Sao Tome and Principe"},
-        //{"SUR", "Suriname"},
-        //{"SVK", "Slovakia"},
-        //{"SVN", "Slovenia"},
-        {"SWE", "Sweden"},
-        //{"SWZ", "Eswatini"},
-        //{"SXM", "Sint Maarten (Dutch part)"},
-        //{"SYC", "Seychelles"},
-        //{"SYR", "Syrian Arab Republic"},
-        //{"TCA", "Turks and Caicos Islands"},
-        //{"TCD", "Chad"},
-        //{"TGO", "Togo"},
-        //{"THA", "Thailand"},
-        //{"TJK", "Tajikistan"},
-        //{"TKL", "Tokelau"},
-        //{"TKM", "Turkmenistan"},
-        //{"TLS", "Timor-Leste"},
-        //{"TON", "Tonga"},
-        //{"TTO", "Trinidad and Tobago"},
-        //{"TUN", "Tunisia"},
-        //{"TUR", "Türkiye"},
-        //{"TUV", "Tuvalu"},
-        {"TWN", "Taiwan"},
-        //{"TZA", "Tanzania, United Republic of"},
-        //{"UGA", "Uganda"},
-        //{"UKR", "Ukraine"},
-        //{"UMI", "United States Minor Outlying Islands"},
-        //{"URY", "Uruguay"},
-        {"USA", "United States of America"},
-        //{"UZB", "Uzbekistan"},
-        //{"VAT", "Holy See"},
-        //{"VCT", "Saint Vincent and the Grenadines"},
-        //{"VEN", "Venezuela (Bolivarian Republic of)"},
-        //{"VGB", "Virgin Islands (British)"},
-        //{"VIR", "Virgin Islands (U.S.)"},
-        //{"VNM", "Viet Nam"},
-        //{"VUT", "Vanuatu"},
-        //{"WLF", "Wallis and Futuna"},
-        //{"WSM", "Samoa"},
-        //{"YEM", "Yemen"},
-        {"ZAF", "South Africa"}
-        //{"ZMB", "Zambia"},
-        //{"ZWE", "Zimbabwe"}
+        ("en-AU", "AU", "AUS", "Australia"),
+        ("nl-BE", "BE", "BEL", "Belgium"),
+        ("en-CA", "CA", "CAN", "Canada"),
+        ("en-KY", "KY", "CYM", "Cayman Islands (the)"),
+        ("fi-FI", "FI", "FIN", "Finland"),
+        ("fr-FR", "FR", "FRA", "France"),
+        ("de-DE", "DE", "DEU", "Germany"),
+        ("gr-GR", "GR", "GRC", "Greece"),
+        ("it-VA", "VA", "VAT", "Holy See (the)"),
+        ("is-IS", "IS", "ISL", "Iceland"),
+        ("hi-IN", "IN", "IND", "India"),
+        ("ar-IR", "IR", "IRN", "Iran (Islamic Republic of)"),
+        ("en-IE", "IE", "IRL", "Ireland"),
+        ("en-IM", "IM", "IMN", "Isle of Man"),
+        ("he-IL", "IL", "ISR", "Israel"),
+        ("it-IT", "IT", "ITA", "Italy"),
+        ("jp-JP", "JP", "JPN", "Japan"),
+        ("ar-JO", "JO", "JOR", "Jordan"),
+        ("de-LU", "LU", "LUX", "Luxembourg"),
+        ("es-MX", "MX", "MEX", "Mexico"),
+        ("nl-NL", "NL", "NLD", "Netherlands (the)"),
+        ("en-NZ", "NZ", "NZL", "New Zealand"),
+        ("nn-NO", "NO", "NOR", "Norway"),
+        ("ur-PK", "PK", "PAK", "Pakistan"),
+        ("pl-PL", "PL", "POL", "Poland"),
+        ("pt-PT", "PT", "PRT", "Portugal"),
+        ("ar-QA", "QA", "QAT", "Qatar"),
+        ("ru-RU", "RU", "RUS", "Russian Federation (the)"),
+        ("en-SG", "SG", "SGP", "Singapore"),
+        ("en-ZA", "ZA", "ZAF", "South Africa"),
+        ("se-SE", "SE", "SWE", "Sweden"),
+        ("de-CH", "CH", "CHE", "Switzerland"),
+        ("th-TH", "TH", "THA", "Thailand"),
+        ("ar-TR", "TR", "TUR", "Turkey"),
+        ("ar-AE", "AE", "ARE", "United Arab Emirates (the)"),
+        ("en-GB", "GB", "GBR", "United Kingdom of Great Britain and Northern Ireland (the)"),
       };
-
 
     //enums
 
@@ -293,17 +80,35 @@ namespace TradeSharp.Common
 
 
     //attributes
+    protected string m_isoCode;
     protected string m_imagePath;
     protected CultureInfo m_cultureInfo;
     protected RegionInfo m_regionInfo;
 
     //constructors
-    public CountryInfo(CultureInfo cultureInfo, RegionInfo regionInfo)
+    // TODO: In .Net 8 there is a custom CountryAndRegionInfoBuilder that allows custom defintions, rather use that for international culture and reqion definitions.
+    //static CountryInfo() 
+    //{
+    //  CultureAndRegionInfoBuilder internationalCulture = new CultureAndRegionInfoBuilder(InternationalId, CultureAndRegionModifiers.None);
+    //  internationalCulture.LoadDataFromCultureInfo(CultureInfo.CurrentCulture);
+    //  internationalCulture.LoadDataFromRegionInfo(RegionInfo.CurrentRegion);
+    //  internationalCulture.CultureEnglishName = "International Culture";
+    //  internationalCulture.CultureNativeName = "International Culture";
+    //  internationalCulture.CurrencyNativeName = RegionInfo.CurrentRegion.CurrencyNativeName;
+    //  internationalCulture.Register();
+    //}
+
+    public CountryInfo(string isoCode, CultureInfo cultureInfo, RegionInfo regionInfo)
     {
+      m_isoCode = isoCode;
       m_cultureInfo = cultureInfo;
       m_regionInfo = regionInfo;
       string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
-      m_imagePath = $"{tradeSharpHome}\\data\\assets\\countryflags\\w80\\{regionInfo.TwoLetterISORegionName}.png";
+
+      if (m_isoCode != InternationalId)
+        m_imagePath = $"{tradeSharpHome}\\data\\assets\\countryflags\\w80\\{regionInfo.TwoLetterISORegionName}.png";
+      else
+        m_imagePath = $"{tradeSharpHome}\\data\\assets\\countryflags\\w80\\{InternationalId}.png";    //HACK: Since we can not create a custom culture we settle for a different icon and the user's local settings (see below).
     }
 
     //finalizers
@@ -313,7 +118,7 @@ namespace TradeSharp.Common
 
 
     //properties
-    public static IDictionary<string, string> EnglishNameByIso2 { get => s_englishNameByIso2; }
+    public static IList<(string, string, string, string)> CountryCodes { get => s_countryCodes; }
     public string ImagePath { get => m_imagePath; set => SetProperty(ref m_imagePath, value); }
     public CultureInfo CultureInfo { get => m_cultureInfo; set => SetProperty(ref m_cultureInfo, value); }
     public RegionInfo RegionInfo { get => m_regionInfo; set => SetProperty(ref m_regionInfo, value); }
@@ -321,16 +126,17 @@ namespace TradeSharp.Common
     //methods
     public static CountryInfo? GetCountryInfo(string isoCode)
     {
-        CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
-        
-        foreach (CultureInfo cultureInfo in cultures)
-        {
-          RegionInfo regionInfo = new RegionInfo(cultureInfo.LCID);
-          if (regionInfo.ThreeLetterISORegionName == isoCode)
-            return new CountryInfo(cultureInfo, regionInfo);
-        }
-
-      return null;
+      if (isoCode == InternationalId)
+      {
+        //return special international culture and region
+        return new CountryInfo(isoCode, CultureInfo.CurrentCulture, RegionInfo.CurrentRegion);
+      }
+      else
+      {
+        RegionInfo regionInfo = new RegionInfo(isoCode);
+        CultureInfo cultureInfo = new CultureInfo(isoCode);
+        return new CountryInfo(isoCode, cultureInfo, regionInfo);
+      }
     }
   }
 
