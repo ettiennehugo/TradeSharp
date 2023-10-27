@@ -1,5 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Xml.Linq;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data
@@ -230,7 +232,7 @@ namespace TradeSharp.Data
       //delete rest of the associated objects
       foreach (var holidayId in GetAssociatedIds(c_TableHoliday, id, "ParentId")) result += DeleteHoliday(holidayId);
       using (var instrumentRows = GetAssociatedRows(c_TableInstrument, id, "PrimaryExchangeId", "Id, Ticker"))
-        while (instrumentRows.Read()) result += DeleteInstrument(instrumentRows.GetGuid(0), instrumentRows.GetString(1));
+        while (instrumentRows.Read()) result += deleteInstrument(instrumentRows.GetGuid(0), instrumentRows.GetString(1));   //TOOD: This should rather move the instrument to the global exchange.
       result += Delete(c_TableInstrumentSecondaryExchange, id, "ExchangeId");
       foreach (var sessionId in GetAssociatedIds(c_TableSession, id, "ExchangeId")) result += DeleteSession(sessionId);
       return result;
@@ -405,6 +407,18 @@ namespace TradeSharp.Data
       );
     }
 
+    public InstrumentGroup? GetInstrumentGroup(Guid id)
+    {
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrumentGroup} WHERE Id == '{id.ToString()}'"))
+        if (reader.Read())
+        {
+          IList<Guid> instruments = GetInstrumentGroupInstruments(id);
+          return new InstrumentGroup(id, (Attributes)reader.GetInt64(1), reader.GetGuid(2), reader.GetString(3), reader.GetString(4), instruments);
+        }
+
+      return null;
+    }
+
     public IList<InstrumentGroup> GetInstrumentGroups()
     {
       List<InstrumentGroup> result = new List<InstrumentGroup>();
@@ -432,50 +446,53 @@ namespace TradeSharp.Data
       return result;
     }
 
-    public void UpdateInstrumentGroup(Guid id, Guid parentId)
-    {
-      //Id and ParentId must be unique in combination
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableInstrumentGroup} SET " +
-            $"ParentId = '{parentId.ToString()}' " +
-          $"WHERE Id = '{id.ToString()}'"
-      );
-    }
-
-    public void UpdateInstrumentGroup(Guid id, string name, string description)
+    public void UpdateInstrumentGroup(InstrumentGroup instrumentGroup)
     {
       ExecuteCommand(
         $"UPDATE OR FAIL {c_TableInstrumentGroup} SET " +
-            $"Name = '{name}' " +
-            $"Description = '{description}' " +
-          $"WHERE Id = '{id.ToString()}'"
+            $"ParentId = '{instrumentGroup.ParentId.ToString()}', " +
+            $"Name = '{instrumentGroup.Name}', " +
+            $"Description = '{instrumentGroup.Description}' " +
+          $"WHERE Id = '{instrumentGroup.Id.ToString()}'"
       );
+
+      Delete(c_TableInstrumentGroupInstrument, instrumentGroup.Id, "InstrumentGroupId");
+
+      foreach (Guid instrumentId in instrumentGroup.Instruments)
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
+            $"VALUES (" +
+              $"'{instrumentGroup.Id.ToString()}', " +
+              $"'{instrumentId.ToString()}'" +
+          $")"
+        );
     }
 
-    public void DeleteInstrumentGroup(Guid id)
+    public int DeleteInstrumentGroup(Guid id)
     {
+      
+      //TODO: Should we rather move these groups to the root parent???
+
+      int result = 0;
       using (var reader = ExecuteReader($"SELECT Id FROM {c_TableInstrumentGroup} WHERE ParentId = '{id.ToString()}'"))
-        while (reader.Read()) DeleteInstrumentGroup(reader.GetGuid(0));
+        while (reader.Read()) result += DeleteInstrumentGroup(reader.GetGuid(0));
 
-      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{id.ToString()}'");
-      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroup} WHERE Id = '{id.ToString()}'");
+      result += ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{id.ToString()}'");
+      result += ExecuteCommand($"DELETE FROM {c_TableInstrumentGroup} WHERE Id = '{id.ToString()}'");
+
+      return result;
     }
 
-    public void DeleteInstrumentGroupChild(Guid parentId, Guid childId)
+    public int DeleteInstrumentGroupChild(Guid parentId, Guid childId)
     {
       //NOTE: We do not use the parentId for Sqlite, we just reset the parentId on the instrument group table for the given child.
-      ExecuteCommand($"UPDATE OR IGNORE {c_TableInstrumentGroup} SET ParentId = '{InstrumentGroup.InstrumentGroupRoot.ToString()}' WHERE Id = '{childId.ToString()}'");
+      return ExecuteCommand($"UPDATE OR IGNORE {c_TableInstrumentGroup} SET ParentId = '{InstrumentGroup.InstrumentGroupRoot.ToString()}' WHERE Id = '{childId.ToString()}'");
     }
 
-    public void DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId)
+    public int DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId)
     {
-      ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' AND InstrumentId = '{instrumentId.ToString()}'");
+      return ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' AND InstrumentId = '{instrumentId.ToString()}'");
     }
-
-
-
-
-    //TODO: Needs to Update, Delete using the object instance. Also, needs to set the AttributeSet.
 
     public void CreateInstrument(Instrument instrument)
     {
@@ -492,6 +509,17 @@ namespace TradeSharp.Data
             $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}" +
           $")"
       );
+
+      foreach (Guid instrumentGroupId in instrument.InstrumentGroupIds)
+      {
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
+            $"VALUES (" +
+              $"'{instrumentGroupId.ToString()}', " +
+              $"'{instrument.Id.ToString()}'" +
+            $")"
+        );
+      }
 
       foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
       {
@@ -564,21 +592,67 @@ namespace TradeSharp.Data
       return result;
     }
 
-    public void UpdateInstrument(Guid id, Guid exchangeId, string ticker, DateTime inceptionDate)
+    public Instrument? GetInstrument(Guid id)
+    {
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} WHERE Id = '{id.ToString()}'"))
+        if (reader.Read())
+        {
+          List<Guid> secondaryExchangeIds = new List<Guid>();
+          using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{id.ToString()}'"))
+            while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
+
+          List<Guid> instrumentGroupIds = new List<Guid>();
+          using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{id.ToString()}'"))
+            while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
+
+          return new Instrument(reader.GetGuid(0), (Attributes)reader.GetInt64(1), (InstrumentType)reader.GetInt32(2), reader.GetString(3), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), instrumentGroupIds, reader.GetGuid(6), secondaryExchangeIds);
+        }
+
+        return null;
+    }
+
+    public void UpdateInstrument(Instrument instrument)
     {
       ExecuteCommand(
         $"UPDATE OR FAIL {c_TableInstrument} " +
-          $"SET Ticker = '{ticker}', PrimaryExchangeId = '{exchangeId.ToString()}', " +
-              $"InceptionDate = {inceptionDate.ToUniversalTime().ToBinary()} " +
-          $"WHERE Id = '{id.ToString()}'"
+          $"SET Ticker = '{instrument.Ticker}', PrimaryExchangeId = '{instrument.PrimaryExchangeId.ToString()}', " +
+              $"InceptionDate = {instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
+          $"WHERE Id = '{instrument.Id.ToString()}'"
       );
+      
+      Delete(c_TableInstrumentGroupInstrument, instrument.Id, "InstrumentId");
+      foreach (Guid instrumentGroupId in instrument.InstrumentGroupIds)
+      {
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
+            $"VALUES (" +
+              $"'{instrumentGroupId.ToString()}', " +
+              $"'{instrument.Id.ToString()}'" +
+            $")"
+        );
+      }
+
+      Delete(c_TableInstrumentSecondaryExchange, instrument.Id, "InstrumentId");
+      foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
+      {
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
+            $"VALUES (" +
+              $"'{instrument.Id.ToString()}', " +
+              $"'{otherExchangeId.ToString()}'" +
+            $")"
+        );
+      }
     }
 
-    public int DeleteInstrument(Guid id, string ticker)
+    public int DeleteInstrument(Instrument instrument)
     {
-      int result = 0;
+      return deleteInstrument(instrument.Id, instrument.Ticker);
+    }
 
-      result = Delete(c_TableInstrument, id);
+    public int deleteInstrument(Guid id, string ticker)
+    {
+      int result = Delete(c_TableInstrument, id);
       result += Delete(c_TableInstrumentSecondaryExchange, id, "InstrumentId");
       result += Delete(c_TableInstrumentGroupInstrument, id, "InstrumentId");
 

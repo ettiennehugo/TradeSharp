@@ -440,11 +440,22 @@ namespace TradeSharp.Data.Testing
     public void UpdateInstrument_ChangeAllAttributes_Success()
     {
       Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "SecondaryTestExchange", m_timeZone, Guid.Empty);
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group", "Test Instrument Group Description", Array.Empty<Guid>());
       DateTime dateTime = DateTime.Now.AddDays(3);
 
       m_dataStore.CreateInstrument(m_instrument);
-      m_dataStore.UpdateInstrument(m_instrument.Id, exchange.Id, "NEW", dateTime);
+
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group1", "Test Instrument Group1 Description", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group2", "Test Instrument Group2 Description", Array.Empty<Guid>());
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
+
+      m_instrument.Ticker = "NEW";
+      m_instrument.PrimaryExchangeId = exchange.Id;
+      m_instrument.InceptionDate = dateTime;
+      m_instrument.InstrumentGroupIds = new List<Guid> { instrumentGroup1.Id, instrumentGroup2.Id };
+      m_instrument.SecondaryExchangeIds = new List<Guid> { secondExchange.Id, thirdExchange.Id };
+
+      m_dataStore.UpdateInstrument(m_instrument);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrument,
         $"Id = '{m_instrument.Id.ToString()}' " +
@@ -453,6 +464,22 @@ namespace TradeSharp.Data.Testing
         $"AND PrimaryExchangeId = '{exchange.Id.ToString()}' " +
         $"AND InceptionDate = {dateTime.ToUniversalTime().ToBinary()}")
       , "Instrument not updated in database.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
+        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
+        $"AND InstrumentGroupId = '{instrumentGroup1.Id.ToString()}'")
+      , "Instrument not associated with instrument group 1.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
+        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
+        $"AND InstrumentGroupId = '{instrumentGroup2.Id.ToString()}'")
+      , "Instrument not associated with instrument group 2.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentSecondaryExchange,
+        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
+        $"AND ExchangeId = '{secondExchange.Id.ToString()}'")
+      , "Instrument not associated with exchange 2.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentSecondaryExchange,
+        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
+        $"AND ExchangeId = '{thirdExchange.Id.ToString()}'")
+      , "Instrument not associated with exchange 3.");
     }
 
     [TestMethod]
@@ -1313,7 +1340,10 @@ namespace TradeSharp.Data.Testing
         $"AND Description = '{instrumentGroup2.Description}'")
       , "Instrument group 2 not persisted to database.");
 
-      m_dataStore.UpdateInstrumentGroup(instrumentGroup1.Id, instrumentGroup2.Id);  //make instrument group 2 the parent of instrument group 1
+      instrumentGroup1.ParentId = instrumentGroup2.Id;
+      instrumentGroup1.Name = "New Group1 Name";
+      instrumentGroup1.Description = "New Group1 Description";
+      m_dataStore.UpdateInstrumentGroup(instrumentGroup1);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroup,
         $"Id = '{instrumentGroup1.Id.ToString()}' " +
@@ -1321,6 +1351,50 @@ namespace TradeSharp.Data.Testing
         $"AND Name = '{instrumentGroup1.Name}' " +
         $"AND Description = '{instrumentGroup1.Description}'")
       , "Instrument group 1 not persisted to database.");
+    }
+
+    [TestMethod]
+    public void UpdateInstrumentGroup_ChangeInstruments_Success()
+    {
+      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "STOCK2", "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "STOCK3", "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+
+      Instrument forex1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Forex, "FOREX1", "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Forex, "FOREX2", "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", new List<Guid> { stock2.Id, stock3.Id });
+
+      m_dataStore.CreateInstrumentGroup(instrumentGroup1);
+
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
+        $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
+        $"AND InstrumentId = '{stock2.Id.ToString()}'")
+      , "Stock 2 not persisted to database.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
+        $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
+        $"AND InstrumentId = '{stock3.Id.ToString()}'")
+      , "Stock 3 not persisted to database.");
+
+      instrumentGroup1.Instruments = new List<Guid> { forex1.Id, forex2.Id };
+
+      m_dataStore.UpdateInstrumentGroup(instrumentGroup1);
+
+      Assert.AreEqual(0, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
+        $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
+        $"AND InstrumentId = '{stock2.Id.ToString()}'")
+      , "Stock 2 not removed from database.");
+      Assert.AreEqual(0, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
+        $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
+        $"AND InstrumentId = '{stock3.Id.ToString()}'")
+      , "Stock 3 not removed from database.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
+        $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
+        $"AND InstrumentId = '{forex1.Id.ToString()}'")
+      , "Forex 1 not persisted to database.");
+      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
+        $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
+        $"AND InstrumentId = '{forex2.Id.ToString()}'")
+      , "Forex 2 not persisted to database.");
     }
 
     [TestMethod]
@@ -1396,7 +1470,7 @@ namespace TradeSharp.Data.Testing
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not persisted to database.");
 
-      m_dataStore.DeleteInstrument(m_instrument.Id, m_instrument.Ticker);
+      m_dataStore.DeleteInstrument(m_instrument);
 
       Assert.AreEqual(0, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrument,
         $"Id = '{m_instrument.Id.ToString()}' " +
@@ -1463,7 +1537,7 @@ namespace TradeSharp.Data.Testing
         $"AND Value = {value.ToString()}")
       , "Instrument fundamental value not persisted to database.");
 
-      Assert.AreEqual(14, m_dataStore.DeleteInstrument(m_instrument.Id, m_instrument.Ticker), "Delete instrument returned the incorrect number of rows removed");
+      Assert.AreEqual(14, m_dataStore.DeleteInstrument(m_instrument), "Delete instrument returned the incorrect number of rows removed");
 
       Assert.AreEqual(0, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrument,
         $"Id = '{m_instrument.Id.ToString()}' " +
@@ -1817,6 +1891,24 @@ namespace TradeSharp.Data.Testing
       Assert.IsNotNull(forex.Where(x => x.Id == forex2.Id && x.Type == forex2.Type && x.Ticker == forex2.Ticker && x.Name == forex2.Name && x.Description == forex2.Description && x.InceptionDate == forex2.InceptionDate).Single(), "forex2 not found");
       Assert.IsNotNull(forex.Where(x => x.Id == forex3.Id && x.Type == forex3.Type && x.Ticker == forex3.Ticker && x.Name == forex3.Name && x.Description == forex3.Description && x.InceptionDate == forex3.InceptionDate).Single(), "forex3 not found");
       Assert.IsNotNull(forex.Where(x => x.Id == forex4.Id && x.Type == forex4.Type && x.Ticker == forex4.Ticker && x.Name == forex4.Name && x.Description == forex4.Description && x.InceptionDate == forex4.InceptionDate).Single(), "forex4 not found");
+    }
+
+    [TestMethod]
+    public void GetInstrument_ById_Success()
+    {
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
+      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "STOCK", "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), new List<Guid>{ instrumentGroup.Id }, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
+
+      m_dataStore.CreateInstrument(stock);
+
+      Instrument? retrievedStock = m_dataStore.GetInstrument(stock.Id);
+
+      Assert.IsNotNull(retrievedStock, "Data store did not return the stock.");
+      Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == secondExchange.Id).Single());
+      Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == thirdExchange.Id).Single());
+      Assert.IsNotNull(retrievedStock.InstrumentGroupIds.Where(x => x == instrumentGroup.Id).Single());
     }
 
     [TestMethod]

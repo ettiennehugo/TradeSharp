@@ -41,9 +41,9 @@ namespace TradeSharp.CoreUI.Repositories
       return Task.Run(() => { m_dataStore.CreateHoliday(item); return item; });
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public Task<bool> DeleteAsync(Holiday item)
     {
-      return Task.FromResult(m_dataStore.DeleteHoliday(id) != 0);
+      return Task.FromResult(m_dataStore.DeleteHoliday(item.Id) != 0);
     }
 
     public Task<Holiday?> GetItemAsync(Guid id)

@@ -39,9 +39,9 @@ namespace TradeSharp.CoreUI.Repositories
       return Task.Run(() => { m_dataStore.CreateExchange(item); return item; });
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public Task<bool> DeleteAsync(Exchange item)
     {
-      return Task.FromResult(m_dataStore.DeleteExchange(id) != 0);
+      return Task.FromResult(m_dataStore.DeleteExchange(item.Id) != 0);
     }
 
     public Task<Exchange?> GetItemAsync(Guid id)

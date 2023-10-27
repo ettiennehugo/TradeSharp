@@ -31,7 +31,6 @@ namespace TradeSharp.CoreUI.Repositories
       m_dataStore = dataStore;
     }
 
-
     //finalizers
 
 
@@ -41,9 +40,9 @@ namespace TradeSharp.CoreUI.Repositories
       return Task.Run(() => { m_dataStore.CreateSession(item); return item; });
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public Task<bool> DeleteAsync(Session item)
     {
-      return Task.FromResult(m_dataStore.DeleteSession(id) != 0);
+      return Task.FromResult(m_dataStore.DeleteSession(item.Id) != 0);
     }
 
     public Task<Session?> GetItemAsync(Guid id)

@@ -13,12 +13,6 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of countries with their details using the associated item view model.
   /// </summary>
-
-
-
-  //TODO: Make this a ListViewModel
-
-
   public class CountryViewModel : ListViewModel<Country>
   {
     //constants

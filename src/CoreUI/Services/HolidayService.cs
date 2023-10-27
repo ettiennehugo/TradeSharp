@@ -73,7 +73,7 @@ namespace TradeSharp.CoreUI.Services
 
     public async Task<bool> DeleteAsync(Holiday item)
     {
-      bool result = await m_holidayRepository.DeleteAsync(item.Id);
+      bool result = await m_holidayRepository.DeleteAsync(item);
       if (item == SelectedItem)
       {
         SelectedItemChanged?.Invoke(this, SelectedItem);

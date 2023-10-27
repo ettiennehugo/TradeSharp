@@ -249,6 +249,46 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
+    public Task<Instrument> ShowCreateInstrumentAsync()
+    {
+      throw new NotImplementedException();
+    }
+
+    public Task<Instrument> ShowUpdateInstrumentAsync(Instrument session)
+    {
+      throw new NotImplementedException();
+    }
+
+    public Task<ImportSettings?> ShowImportInstrumentsAsync()
+    {
+      throw new NotImplementedException();
+    }
+
+    public Task<string> ShowExportInstrumentsAsync()
+    {
+      throw new NotImplementedException();
+    }
+
+    public Task<InstrumentGroup> ShowCreateInstrumentGroupAsync()
+    {
+      throw new NotImplementedException();
+    }
+
+    public Task<InstrumentGroup> ShowUpdateInstrumentGroupAsync(InstrumentGroup session)
+    {
+      throw new NotImplementedException();
+    }
+
+    public Task<ImportSettings?> ShowImportInstrumntGroupsAsync()
+    {
+      throw new NotImplementedException();
+    }
+
+    public Task<string> ShowExportInstrumentGroupsAsync()
+    {
+      throw new NotImplementedException();
+    }
+
     //properties
     public InfoBar StatusBar { get; set; }
 

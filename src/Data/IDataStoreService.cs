@@ -814,13 +814,13 @@ namespace TradeSharp.Data
     /// </summary>
     public void CreateInstrumentGroup(InstrumentGroup instrumentGroup);
     public void CreateInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
+    public InstrumentGroup? GetInstrumentGroup(Guid id);
     public IList<InstrumentGroup> GetInstrumentGroups();
     public IList<Guid> GetInstrumentGroupInstruments(Guid instrumentGroupId);
-    public void UpdateInstrumentGroup(Guid id, Guid parentId);
-    public void UpdateInstrumentGroup(Guid id, string name, string description);
-    public void DeleteInstrumentGroup(Guid id);
-    public void DeleteInstrumentGroupChild(Guid parentId, Guid childId);
-    public void DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
+    public void UpdateInstrumentGroup(InstrumentGroup instrumentGroup);
+    public int DeleteInstrumentGroup(Guid id);
+    public int DeleteInstrumentGroupChild(Guid parentId, Guid childId);
+    public int DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
 
     /// <summary>
     /// Instrument definition interface.
@@ -829,8 +829,9 @@ namespace TradeSharp.Data
     public void AddInstrumentToExchange(Guid instrument, Guid exchange);
     public IList<Instrument> GetInstruments();
     public IList<Instrument> GetInstruments(InstrumentType instrumentType);
-    public void UpdateInstrument(Guid id, Guid exchangeId, string ticker, DateTime inceptionDate);
-    public int DeleteInstrument(Guid id, string ticker);
+    public Instrument? GetInstrument(Guid id);
+    public void UpdateInstrument(Instrument instrument);
+    public int DeleteInstrument(Instrument instrument);
     public int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId);
 
     /// <summary>

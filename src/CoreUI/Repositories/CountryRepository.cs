@@ -38,9 +38,9 @@ namespace TradeSharp.CoreUI.Repositories
       return Task.Run(() => { m_dataStore.CreateCountry(item); return item; });
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public Task<bool> DeleteAsync(Country item)
     {
-      return Task.FromResult(m_dataStore.DeleteCountry(id) != 0);
+      return Task.FromResult(m_dataStore.DeleteCountry(item.Id) != 0);
     }
 
     public Task<Country?> GetItemAsync(Guid id)

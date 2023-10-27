@@ -29,8 +29,25 @@ namespace TradeSharp.CoreUI.Services
       Error
     }
 
+    /// <summary>
+    /// Behavior when importing instrument groups or instruments when an item already exists in the database.
+    /// </summary>
+    public enum ImportReplaceBehavior
+    {
+      Skip,
+      Update,
+      Replace,
+    }
+
     //types
-    
+    /// <summary>
+    /// Settings to use for importing instrument groups and instruments.
+    /// </summary>
+    public struct ImportSettings 
+    {
+      ImportReplaceBehavior importReplaceBehavior;
+      string filePath;
+    }
 
     //attributes
 
@@ -52,5 +69,15 @@ namespace TradeSharp.CoreUI.Services
 
     Task<Session?> ShowCreateSessionAsync(Guid parentId);
     Task<Session?> ShowUpdateSessionAsync(Session session);
+
+    Task<Instrument?> ShowCreateInstrumentAsync();
+    Task<Instrument?> ShowUpdateInstrumentAsync(Instrument session);
+    Task<ImportSettings?> ShowImportInstrumentsAsync();
+    Task<string?> ShowExportInstrumentsAsync();
+
+    Task<InstrumentGroup?> ShowCreateInstrumentGroupAsync();
+    Task<InstrumentGroup?> ShowUpdateInstrumentGroupAsync(InstrumentGroup session);
+    Task<ImportSettings?> ShowImportInstrumntGroupsAsync();
+    Task<string?> ShowExportInstrumentGroupsAsync();
   }
 }
