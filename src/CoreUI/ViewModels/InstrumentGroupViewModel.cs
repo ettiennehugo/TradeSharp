@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -40,7 +41,7 @@ namespace TradeSharp.CoreUI.ViewModels
     //interface implementations
     public async override void OnAdd()
     {
-      InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync();
+      InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync(SelectedItem != null ? SelectedItem.Id : InstrumentGroup.InstrumentGroupRoot);
       if (newInstrumentGroup != null)
       {
         await m_itemsService.AddAsync(newInstrumentGroup);
@@ -74,7 +75,7 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     //properties
-
+    public ObservableCollection<InstrumentGroupServiceNode> Nodes => ((InstrumentGroupService)m_itemsService).Nodes;
 
     //methods
 

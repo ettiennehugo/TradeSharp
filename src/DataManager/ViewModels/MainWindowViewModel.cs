@@ -38,10 +38,10 @@ namespace TradeSharp.WinDataManager.ViewModels
       { INavigationService.DataManager.DataProviders, typeof(BlankView) },
       { INavigationService.DataManager.Countries, typeof(WinCoreUI.Views.CountriesView) },
       { INavigationService.DataManager.Exchanges, typeof(WinCoreUI.Views.ExchangesView) },
-      { INavigationService.DataManager.Fundamentals, typeof(BlankView) },
-      { INavigationService.DataManager.Instruments, typeof(BlankView) },
-      { INavigationService.DataManager.InstrumentGroups, typeof(BlankView) },
-      { INavigationService.DataManager.FundamentalData, typeof(BlankView) },
+      //{ INavigationService.DataManager.Fundamentals, typeof(BlankView) },
+      { INavigationService.DataManager.Instruments, typeof(WinCoreUI.Views.InstrumentsView) },
+      { INavigationService.DataManager.InstrumentGroups, typeof(WinCoreUI.Views.InstrumentGroupsView) },
+      //{ INavigationService.DataManager.FundamentalData, typeof(BlankView) },
       { INavigationService.DataManager.InstrumentData, typeof(BlankView) },
       { INavigationService.DataManager.Settings, typeof(BlankView) }
     };

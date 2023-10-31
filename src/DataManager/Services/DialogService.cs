@@ -10,6 +10,8 @@ using TradeSharp.Common;
 using TradeSharp.Data;
 using Microsoft.UI.Dispatching;
 using static TradeSharp.CoreUI.Services.IDialogService;
+using Windows.Storage.Pickers;
+using Windows.Storage;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -249,14 +251,46 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public Task<Instrument> ShowCreateInstrumentAsync()
+    public async Task<Instrument> ShowCreateInstrumentAsync()
     {
-      throw new NotImplementedException();
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView();
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Title = "Create Instrument",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+
+      if (result == ContentDialogResult.Primary) return view.Instrument;
+
+      return null;
     }
 
-    public Task<Instrument> ShowUpdateInstrumentAsync(Instrument session)
+    public async Task<Instrument> ShowUpdateInstrumentAsync(Instrument instrument)
     {
-      throw new NotImplementedException();
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView((Instrument)instrument.Clone());
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Title = "Update Instrument",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+
+      if (result == ContentDialogResult.Primary) return view.Instrument;
+
+      return null;
     }
 
     public Task<ImportSettings?> ShowImportInstrumentsAsync()
@@ -264,28 +298,77 @@ namespace TradeSharp.WinDataManager.Services
       throw new NotImplementedException();
     }
 
-    public Task<string> ShowExportInstrumentsAsync()
+    public Task ShowExportInstrumentsAsync()
     {
       throw new NotImplementedException();
     }
 
-    public Task<InstrumentGroup> ShowCreateInstrumentGroupAsync()
+    public async Task<InstrumentGroup> ShowCreateInstrumentGroupAsync(Guid parentId)
+    {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.InstrumentGroupView view = new WinCoreUI.Views.InstrumentGroupView(parentId);
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Title = "Create Instrument Group",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+
+      if (result == ContentDialogResult.Primary) return view.InstrumentGroup;
+
+      return null;
+    }
+
+    public async Task<InstrumentGroup> ShowUpdateInstrumentGroupAsync(InstrumentGroup instrumentGroup)
+    {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.InstrumentGroupView view = new WinCoreUI.Views.InstrumentGroupView((InstrumentGroup)instrumentGroup.Clone());
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Title = "Update Instrument Group",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+
+      if (result == ContentDialogResult.Primary) return view.InstrumentGroup;
+
+      return null;
+    }
+
+    public Task<ImportSettings?> ShowImportInstrumentGroupsAsync()
     {
       throw new NotImplementedException();
     }
 
-    public Task<InstrumentGroup> ShowUpdateInstrumentGroupAsync(InstrumentGroup session)
+    public Task ShowExportInstrumentGroupsAsync()
     {
-      throw new NotImplementedException();
-    }
 
-    public Task<ImportSettings?> ShowImportInstrumntGroupsAsync()
-    {
-      throw new NotImplementedException();
-    }
 
-    public Task<string> ShowExportInstrumentGroupsAsync()
-    {
+      ////https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
+      //FileOpenPicker openPicker = new FileOpenPicker();
+      //openPicker.ViewMode = PickerViewMode.Thumbnail;
+      //openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      //openPicker.FileTypeFilter.Add(".jpg");
+      //openPicker.FileTypeFilter.Add(".jpeg");
+      //openPicker.FileTypeFilter.Add(".png");
+
+      //var hwnd = GetActiveWindow();
+      //InitializeWithWindow.Initialize(openPicker, hwnd);
+
+      //StorageFile file = await openPicker.PickSingleFileAsync();
+      //if (file != null) ExchangeLogoPath = file.Path;
+
+
       throw new NotImplementedException();
     }
 

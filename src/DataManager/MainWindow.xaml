@@ -32,11 +32,11 @@
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xF22C;"/>
         </NavigationViewItem.Icon>
       </NavigationViewItem>
-      <NavigationViewItem x:Name="m_nvvMainFundamentals" Content="Fundamentals" Tag="DataManager.Fundamentals">
+      <!--<NavigationViewItem x:Name="m_nvvMainFundamentals" Content="Fundamentals" Tag="DataManager.Fundamentals">
         <NavigationViewItem.Icon>
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D2;"/>
         </NavigationViewItem.Icon>
-      </NavigationViewItem>
+      </NavigationViewItem>-->
       <NavigationViewItem x:Name="m_nvvMainInstrumentGroups" Content="Instrument Groups" Tag="DataManager.InstrumentGroups">
         <NavigationViewItem.Icon>
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE15C;"/>
@@ -48,11 +48,11 @@
         </NavigationViewItem.Icon>
       </NavigationViewItem>
       <NavigationViewItemHeader x:Name="m_nvvMainData" Content="Data"/>
-      <NavigationViewItem x:Name="m_nvvMainFundamentalData" Content="Fundamental Data" Tag="DataManager.FundamentalData">
+      <!--<NavigationViewItem x:Name="m_nvvMainFundamentalData" Content="Fundamental Data" Tag="DataManager.FundamentalData">
         <NavigationViewItem.Icon>
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE71D;"/>
         </NavigationViewItem.Icon>
-      </NavigationViewItem>
+      </NavigationViewItem>-->
       <NavigationViewItem x:Name="m_nvvMainInstrumentData" Content="Instrument Data" Tag="DataManager.InstrumentData">
         <NavigationViewItem.Icon>
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;"/>

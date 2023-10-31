@@ -71,13 +71,13 @@ namespace TradeSharp.CoreUI.Services
     Task<Session?> ShowUpdateSessionAsync(Session session);
 
     Task<Instrument?> ShowCreateInstrumentAsync();
-    Task<Instrument?> ShowUpdateInstrumentAsync(Instrument session);
+    Task<Instrument?> ShowUpdateInstrumentAsync(Instrument instrument);
     Task<ImportSettings?> ShowImportInstrumentsAsync();
-    Task<string?> ShowExportInstrumentsAsync();
+    Task ShowExportInstrumentsAsync();
 
-    Task<InstrumentGroup?> ShowCreateInstrumentGroupAsync();
-    Task<InstrumentGroup?> ShowUpdateInstrumentGroupAsync(InstrumentGroup session);
-    Task<ImportSettings?> ShowImportInstrumntGroupsAsync();
-    Task<string?> ShowExportInstrumentGroupsAsync();
+    Task<InstrumentGroup?> ShowCreateInstrumentGroupAsync(Guid parentId);
+    Task<InstrumentGroup?> ShowUpdateInstrumentGroupAsync(InstrumentGroup instrumentGroup);
+    Task<ImportSettings?> ShowImportInstrumentGroupsAsync();
+    Task ShowExportInstrumentGroupsAsync();
   }
 }

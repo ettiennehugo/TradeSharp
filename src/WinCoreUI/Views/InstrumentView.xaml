@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="TradeSharp.WinCoreUI.Views.InstrumentView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TradeSharp.WinCoreUI.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"  
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="Page_Loaded">
+  <Page.Resources>
+    <wincoreuicommon:EnumValueConverter x:Key="EnumValueConverter"/>
+    <wincoreuicommon:ExchangeIdToNameConverter x:Key="ExchangeIdToNameConverter"/>
+    <wincoreuicommon:DateTimeToDateTimeOffsetConverter x:Key="DateTimeOffsetToDateTimeConverter"/>
+  </Page.Resources>
+  <Grid ColumnDefinitions="150, 350" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto">
+    <TextBlock x:Name="m_typeLabel" Text="Type" Grid.Column="0" Grid.Row="0"/>
+    <TextBlock x:Name="m_tickerLabel" Text="Ticker" Grid.Column="0" Grid.Row="1"/>
+    <TextBlock x:Name="m_nameLabel" Text="Name" Grid.Column="0" Grid.Row="2"/>
+    <TextBlock x:Name="m_descriptionLabel" Text="Description" Grid.Column="0" Grid.Row="3"/>
+    <TextBlock x:Name="m_inceptionDateLabel" Text="Inception Date" Grid.Column="0" Grid.Row="4"/>
+    <TextBlock x:Name="m_primaryExchangeLabel" Text="Primary Exchange" Grid.Column="0" Grid.Row="5"/>
+    <ComboBox x:Name="m_type" SelectedIndex="{x:Bind Instrument.Type, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="0"/>
+    <TextBox x:Name="m_ticker" Text="{x:Bind Instrument.Ticker}" CharacterCasing="Upper" Grid.Column="1" Grid.Row="1"/>
+    <TextBox x:Name="m_name" Text="{x:Bind Instrument.Name}" Grid.Column="1" Grid.Row="2"/>
+    <TextBox x:Name="m_description" Text="{x:Bind Instrument.Description}" Grid.Column="1" Grid.Row="3"/>
+    <CalendarDatePicker x:Name="m_inceptionDate" PlaceholderText="Pick a date" Date="{x:Bind Instrument.InceptionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" Grid.Column="1" Grid.Row="4"/>
+    <ComboBox x:Name="m_primaryExchange" SelectedIndex="{x:Bind Instrument.PrimaryExchangeId, Mode=TwoWay, Converter={StaticResource ExchangeIdToNameConverter}}" ItemsSource="{x:Bind Exchanges, Mode=OneTime}" DisplayMemberPath="Name" Grid.Column="1" Grid.Row="5"/>
+  </Grid>
+</Page>
