@@ -80,6 +80,16 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentRepository.UpdateAsync(item);
     }
 
+    public Task<int> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior)
+    {
+      return Task.FromResult<int>(0);
+    }
+
+    public Task<int> ExportAsync(string filename)
+    {
+      return Task.FromResult<int>(0);
+    }
+
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
     public event EventHandler<Instrument>? SelectedItemChanged;

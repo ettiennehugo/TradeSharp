@@ -7,8 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Activated="Window_Activated"
     mc:Ignorable="d">
-  <NavigationView x:Name="m_nvvMain" IsBackButtonVisible="Collapsed"
-                  SelectionChanged="{x:Bind ViewModel.OnNavigationSelectionChanged, Mode=OneTime}">
+  <NavigationView x:Name="m_nvvMain" IsBackButtonVisible="Collapsed">
     <NavigationView.MenuItems>
       <NavigationViewItemHeader x:Name="m_nvvMainPlugins" Content="Plugin's"/>
       <NavigationViewItem x:Name="m_nvvMainBrokers" Content="Brokers" Tag="DataManager.Brokers">

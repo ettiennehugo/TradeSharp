@@ -6,13 +6,41 @@ using System.Threading.Tasks;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Common;
 using TradeSharp.Data;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TradeSharp.CoreUI.Services
 {
-    /// <summary>
-    /// Interface for the platform independent dialog service.
-    /// </summary>
-    public interface IDialogService
+
+  /// <summary>
+  /// Behavior when importing instrument groups or instruments when an item already exists in the database.
+  /// </summary>
+  public enum ImportReplaceBehavior
+  {
+    Skip,
+    Update,
+    Replace,
+  }
+
+  //types
+  /// <summary>
+  /// Settings to use for importing instrument groups and instruments.
+  /// </summary>
+  public partial class ImportSettings: ObservableObject
+  {
+    public ImportSettings()
+    {
+      m_importReplaceBehavior = ImportReplaceBehavior.Skip;
+      m_filename = "";
+    }
+
+    [ObservableProperty] ImportReplaceBehavior m_importReplaceBehavior;
+    [ObservableProperty] string m_filename;
+  }
+
+  /// <summary>
+  /// Interface for the platform independent dialog service.
+  /// </summary>
+  public interface IDialogService
   {
     //constants
 
@@ -27,26 +55,6 @@ namespace TradeSharp.CoreUI.Services
       Information,
       Warning,
       Error
-    }
-
-    /// <summary>
-    /// Behavior when importing instrument groups or instruments when an item already exists in the database.
-    /// </summary>
-    public enum ImportReplaceBehavior
-    {
-      Skip,
-      Update,
-      Replace,
-    }
-
-    //types
-    /// <summary>
-    /// Settings to use for importing instrument groups and instruments.
-    /// </summary>
-    public struct ImportSettings 
-    {
-      ImportReplaceBehavior importReplaceBehavior;
-      string filePath;
     }
 
     //attributes
@@ -73,11 +81,11 @@ namespace TradeSharp.CoreUI.Services
     Task<Instrument?> ShowCreateInstrumentAsync();
     Task<Instrument?> ShowUpdateInstrumentAsync(Instrument instrument);
     Task<ImportSettings?> ShowImportInstrumentsAsync();
-    Task ShowExportInstrumentsAsync();
+    Task<string?> ShowExportInstrumentsAsync();
 
     Task<InstrumentGroup?> ShowCreateInstrumentGroupAsync(Guid parentId);
     Task<InstrumentGroup?> ShowUpdateInstrumentGroupAsync(InstrumentGroup instrumentGroup);
     Task<ImportSettings?> ShowImportInstrumentGroupsAsync();
-    Task ShowExportInstrumentGroupsAsync();
+    Task<string?> ShowExportInstrumentGroupsAsync();
   }
 }

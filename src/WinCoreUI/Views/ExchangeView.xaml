@@ -27,15 +27,18 @@
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
     </Grid.RowDefinitions>
     <TextBlock x:Name="m_nameLbl" Text="Name" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="0"/>
     <TextBlock x:Name="m_countryLbl" Text="Country" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="1"/>
     <TextBlock x:Name="m_timeZoneLbl" Text="Time Zone" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="2"/>
-    <Button x:Name="m_logo" Click="m_logo_Click" Style="{StaticResource ImageButtonStyle}" Margin="5,5" ToolTipService.ToolTip="Click to change logo" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="1" Grid.RowSpan="3">
+    <TextBlock x:Name="m_tagLbl" Text="Tag" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="3"/>
+    <Button x:Name="m_logo" Click="m_logo_Click" Style="{StaticResource ImageButtonStyle}" Margin="5,5" ToolTipService.ToolTip="Click to change logo" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="1" Grid.RowSpan="4">
       <Image x:Name="m_logoImage" Source="{x:Bind ExchangeLogoPath, Mode=OneWay}" Stretch="Uniform" MaxWidth="128" MaxHeight="128"/>
     </Button>
     <TextBox x:Name="m_name" Text="{x:Bind Exchange.Name, Mode=TwoWay}" Grid.Column="2" Grid.Row="0"/>
     <ComboBox x:Name="m_countryId" ItemsSource="{x:Bind Countries, Mode=OneTime}" DisplayMemberPath="CountryInfo.CultureInfo.DisplayName" SelectionChanged="m_countryId_SelectionChanged" Grid.Column="2" Grid.Row="1"/>
     <ComboBox x:Name="m_timeZone" ItemsSource="{x:Bind TimeZones, Mode=OneTime}" DisplayMemberPath="DisplayName" SelectedItem="{x:Bind Exchange.TimeZone, Mode=OneTime}" SelectionChanged="m_timeZone_SelectionChanged" IsTextSearchEnabled="True" Grid.Column="2" Grid.Row="2"/>
+    <TextBox x:Name="m_tag" Text="{x:Bind Tag, Mode=TwoWay}" Grid.Column="2" Grid.Row="3"/>
   </Grid>
 </Page>

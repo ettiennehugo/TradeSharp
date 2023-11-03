@@ -79,16 +79,15 @@ namespace TradeSharp.CoreUI.ViewModels
       get => m_itemsService.SelectedItem;
       set
       {
-        if (!EqualityComparer<TItem>.Default.Equals(m_itemsService.SelectedItem, value))
-        {
-          m_itemsService.SelectedItem = value;
-          OnPropertyChanged();
-          AddCommand.NotifyCanExecuteChanged();
-          UpdateCommand.NotifyCanExecuteChanged();
-          DeleteCommand.NotifyCanExecuteChanged();
-          RefreshCommand.NotifyCanExecuteChanged();
-          RefreshCommandAsync.NotifyCanExecuteChanged();
-        }
+        //NOTE: You can not just change this item when it differs from value since the UI calls this method sometimes
+        //      before the toolbar is ready to use and thus you end up with stale command button states.
+        m_itemsService.SelectedItem = value;
+        OnPropertyChanged();
+        AddCommand.NotifyCanExecuteChanged();
+        UpdateCommand.NotifyCanExecuteChanged();
+        DeleteCommand.NotifyCanExecuteChanged();
+        RefreshCommand.NotifyCanExecuteChanged();
+        RefreshCommandAsync.NotifyCanExecuteChanged();
       }
     }
 
@@ -140,7 +139,10 @@ namespace TradeSharp.CoreUI.ViewModels
       }
 
       IDialogService dialogService = Ioc.Default.GetRequiredService<IDialogService>();
-      await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} items");
+      if (count > 0)
+        await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} items");
+      else
+        await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "Failure", $"Deleted {count} items");
     }
   }
 }

@@ -39,10 +39,10 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public InstrumentGroupView(Guid parentId)
     {
-      InstrumentGroup = new InstrumentGroup(Guid.NewGuid(), Data.InstrumentGroup.DefaultAttributeSet, parentId, "", "", new List<Guid>());
+      InstrumentGroup = new InstrumentGroup(Guid.NewGuid(), Data.InstrumentGroup.DefaultAttributeSet, "TagValue", parentId, "", "", new List<Guid>());
       this.InitializeComponent();
-      m_name.Text = "New instrument group";
-      m_name.SelectAll();
+      m_name.PlaceholderText = "New instrument group name";
+      m_description.PlaceholderText = "New instrument group description";
     }
 
     public InstrumentGroupView(InstrumentGroup instrumentGroup)

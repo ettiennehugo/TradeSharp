@@ -28,6 +28,7 @@
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
     </Grid.RowDefinitions>
     <TextBlock x:Name="m_holidayTypeLbl" Text="Holiday Type" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="0"/>
     <TextBlock x:Name="m_nameLbl" Text="Name" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="1"/>
@@ -36,6 +37,7 @@
     <TextBlock x:Name="m_dayOfWeekLbl" Text="Day of Week" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="4"/>
     <TextBlock x:Name="m_weekOfMonthLbl" Text="Week of Month" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="5"/>
     <TextBlock x:Name="m_moveWeekendHolidayLbl" Text="Move Weekend Holiday" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="6"/>
+    <TextBlock x:Name="m_tagLbl" Text="Tag" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="7"/>
     <ComboBox x:Name="m_holidayType" SelectedIndex="{x:Bind Holiday.Type, Mode=TwoWay, Converter={StaticResource EnumValueDescriptionConverter}}" SelectionChanged="m_holidayType_SelectionChanged" Grid.Column="1" Grid.Row="0"/>
     <TextBox x:Name="m_name" Text="{x:Bind Holiday.Name, Mode=TwoWay}" Grid.Column="1" Grid.Row="1"/>
     <ComboBox x:Name="m_month" SelectedIndex="{x:Bind Holiday.Month, Mode=TwoWay, Converter={StaticResource MonthValueConverter}}" SelectionChanged="m_month_SelectionChanged" Grid.Column="1" Grid.Row="2"/>
@@ -43,5 +45,6 @@
     <ComboBox x:Name="m_dayOfWeek" SelectedIndex="{x:Bind Holiday.DayOfWeek, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="4"/>
     <ComboBox x:Name="m_weekOfMonth" SelectedIndex="{x:Bind Holiday.WeekOfMonth, Mode=TwoWay, Converter={StaticResource WeekOfMonthValueConverter}}" Grid.Column="1" Grid.Row="5"/>
     <ComboBox x:Name="m_moveWeekendHoliday" SelectedIndex="{x:Bind Holiday.MoveWeekendHoliday, Mode=TwoWay, Converter={StaticResource EnumValueDescriptionConverter}}" Grid.Column="1" Grid.Row="6"/>
+    <TextBox x:Name="m_tag" Text="{x:Bind Holiday.Tag, Mode=TwoWay}" Grid.Column="1" Grid.Row="7"/>
   </Grid>
 </Page>

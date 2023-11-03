@@ -44,7 +44,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_dataStoreService = Ioc.Default.GetRequiredService<IDataStoreService>();
       Exchanges = m_dataStoreService.GetExchanges();
-      Instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "", "", "", DateTime.Today, new List<Guid>(), Exchange.InternationalId, new List<Guid>());
+      Instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "", "", "", DateTime.Today, new List<Guid>(), Exchange.InternationalId, new List<Guid>());
       this.InitializeComponent();
     }
 
@@ -75,6 +75,7 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       Utilities.populateComboBoxFromEnum(ref m_type, typeof(InstrumentType));
+      m_primaryExchange.SelectedIndex = 0;
     }
 
     //methods

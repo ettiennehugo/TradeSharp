@@ -12,6 +12,7 @@ using Microsoft.UI.Dispatching;
 using static TradeSharp.CoreUI.Services.IDialogService;
 using Windows.Storage.Pickers;
 using Windows.Storage;
+using Microsoft.UI.Xaml;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -224,7 +225,6 @@ namespace TradeSharp.WinDataManager.Services
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
-
       if (result == ContentDialogResult.Primary) return view.Session;
       
       return null;
@@ -245,7 +245,6 @@ namespace TradeSharp.WinDataManager.Services
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
-
       if (result == ContentDialogResult.Primary) return view.Session;
 
       return null;
@@ -258,6 +257,7 @@ namespace TradeSharp.WinDataManager.Services
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Create Instrument",
         Content = view,
         PrimaryButtonText = "OK",
@@ -266,7 +266,6 @@ namespace TradeSharp.WinDataManager.Services
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
-
       if (result == ContentDialogResult.Primary) return view.Instrument;
 
       return null;
@@ -279,6 +278,7 @@ namespace TradeSharp.WinDataManager.Services
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Update Instrument",
         Content = view,
         PrimaryButtonText = "OK",
@@ -287,20 +287,49 @@ namespace TradeSharp.WinDataManager.Services
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
-
       if (result == ContentDialogResult.Primary) return view.Instrument;
 
       return null;
     }
 
-    public Task<ImportSettings?> ShowImportInstrumentsAsync()
+    public async Task<ImportSettings?> ShowImportInstrumentsAsync()
     {
-      throw new NotImplementedException();
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView();
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+        Title = "Import Instruments",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+        Width = 575,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+      if (result == ContentDialogResult.Primary) return view.ImportSettings;
+
+      return null;
     }
 
-    public Task ShowExportInstrumentsAsync()
+    public async Task<string?> ShowExportInstrumentsAsync()
     {
-      throw new NotImplementedException();
+      //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
+      FileOpenPicker openPicker = new FileOpenPicker();
+      openPicker.ViewMode = PickerViewMode.Thumbnail;
+      openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      openPicker.FileTypeFilter.Add(".csv");
+      openPicker.FileTypeFilter.Add(".json");
+
+      var hwnd = GetActiveWindow();
+      InitializeWithWindow.Initialize(openPicker, hwnd);
+
+      StorageFile file = await openPicker.PickSingleFileAsync();
+      if (file != null) return file.Path;
+
+      return null;
     }
 
     public async Task<InstrumentGroup> ShowCreateInstrumentGroupAsync(Guid parentId)
@@ -310,6 +339,7 @@ namespace TradeSharp.WinDataManager.Services
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Create Instrument Group",
         Content = view,
         PrimaryButtonText = "OK",
@@ -318,7 +348,6 @@ namespace TradeSharp.WinDataManager.Services
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
-
       if (result == ContentDialogResult.Primary) return view.InstrumentGroup;
 
       return null;
@@ -331,6 +360,7 @@ namespace TradeSharp.WinDataManager.Services
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Update Instrument Group",
         Content = view,
         PrimaryButtonText = "OK",
@@ -339,37 +369,51 @@ namespace TradeSharp.WinDataManager.Services
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
-
       if (result == ContentDialogResult.Primary) return view.InstrumentGroup;
 
       return null;
     }
 
-    public Task<ImportSettings?> ShowImportInstrumentGroupsAsync()
+    public async Task<ImportSettings?> ShowImportInstrumentGroupsAsync()
     {
-      throw new NotImplementedException();
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView();
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+        Title = "Import Instrument Groups",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+        Width=575,
+        MaxWidth=1920,
+        MaxHeight=1080,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+      if (result == ContentDialogResult.Primary) return view.ImportSettings;
+
+      return null;
     }
 
-    public Task ShowExportInstrumentGroupsAsync()
+    public async Task<string?> ShowExportInstrumentGroupsAsync()
     {
+      //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
+      FileOpenPicker openPicker = new FileOpenPicker();
+      openPicker.ViewMode = PickerViewMode.Thumbnail;
+      openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      openPicker.FileTypeFilter.Add(".csv");
+      openPicker.FileTypeFilter.Add(".json");
 
+      var hwnd = GetActiveWindow();
+      InitializeWithWindow.Initialize(openPicker, hwnd);
 
-      ////https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
-      //FileOpenPicker openPicker = new FileOpenPicker();
-      //openPicker.ViewMode = PickerViewMode.Thumbnail;
-      //openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
-      //openPicker.FileTypeFilter.Add(".jpg");
-      //openPicker.FileTypeFilter.Add(".jpeg");
-      //openPicker.FileTypeFilter.Add(".png");
+      StorageFile file = await openPicker.PickSingleFileAsync();
+      if (file != null) return file.Path;
 
-      //var hwnd = GetActiveWindow();
-      //InitializeWithWindow.Initialize(openPicker, hwnd);
-
-      //StorageFile file = await openPicker.PickSingleFileAsync();
-      //if (file != null) ExchangeLogoPath = file.Path;
-
-
-      throw new NotImplementedException();
+      return null;
     }
 
     //properties

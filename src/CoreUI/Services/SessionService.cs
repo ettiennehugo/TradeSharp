@@ -105,5 +105,8 @@ namespace TradeSharp.CoreUI.Services
       SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
     }
+
+    public Task<int> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior) => throw new NotImplementedException();
+    public Task<int> ExportAsync(string filename) => throw new NotImplementedException();
   }
 }

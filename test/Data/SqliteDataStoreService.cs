@@ -91,10 +91,10 @@ namespace TradeSharp.Data.Testing
       //m_dataStore.ClearDatabase();
 
       //create common attributes used for testing
-      m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "en-US");
+      m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "en-US");
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-      m_exchange = new Exchange(Guid.NewGuid(), Country.DefaultAttributeSet, m_country.Id, "TestExchange", m_timeZone, Guid.Empty);
-      m_instrument = new Instrument(Guid.NewGuid(), Country.DefaultAttributeSet, InstrumentType.Stock, "TEST", "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
+      m_exchange = new Exchange(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Guid.Empty);
+      m_instrument = new Instrument(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST", "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
     }
 
     //finalizers
@@ -159,12 +159,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateCountryHoliday_DayOfMonth_Success()
     {
-      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
 
       m_dataStore.CreateHoliday(holiday);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
+        $"AND Tag = '{holiday.Tag}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)holiday.Type} " +
         $"AND Month = {(int)holiday.Month} " +
@@ -179,12 +180,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateCountryHoliday_DayOfWeek_Success()
     {
-      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfWeek", HolidayType.DayOfWeek, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfWeek", HolidayType.DayOfWeek, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
 
       m_dataStore.CreateHoliday(holiday);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
+        $"AND Tag = '{holiday.Tag}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)holiday.Type} " +
         $"AND Month = {(int)holiday.Month} " +
@@ -210,12 +212,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateHoliday_ExchangeDayOfMonth_Success()
     {
-      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
 
       m_dataStore.CreateHoliday(holiday);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
+        $"AND Tag = '{holiday.Tag}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)holiday.Type} " +
         $"AND Month = {(int)holiday.Month} " +
@@ -230,12 +233,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateHoliday_ExchangeDayOfWeek_Success()
     {
-      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_exchange.Id, "ExchangeDayOfWeek", HolidayType.DayOfWeek, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_exchange.Id, "ExchangeDayOfWeek", HolidayType.DayOfWeek, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
 
       m_dataStore.CreateHoliday(holiday);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
+        $"AND Tag = '{holiday.Tag}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)holiday.Type} " +
         $"AND Month = {(int)holiday.Month} " +
@@ -251,12 +255,13 @@ namespace TradeSharp.Data.Testing
     {
       TimeOnly startTime = new TimeOnly(9, 30);
       TimeOnly endTime = new TimeOnly(16, 0);
-      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
+      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
 
       m_dataStore.CreateSession(session);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
         $"Id = '{session.Id.ToString()}' " +
+        $"AND Tag = '{session.Tag}' " +
         $"AND ExchangeId = '{session.ExchangeId.ToString()}' " +
         $"AND DayOfWeek = {(int)session.DayOfWeek} " +
         $"AND StartTime = {session.Start.Ticks} " +
@@ -267,7 +272,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateCountryFundamental_PersistAssociation_Success()
     {
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
 
       CountryFundamental countryFundamental = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_country.Id);
       m_dataStore.CreateCountryFundamental(countryFundamental);
@@ -283,7 +288,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateInstrumentFundamental_PersistAssociation_Success()
     {
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
 
       InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
       m_dataStore.CreateInstrumentFundamental(instrumentFundamental);
@@ -299,12 +304,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateInstrumentGroup_PersistData_Success()
     {
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
 
       m_dataStore.CreateInstrumentGroup(instrumentGroup);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroup,
         $"Id = '{instrumentGroup.Id.ToString()}' " +
+        $"AND Tag = '{instrumentGroup.Tag}' " +
         $"AND ParentId = '{instrumentGroup.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup.Name}' " +
         $"AND Description = '{instrumentGroup.Description}'")
@@ -322,6 +328,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrument,
         $"Id = '{m_instrument.Id.ToString()}' " +
+        $"AND Tag = '{m_instrument.Tag}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
@@ -332,7 +339,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateInstrument_AdditionalExchangePersistData_Success()
     {
-      Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "SecondaryTestExchange", m_timeZone, Guid.Empty);
+      Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "SecondaryTestExchange", m_timeZone, Guid.Empty);
       m_dataStore.AddInstrumentToExchange(m_instrument.Id, exchange.Id);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentSecondaryExchange,
@@ -344,12 +351,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateFundamental_PersistData_Success()
     {
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
 
       m_dataStore.CreateFundamental(fundamental);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableFundamentals,
         $"Id = '{fundamental.Id.ToString()}' " +
+        $"AND Tag = '{fundamental.Tag}' " +
         $"AND Category = {(int)fundamental.Category} " +
         $"AND ReleaseInterval = {(int)fundamental.ReleaseInterval}")
       , "Fundamental not persisted to database.");
@@ -358,11 +366,12 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateHoliday_PersistChanges_Success()
     {
-      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "TestHoliday", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
+      Holiday holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "TestHoliday", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
 
       m_dataStore.CreateHoliday(holiday);
 
       holiday.ParentId = Guid.NewGuid();
+      holiday.Tag = "NewTagValue";
       holiday.Month = Months.February;
       holiday.DayOfMonth = 2;
       holiday.DayOfWeek = DayOfWeek.Monday;
@@ -375,6 +384,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.IsNotNull(holidayFromDB, "Holiday returned as null");
       Assert.AreEqual(holiday.ParentId, holidayFromDB.ParentId, "Holiday parent not updated in database.");
+      Assert.AreEqual(holiday.Tag, holidayFromDB.Tag, "Holiday tag not updated in database.");
       Assert.AreEqual(holiday.Month, holidayFromDB.Month, "Holiday month not updated in database.");
       Assert.AreEqual(holiday.DayOfMonth, holidayFromDB.DayOfMonth, "Holiday day of month not updated in database.");
       Assert.AreEqual(holiday.DayOfWeek, holidayFromDB.DayOfWeek, "Holiday day of week not updated in database.");
@@ -393,10 +403,11 @@ namespace TradeSharp.Data.Testing
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
       , "Exchange not persisted to database.");
 
-      Country germany = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "de-DE");
+      Country germany = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "de-DE");
       TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
 
       m_exchange.Name = "New Exchange";
+      m_exchange.Tag = "NewTagValue";
       m_exchange.CountryId = germany.Id;
       m_exchange.TimeZone = timeZone;
 
@@ -404,6 +415,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
+        $"AND Tag = '{m_exchange.Tag}' " +
         $"AND Name = '{m_exchange.Name}' " +
         $"AND CountryId = '{germany.Id.ToString()}' " +
         $"AND TimeZone = '{timeZone.ToSerializedString()}'")
@@ -415,11 +427,12 @@ namespace TradeSharp.Data.Testing
     {
       TimeOnly startTime = new TimeOnly(9, 30);
       TimeOnly endTime = new TimeOnly(16, 0);
-      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
+      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
 
       m_dataStore.CreateSession(session);
 
       session.Name = "New Name";
+      session.Tag = "NewTagValue";
       session.DayOfWeek = DayOfWeek.Tuesday;
       session.Start = startTime.AddMinutes(5);
       session.End = endTime.AddMinutes(5);
@@ -428,6 +441,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableSession,
         $"Id = '{session.Id.ToString()}' " +
+        $"AND Tag = '{m_dataStore.SqlSafeString(session.Tag)}' " +
         $"AND Name = '{m_dataStore.SqlSafeString(session.Name)}' " +
         $"AND ExchangeId = '{session.ExchangeId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Tuesday} " +
@@ -439,17 +453,18 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateInstrument_ChangeAllAttributes_Success()
     {
-      Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "SecondaryTestExchange", m_timeZone, Guid.Empty);
+      Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "SecondaryTestExchange", m_timeZone, Guid.Empty);
       DateTime dateTime = DateTime.Now.AddDays(3);
 
       m_dataStore.CreateInstrument(m_instrument);
 
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group1", "Test Instrument Group1 Description", Array.Empty<Guid>());
-      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group2", "Test Instrument Group2 Description", Array.Empty<Guid>());
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group1", "Test Instrument Group1 Description", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group2", "Test Instrument Group2 Description", Array.Empty<Guid>());
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
 
       m_instrument.Ticker = "NEW";
+      m_instrument.Tag = "NewTagValue";
       m_instrument.PrimaryExchangeId = exchange.Id;
       m_instrument.InceptionDate = dateTime;
       m_instrument.InstrumentGroupIds = new List<Guid> { instrumentGroup1.Id, instrumentGroup2.Id };
@@ -459,6 +474,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrument,
         $"Id = '{m_instrument.Id.ToString()}' " +
+        $"AND Tag = '{m_instrument.Tag}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND Ticker = 'NEW' " +
         $"AND PrimaryExchangeId = '{exchange.Id.ToString()}' " +
@@ -485,7 +501,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateCountryFundamental_PersistData_Success()
     {
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       CountryFundamental countryFundamental = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_country.Id);
@@ -505,7 +521,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateInstrumentFundamental_PersistData_Success()
     {
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
@@ -710,20 +726,20 @@ namespace TradeSharp.Data.Testing
     {
       //create country and a related objects
       m_dataStore.CreateCountry(m_country);
-      Holiday countryHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday countryHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
       m_dataStore.CreateHoliday(countryHolidayDayOfMonth);
 
       m_dataStore.CreateExchange(m_exchange);
-      Holiday exchangeHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday exchangeHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
       m_dataStore.CreateHoliday(exchangeHolidayDayOfMonth);
 
       TimeOnly startTime = new TimeOnly(9, 30);
       TimeOnly endTime = new TimeOnly(16, 0);
-      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
+      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
       m_dataStore.CreateSession(session);
       m_dataStore.CreateInstrument(m_instrument);
 
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
 
       CountryFundamental countryFundamental = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_country.Id);
       m_dataStore.CreateCountryFundamental(countryFundamental);
@@ -857,12 +873,12 @@ namespace TradeSharp.Data.Testing
     {
       //create exchange and related objects
       m_dataStore.CreateExchange(m_exchange);
-      Holiday exchangeHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday exchangeHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
       m_dataStore.CreateHoliday(exchangeHolidayDayOfMonth);
 
       TimeOnly startTime = new TimeOnly(9, 30);
       TimeOnly endTime = new TimeOnly(16, 0);
-      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
+      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
       m_dataStore.CreateSession(session);
 
       m_dataStore.CreateInstrument(m_instrument);
@@ -930,7 +946,7 @@ namespace TradeSharp.Data.Testing
     {
       TimeOnly startTime = new TimeOnly(9, 30);
       TimeOnly endTime = new TimeOnly(16, 0);
-      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
+      Session session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "TestSession", m_exchange.Id, DayOfWeek.Monday, startTime, endTime);
 
       m_dataStore.CreateSession(session);
 
@@ -956,7 +972,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void DeleteFundamental_DataRemoved_Success()
     {
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
 
       m_dataStore.CreateFundamental(fundamental);
 
@@ -979,7 +995,7 @@ namespace TradeSharp.Data.Testing
     public void DeleteFundamental_CountryFundamentalAndRelatedDataRemoved_Success()
     {
       //create countryFundamental and associated value1
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       CountryFundamental countryFundamental = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_country.Id);
@@ -1009,9 +1025,9 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void DeleteFundamental_CountryForDataProvider_Success()
     {
-      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental1", "TestCountryFundamentalDescription1", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental1", "TestCountryFundamentalDescription1", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental1);
-      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental2", "TestCountryFundamentalDescription2", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental2", "TestCountryFundamentalDescription2", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental2);
 
       CountryFundamental countryFundamental1 = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental1.Id, m_country.Id);
@@ -1054,7 +1070,7 @@ namespace TradeSharp.Data.Testing
     public void DeleteFundamentalValue_CountryForDataProvider_Success()
     {
       //create countryFundamental and associated values
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       CountryFundamental countryFundamental = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_country.Id);
@@ -1098,9 +1114,9 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void DeleteInstrumentFundamental_ForDataProvider_Success()
     {
-      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental1", "TestInstrumentFundamentalDescription1", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental1", "TestInstrumentFundamentalDescription1", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental1);
-      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental2", "TestInstrumentFundamentalDescription2", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental2", "TestInstrumentFundamentalDescription2", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental2);
 
       InstrumentFundamental instrumentFundamental1 = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental1.Id, m_instrument.Id);
@@ -1143,7 +1159,7 @@ namespace TradeSharp.Data.Testing
     public void DeleteFundamentalValues_InstrumentFundamentalAndRelatedDataRemoved_Success()
     {
       //create instrumentFundamental and associated values
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
@@ -1188,7 +1204,7 @@ namespace TradeSharp.Data.Testing
     public void DeleteFundamentalValues_InstrumentForDataProvider_Success()
     {
       //create countryFundamental and associated values
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
@@ -1220,7 +1236,7 @@ namespace TradeSharp.Data.Testing
     public void DeleteCountryFundamentalValue_DataRemoved_Success()
     {
       //create countryFundamental and associated values
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       CountryFundamental countryFundamental = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_country.Id);
@@ -1271,7 +1287,7 @@ namespace TradeSharp.Data.Testing
     public void DeleteInstrumentFundamentalValue_DataRemoved_Success()
     {
       //create countryFundamental and associated values
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
@@ -1321,8 +1337,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateInstrumentGroup_ChangeParent_Success()
     {
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", Array.Empty<Guid>());
-      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName2", "TestInstrumentGroupDescription2", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName2", "TestInstrumentGroupDescription2", Array.Empty<Guid>());
 
       m_dataStore.CreateInstrumentGroup(instrumentGroup1);
       m_dataStore.CreateInstrumentGroup(instrumentGroup2);
@@ -1356,13 +1372,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateInstrumentGroup_ChangeInstruments_Success()
     {
-      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "STOCK2", "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "STOCK3", "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK3", "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
 
-      Instrument forex1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Forex, "FOREX1", "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Forex, "FOREX2", "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX1", "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX2", "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
 
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", new List<Guid> { stock2.Id, stock3.Id });
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", new List<Guid> { stock2.Id, stock3.Id });
 
       m_dataStore.CreateInstrumentGroup(instrumentGroup1);
 
@@ -1400,8 +1416,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void DeleteInstrumentGroup_DeleteAndPersist_Success()
     {
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", Array.Empty<Guid>());
-      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, instrumentGroup1.Id, "TestInstrumentGroupName2", "TestInstrumentGroupDescription2", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", instrumentGroup1.Id, "TestInstrumentGroupName2", "TestInstrumentGroupDescription2", Array.Empty<Guid>());
 
       m_dataStore.CreateInstrumentGroup(instrumentGroup1);
       m_dataStore.CreateInstrumentGroup(instrumentGroup2);
@@ -1434,8 +1450,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void DeleteInstumentGroupChild_Update_Success()
     {
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", Array.Empty<Guid>());
-      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, instrumentGroup1.Id, "TestInstrumentGroupName2", "TestInstrumentGroupDescription2", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", "TestInstrumentGroupDescription1", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", instrumentGroup1.Id, "TestInstrumentGroupName2", "TestInstrumentGroupDescription2", Array.Empty<Guid>());
 
       m_dataStore.CreateInstrumentGroup(instrumentGroup1);
       m_dataStore.CreateInstrumentGroup(instrumentGroup2);
@@ -1494,13 +1510,13 @@ namespace TradeSharp.Data.Testing
       barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
       barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
 
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
 
       m_dataStore.CreateInstrumentGroup(instrumentGroup);
       m_dataStore.CreateInstrument(m_instrument);
       m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, Resolution.Day, barData);
 
-      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental);
 
       InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
@@ -1586,8 +1602,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetHoliday_ReturnExistingHoliday_Success()
     {
-      Holiday countryHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
-      Holiday countryHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfWeek", HolidayType.DayOfWeek, Months.January, 0, DayOfWeek.Monday, WeekOfMonth.Second, MoveWeekendHoliday.DontAdjust);
+      Holiday countryHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
+      Holiday countryHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfWeek", HolidayType.DayOfWeek, Months.January, 0, DayOfWeek.Monday, WeekOfMonth.Second, MoveWeekendHoliday.DontAdjust);
       m_dataStore.CreateHoliday(countryHolidayDayOfMonth);
       m_dataStore.CreateHoliday(countryHolidayDayOfWeek);
 
@@ -1619,8 +1635,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetHolidays_CountryReturnPersistedData_Success()
     {
-      Holiday countryHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
-      Holiday countryHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfWeek", HolidayType.DayOfWeek, Months.January, 0, DayOfWeek.Monday, WeekOfMonth.Second, MoveWeekendHoliday.DontAdjust);
+      Holiday countryHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
+      Holiday countryHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfWeek", HolidayType.DayOfWeek, Months.January, 0, DayOfWeek.Monday, WeekOfMonth.Second, MoveWeekendHoliday.DontAdjust);
       m_dataStore.CreateHoliday(countryHolidayDayOfMonth);
       m_dataStore.CreateHoliday(countryHolidayDayOfWeek);
 
@@ -1635,8 +1651,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetHolidays_ExchangeReturnPersistedData_Success()
     {
-      Holiday exchangeHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
-      Holiday exchangeHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_exchange.Id, "ExchangeDayOfWeek", HolidayType.DayOfWeek, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday exchangeHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday exchangeHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_exchange.Id, "ExchangeDayOfWeek", HolidayType.DayOfWeek, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
       m_dataStore.CreateHoliday(exchangeHolidayDayOfMonth);
       m_dataStore.CreateHoliday(exchangeHolidayDayOfWeek);
 
@@ -1651,13 +1667,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetHolidays_ReturnHolidaysForParent_Success()
     {
-      Holiday countryHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
-      Holiday countryHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_country.Id, "CountryDayOfWeek", HolidayType.DayOfWeek, Months.January, 0, DayOfWeek.Monday, WeekOfMonth.Second, MoveWeekendHoliday.DontAdjust);
+      Holiday countryHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, 0, 0, MoveWeekendHoliday.DontAdjust);
+      Holiday countryHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_country.Id, "CountryDayOfWeek", HolidayType.DayOfWeek, Months.January, 0, DayOfWeek.Monday, WeekOfMonth.Second, MoveWeekendHoliday.DontAdjust);
       m_dataStore.CreateHoliday(countryHolidayDayOfMonth);
       m_dataStore.CreateHoliday(countryHolidayDayOfWeek);
 
-      Holiday exchangeHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
-      Holiday exchangeHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_exchange.Id, "ExchangeDayOfWeek", HolidayType.DayOfWeek, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday exchangeHolidayDayOfMonth = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_exchange.Id, "ExchangeDayOfMonth", HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday exchangeHolidayDayOfWeek = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_exchange.Id, "ExchangeDayOfWeek", HolidayType.DayOfWeek, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
       m_dataStore.CreateHoliday(exchangeHolidayDayOfMonth);
       m_dataStore.CreateHoliday(exchangeHolidayDayOfWeek);
 
@@ -1685,8 +1701,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetExchanges_ReturnPersistedData_Success()
     {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
 
       m_dataStore.CreateExchange(m_exchange);
       m_dataStore.CreateExchange(secondExchange);
@@ -1709,9 +1725,9 @@ namespace TradeSharp.Data.Testing
       TimeOnly postMarketStartTime = new TimeOnly(16, 0);
       TimeOnly postMarketEndTime = new TimeOnly(21, 00);
 
-      Session preMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
-      Session mainSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
-      Session postMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Post-market Session", m_exchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+      Session preMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Post-market Session", m_exchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
 
       m_dataStore.CreateSession(preMarketSession);
       m_dataStore.CreateSession(mainSession);
@@ -1739,23 +1755,23 @@ namespace TradeSharp.Data.Testing
       TimeOnly postMarketStartTime = new TimeOnly(16, 0);
       TimeOnly postMarketEndTime = new TimeOnly(21, 00);
 
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
 
-      Session preFirstMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
-      Session mainFirstSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
-      Session postFirstMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Post-market Session", m_exchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+      Session preFirstMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainFirstSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postFirstMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Post-market Session", m_exchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
 
-      Session preSecondMondayMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Pre-market Session", secondExchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
-      Session mainSecondMondaySession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Main Session", secondExchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
-      Session postSecondMondayMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Post-market Session", secondExchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
-      Session preSecondTuesdayMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Pre-market Session", secondExchange.Id, DayOfWeek.Tuesday, preMarketStartTime, preMarketEndTime);
-      Session mainSecondTuesdaySession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Main Session", secondExchange.Id, DayOfWeek.Tuesday, mainStartTime, mainEndTime);
-      Session postSecondTuesdayMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Post-market Session", secondExchange.Id, DayOfWeek.Tuesday, postMarketStartTime, postMarketEndTime);
+      Session preSecondMondayMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Pre-market Session", secondExchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainSecondMondaySession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Main Session", secondExchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postSecondMondayMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Post-market Session", secondExchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+      Session preSecondTuesdayMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Pre-market Session", secondExchange.Id, DayOfWeek.Tuesday, preMarketStartTime, preMarketEndTime);
+      Session mainSecondTuesdaySession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Main Session", secondExchange.Id, DayOfWeek.Tuesday, mainStartTime, mainEndTime);
+      Session postSecondTuesdayMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Post-market Session", secondExchange.Id, DayOfWeek.Tuesday, postMarketStartTime, postMarketEndTime);
 
-      Session preThirdMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Pre-market Session", thirdExchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
-      Session mainThirdSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Main Session", thirdExchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
-      Session postThirdMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Post-market Session", thirdExchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+      Session preThirdMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Pre-market Session", thirdExchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainThirdSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Main Session", thirdExchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postThirdMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Post-market Session", thirdExchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
 
       m_dataStore.CreateSession(preFirstMarketSession);
       m_dataStore.CreateSession(mainFirstSession);
@@ -1792,9 +1808,9 @@ namespace TradeSharp.Data.Testing
       TimeOnly postMarketStartTime = new TimeOnly(16, 0);
       TimeOnly postMarketEndTime = new TimeOnly(21, 00);
 
-      Session preMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
-      Session mainSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
-      Session postMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "Post-market Session", m_exchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
+      Session preMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
+      Session mainSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
+      Session postMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Post-market Session", m_exchange.Id, DayOfWeek.Monday, postMarketStartTime, postMarketEndTime);
 
       m_dataStore.CreateSession(preMarketSession);
       m_dataStore.CreateSession(mainSession);
@@ -1810,7 +1826,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstrumentGroupInstruments_ReturnPersistedData_Success()
     {
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
       m_dataStore.CreateInstrumentGroup(instrumentGroup);
 
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroup,
@@ -1828,8 +1844,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstruments_ReturnPersistedData_Success()
     {
-      Instrument instrumentTest2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "TEST2", "TestInstrument2", "TestInstrumentDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
-      Instrument instrumentTest3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "TEST3", "TestInstrument3", "TestInstrumentDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument instrumentTest2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST2", "TestInstrument2", "TestInstrumentDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument instrumentTest3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST3", "TestInstrument3", "TestInstrumentDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
       m_dataStore.CreateInstrument(m_instrument);
       m_dataStore.CreateInstrument(instrumentTest2);
       m_dataStore.CreateInstrument(instrumentTest3);
@@ -1845,9 +1861,9 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstruments_ReturnsSecondaryExchanges_Success()
     {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
-      m_instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "TEST", "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Array.Empty<Guid>(), m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
+      m_instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST", "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Array.Empty<Guid>(), m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
       m_dataStore.CreateInstrument(m_instrument);
 
       IList<Instrument> instruments = m_dataStore.GetInstruments();
@@ -1861,13 +1877,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstruments_ByInstrumentType_Success()
     {
-      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "STOCK2", "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "STOCK3", "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK3", "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
 
-      Instrument forex1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Forex, "FOREX1", "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Forex, "FOREX2", "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Forex, "FOREX3", "Forex3", "ForexDescription3", DateTime.Now.ToUniversalTime().AddDays(3), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex4 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Forex, "FOREX4", "Forex4", "ForexDescription4", DateTime.Now.ToUniversalTime().AddDays(4), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX1", "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX2", "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX3", "Forex3", "ForexDescription3", DateTime.Now.ToUniversalTime().AddDays(3), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex4 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX4", "Forex4", "ForexDescription4", DateTime.Now.ToUniversalTime().AddDays(4), Array.Empty<Guid>(), m_exchange.Id, Array.Empty<Guid>());
 
       m_dataStore.CreateInstrument(m_instrument);
       m_dataStore.CreateInstrument(stock2);
@@ -1896,10 +1912,10 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstrument_ById_Success()
     {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
-      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, InstrumentType.Stock, "STOCK", "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), new List<Guid>{ instrumentGroup.Id }, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
+      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), new List<Guid>{ instrumentGroup.Id }, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
 
       m_dataStore.CreateInstrument(stock);
 
@@ -1914,12 +1930,12 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetFundmentals_ReturnPersistedData_Success()
     {
-      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental1", "TestCountryFundamentalDescription1", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
-      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental2", "TestCountryFundamentalDescription2", FundamentalCategory.Country, FundamentalReleaseInterval.Monthly);
-      Fundamental fundamental3 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental3", "TestCountryFundamentalDescription3", FundamentalCategory.Country, FundamentalReleaseInterval.Quarterly);
-      Fundamental fundamental4 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental1", "TestInsrumentFundamentalDescription1", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
-      Fundamental fundamental5 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental2", "TestInsrumentFundamentalDescription2", FundamentalCategory.Instrument, FundamentalReleaseInterval.Monthly);
-      Fundamental fundamental6 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental3", "TestInsrumentFundamentalDescription3", FundamentalCategory.Instrument, FundamentalReleaseInterval.Quarterly);
+      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental1", "TestCountryFundamentalDescription1", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental2", "TestCountryFundamentalDescription2", FundamentalCategory.Country, FundamentalReleaseInterval.Monthly);
+      Fundamental fundamental3 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental3", "TestCountryFundamentalDescription3", FundamentalCategory.Country, FundamentalReleaseInterval.Quarterly);
+      Fundamental fundamental4 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental1", "TestInsrumentFundamentalDescription1", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental5 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental2", "TestInsrumentFundamentalDescription2", FundamentalCategory.Instrument, FundamentalReleaseInterval.Monthly);
+      Fundamental fundamental6 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental3", "TestInsrumentFundamentalDescription3", FundamentalCategory.Instrument, FundamentalReleaseInterval.Quarterly);
 
       m_dataStore.CreateFundamental(fundamental1);
       m_dataStore.CreateFundamental(fundamental2);
@@ -1943,7 +1959,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetCountryFundmentals_ReturnPersistedData_Success()
     {
-      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
       m_dataStore.CreateFundamental(fundamental1);
 
       CountryFundamental countryFundamental = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental1.Id, m_country.Id);
@@ -1952,7 +1968,7 @@ namespace TradeSharp.Data.Testing
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double value = 1.0;
 
-      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental", "TestInsrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInsrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental2.Id, m_instrument.Id);
       m_dataStore.CreateInstrumentFundamental(instrumentFundamental);
 
@@ -1980,14 +1996,14 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstrumentFundmentals_ReturnPersistedData_Success()
     {
-      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestInstrumentFundamental", "TestInsrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInsrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental1.Id, m_instrument.Id);
       m_dataStore.CreateInstrumentFundamental(instrumentFundamental);
 
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double value = 1.0;
 
-      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
+      Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental", "TestCountryFundamentalDescription", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
       CountryFundamental countryFundamental = new CountryFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental2.Id, m_country.Id);
       m_dataStore.CreateCountryFundamental(countryFundamental);
 

@@ -55,6 +55,11 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public InstrumentGroupViewModel ViewModel { get; }
 
+    private void Page_Loaded(object sender, RoutedEventArgs e)
+    {
+      ViewModel.RefreshCommand.Execute(null);
+    }
+
     //methods
 
 

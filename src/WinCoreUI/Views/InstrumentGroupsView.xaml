@@ -8,14 +8,15 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="Page_Loaded">
   <StackPanel x:Name="m_main" Orientation="Vertical">
     <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
         <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
         <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add instrument group" IsCompact="True"/>
         <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update instrument group" IsCompact="True"/>
-        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" CommandParameter="{x:Bind m_instrumentGroups.SelectedItems}" ToolTipService.ToolTip="Delete instrument group" IsCompact="True"/>
+        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" CommandParameter="{x:Bind ViewModel.SelectedItem}" ToolTipService.ToolTip="Delete instrument group" IsCompact="True"/>
         <AppBarSeparator/>
         <AppBarButton Command="{x:Bind ViewModel.ImportCommand}" ToolTipService.ToolTip="Import instrument groups" IsCompact="True">
           <AppBarButton.Icon>
@@ -29,10 +30,10 @@
         </AppBarButton>
       </CommandBar>
     </StackPanel>
-    <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}">
+    <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}">
       <TreeView.ItemTemplate>
         <DataTemplate x:DataType="cuiservices:InstrumentGroupServiceNode">
-          <TreeViewItem ItemsSource="{x:Bind Children}" Content="{x:Bind Name}" IsExpanded="False"/>
+          <TreeViewItem Content="{x:Bind Name}" ItemsSource="{x:Bind Children}" IsExpanded="False"/>
         </DataTemplate>
       </TreeView.ItemTemplate>
     </TreeView>

@@ -1,0 +1,94 @@
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
+using TradeSharp.CoreUI.Services;
+using WinRT.Interop;
+using Windows.Storage.Pickers;
+using Windows.Storage;
+using System.Runtime.InteropServices;
+using TradeSharp.WinCoreUI.Common;
+using TradeSharp.Data;
+
+// To learn more about WinUI, the WinUI project structure,
+// and more about our project templates, see: http://aka.ms/winui-project-info.
+
+namespace TradeSharp.WinCoreUI.Views
+{
+  /// <summary>
+  /// An empty page that can be used on its own or navigated to within a Frame.
+  /// </summary>
+  public sealed partial class ImportView : Page
+  {
+
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+
+
+    //constructors
+    public ImportView()
+    {
+      this.InitializeComponent();
+    }
+
+    //finalizers
+
+
+    //interface implementations
+
+
+    //properties
+    public static readonly DependencyProperty s_importSettingsProperty = DependencyProperty.Register("ImportSettings", typeof(ImportSettings), typeof(ImportView), new PropertyMetadata(null));
+    public ImportSettings? ImportSettings
+    {
+      get => (ImportSettings?)GetValue(s_importSettingsProperty);
+      set => SetValue(s_importSettingsProperty, value);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetActiveWindow();
+
+    private async void m_browse_Click(object sender, RoutedEventArgs e)
+    {
+      //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
+      FileOpenPicker openPicker = new FileOpenPicker();
+      openPicker.ViewMode = PickerViewMode.Thumbnail;
+      openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      openPicker.FileTypeFilter.Add(".json");
+      openPicker.FileTypeFilter.Add(".csv");
+
+      var hwnd = GetActiveWindow();
+      InitializeWithWindow.Initialize(openPicker, hwnd);
+
+      StorageFile file = await openPicker.PickSingleFileAsync();
+      if (file != null) m_filename.Text = file.Path;
+    }
+
+    private void Page_Loaded(object sender, RoutedEventArgs e)
+    {
+      Utilities.populateComboBoxFromEnum(ref m_replaceBehavior, typeof(ImportReplaceBehavior));
+    }
+
+    //methods
+
+
+  }
+}

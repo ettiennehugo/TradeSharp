@@ -35,6 +35,7 @@
         <winui:DataGridTextColumn x:Name="m_columnName" Width="Auto" Header="Name" Binding="{Binding Name}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnCountry" Width="Auto" Header="Country" Binding="{Binding CountryId, Converter={StaticResource CountryIdToDisplayNameConverter}}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnTimeZone" Width="Auto" Header="Time Zone" Binding="{Binding TimeZone}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnTag" Width="Auto" Header="Tag" Binding="{Binding Tag}" IsReadOnly="True"/>
       </winui:DataGrid.Columns>
     </winui:DataGrid>
     <TabView x:Name="m_tabView" TabWidthMode="Equal" SelectedIndex="0" IsAddTabButtonVisible="False" Grid.Row="2" Grid.Column="0">

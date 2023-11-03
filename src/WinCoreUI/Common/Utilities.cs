@@ -60,6 +60,8 @@ namespace TradeSharp.WinCoreUI.Common
 
         comboBox.Items.Add(comboValue);
       }
+
+      comboBox.SelectedIndex = 0;
     }
   }
 }

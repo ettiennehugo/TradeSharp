@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using TradeSharp.CoreUI.Events;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.WinDataManager.Services;
+using Microsoft.UI.Xaml.Controls;
 
 namespace TradeSharp.WinDataManager
 {
@@ -58,6 +59,14 @@ namespace TradeSharp.WinDataManager
       ViewModel.SetNavigationFrame(m_nvvMainContent);
       DialogService dialogService = (DialogService)Ioc.Default.GetRequiredService<IDialogService>();
       dialogService.StatusBar = m_statusBar;
+
+      m_nvvMain.SelectionChanged += ViewModel.OnNavigationSelectionChanged;
+      m_nvvMain.SelectionChanged += this.OnNavigationSelectionChanged;
+    }
+
+    public void OnNavigationSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+      m_statusBar.IsOpen = false; //make sure status bar is hidden when switching between screens
     }
   }
 }

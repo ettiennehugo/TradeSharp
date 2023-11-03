@@ -97,6 +97,7 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public Task<Holiday> CopyAsync(Holiday item) => throw new NotImplementedException();
-
+    public Task<int> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior) => throw new NotImplementedException();
+    public Task<int> ExportAsync(string filename) => throw new NotImplementedException();
   }
 }

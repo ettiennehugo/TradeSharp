@@ -29,32 +29,38 @@ namespace TradeSharp.CoreUI.Services
 
 
     //attributes
-    private Instrument? m_instrument;
-    private InstrumentGroup? m_instrumentGroup;
+    private InstrumentGroupService m_instrumentGroupService;
+    [ObservableProperty] private Instrument? m_instrument;
+    [ObservableProperty] private InstrumentGroup? m_instrumentGroup;
+    [ObservableProperty] private Guid m_id;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private ObservableCollection<InstrumentGroupServiceNode> m_children;
 
     //constructors
-    public InstrumentGroupServiceNode(object value)
+    public InstrumentGroupServiceNode(InstrumentGroupService service, object value)
     {
-      
+      m_instrumentGroupService = service;
+      m_children = new ObservableCollection<InstrumentGroupServiceNode>();
+
       if (value is InstrumentGroup)
       {
         m_instrumentGroup = (InstrumentGroup)value;
+        m_id = m_instrumentGroup.Id;
         m_name = m_instrumentGroup.Name;
         m_description = m_instrumentGroup.Description;
+
+        foreach (InstrumentGroup instrumentGroup in m_instrumentGroupService.Items)
+          if (instrumentGroup.ParentId == m_id) m_children.Add(new InstrumentGroupServiceNode(m_instrumentGroupService, instrumentGroup));
       }
       else
       {
         m_instrument = (Instrument)value;
+        m_id = m_instrument.Id;
         m_name = m_instrument.Name;
         m_description = m_instrument.Description;
       }
-
-      m_children = new ObservableCollection<InstrumentGroupServiceNode>();
     }
-
 
     //finalizers
 
@@ -66,8 +72,6 @@ namespace TradeSharp.CoreUI.Services
 
 
     //methods
-
-
 
 
   }
@@ -90,6 +94,7 @@ namespace TradeSharp.CoreUI.Services
     private IInstrumentGroupRepository m_instrumentGroupRepository;
     [ObservableProperty] private InstrumentGroup? m_selectedItem;
     [ObservableProperty] private ObservableCollection<InstrumentGroup> m_items;
+    [ObservableProperty] private InstrumentGroupServiceNode? m_selectedNode;
     [ObservableProperty] private ObservableCollection<InstrumentGroupServiceNode> m_nodes;
 
     //constructors
@@ -109,7 +114,7 @@ namespace TradeSharp.CoreUI.Services
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
     public event EventHandler<InstrumentGroup>? SelectedItemChanged;
-
+    public event EventHandler<InstrumentGroupServiceNode>? SelectedNodeChanged;
 
     //methods
     public async Task<InstrumentGroup> AddAsync(InstrumentGroup item)
@@ -145,11 +150,12 @@ namespace TradeSharp.CoreUI.Services
     {
       var result = await m_instrumentGroupRepository.GetItemsAsync();
       Items.Clear();
+      Nodes.Clear();
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result)
       {
         Items.Add(item);
-        if (item.ParentId == InstrumentGroup.InstrumentGroupRoot) Nodes.Add(new InstrumentGroupServiceNode(item));  //add the set of root item nodes
+        if (item.ParentId == InstrumentGroup.InstrumentGroupRoot) Nodes.Add(new InstrumentGroupServiceNode(this, item));  //add the set of root item nodes
       }
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
@@ -157,6 +163,16 @@ namespace TradeSharp.CoreUI.Services
     public Task<InstrumentGroup> UpdateAsync(InstrumentGroup item)
     {
       return m_instrumentGroupRepository.UpdateAsync(item);
+    }
+
+    public Task<int> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior)
+    {
+      return Task.FromResult<int>(0);
+    }
+
+    public Task<int> ExportAsync(string filename)
+    {
+      return Task.FromResult<int>(0);
     }
   }
 }

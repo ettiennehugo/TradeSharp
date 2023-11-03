@@ -46,7 +46,7 @@ namespace TradeSharp.WinCoreUI.Views
       this.InitializeComponent();
       m_parentId = parentId;
       m_name.Text = "New Holiday";
-      Holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, m_parentId, m_name.Text, HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_parentId, m_name.Text, HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
     }
 
     public HolidayView(Holiday holiday)

@@ -36,12 +36,13 @@
     </StackPanel>
     <winui:DataGrid x:Name="m_instruments" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
       <winui:DataGrid.Columns>
-        <winui:DataGridTextColumn x:Name="m_columnInstrumentType" Width="Auto" Header="Type" Binding="{Binding Path=Type, Mode=OneWay, Converter={StaticResource EnumValueConverter}}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnTicker" Width="Auto" Header="Ticker" Binding="{Binding Path=Ticker, Mode=OneWay}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnName" Width="Auto" Header="Name" Binding="{Binding Path=Name, Mode=OneWay}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnDescription" Width="Auto" Header="Description" Binding="{Binding Path=Description, Mode=OneWay}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnPrimaryExchange" Width="Auto" Header="Primary Exchange" Binding="{Binding Path=PrimaryExchangeId, Mode=OneWay, Converter={StaticResource ExchangeIdToNameConverter}}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnInceptionDate" Width="Auto" Header="Inception Date" Binding="{Binding Path=InceptionDate, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnInstrumentType" Width="Auto" Header="Type" Binding="{Binding Type, Mode=OneWay, Converter={StaticResource EnumValueConverter}}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnTicker" Width="Auto" Header="Ticker" Binding="{Binding Ticker, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnName" Width="Auto" Header="Name" Binding="{Binding Name, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnDescription" Width="Auto" Header="Description" Binding="{Binding Description, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnPrimaryExchange" Width="Auto" Header="Primary Exchange" Binding="{Binding PrimaryExchangeId, Mode=OneWay, Converter={StaticResource ExchangeIdToNameConverter}}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnInceptionDate" Width="Auto" Header="Inception Date" Binding="{Binding InceptionDate, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnTag" Width="Auto" Header="Tag" Binding="{Binding Tag, Mode=OneWay}" IsReadOnly="True"/>
       </winui:DataGrid.Columns>
     </winui:DataGrid>
   </StackPanel>

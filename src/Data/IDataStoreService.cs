@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
+using System.ComponentModel;
 using static TradeSharp.Data.Country;
 
 namespace TradeSharp.Data
@@ -28,6 +29,9 @@ namespace TradeSharp.Data
   public enum InstrumentType
   {
     None = 0,   //only used for initialization
+    Index,
+    [Description("Exchange Traded Fund")]
+    ETF,
     Stock,
     Forex,
     Crypto,
@@ -77,14 +81,16 @@ namespace TradeSharp.Data
   {
     public const Attributes DefaultAttributeSet = Attributes.Editable | Attributes.Deletable;
 
-    public DataObject(Guid id, Attributes attributeSet)
+    public DataObject(Guid id, Attributes attributeSet, string tag)
     {
       Id = id;
       AttributeSet = attributeSet;
+      Tag = tag;
     }
 
     [ObservableProperty] private Guid m_id;
     [ObservableProperty] private Attributes m_attributeSet;
+    [ObservableProperty] private string m_tag;    //general string data to be used for whatever purpose necessary
 
     public bool HasAttribute(Attributes attribute)
     {
@@ -145,7 +151,7 @@ namespace TradeSharp.Data
       return $"{tradeSharpHome}\\data\\countryflags\\w80\\{s_internationalIsoCode}.png"; //return no logo image
     }
 
-    public Country(Guid id, Attributes attributeSet, string isoCode) : base(id, attributeSet)
+    public Country(Guid id, Attributes attributeSet, string tag, string isoCode) : base(id, attributeSet, tag)
     {
       IsoCode = isoCode;
       CountryInfo = CountryInfo.GetCountryInfo(IsoCode);
@@ -169,7 +175,7 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class Holiday : DataObject, IEquatable<Holiday>, ICloneable, IUpdateable<Holiday>
   {
-    public Holiday(Guid id, Attributes attributeSet, Guid parentId, string name, HolidayType type, Months month, int dayOfMonth, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth, MoveWeekendHoliday moveWeekendHoliday): base(id, attributeSet)
+    public Holiday(Guid id, Attributes attributeSet, string tag, Guid parentId, string name, HolidayType type, Months month, int dayOfMonth, DayOfWeek dayOfWeek, WeekOfMonth weekOfMonth, MoveWeekendHoliday moveWeekendHoliday): base(id, attributeSet, tag)
     {
       Type = type;
       ParentId = parentId;
@@ -204,11 +210,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Holiday(Id, AttributeSet, ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
+      return new Holiday(Id, AttributeSet, Tag, ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
     }
 
     public void Update(Holiday item)
     {
+      AttributeSet = item.AttributeSet;
+      Tag = item.Tag;
       ParentId = item.ParentId;
       Name = item.Name;
       Type = item.Type;
@@ -350,7 +358,7 @@ namespace TradeSharp.Data
       File.Copy(newLogoImagePath, exchange.LogoPath);
     }
 
-    public Exchange(Guid id, Attributes attributeSet, Guid countryId, string name, TimeZoneInfo timeZone, Guid logoId): base(id, attributeSet)
+    public Exchange(Guid id, Attributes attributeSet, string tag, Guid countryId, string name, TimeZoneInfo timeZone, Guid logoId): base(id, attributeSet, tag)
     {
       CountryId = countryId;
       Name = name;
@@ -372,11 +380,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Exchange(Id, AttributeSet, CountryId, Name, TimeZone, LogoId);
+      return new Exchange(Id, AttributeSet, Tag, CountryId, Name, TimeZone, LogoId);
     }
 
     public void Update(Exchange item)
     {
+      AttributeSet = item.AttributeSet;
+      Tag = item.Tag;
       CountryId = item.CountryId;
       Name = item.Name;
       TimeZone = item.TimeZone;
@@ -389,7 +399,7 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class Session : DataObject, IEquatable<Session>, ICloneable, IUpdateable<Session>
   {
-    public Session(Guid id, Attributes attributeSet, string name, Guid exchangeId, DayOfWeek dayOfWeek, TimeOnly start, TimeOnly end): base(id, attributeSet)
+    public Session(Guid id, Attributes attributeSet, string tag, string name, Guid exchangeId, DayOfWeek dayOfWeek, TimeOnly start, TimeOnly end): base(id, attributeSet, tag)
     {
       Name = name;
       ExchangeId = exchangeId;
@@ -411,11 +421,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Session(Id, AttributeSet, Name, ExchangeId, DayOfWeek, Start, End);
+      return new Session(Id, AttributeSet, Tag, Name, ExchangeId, DayOfWeek, Start, End);
     }
 
     public void Update(Session item)
     {
+      AttributeSet = item.AttributeSet;
+      Tag = item.Tag;
       Name = item.Name;
       ExchangeId = item.ExchangeId;
       DayOfWeek = item.DayOfWeek;
@@ -429,7 +441,7 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class Instrument : DataObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>
   {
-    public Instrument(Guid id, Attributes attributeSet, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, IList<Guid> instrumentGroupId, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds): base(id, attributeSet)
+    public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, IList<Guid> instrumentGroupId, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds): base(id, attributeSet, tag)
     {
       Type = type;
       Ticker = ticker;
@@ -457,11 +469,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Instrument(Id, AttributeSet, Type, Ticker, Name, Description, InceptionDate, InstrumentGroupIds, PrimaryExchangeId, SecondaryExchangeIds);
+      return new Instrument(Id, AttributeSet, Tag, Type, Ticker, Name, Description, InceptionDate, InstrumentGroupIds, PrimaryExchangeId, SecondaryExchangeIds);
     }
 
     public void Update(Instrument item)
     {
+      AttributeSet = item.AttributeSet;
+      Tag = item.Tag;
       Type = item.Type;
       Ticker = item.Ticker;
       Name = item.Name;
@@ -480,7 +494,7 @@ namespace TradeSharp.Data
   {
     public static Guid InstrumentGroupRoot = Guid.Empty;
 
-    public InstrumentGroup(Guid id, Attributes attributeSet, Guid parentId, string name, string description, IList<Guid> instruments): base(id, attributeSet)
+    public InstrumentGroup(Guid id, Attributes attributeSet, string tag, Guid parentId, string name, string description, IList<Guid> instruments): base(id, attributeSet, tag)
     {
       ParentId = parentId;
       Name = name;
@@ -500,11 +514,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new InstrumentGroup(Id, AttributeSet, ParentId, Name, Description, Instruments);
+      return new InstrumentGroup(Id, AttributeSet, Tag, ParentId, Name, Description, Instruments);
     }
 
     public void Update(InstrumentGroup item)
     {
+      AttributeSet = item.AttributeSet;
+      Tag = item.Tag;
       ParentId = item.ParentId;
       Name = item.Name;
       Description = item.Description;
@@ -517,7 +533,7 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class Fundamental : DataObject, IEquatable<Fundamental>, ICloneable, IUpdateable<Fundamental>
   {
-    public Fundamental(Guid id, Attributes attributeSet, string name, string description, FundamentalCategory category, FundamentalReleaseInterval releaseInterval): base(id, attributeSet)
+    public Fundamental(Guid id, Attributes attributeSet, string tag, string name, string description, FundamentalCategory category, FundamentalReleaseInterval releaseInterval): base(id, attributeSet, tag)
     {
       Name = name;
       Description = description;
@@ -537,11 +553,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Fundamental(Id, AttributeSet, Name, Description, Category, ReleaseInterval);
+      return new Fundamental(Id, AttributeSet, Tag, Name, Description, Category, ReleaseInterval);
     }
 
     public void Update(Fundamental item)
     {
+      AttributeSet = item.AttributeSet;
+      Tag = item.Tag;
       Name = item.Name;
       Description = item.Description;
       Category = item.Category;
@@ -776,6 +794,7 @@ namespace TradeSharp.Data
     /// Country definition interface.
     /// </summary>
     public void CreateCountry(Country country);
+    public void UpdateCountry(Country country);
     public Country? GetCountry(Guid id);
     public IList<Country> GetCountries();
     public int DeleteCountry(Guid id);

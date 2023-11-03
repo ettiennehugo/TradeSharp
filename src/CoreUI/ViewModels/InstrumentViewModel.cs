@@ -63,14 +63,26 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public void OnImport()
+    public async void OnImport()
     {
-      throw new NotImplementedException();
+      ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
+
+      if (importSettings != null)
+      {
+        int importCount = await m_itemsService.ImportAsync(importSettings.Filename, importSettings.ImportReplaceBehavior);
+        await m_dialogService.ShowStatusMessageAsync(importCount == 0 ? IDialogService.StatusMessageSeverity.Warning : IDialogService.StatusMessageSeverity.Success, "", $"Imported {importCount} instruments");
+      }
     }
 
-    public void OnExport()
+    public async void OnExport()
     {
-      throw new NotImplementedException();
+      string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
+
+      if (filename != null)
+      {
+        int exportCount = await m_itemsService.ExportAsync(filename);
+        await m_dialogService.ShowStatusMessageAsync(exportCount == 0 ? IDialogService.StatusMessageSeverity.Warning : IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} instruments");
+      }
     }
 
     //properties
