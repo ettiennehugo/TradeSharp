@@ -185,7 +185,7 @@ namespace TradeSharp.Data
           $"VALUES (" +
             $"'{exchange.Id.ToString()}', " +
             $"{(long)exchange.AttributeSet}, " +
-            $"{SqlSafeString(exchange.Tag)}, " +
+            $"'{SqlSafeString(exchange.Tag)}', " +
             $"'{exchange.CountryId.ToString()}', " +
             $"'{SqlSafeString(exchange.Name)}', " +
             $"'{exchange.TimeZone.ToSerializedString()}', " +
@@ -278,7 +278,7 @@ namespace TradeSharp.Data
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableHoliday} WHERE Id = '{id.ToString()}'"))
       {
         if (reader.Read())
-          return new Holiday(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), (HolidayType)reader.GetInt64(5), (Months)reader.GetInt64(6), reader.GetInt32(7), (DayOfWeek)reader.GetInt64(9), (WeekOfMonth)reader.GetInt64(9), (MoveWeekendHoliday)reader.GetInt64(10));
+          return new Holiday(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), (HolidayType)reader.GetInt64(5), (Months)reader.GetInt64(6), reader.GetInt32(7), (DayOfWeek)reader.GetInt64(8), (WeekOfMonth)reader.GetInt64(9), (MoveWeekendHoliday)reader.GetInt64(10));
 
         return null;
       }
@@ -383,7 +383,7 @@ namespace TradeSharp.Data
           $"SET Name = '{SqlSafeString(session.Name)}', " +
               $"ExchangeId = '{session.ExchangeId.ToString()}', " +
               $"AttributeSet = {(long)session.AttributeSet}, " +
-              $"Tag = {SqlSafeString(session.Tag)}, " +
+              $"Tag = '{SqlSafeString(session.Tag)}', " +
               $"DayOfWeek = {(int)session.DayOfWeek}, " +
               $"StartTime = {session.Start.Ticks}, " +
               $"EndTime = {session.End.Ticks} " +

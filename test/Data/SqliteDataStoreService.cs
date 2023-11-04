@@ -88,7 +88,7 @@ namespace TradeSharp.Data.Testing
       m_dataStore = new TradeSharp.Data.SqliteDataStoreService(m_configuration.Object);
 
       //remove stale data from previous tests - this is to ensure proper test isolation
-      //m_dataStore.ClearDatabase();
+     m_dataStore.ClearDatabase();
 
       //create common attributes used for testing
       m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "en-US");
@@ -1612,6 +1612,7 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(countryHolidayDayOfMonth.Id, countryHolidayOfMonthReturned.Id, "Holiday Id mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.ParentId, countryHolidayOfMonthReturned.ParentId, "Parent Id mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.Name, countryHolidayOfMonthReturned.Name, "Name mismatch");
+      Assert.AreEqual(countryHolidayDayOfMonth.Tag, countryHolidayOfMonthReturned.Tag, "Tag mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.Type, countryHolidayOfMonthReturned.Type, "Type mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.Month, countryHolidayOfMonthReturned.Month, "Month mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.DayOfMonth, countryHolidayOfMonthReturned.DayOfMonth, "DayOfMonth mismatch");
@@ -1623,6 +1624,7 @@ namespace TradeSharp.Data.Testing
       Assert.IsNotNull(countryHolidayOfWeekReturned, "CountryDayOfWeek not returned");
       Assert.AreEqual(countryHolidayDayOfWeek.Id, countryHolidayOfWeekReturned.Id, "Holiday Id mismatch");
       Assert.AreEqual(countryHolidayDayOfWeek.ParentId, countryHolidayOfWeekReturned.ParentId, "Parent Id mismatch");
+      Assert.AreEqual(countryHolidayDayOfWeek.Tag, countryHolidayOfWeekReturned.Tag, "Tag mismatch");
       Assert.AreEqual(countryHolidayDayOfWeek.Name, countryHolidayOfWeekReturned.Name, "Name mismatch");
       Assert.AreEqual(countryHolidayDayOfWeek.Type, countryHolidayOfWeekReturned.Type, "Type mismatch");
       Assert.AreEqual(countryHolidayDayOfWeek.Month, countryHolidayOfWeekReturned.Month, "Month mismatch");
