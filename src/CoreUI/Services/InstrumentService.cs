@@ -10,7 +10,7 @@ using TradeSharp.CoreUI.Repositories;
 
 namespace TradeSharp.CoreUI.Services
 {
-  public partial class InstrumentService : ObservableObject, IItemsService<Instrument>
+  public partial class InstrumentService : ObservableObject, IListItemsService<Instrument>
   {
     //constants
 

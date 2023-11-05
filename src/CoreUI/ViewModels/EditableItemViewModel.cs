@@ -27,12 +27,12 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    protected readonly IItemsService<TItem> m_itemsService;
+    protected readonly IListItemsService<TItem> m_itemsService;
     private bool m_isEditMode;
     private TItem? m_editItem;
 
     //constructors
-    public EditableItemViewModel(IItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService.SelectedItem, navigationService, dialogService)
+    public EditableItemViewModel(IListItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService.SelectedItem, navigationService, dialogService)
     {
       m_itemsService = itemsService;
 

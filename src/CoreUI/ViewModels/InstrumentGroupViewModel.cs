@@ -13,7 +13,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of instrument groups defined and the instruments contained by them.
   /// </summary>
-  public class InstrumentGroupViewModel : ListViewModel<InstrumentGroup>
+  public class InstrumentGroupViewModel : TreeViewModel<Guid, InstrumentGroup>
   {
     //constants
 
@@ -25,16 +25,13 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    public RelayCommand ImportCommand { get; internal set; }
-    public RelayCommand ExportCommand { get; internal set; }
+
 
     //constructors
-    public InstrumentGroupViewModel(IItemsService<InstrumentGroup> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
+    public InstrumentGroupViewModel(ITreeItemsService<Guid, InstrumentGroup> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
-      UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null && SelectedNode.InstrumentGroup != null && SelectedNode.InstrumentGroup.HasAttribute(Attributes.Editable));
-      DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedNode != null && SelectedNode.InstrumentGroup != null && SelectedNode.InstrumentGroup.HasAttribute(Attributes.Deletable));
-      ImportCommand = new RelayCommand(OnImport);
-      ExportCommand = new RelayCommand(OnExport);
+      UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Editable));
+      DeleteCommand = new RelayCommand(OnDelete, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Deletable));
     }
 
     //finalizers
@@ -43,77 +40,42 @@ namespace TradeSharp.CoreUI.ViewModels
     //interface implementations
     public async override void OnAdd()
     {
-      InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync(SelectedItem != null ? SelectedItem.Id : InstrumentGroup.InstrumentGroupRoot);
+      Guid parentId = SelectedNode != null ? SelectedNode.Item.Id : InstrumentGroup.InstrumentGroupRoot;
+      InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync(parentId);
       if (newInstrumentGroup != null)
-      {
-        await m_itemsService.AddAsync(newInstrumentGroup);
-        Items.Add(newInstrumentGroup);
-        SelectedItem = newInstrumentGroup;
-        await OnRefreshAsync();
-      }
+        await m_itemsService.AddAsync(new InstrumentGroupNodeType(m_itemsService, newInstrumentGroup));
     }
 
     public async override void OnUpdate()
     {
-      if (SelectedItem != null)
+      if (SelectedNode != null)
       {
-        var updatedSession = await m_dialogService.ShowUpdateInstrumentGroupAsync(SelectedItem);
-        if (updatedSession != null)
+        var updatedInstrumentGroup = await m_dialogService.ShowUpdateInstrumentGroupAsync(SelectedNode.Item);
+        if (updatedInstrumentGroup != null)
         {
-          await m_itemsService.UpdateAsync(updatedSession);
-          await OnRefreshAsync();
+          SelectedNode.Item = updatedInstrumentGroup;
+          SelectedNode = await m_itemsService.UpdateAsync(SelectedNode!);
         }
       }
+      else
+        await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Please select a node to update");
     }
 
-    public async void OnImport()
+    protected async Task OnRefreshAsync(Guid parentId)
     {
-      ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
-      
-      if (importSettings != null)
-      {
-        int importCount = await m_itemsService.ImportAsync(importSettings.Filename, importSettings.ImportReplaceBehavior);
-        await m_dialogService.ShowStatusMessageAsync(importCount == 0 ? IDialogService.StatusMessageSeverity.Warning : IDialogService.StatusMessageSeverity.Success, "", $"Imported {importCount} instrument groups");
-      }
+      StartInProgress();
+      await m_itemsService.RefreshAsync(parentId);
     }
 
-    public async void OnExport()
+    public async override void OnCopy()
     {
-      string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
-
-      if (filename != null)
-      {
-        int exportCount = await m_itemsService.ExportAsync(filename);
-        await m_dialogService.ShowStatusMessageAsync(exportCount == 0 ? IDialogService.StatusMessageSeverity.Warning : IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} instrument groups");
-      }
+      if (SelectedNode != null)
+        SelectedNode = await m_itemsService.CopyAsync(SelectedNode);
+      else
+        await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Please select a node to copy");
     }
 
     //properties
-    public ObservableCollection<InstrumentGroupServiceNode> Nodes => ((InstrumentGroupService)m_itemsService).Nodes;
-
-    /// <summary>
-    /// Selected node in the tree view model.
-    /// </summary>
-    public virtual InstrumentGroupServiceNode? SelectedNode
-    {
-      get => ((InstrumentGroupService)m_itemsService).SelectedNode;
-      set
-      {
-        InstrumentGroupService igs = (InstrumentGroupService)m_itemsService;
-        if (!EqualityComparer<InstrumentGroupServiceNode>.Default.Equals(igs.SelectedNode, value))
-        {
-          igs.SelectedNode = value;
-          SelectedItem = igs.SelectedNode != null ? igs.SelectedNode.InstrumentGroup : null;
-          OnPropertyChanged();
-          AddCommand.NotifyCanExecuteChanged();
-          UpdateCommand.NotifyCanExecuteChanged();
-          DeleteCommand.NotifyCanExecuteChanged();
-          RefreshCommand.NotifyCanExecuteChanged();
-          RefreshCommandAsync.NotifyCanExecuteChanged();
-        }
-      }
-    }
-
 
 
     //methods

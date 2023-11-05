@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace TradeSharp.CoreUI.Services
 {
     /// <summary>
-    /// Interface to be implemented by services that allow the mnipulation of items. Services are defined to support dependency injection in MVVM.
+    /// Interface to be implemented by services that allow the manipulation of items in a list fashion. Services are defined to support dependency injection in MVVM.
     /// The service overall supports viewing all the items and then viewing the details of a single item (SelectedItem)
     /// </summary>
-    public interface IItemsService<T>
+    public interface IListItemsService<T>
     {
         //constants
 

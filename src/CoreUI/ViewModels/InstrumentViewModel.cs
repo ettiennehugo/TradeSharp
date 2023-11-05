@@ -28,7 +28,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public RelayCommand ExportCommand { get; internal set; }
 
     //constructors
-    public InstrumentViewModel(IItemsService<Instrument> itemsService, INavigationService navigationService, IDialogService dialogService): base(itemsService, navigationService, dialogService)
+    public InstrumentViewModel(IListItemsService<Instrument> itemsService, INavigationService navigationService, IDialogService dialogService): base(itemsService, navigationService, dialogService)
     {
       ImportCommand = new RelayCommand(OnImport);
       ExportCommand = new RelayCommand(OnExport);

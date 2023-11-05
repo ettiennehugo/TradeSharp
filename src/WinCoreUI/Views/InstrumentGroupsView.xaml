@@ -16,7 +16,7 @@
         <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
         <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add instrument group" IsCompact="True"/>
         <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update instrument group" IsCompact="True"/>
-        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" CommandParameter="{x:Bind ViewModel.SelectedItem}" ToolTipService.ToolTip="Delete instrument group" IsCompact="True"/>
+        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" ToolTipService.ToolTip="Delete instrument group" IsCompact="True"/>
         <AppBarSeparator/>
         <AppBarButton Command="{x:Bind ViewModel.ImportCommand}" ToolTipService.ToolTip="Import instrument groups" IsCompact="True">
           <AppBarButton.Icon>
@@ -32,8 +32,8 @@
     </StackPanel>
     <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}">
       <TreeView.ItemTemplate>
-        <DataTemplate x:DataType="cuiservices:InstrumentGroupServiceNode">
-          <TreeViewItem Content="{x:Bind Name}" ItemsSource="{x:Bind Children}" IsExpanded="False"/>
+        <DataTemplate x:DataType="cuiservices:InstrumentGroupNodeType">
+          <TreeViewItem Content="{x:Bind Item.Name}" ItemsSource="{x:Bind Children}" IsExpanded="False"/>
         </DataTemplate>
       </TreeView.ItemTemplate>
     </TreeView>

@@ -24,10 +24,10 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    protected readonly IItemsService<TItem> m_itemsService;
+    protected readonly IListItemsService<TItem> m_itemsService;
 
     //constructors
-    public ListViewModel(IItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
+    public ListViewModel(IListItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
     {
       m_itemsService = itemsService;
       AddCommand = new RelayCommand(OnAdd);

@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.CoreUI.Repositories;
+using System;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -68,12 +69,12 @@ namespace TradeSharp.WinDataManager
           .AddScoped<ISessionRepository, SessionRepository>()
           .AddScoped<IInstrumentRepository, InstrumentRepository>()
           .AddScoped<IInstrumentGroupRepository, InstrumentGroupRepository>()
-          .AddScoped<IItemsService<Country>, CountryService>()
-          .AddScoped<IItemsService<Holiday>, HolidayService>()
-          .AddScoped<IItemsService<Exchange>, ExchangeService>()
-          .AddScoped<IItemsService<Session>, SessionService>()
-          .AddScoped<IItemsService<Instrument>, InstrumentService>()
-          .AddScoped<IItemsService<InstrumentGroup>, InstrumentGroupService>()
+          .AddScoped<IListItemsService<Country>, CountryService>()
+          .AddScoped<IListItemsService<Holiday>, HolidayService>()
+          .AddScoped<IListItemsService<Exchange>, ExchangeService>()
+          .AddScoped<IListItemsService<Session>, SessionService>()
+          .AddScoped<IListItemsService<Instrument>, InstrumentService>()
+          .AddScoped<ITreeItemsService<Guid, InstrumentGroup>, InstrumentGroupService>()
           .AddScoped<CountryViewModel>()
           .AddScoped<CountryItemViewModel>()
           .AddScoped<HolidayViewModel>()

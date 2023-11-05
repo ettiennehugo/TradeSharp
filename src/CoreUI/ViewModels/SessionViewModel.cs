@@ -25,7 +25,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //constructors
-    public SessionViewModel(IItemsService<Session> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
+    public SessionViewModel(IListItemsService<Session> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       AddCommand = new RelayCommand(OnAdd, () => ParentId != Guid.Empty);
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));

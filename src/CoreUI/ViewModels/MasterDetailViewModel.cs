@@ -30,7 +30,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //constructors
-    public MasterDetailViewModel(IItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
+    public MasterDetailViewModel(IListItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       m_itemsService.Items.CollectionChanged += (sender, e) =>
       {

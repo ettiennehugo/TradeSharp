@@ -10,76 +10,10 @@ using TradeSharp.CoreUI.Repositories;
 
 namespace TradeSharp.CoreUI.Services
 {
-
-
-//https://github.com/microsoft/WinUI-Gallery/blob/main/WinUIGallery/ControlPages/TreeViewPage.xaml.cs
-
-  /// <summary>
-  /// Tree node item used to decorate an instrument group or instrument in a hierarchical fashion.
-  /// </summary>
-  public partial class InstrumentGroupServiceNode : ObservableObject
-  {
-    //constants
-
-
-    //enums
-
-
-    //types
-
-
-    //attributes
-    private InstrumentGroupService m_instrumentGroupService;
-    [ObservableProperty] private Instrument? m_instrument;
-    [ObservableProperty] private InstrumentGroup? m_instrumentGroup;
-    [ObservableProperty] private Guid m_id;
-    [ObservableProperty] private string m_name;
-    [ObservableProperty] private string m_description;
-    [ObservableProperty] private ObservableCollection<InstrumentGroupServiceNode> m_children;
-
-    //constructors
-    public InstrumentGroupServiceNode(InstrumentGroupService service, object value)
-    {
-      m_instrumentGroupService = service;
-      m_children = new ObservableCollection<InstrumentGroupServiceNode>();
-
-      if (value is InstrumentGroup)
-      {
-        m_instrumentGroup = (InstrumentGroup)value;
-        m_id = m_instrumentGroup.Id;
-        m_name = m_instrumentGroup.Name;
-        m_description = m_instrumentGroup.Description;
-
-        foreach (InstrumentGroup instrumentGroup in m_instrumentGroupService.Items)
-          if (instrumentGroup.ParentId == m_id) m_children.Add(new InstrumentGroupServiceNode(m_instrumentGroupService, instrumentGroup));
-      }
-      else
-      {
-        m_instrument = (Instrument)value;
-        m_id = m_instrument.Id;
-        m_name = m_instrument.Name;
-        m_description = m_instrument.Description;
-      }
-    }
-
-    //finalizers
-
-
-    //interface implementations
-
-
-    //properties
-
-
-    //methods
-
-
-  }
-
   /// <summary>
   /// Observable service class for instrument group objects.
   /// </summary>
-  public partial class InstrumentGroupService : ObservableObject, IItemsService<InstrumentGroup>
+  public partial class InstrumentGroupService : ObservableObject, ITreeItemsService<Guid, InstrumentGroup>
   {
     //constants
 
@@ -92,17 +26,18 @@ namespace TradeSharp.CoreUI.Services
 
     //attributes
     private IInstrumentGroupRepository m_instrumentGroupRepository;
-    [ObservableProperty] private InstrumentGroup? m_selectedItem;
+    [ObservableProperty] private ITreeNodeType<Guid, InstrumentGroup>? m_selectedNode;
+    [ObservableProperty] private ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> m_selectedNodes;
+    [ObservableProperty] private ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> m_nodes;
     [ObservableProperty] private ObservableCollection<InstrumentGroup> m_items;
-    [ObservableProperty] private InstrumentGroupServiceNode? m_selectedNode;
-    [ObservableProperty] private ObservableCollection<InstrumentGroupServiceNode> m_nodes;
 
     //constructors
     public InstrumentGroupService(IInstrumentGroupRepository instrumentGroupRepository)
     {
       m_instrumentGroupRepository = instrumentGroupRepository;
+      m_selectedNodes = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
       m_items = new ObservableCollection<InstrumentGroup>();
-      m_nodes = new ObservableCollection<InstrumentGroupServiceNode>();
+      m_nodes = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
     }
 
     //finalizers
@@ -113,56 +48,96 @@ namespace TradeSharp.CoreUI.Services
 
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
-    public event EventHandler<InstrumentGroup>? SelectedItemChanged;
-    public event EventHandler<InstrumentGroupServiceNode>? SelectedNodeChanged;
+    public Guid RootNodeId => InstrumentGroup.InstrumentGroupRoot;
+
+    public event EventHandler<InstrumentGroup>? SelectedNodeChanged;
 
     //methods
-    public async Task<InstrumentGroup> AddAsync(InstrumentGroup item)
+    public async Task<ITreeNodeType<Guid, InstrumentGroup>> AddAsync(ITreeNodeType<Guid, InstrumentGroup> node)
     {
-      var result = await m_instrumentGroupRepository.AddAsync(item);
-      SelectedItem = result;
-      SelectedItemChanged?.Invoke(this, SelectedItem);
-      return result;
+      await m_instrumentGroupRepository.AddAsync(node.Item);
+      await RefreshAsync(node.Item.ParentId);
+      SelectedNode = getNode(node.Item.Id);
+      SelectedNodeChanged?.Invoke(this, SelectedNode!.Item);
+      return node;
     }
 
-    public async Task<InstrumentGroup> CopyAsync(InstrumentGroup item)
+    public async Task<ITreeNodeType<Guid, InstrumentGroup>> CopyAsync(ITreeNodeType<Guid, InstrumentGroup> node)
     {
-      InstrumentGroup clone = (InstrumentGroup)item.Clone();
+      InstrumentGroup clone = (InstrumentGroup)node.Item.Clone();
       clone.Id = Guid.NewGuid();
       var result = await m_instrumentGroupRepository.AddAsync(clone);
-      SelectedItem = result;
-      SelectedItemChanged?.Invoke(this, SelectedItem);
-      return result;
+      
+      ITreeNodeType<Guid, InstrumentGroup>? parentNode = getNode(node.ParentId);
+      SelectedNode = null;
+      await parentNode!.RefreshAsync();
+      SelectedNode = getNode(result);
+
+      SelectedNodeChanged?.Invoke(this, SelectedNode!.Item);
+
+      return SelectedNode!;
     }
 
-    public async Task<bool> DeleteAsync(InstrumentGroup item)
+    public async Task<bool> DeleteAsync(ITreeNodeType<Guid, InstrumentGroup> node)
     {
-      bool result = await m_instrumentGroupRepository.DeleteAsync(item);
-      if (item == SelectedItem)
+      bool result = await m_instrumentGroupRepository.DeleteAsync(node.Item);
+      if (node == SelectedNode)
       {
-        SelectedItemChanged?.Invoke(this, SelectedItem);
-        SelectedItem = null;
+        SelectedNode = null;
+        SelectedNodeChanged?.Invoke(this, null);
       }
       return result;
     }
 
     public async Task RefreshAsync()
     {
-      var result = await m_instrumentGroupRepository.GetItemsAsync();
+      //load all the items
       Items.Clear();
+      var result = await m_instrumentGroupRepository.GetItemsAsync();
+      foreach (var item in result) Items.Add(item);
+
+      //populate the nodes list of root nodes
       Nodes.Clear();
-      SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
-      foreach (var item in result)
-      {
-        Items.Add(item);
-        if (item.ParentId == InstrumentGroup.InstrumentGroupRoot) Nodes.Add(new InstrumentGroupServiceNode(this, item));  //add the set of root item nodes
-      }
-      if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+      foreach (var item in Items)
+        if (item.ParentId == InstrumentGroup.InstrumentGroupRoot) Nodes.Add(new InstrumentGroupNodeType(this, item));
+
+      SelectedNode = Nodes.FirstOrDefault(x => x.ParentId == InstrumentGroup.InstrumentGroupRoot); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
+      if (SelectedNode != null) SelectedNodeChanged?.Invoke(this, SelectedNode.Item);
     }
 
-    public Task<InstrumentGroup> UpdateAsync(InstrumentGroup item)
+    private void removeNodes(Guid parentId)
     {
-      return m_instrumentGroupRepository.UpdateAsync(item);
+      var nodesToRemove = Nodes.Where(x => x.ParentId == parentId).ToList();
+      foreach (var node in nodesToRemove)
+      {
+        removeNodes(node.Id);
+        Nodes.Remove(node);
+      }
+    }
+
+    public async Task RefreshAsync(Guid parentId)
+    {
+      Items.Clear();
+      var result = await m_instrumentGroupRepository.GetItemsAsync();
+      foreach (var item in result) Items.Add(item);
+      removeNodes(parentId);
+      var parentNode = getNode(parentId);
+      if (parentNode != null) await parentNode.RefreshAsync();
+      SelectedNode = parentNode;
+    }
+
+    public async Task RefreshAsync(ITreeNodeType<Guid, InstrumentGroup> parentNode)
+    {
+      Items.Clear();
+      var result = await m_instrumentGroupRepository.GetItemsAsync();
+      foreach (var item in result) Items.Add(item);
+      await parentNode.RefreshAsync();
+    }
+
+    public Task<ITreeNodeType<Guid, InstrumentGroup>> UpdateAsync(ITreeNodeType<Guid, InstrumentGroup> node)
+    {
+      m_instrumentGroupRepository.UpdateAsync(node.Item);
+      return Task.FromResult(node);
     }
 
     public Task<int> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior)
@@ -173,6 +148,22 @@ namespace TradeSharp.CoreUI.Services
     public Task<int> ExportAsync(string filename)
     {
       return Task.FromResult<int>(0);
+    }
+
+    private ITreeNodeType<Guid, InstrumentGroup>? getNode(Guid instrumentGroupId)
+    {
+      foreach (ITreeNodeType<Guid, InstrumentGroup> instrumentGroupNode in Nodes)
+        if (instrumentGroupNode.Item.Id == instrumentGroupId) return instrumentGroupNode;
+
+      return null;
+    }
+
+    private ITreeNodeType<Guid, InstrumentGroup>? getNode(InstrumentGroup instrumentGroup)
+    {
+      foreach (ITreeNodeType<Guid, InstrumentGroup> instrumentGroupNode in Nodes)
+        if (instrumentGroupNode.Item == instrumentGroup) return instrumentGroupNode;
+
+      return null;
     }
   }
 }

@@ -13,7 +13,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for holiday objects.
   /// </summary>
-  public partial class HolidayService : ObservableObject, IItemsService<Holiday>
+  public partial class HolidayService : ObservableObject, IListItemsService<Holiday>
   {
     //constants
 
