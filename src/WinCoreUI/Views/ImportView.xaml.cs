@@ -46,6 +46,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public ImportView()
     {
+      ImportSettings = new ImportSettings();
       this.InitializeComponent();
     }
 
@@ -57,10 +58,10 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public static readonly DependencyProperty s_importSettingsProperty = DependencyProperty.Register("ImportSettings", typeof(ImportSettings), typeof(ImportView), new PropertyMetadata(null));
-    public ImportSettings? ImportSettings
+    public ImportSettings ImportSettings
     {
-      get => (ImportSettings?)GetValue(s_importSettingsProperty);
-      set => SetValue(s_importSettingsProperty, value);
+      get => (ImportSettings)GetValue(s_importSettingsProperty);
+      set => SetValue(s_importSettingsProperty, (ImportSettings)value);
     }
 
     [DllImport("user32.dll")]
@@ -79,7 +80,7 @@ namespace TradeSharp.WinCoreUI.Views
       InitializeWithWindow.Initialize(openPicker, hwnd);
 
       StorageFile file = await openPicker.PickSingleFileAsync();
-      if (file != null) m_filename.Text = file.Path;
+      if (file != null) ImportSettings.Filename = file.Path;
     }
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
