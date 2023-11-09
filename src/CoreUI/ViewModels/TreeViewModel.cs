@@ -164,8 +164,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
       if (importSettings != null)
       {
-        int importCount = await m_itemsService.ImportAsync(importSettings.Filename, importSettings.ImportReplaceBehavior);
-        await m_dialogService.ShowStatusMessageAsync(importCount == 0 ? IDialogService.StatusMessageSeverity.Warning : IDialogService.StatusMessageSeverity.Success, "", $"Imported {importCount} instrument groups");
+        ImportReplaceResult importResult = await m_itemsService.ImportAsync(importSettings.Filename, importSettings.ImportReplaceBehavior);
+        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", $"Import result - Created({importResult.Created}), Skipped({importResult.Skipped}), Updated({importResult.Updated}), Replaced({importResult.Replaced})");
         await OnRefreshAsync();
       }
     }

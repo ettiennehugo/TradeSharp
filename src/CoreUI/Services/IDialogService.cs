@@ -21,6 +21,27 @@ namespace TradeSharp.CoreUI.Services
     Replace,
   }
 
+  /// <summary>
+  /// Results from import operation in terms of entries skipped, updated or replaced in the data store.
+  /// </summary>
+  public class ImportReplaceResult
+  {
+    public ImportReplaceResult()
+    {
+      Severity = IDialogService.StatusMessageSeverity.Error;
+      Created = 0;
+      Skipped = 0;
+      Updated = 0;
+      Replaced = 0;
+    }
+
+    public IDialogService.StatusMessageSeverity Severity;
+    public int Created;
+    public int Skipped;
+    public int Updated;
+    public int Replaced;
+  }
+
   //types
   /// <summary>
   /// Settings to use for importing instrument groups and instruments.

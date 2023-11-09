@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.CoreUI.Repositories;
 using System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -56,9 +58,10 @@ namespace TradeSharp.WinDataManager
     private void registerServices()
     {
       Ioc.Default.ConfigureServices(
-        new ServiceCollection()
+        new ServiceCollection()  
+          .AddSingleton<ILoggerFactory, NullLoggerFactory>()            //TODO: Implement or add a proper logger
           .AddSingleton<IConfigurationService, ConfigurationService>()
-          .AddSingleton<IDataStoreService, SqliteDataStoreService>()    //Sqlite is currently the only supported data store, if this changes we need to base this off configuration and add the services dynamically`
+          .AddSingleton<IDataStoreService, SqliteDataStoreService>()    //Sqlite is currently the only supported data store, if this changes we need to base this off configuration and add the services dynamically
           .AddSingleton<IDialogService, DialogService>()
           .AddSingleton<INavigationService, NavigationService>()
           .AddSingleton<InitNavigationService>()

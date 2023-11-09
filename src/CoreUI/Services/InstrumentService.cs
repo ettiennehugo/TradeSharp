@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -22,13 +23,15 @@ namespace TradeSharp.CoreUI.Services
 
 
     //attributes
+    private ILoggerFactory m_loggerFactory;
     private IInstrumentRepository m_instrumentRepository;
     [ObservableProperty] private Instrument? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Instrument> m_items;
 
     //constructors
-    public InstrumentService(IInstrumentRepository instrumentRepository)
+    public InstrumentService(ILoggerFactory loggerFactory, IInstrumentRepository instrumentRepository)
     {
+      m_loggerFactory = loggerFactory;
       m_instrumentRepository = instrumentRepository;
       m_items = new ObservableCollection<Instrument>();
     }
@@ -80,9 +83,9 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentRepository.UpdateAsync(item);
     }
 
-    public Task<int> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior)
+    public Task<ImportReplaceResult> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior)
     {
-      return Task.FromResult<int>(0);
+      return Task.FromResult(new ImportReplaceResult());
     }
 
     public Task<int> ExportAsync(string filename)
@@ -95,7 +98,6 @@ namespace TradeSharp.CoreUI.Services
     public event EventHandler<Instrument>? SelectedItemChanged;
 
     //methods
-
 
 
   }

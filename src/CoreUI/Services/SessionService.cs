@@ -106,7 +106,7 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
-    public Task<int> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior) => throw new NotImplementedException();
+    public Task<ImportReplaceResult> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior) => throw new NotImplementedException();
     public Task<int> ExportAsync(string filename) => throw new NotImplementedException();
   }
 }

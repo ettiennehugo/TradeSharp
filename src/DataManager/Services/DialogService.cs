@@ -13,6 +13,7 @@ using static TradeSharp.CoreUI.Services.IDialogService;
 using Windows.Storage.Pickers;
 using Windows.Storage;
 using Microsoft.UI.Xaml;
+using System.Collections.Generic;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -401,16 +402,16 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<string?> ShowExportInstrumentGroupsAsync()
     {
       //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
-      FileOpenPicker openPicker = new FileOpenPicker();
-      openPicker.ViewMode = PickerViewMode.Thumbnail;
-      openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
-      openPicker.FileTypeFilter.Add(".csv");
-      openPicker.FileTypeFilter.Add(".json");
+      FileSavePicker savePicker = new FileSavePicker();
+      savePicker.DefaultFileExtension = ".json";  //JSON allows better structure of the instrument group definitions
+      savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      savePicker.FileTypeChoices.Add("CSV", new List<string>() { ".csv" });
+      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" });
 
       var hwnd = GetActiveWindow();
-      InitializeWithWindow.Initialize(openPicker, hwnd);
+      InitializeWithWindow.Initialize(savePicker, hwnd);
 
-      StorageFile file = await openPicker.PickSingleFileAsync();
+      StorageFile file = await savePicker.PickSaveFileAsync();
       if (file != null) return file.Path;
 
       return null;
