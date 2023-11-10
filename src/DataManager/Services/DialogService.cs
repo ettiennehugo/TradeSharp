@@ -405,8 +405,8 @@ namespace TradeSharp.WinDataManager.Services
       FileSavePicker savePicker = new FileSavePicker();
       savePicker.DefaultFileExtension = ".json";  //JSON allows better structure of the instrument group definitions
       savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" }); //default export to JSON
       savePicker.FileTypeChoices.Add("CSV", new List<string>() { ".csv" });
-      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" });
 
       var hwnd = GetActiveWindow();
       InitializeWithWindow.Initialize(savePicker, hwnd);
