@@ -78,6 +78,7 @@ namespace TradeSharp.CoreUI.ViewModels
         KeyValuePair<DayOfWeek, IList> selectedSessions = (KeyValuePair<DayOfWeek, IList>)target;
 
         copiedCount = selectedSessions.Value.Count;
+        Session? lastCopiedSession = null;
         foreach (Session session in selectedSessions.Value)
         {
           Session newSession = (Session)session.Clone();
@@ -85,8 +86,10 @@ namespace TradeSharp.CoreUI.ViewModels
           newSession.DayOfWeek = selectedSessions.Key;
           await m_itemsService.AddAsync(newSession);
           Items.Add(newSession);
-          SelectedItem = newSession;
+          lastCopiedSession = newSession;
         }
+
+        SelectedItem = lastCopiedSession;
       }
       else if (target is KeyValuePair<Guid, IList>)
       {

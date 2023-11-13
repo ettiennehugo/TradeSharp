@@ -3,17 +3,19 @@
     x:Class="TradeSharp.WinCoreUI.Views.InstrumentGroupsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:TradeSharp.WinCoreUI.Views"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:cuiservices="using:TradeSharp.CoreUI.Services"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     Loaded="Page_Loaded">
-  <StackPanel x:Name="m_main" Orientation="Vertical">
-    <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
+  <controls:DockPanel x:Name="m_main" LastChildFill="True">
+    <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" controls:DockPanel.Dock="Top">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
         <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarButton Icon="Clear" Command="{x:Bind ViewModel.ClearSelectionCommand}" ToolTipService.ToolTip="Clear selection" IsCompact="True"/>
+        <AppBarSeparator/>
         <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add instrument group" IsCompact="True"/>
         <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update instrument group" IsCompact="True"/>
         <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" ToolTipService.ToolTip="Delete instrument group" IsCompact="True"/>
@@ -30,12 +32,12 @@
         </AppBarButton>
       </CommandBar>
     </StackPanel>
-    <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}">
+    <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.VerticalScrollMode="Auto">
       <TreeView.ItemTemplate>
         <DataTemplate x:DataType="cuiservices:InstrumentGroupNodeType">
           <TreeViewItem Content="{x:Bind Item.Name}" ItemsSource="{x:Bind Children}" IsExpanded="False"/>
         </DataTemplate>
       </TreeView.ItemTemplate>
     </TreeView>
-  </StackPanel>
+  </controls:DockPanel>
 </Page>

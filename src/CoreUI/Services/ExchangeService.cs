@@ -66,19 +66,12 @@ namespace TradeSharp.CoreUI.Services
     public async Task<Exchange> AddAsync(Exchange item)
     {
       var result = await m_exchangeRepository.AddAsync(item);
-      SelectedItem = result;
-      SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
     }
 
     public async Task<bool> DeleteAsync(Exchange item)
     {
       bool result = await m_exchangeRepository.DeleteAsync(item);
-      if (item == SelectedItem)
-      {
-        SelectedItemChanged?.Invoke(this, SelectedItem);
-        SelectedItem = null;
-      }
       return result;
     }
 
@@ -86,9 +79,7 @@ namespace TradeSharp.CoreUI.Services
     {
       var result = await m_exchangeRepository.GetItemsAsync();
       Items.Clear();
-      SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
-      if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
     public Task<Exchange> UpdateAsync(Exchange item)
@@ -97,7 +88,7 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public Task<Exchange> CopyAsync(Exchange item) => throw new NotImplementedException();
-    public Task<ImportReplaceResult> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior) => throw new NotImplementedException();
+    public Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
     public Task<int> ExportAsync(string filename) => throw new NotImplementedException();
   }
 }

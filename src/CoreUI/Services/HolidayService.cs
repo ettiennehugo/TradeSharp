@@ -66,19 +66,12 @@ namespace TradeSharp.CoreUI.Services
     public async Task<Holiday> AddAsync(Holiday item)
     {
       var result = await m_holidayRepository.AddAsync(item);
-      SelectedItem = result;
-      SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
     }
 
     public async Task<bool> DeleteAsync(Holiday item)
     {
       bool result = await m_holidayRepository.DeleteAsync(item);
-      if (item == SelectedItem)
-      {
-        SelectedItemChanged?.Invoke(this, SelectedItem);
-        SelectedItem = null;
-      }
       return result;
     }
 
@@ -86,9 +79,7 @@ namespace TradeSharp.CoreUI.Services
     {
       var result = await m_holidayRepository.GetItemsAsync();
       Items.Clear();
-      SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
-      if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
     public Task<Holiday> UpdateAsync(Holiday item)
@@ -97,7 +88,7 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public Task<Holiday> CopyAsync(Holiday item) => throw new NotImplementedException();
-    public Task<ImportReplaceResult> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior) => throw new NotImplementedException();
+    public Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
     public Task<int> ExportAsync(string filename) => throw new NotImplementedException();
   }
 }

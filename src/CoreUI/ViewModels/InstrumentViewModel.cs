@@ -69,8 +69,9 @@ namespace TradeSharp.CoreUI.ViewModels
 
       if (importSettings != null)
       {
-        ImportReplaceResult importResult = await m_itemsService.ImportAsync(importSettings.Filename, importSettings.ImportReplaceBehavior);
+        ImportReplaceResult importResult = await m_itemsService.ImportAsync(importSettings);
         await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", $"Import result - Created({importResult.Created}), Skipped({importResult.Skipped}), Updated({importResult.Updated}), Replaced({importResult.Replaced})");
+        await OnRefreshAsync();
       }
     }
 

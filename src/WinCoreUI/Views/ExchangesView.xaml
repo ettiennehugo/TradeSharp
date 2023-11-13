@@ -18,6 +18,7 @@
     <StackPanel x:Name="m_commandBarLayout"  Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
         <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarSeparator/>
         <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add Exchange" IsCompact="True"/>
         <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update Exchange" IsCompact="True"/>
         <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}"  CommandParameter="{x:Bind m_exchanges.SelectedItems}" ToolTipService.ToolTip="Delete Exchange" IsCompact="True"/>

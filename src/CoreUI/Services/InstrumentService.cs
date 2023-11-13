@@ -8,13 +8,34 @@ using System.Threading.Tasks;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Repositories;
 using Microsoft.Extensions.Logging;
+using CsvHelper;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Globalization;
 
 namespace TradeSharp.CoreUI.Services
 {
   public partial class InstrumentService : ObservableObject, IListItemsService<Instrument>
   {
     //constants
-
+    private const string extensionCSV = ".csv";
+    private const string extensionJSON = ".json";
+    private const string tokenCsvType = "type";
+    private const string tokenCsvTicker = "ticker";
+    private const string tokenCsvName = "name";
+    private const string tokenCsvDescription = "description";
+    private const string tokenCsvExchange = "exchange";
+    private const string tokenCsvInceptionDate = "inception date";
+    private const string tokenCsvTag = "tag";
+    private const string tokenCsvAttributes = "attributes";
+    private const string tokenJsonType = "Type";
+    private const string tokenJsonTicker = "Ticker";
+    private const string tokenJsonName = "Name";
+    private const string tokenJsonDescription = "Description";
+    private const string tokenJsonTag = "Tag";
+    private const string tokenJsonExchange = "Exchange";
+    private const string tokenJsonInceptionDate = "Inception Date";
+    private const string tokenJsonAttributes = "Attributes";
 
     //enums
 
@@ -25,14 +46,16 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     private ILoggerFactory m_loggerFactory;
     private IInstrumentRepository m_instrumentRepository;
+    private IDataStoreService m_dataStoreService;
     [ObservableProperty] private Instrument? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Instrument> m_items;
 
     //constructors
-    public InstrumentService(ILoggerFactory loggerFactory, IInstrumentRepository instrumentRepository)
+    public InstrumentService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IInstrumentRepository instrumentRepository)
     {
       m_loggerFactory = loggerFactory;
       m_instrumentRepository = instrumentRepository;
+      m_dataStoreService = dataStoreService;
       m_items = new ObservableCollection<Instrument>();
     }
 
@@ -83,22 +106,207 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentRepository.UpdateAsync(item);
     }
 
-    public Task<ImportReplaceResult> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior)
+    public async Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings)
     {
-      return Task.FromResult(new ImportReplaceResult());
+      ImportReplaceResult result = new ImportReplaceResult();
+
+      string extension = Path.GetExtension(importSettings.Filename).ToLower();
+      if (extension == extensionCSV)
+        result = await importCSV(importSettings);
+      else if (extension == extensionJSON)
+        result = await importJSON(importSettings);
+
+      return result;
     }
 
     public Task<int> ExportAsync(string filename)
     {
-      return Task.FromResult<int>(0);
+      int result = 0;
+
+      string extension = Path.GetExtension(filename).ToLower();
+      if (extension == extensionCSV)
+        result = exportCSV(filename);
+      else if (extension == extensionJSON)
+        result = exportJSON(filename);
+
+      return Task.FromResult(result);
     }
 
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
     public event EventHandler<Instrument>? SelectedItemChanged;
 
+    private Task<ImportReplaceResult> importJSON(ImportSettings importSettings)
+    {
+      throw new NotImplementedException();
+    }
+
     //methods
+    /// <summary>
+    /// Imports the instruments from a CSV file with the following columns:
+    ///   Type, Ticker, Name, Description, Exchange, Inception Date, Tag, Attributes
+    /// Uses - https://joshclose.github.io/CsvHelper/examples/reading/get-dynamic-records/
+    /// </summary>
+    private async Task<ImportReplaceResult> importCSV(ImportSettings importSettings)
+    {
+      ImportReplaceResult result = new ImportReplaceResult();
+      ILogger logger = m_loggerFactory.CreateLogger($"Importing instruments - \"{importSettings.Filename}\"");
 
+      using (var reader = new StreamReader(importSettings.Filename))
+      using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+      {
+        //read the header record
+        if (csv.Read() && csv.ReadHeader() && csv.HeaderRecord != null)
+        {
+          int lineNo = 0;
+          bool parseError = false;
+          IList<Exchange> exchanges = m_dataStoreService.GetExchanges();          
+          SortedDictionary<string, Instrument> definedInstruments = new SortedDictionary<string, Instrument>();
+          foreach (Instrument instrument in m_dataStoreService.GetInstruments()) definedInstruments.Add(instrument.Ticker.ToUpper(), instrument);
+          List<Instrument> fileInstruments = new List<Instrument>();
 
+          while (csv.Read() && !parseError)
+          {
+            InstrumentType type = InstrumentType.None;
+            string ticker = "";
+            string name = "";
+            string description = "";
+            string exchange = "";
+            DateTime inceptionDate = DateTime.MinValue;
+            string tag = "";
+            Attributes attributes = Instrument.DefaultAttributeSet;
+
+            lineNo++;
+
+            for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
+            {
+              string? columnValue = null;
+              if (csv.TryGetField(columnIndex, out columnValue))
+              {
+                if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvType)
+                  type = (InstrumentType)Enum.Parse(typeof(InstrumentType), columnValue!);
+                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTicker)
+                  ticker = columnValue!.ToUpper();
+                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvName)
+                  name = columnValue!;
+                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDescription)
+                  description = columnValue!;
+                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvExchange)
+                  exchange = columnValue!;
+                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvInceptionDate)
+                  inceptionDate = DateTime.Parse(columnValue!);
+                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTag)
+                  tag = columnValue!;
+                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvAttributes)
+                  attributes = (Attributes)Enum.Parse(typeof(Attributes), columnValue!);
+              }
+            }
+
+            if (description == "") description = name;
+            if (tag == "") tag = ticker;
+
+            //try to find the exchange for the instrument matching different potential attributes of the exchanges
+            Exchange? primaryExchange = null;
+            foreach (Exchange definedExchange in exchanges)
+            {
+              if (Guid.TryParse(exchange, out Guid id))
+              {
+                if (id == definedExchange.Id)
+                {
+                  primaryExchange = definedExchange;
+                  break;
+                }
+              }
+              else if (definedExchange.Name.ToLower() == exchange.ToLower())
+              {
+                primaryExchange = definedExchange;
+                break;
+              }
+              else if (definedExchange.Tag.ToLower() == exchange.ToLower())
+              {
+                primaryExchange = definedExchange;
+                break;
+              }
+            }
+
+            Guid exchangeId = Exchange.InternationalId;
+            if (primaryExchange != null)
+              exchangeId = primaryExchange!.Id;
+            else
+              logger.LogWarning($"Failed to find exchange \"{exchange}\" for instrument \"{ticker}\", defaulting to global exchange.");
+
+            fileInstruments.Add(new Instrument(Guid.NewGuid(), attributes, tag, type, ticker, name, description, inceptionDate, new List<Guid>(), exchangeId, new List<Guid>()));
+          }
+
+          if (fileInstruments.Count > 0) result.Severity = IDialogService.StatusMessageSeverity.Success;
+          foreach (Instrument fileInstrument in fileInstruments)
+          {
+            if (definedInstruments.TryGetValue(fileInstrument.Ticker, out Instrument? definedInstrument))
+            {
+              switch (importSettings.ImportReplaceBehavior)
+              {
+                case ImportReplaceBehavior.Skip:
+                  logger.LogWarning($"Skipping - {fileInstrument.Ticker}");
+                  result.Severity = IDialogService.StatusMessageSeverity.Warning;
+                  result.Skipped++;
+                  break;
+                case ImportReplaceBehavior.Replace:
+                  logger.LogInformation($"Replacing - {fileInstrument.Ticker}");
+                  fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
+                  await m_instrumentRepository.UpdateAsync(fileInstrument);
+                  result.Replaced++;
+                  break;
+                case ImportReplaceBehavior.Update:
+                  logger.LogInformation($"Updating - {fileInstrument.Ticker}");
+                  fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
+                  fileInstrument.SecondaryExchangeIds = definedInstrument.SecondaryExchangeIds;
+                  await m_instrumentRepository.UpdateAsync(fileInstrument);
+                  result.Updated++;
+                  break;
+              }
+            }
+            else
+            {
+              logger.LogInformation($"Creating - {fileInstrument.Ticker}");
+              await m_instrumentRepository.AddAsync(fileInstrument);
+              result.Created++;
+            }
+          }
+        }
+      }
+
+      return result;
+    }
+
+    private int exportJSON(string filename)
+    {
+      throw new NotImplementedException();
+    }
+
+    private int exportCSV(string filename)
+    {
+      int result = 0;
+
+      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+      {
+        file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate},{tokenCsvTag},{tokenCsvAttributes}");
+        
+        foreach (Instrument instrument in m_dataStoreService.GetInstruments())
+        {
+          string instrumentDefinition = ((int)instrument.Type).ToString();
+          instrumentDefinition += instrument.Ticker.ToUpper();
+          instrumentDefinition += instrument.Name;
+          instrumentDefinition += instrument.Description;
+          instrumentDefinition += instrument.PrimaryExchangeId.ToString();
+          instrumentDefinition += instrument.InceptionDate.ToString();
+          instrumentDefinition += instrument.Tag;
+          instrumentDefinition += ((int)instrument.AttributeSet).ToString();
+          file.WriteLine(instrumentDefinition);
+          result++;
+        }
+      }
+
+      return result;
+    }
   }
 }

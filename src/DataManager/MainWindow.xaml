@@ -7,66 +7,76 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Activated="Window_Activated"
     mc:Ignorable="d">
-  <NavigationView x:Name="m_nvvMain" IsBackButtonVisible="Collapsed">
-    <NavigationView.MenuItems>
-      <NavigationViewItemHeader x:Name="m_nvvMainPlugins" Content="Plugin's"/>
-      <NavigationViewItem x:Name="m_nvvMainBrokers" Content="Brokers" Tag="DataManager.Brokers">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE17B;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <NavigationViewItem x:Name="m_nvvMainDataProviders" Content="Data Providers" Tag="DataManager.DataProviders">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE705;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <NavigationViewItemHeader x:Name="m_nvvMainModel" Content="Model"/>
-      <NavigationViewItem x:Name="m_nvvMainCountries" Content="Countries" Tag="DataManager.Countries">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE128;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <NavigationViewItem x:Name="m_nvvMainExchanges" Content="Exchanges" Tag="DataManager.Exchanges">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xF22C;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <!--<NavigationViewItem x:Name="m_nvvMainFundamentals" Content="Fundamentals" Tag="DataManager.Fundamentals">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="32"/>
+      <RowDefinition/>
+    </Grid.RowDefinitions>
+    <Grid x:Name="m_titleBar" Grid.Row="0">
+      <Image x:Name="m_titleBarIcon" Source="Assets/Square64x64.ico" HorizontalAlignment="Left" Width="24" Height="24" Margin="8,0"/>
+      <TextBlock x:Name="m_titleBarText" Text="TradeSharp Data Manager" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" Margin="32,0,0,0"/>
+    </Grid>
+    <NavigationView x:Name="m_nvvMain" IsBackButtonVisible="Collapsed" Grid.Row="1">
+      <NavigationView.MenuItems>
+        <NavigationViewItemHeader x:Name="m_nvvMainPlugins" Content="Plugin's"/>
+        <NavigationViewItem x:Name="m_nvvMainBrokers" Content="Brokers" Tag="DataManager.Brokers">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE17B;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem x:Name="m_nvvMainDataProviders" Content="Data Providers" Tag="DataManager.DataProviders">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE705;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItemHeader x:Name="m_nvvMainModel" Content="Model"/>
+        <NavigationViewItem x:Name="m_nvvMainCountries" Content="Countries" Tag="DataManager.Countries">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE128;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem x:Name="m_nvvMainExchanges" Content="Exchanges" Tag="DataManager.Exchanges">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xF22C;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <!--<NavigationViewItem x:Name="m_nvvMainFundamentals" Content="Fundamentals" Tag="DataManager.Fundamentals">
         <NavigationViewItem.Icon>
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D2;"/>
         </NavigationViewItem.Icon>
       </NavigationViewItem>-->
-      <NavigationViewItem x:Name="m_nvvMainInstrumentGroups" Content="Instrument Groups" Tag="DataManager.InstrumentGroups">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE15C;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <NavigationViewItem x:Name="m_nvvMainInstruments" Content="Instruments" Tag="DataManager.Instruments">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74C;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <NavigationViewItemHeader x:Name="m_nvvMainData" Content="Data"/>
-      <!--<NavigationViewItem x:Name="m_nvvMainFundamentalData" Content="Fundamental Data" Tag="DataManager.FundamentalData">
+        <NavigationViewItem x:Name="m_nvvMainInstrumentGroups" Content="Instrument Groups" Tag="DataManager.InstrumentGroups">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE15C;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem x:Name="m_nvvMainInstruments" Content="Instruments" Tag="DataManager.Instruments">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74C;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItemHeader x:Name="m_nvvMainData" Content="Data"/>
+        <!--<NavigationViewItem x:Name="m_nvvMainFundamentalData" Content="Fundamental Data" Tag="DataManager.FundamentalData">
         <NavigationViewItem.Icon>
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE71D;"/>
         </NavigationViewItem.Icon>
       </NavigationViewItem>-->
-      <NavigationViewItem x:Name="m_nvvMainInstrumentData" Content="Instrument Data" Tag="DataManager.InstrumentData">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>
-    </NavigationView.MenuItems>
-    <StackPanel Orientation="Vertical">
-      <Frame x:Name="m_nvvMainContent" Margin="16">
-        <Frame.ContentTransitions>
-          <TransitionCollection>
-            <NavigationThemeTransition/>
-          </TransitionCollection>
-        </Frame.ContentTransitions>
-      </Frame>
-      <InfoBar x:Name="m_statusBar" Title="Title" Message="Test message text" Severity="Warning"/>
-    </StackPanel>
-  </NavigationView>
+        <NavigationViewItem x:Name="m_nvvMainInstrumentData" Content="Instrument Data" Tag="DataManager.InstrumentData">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+      </NavigationView.MenuItems>
+      <StackPanel Orientation="Vertical">
+        <Frame x:Name="m_nvvMainContent" Margin="16">
+          <Frame.ContentTransitions>
+            <TransitionCollection>
+              <NavigationThemeTransition/>
+            </TransitionCollection>
+          </Frame.ContentTransitions>
+        </Frame>
+        <InfoBar x:Name="m_statusBar" Title="Title" Message="Test message text" Severity="Warning"/>
+      </StackPanel>
+    </NavigationView>
+  </Grid>
 </Window>

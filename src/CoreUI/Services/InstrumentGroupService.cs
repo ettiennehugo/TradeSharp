@@ -178,15 +178,15 @@ namespace TradeSharp.CoreUI.Services
       return Task.FromResult(node);
     }
 
-    public async Task<ImportReplaceResult> ImportAsync(string filename, ImportReplaceBehavior importReplaceBehavior)
+    public async Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings)
     {
       ImportReplaceResult result = new ImportReplaceResult();
 
-      string extension = Path.GetExtension(filename).ToLower();
+      string extension = Path.GetExtension(importSettings.Filename).ToLower();
       if (extension == extensionCSV)
-        result = await importCSV(filename, importReplaceBehavior);
+        result = await importCSV(importSettings);
       else if (extension == extensionJSON)
-        result = await importJSON(filename, importReplaceBehavior);
+        result = await importJSON(importSettings);
 
       return result;
     }
@@ -228,16 +228,16 @@ namespace TradeSharp.CoreUI.Services
     /// Uses - https://joshclose.github.io/CsvHelper/examples/reading/get-dynamic-records/
     ///   - Only instrument group names are imported and is used for the description as well.
     /// </summary>
-    private async Task<ImportReplaceResult> importCSV(string filename, ImportReplaceBehavior importReplaceBehavior)
+    private async Task<ImportReplaceResult> importCSV(ImportSettings importSettings)
     {
       ImportReplaceResult result = new ImportReplaceResult();
-      ILogger logger = m_loggerFactory.CreateLogger($"Importing instrument groups - \"{filename}\"");
+      ILogger logger = m_loggerFactory.CreateLogger($"Importing instrument groups - \"{importSettings.Filename}\"");
 
       Dictionary<string, InstrumentGroup> definedInstrumentGroups = new Dictionary<string, InstrumentGroup>();
       Dictionary<string, InstrumentGroupRecord> fileInstrumentGroups = new Dictionary<string, InstrumentGroupRecord>();
       List<InstrumentGroupRecord> currentLineRecords = new List<InstrumentGroupRecord>();
 
-      using (var reader = new StreamReader(filename))
+      using (var reader = new StreamReader(importSettings.Filename))
       using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
       {
         //construct the set of instrument groups to be imported
@@ -268,7 +268,7 @@ namespace TradeSharp.CoreUI.Services
                   if (tag == "") tag = name;
 
                   //create new group to be added for this line
-                  currentLineRecords.Add(new InstrumentGroupRecord(InstrumentGroup.InstrumentGroupRoot, Guid.NewGuid(), name, description, tag, ticker, attributes));
+                  currentLineRecords.Add(new InstrumentGroupRecord(SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot, Guid.NewGuid(), name, description, tag, ticker, attributes));
 
                   //reset field values
                   name = "";
@@ -288,7 +288,7 @@ namespace TradeSharp.CoreUI.Services
                 //resolve the parent id's and add the objects as required - we use the tag as the key since it should be a unique key value used for the instrument groups
                 if (columnIndex == 0)
                 {
-                  Guid previousId = Guid.Empty;
+                  Guid previousId = SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot;
                   currentLineRecords.Reverse();
                   foreach (InstrumentGroupRecord instrumentGroupRecord in currentLineRecords)
                   {
@@ -300,7 +300,7 @@ namespace TradeSharp.CoreUI.Services
                     }
                     else
                     {
-                      instrumentGroupRecord.ParentId = previousId != Guid.Empty ? previousId : InstrumentGroup.InstrumentGroupRoot;
+                      instrumentGroupRecord.ParentId = previousId;
                       fileInstrumentGroups.Add(instrumentGroupRecord.Tag, instrumentGroupRecord);
                     }
 
@@ -343,7 +343,7 @@ namespace TradeSharp.CoreUI.Services
             {
               if (definedInstrumentGroups.TryGetValue(fileInstrumentGroup.Key, out InstrumentGroup? definedInstrumentGroup))
               {
-                switch (importReplaceBehavior)
+                switch (importSettings.ImportReplaceBehavior)
                 {
                   case ImportReplaceBehavior.Skip:
                     logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag}");
@@ -436,7 +436,7 @@ namespace TradeSharp.CoreUI.Services
     /// </summary>
     private int exportCSV(string filename, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
     {
-      int result = instrumentGroups.Count;
+      int result = 0;
 
       using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
       {
@@ -449,6 +449,7 @@ namespace TradeSharp.CoreUI.Services
         //compute the number of instrument groups to be added to each line in the file
         int longestBranch = 0;
         bool includeTicker = false;
+        Guid exportRootId = SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot;
         List<List<InstrumentGroup>> instrumentGroupsPerLine = new List<List<InstrumentGroup>>();
         foreach (KeyValuePair<Guid, Tuple<InstrumentGroup, bool>> instrumentGroupTuple in instrumentGroups)
           if (instrumentGroupTuple.Value.Item2)  //only process leaf nodes
@@ -469,27 +470,84 @@ namespace TradeSharp.CoreUI.Services
             }
 
             instrumentGroupPerLine.Reverse();
-            if (instrumentGroupPerLine.Count > longestBranch) longestBranch = instrumentGroupPerLine.Count;
-            instrumentGroupsPerLine.Add(instrumentGroupPerLine);
+
+            //if we're adding only lines associated with a specific parent node check that the line contains that specific parent node otherwise
+            //we can just add it if it's associated with the root node
+            if (exportRootId == InstrumentGroup.InstrumentGroupRoot)
+            {
+              if (instrumentGroupPerLine.Count > longestBranch) longestBranch = instrumentGroupPerLine.Count;
+              instrumentGroupsPerLine.Add(instrumentGroupPerLine);
+            }
+            else
+            {
+              bool includeLine = false;
+              int branchNodeCount = 0;
+              for (int i = instrumentGroupPerLine.Count - 1; i >= 0; i--)
+              {
+                InstrumentGroup instrumentGroupInLine = instrumentGroupPerLine[i];
+                branchNodeCount++;
+                if (instrumentGroupInLine.Id == exportRootId)
+                {
+                  includeLine = true;
+                  break;
+                }
+              }
+
+              if (includeLine)
+              {
+                if (branchNodeCount > longestBranch) longestBranch = branchNodeCount;
+                instrumentGroupsPerLine.Add(instrumentGroupPerLine);
+              }
+            }
           }
 
         //construct and output the header line
         //NOTE: When tickers are included this algorithm will not work if instruments are included in non-leaf node instrument groups. This is typically not the case for instrument group classifications like GDIC by MSCI.
         //      If you want to use instruments included in the non-leaf nodes rather use JSON as the CSV output will not output the tickers.
+        SortedSet<string> instrumentGroupsOutput = new SortedSet<string>();
         foreach (IList<InstrumentGroup> instrumentGroupPerLine in instrumentGroupsPerLine)
         {
+          foreach (InstrumentGroup instrumentGroup in instrumentGroupPerLine) instrumentGroupsOutput.Add(instrumentGroup.Tag);    //build set of the instrument groups that are going to be output
+
           InstrumentGroup lastInstrumentGroup = instrumentGroupPerLine[instrumentGroupPerLine.Count - 1];
-          if (lastInstrumentGroup.Instruments.Count > 0)
+
+          if (exportRootId == InstrumentGroup.InstrumentGroupRoot)
           {
-            includeTicker = true;
-            if (instrumentGroupPerLine.Count < longestBranch)
+            if (lastInstrumentGroup.Instruments.Count > 0)
             {
-              logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
-              includeTicker = false;
-              break;
+              includeTicker = true;
+              if (instrumentGroupPerLine.Count < longestBranch)
+              {
+                logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
+                includeTicker = false;
+                break;
+              }
+            }
+          }
+          else
+          {
+            int branchNodeCount = 0;
+            for (int i = instrumentGroupPerLine.Count - 1; i >= 0; i--) //count instrument groups to be output in reverse order from the leaf node to 
+            {
+              InstrumentGroup instrumentGroupInLine = instrumentGroupPerLine[i];
+              branchNodeCount++;
+              if (instrumentGroupInLine.Id == exportRootId) break;
+            }
+
+            if (lastInstrumentGroup.Instruments.Count > 0)
+            {
+              includeTicker = true;
+              if (branchNodeCount < longestBranch)
+              {
+                logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
+                includeTicker = false;
+                break;
+              }
             }
           }
         }
+
+        result = instrumentGroupsOutput.Count;
 
         string headerLine = "";
         for (int i = 0; i < longestBranch; i++)
@@ -505,17 +563,23 @@ namespace TradeSharp.CoreUI.Services
         foreach (IList<InstrumentGroup> instrumentGroupPerLine in instrumentGroupsPerLine)
         {
           string instrumentGroupDefinitions = "";
+          bool outputInstrumentGroups = false;  //need to keep track whether we need to output instrument groups if we're outputting up to a non-root node
           foreach (InstrumentGroup instrumentGroup in instrumentGroupPerLine)
           {
-            if (instrumentGroupDefinitions.Length > 0) instrumentGroupDefinitions += ", ";
-            instrumentGroupDefinitions += instrumentGroup.Name;
-            instrumentGroupDefinitions += ", ";
-            instrumentGroupDefinitions += instrumentGroup.Description;
-            instrumentGroupDefinitions += ", ";
-            instrumentGroupDefinitions += instrumentGroup.Tag;
-            instrumentGroupDefinitions += ", ";
-            int attributeSet = (int)instrumentGroup.AttributeSet;
-            instrumentGroupDefinitions += attributeSet.ToString();
+            if (instrumentGroup.Id == exportRootId) outputInstrumentGroups = true;
+
+            if (outputInstrumentGroups)
+            {
+              if (instrumentGroupDefinitions.Length > 0) instrumentGroupDefinitions += ", ";
+              instrumentGroupDefinitions += instrumentGroup.Name;
+              instrumentGroupDefinitions += ", ";
+              instrumentGroupDefinitions += instrumentGroup.Description;
+              instrumentGroupDefinitions += ", ";
+              instrumentGroupDefinitions += instrumentGroup.Tag;
+              instrumentGroupDefinitions += ", ";
+              int attributeSet = (int)instrumentGroup.AttributeSet;
+              instrumentGroupDefinitions += attributeSet.ToString();
+            }
           }
 
           file.WriteLine(instrumentGroupDefinitions);
@@ -552,16 +616,16 @@ namespace TradeSharp.CoreUI.Services
     ///     "instruments" : [ ticker1, ... , tickerN ]
     ///   }
     /// </summary>
-    private async Task<ImportReplaceResult> importJSON(string filename, ImportReplaceBehavior importReplaceBehavior)
+    private async Task<ImportReplaceResult> importJSON(ImportSettings importSettings)
     {
       ImportReplaceResult result = new ImportReplaceResult();
 
-      using (StreamReader file = new StreamReader(filename))
+      using (StreamReader file = new StreamReader(importSettings.Filename))
       {
         JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd());
         if (documentNode != null)
         {
-          ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{filename}\"");
+          ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
           Dictionary<Guid, InstrumentGroup> definedInstrumentGroups = new Dictionary<Guid, InstrumentGroup>();
           IEnumerable<InstrumentGroup> instrumentGroups = await m_instrumentGroupRepository.GetItemsAsync();
           foreach (InstrumentGroup instrumentGroup in instrumentGroups) definedInstrumentGroups.Add(instrumentGroup.Id, instrumentGroup);
@@ -572,7 +636,7 @@ namespace TradeSharp.CoreUI.Services
 
           JsonArray rootNodes = documentNode.AsArray();
           result.Severity = IDialogService.StatusMessageSeverity.Success;
-          foreach (JsonObject? node in rootNodes) if (node != null) result = await importJsonNode(node!, importReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, result);
+          foreach (JsonObject? node in rootNodes) if (node != null) result = await importJsonNode(node!, importSettings.ImportReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, result);
         }
       }
 
@@ -583,6 +647,8 @@ namespace TradeSharp.CoreUI.Services
     {
       Guid id = (Guid)(node[tokenJsonId]!.AsValue().Deserialize(typeof(Guid)))!;
       Guid parentId = (Guid)(node[tokenJsonParentId]!.AsValue().Deserialize(typeof(Guid)))!;
+      Guid importParentId = SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot; //determine which node would be the root node for all the imported nodes, the root nodes in the import data should be associated with the root node Id used for instrument groups
+      parentId = parentId == InstrumentGroup.InstrumentGroupRoot ? importParentId : parentId;   //adjust the root parents to the selected node Id if required
       string name = (string)(node[tokenJsonName]!.AsValue().Deserialize(typeof(string)))!;
       string description = (string?)(node[tokenJsonDescription]!.AsValue().Deserialize(typeof(string))) ?? name;
       string tag = (string?)(node[tokenJsonTag]!.AsValue().Deserialize(typeof(string))) ?? name;
@@ -648,10 +714,26 @@ namespace TradeSharp.CoreUI.Services
     {
       int result = 0;
 
-      //output the instrument groups from the root nodes
+      //determine the root node(s) based on whether we have a selected node or not
+      //NOTE: For exporting the nodes we adjust the parent Id's to the root node Id which again would be adjusted to the import to the selected node Id or it would be kept the root node Id if
+      //      there is no selected Id.
       List<JsonObject> rootNodes = new List<JsonObject>();
-      foreach (KeyValuePair<Guid, Tuple<InstrumentGroup, bool>> instrumentGroupTuple in instrumentGroups)
-        if (instrumentGroupTuple.Value.Item1.ParentId == InstrumentGroup.InstrumentGroupRoot) rootNodes.Add(writeJsonNode(instrumentGroupTuple.Value.Item1, instrumentGroups, ref result));
+      if (SelectedNode != null)
+      {
+        //when we have a selected node we export from that node on with it's children
+        foreach (KeyValuePair<Guid, Tuple<InstrumentGroup, bool>> instrumentGroupTuple in instrumentGroups)
+          if (instrumentGroupTuple.Value.Item1.Id == SelectedNode.Id)
+          {
+            rootNodes.Add(writeJsonNode(InstrumentGroup.InstrumentGroupRoot, instrumentGroupTuple.Value.Item1, instrumentGroups, ref result));
+            break;
+          }
+      }
+      else
+      {
+        //with no selected node we export from all nodes that are root node
+        foreach (KeyValuePair<Guid, Tuple<InstrumentGroup, bool>> instrumentGroupTuple in instrumentGroups)
+          if (instrumentGroupTuple.Value.Item1.ParentId == InstrumentGroup.InstrumentGroupRoot) rootNodes.Add(writeJsonNode(InstrumentGroup.InstrumentGroupRoot, instrumentGroupTuple.Value.Item1, instrumentGroups, ref result));
+      }
 
       using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
       {
@@ -672,12 +754,12 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
-    private JsonObject writeJsonNode(InstrumentGroup instrumentGroup, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups, ref int resultCount)
+    private JsonObject writeJsonNode(Guid adjustedParentNodeId, InstrumentGroup instrumentGroup, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups, ref int resultCount)
     {
       JsonObject node = new JsonObject
       {
         [tokenJsonId] = instrumentGroup.Id,
-        [tokenJsonParentId] = instrumentGroup.ParentId,
+        [tokenJsonParentId] = adjustedParentNodeId,
         [tokenJsonName] = instrumentGroup.Name,
         [tokenJsonDescription] = instrumentGroup.Description,
         [tokenJsonTag] = instrumentGroup.Tag,
@@ -688,8 +770,9 @@ namespace TradeSharp.CoreUI.Services
 
       JsonArray children = node[tokenJsonChildren]!.AsArray();
       foreach (KeyValuePair<Guid, Tuple<InstrumentGroup, bool>> instrumentGroupTuple in instrumentGroups)
+        //NOTE: For the child nodes we keep the "adjusted parent Id" normal for any layers of nodes beyond the selected parent node.
         if (instrumentGroupTuple.Value.Item1.ParentId == instrumentGroup.Id)
-          children.Add(writeJsonNode(instrumentGroupTuple.Value.Item1, instrumentGroups, ref resultCount));
+          children.Add(writeJsonNode(instrumentGroupTuple.Value.Item1.ParentId, instrumentGroupTuple.Value.Item1, instrumentGroups, ref resultCount));
 
       if (instrumentGroup.Instruments.Count > 0)
       {

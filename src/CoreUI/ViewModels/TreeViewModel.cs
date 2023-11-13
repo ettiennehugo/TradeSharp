@@ -37,6 +37,7 @@ namespace TradeSharp.CoreUI.ViewModels
       AddCommand = new RelayCommand(OnAdd);
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null);
       DeleteCommand = new RelayCommand(OnDelete, () => SelectedNode != null || SelectedNodes.Count > 0);
+      ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null | SelectedNodes.Count > 0);
       RefreshCommand = new RelayCommand(OnRefresh);
       RefreshCommandAsync = new AsyncRelayCommand(OnRefreshAsync);
       CopyCommand = new RelayCommand(OnCopy);
@@ -66,6 +67,7 @@ namespace TradeSharp.CoreUI.ViewModels
         AddCommand.NotifyCanExecuteChanged();
         UpdateCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
+        ClearSelectionCommand.NotifyCanExecuteChanged();
         RefreshCommand.NotifyCanExecuteChanged();
         RefreshCommandAsync.NotifyCanExecuteChanged();
         CopyCommand.NotifyCanExecuteChanged();
@@ -89,6 +91,7 @@ namespace TradeSharp.CoreUI.ViewModels
         AddCommand.NotifyCanExecuteChanged();
         UpdateCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
+        ClearSelectionCommand.NotifyCanExecuteChanged();
         RefreshCommand.NotifyCanExecuteChanged();
         RefreshCommandAsync.NotifyCanExecuteChanged();
         CopyCommand.NotifyCanExecuteChanged();
@@ -108,6 +111,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public RelayCommand AddCommand { get; internal set; }
     public RelayCommand UpdateCommand { get; internal set; }
     public RelayCommand DeleteCommand { get; internal set; }
+    public RelayCommand ClearSelectionCommand { get; internal set; }
     public RelayCommand RefreshCommand { get; internal set; }
     public AsyncRelayCommand RefreshCommandAsync { get; internal set; }
     public RelayCommand CopyCommand { get; internal set; }
@@ -115,6 +119,12 @@ namespace TradeSharp.CoreUI.ViewModels
     public RelayCommand ExportCommand { get; internal set; }
 
     //methods
+    public void OnClearSelection()
+    {
+      SelectedNode = null;
+      SelectedNodes.Clear();
+    }
+
     public async void OnRefresh()
     {
       await OnRefreshAsync();
@@ -164,7 +174,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
       if (importSettings != null)
       {
-        ImportReplaceResult importResult = await m_itemsService.ImportAsync(importSettings.Filename, importSettings.ImportReplaceBehavior);
+        ImportReplaceResult importResult = await m_itemsService.ImportAsync(importSettings);
         await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", $"Import result - Created({importResult.Created}), Skipped({importResult.Skipped}), Updated({importResult.Updated}), Replaced({importResult.Replaced})");
         await OnRefreshAsync();
       }
