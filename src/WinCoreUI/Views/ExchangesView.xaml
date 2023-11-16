@@ -43,7 +43,7 @@
       <TabViewItem x:Name="m_sessionTab" IsClosable="False">
         <TabViewItem.Header>
           <StackPanel Orientation="Horizontal">
-            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7AC;" />
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7AC;"/>
             <TextBlock Text="Sessions" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>

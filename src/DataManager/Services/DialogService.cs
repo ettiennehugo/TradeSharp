@@ -54,28 +54,29 @@ namespace TradeSharp.WinDataManager.Services
 
     public Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message)
     {
-      StatusBar.DispatcherQueue.TryEnqueue(() =>
+      StatusBarText.DispatcherQueue.TryEnqueue(() =>
       {
-        //NOTE: StatusBar should be set before calling this method. 
+        //see glyphs used at - https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-ui-symbol-font
         switch (severity)
         {
           case StatusMessageSeverity.Success:
-            StatusBar.Severity = InfoBarSeverity.Success;
+            StatusBarIcon.Glyph = "&#xE73E;";
             break;
           case StatusMessageSeverity.Information:
-            StatusBar.Severity = InfoBarSeverity.Informational;
+            StatusBarIcon.Glyph = "&#xE946;";
             break;
           case StatusMessageSeverity.Warning:
-            StatusBar.Severity = InfoBarSeverity.Warning;
+            StatusBarIcon.Glyph = "&#xE128;";
             break;
           case StatusMessageSeverity.Error:
-            StatusBar.Severity = InfoBarSeverity.Error;
+            StatusBarIcon.Glyph = "&#xE783;";
             break;
         }
 
-        StatusBar.Title = title;
-        StatusBar.Message = message;
-        StatusBar.IsOpen = true;
+        if (title.Length != 0)
+          StatusBarText.Text = $"{title} - {message}";
+        else
+          StatusBarText.Text = $"{message}";
       });
 
       return Task.CompletedTask;
@@ -418,7 +419,8 @@ namespace TradeSharp.WinDataManager.Services
     }
 
     //properties
-    public InfoBar StatusBar { get; set; }
+    public FontIcon StatusBarIcon { get; set; }
+    public TextBlock StatusBarText { get; set; }
 
     //methods
     [DllImport("user32.dll")]

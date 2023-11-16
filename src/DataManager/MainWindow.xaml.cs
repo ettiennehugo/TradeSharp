@@ -59,17 +59,20 @@ namespace TradeSharp.WinDataManager
     private void Window_Activated(object sender, WindowActivatedEventArgs args)
     {
       ViewModel = Ioc.Default.GetRequiredService<MainWindowViewModel>();
-      ViewModel.SetNavigationFrame(m_nvvMainContent);
-      DialogService dialogService = (DialogService)Ioc.Default.GetRequiredService<IDialogService>();
-      dialogService.StatusBar = m_statusBar;
+      ViewModel.SetNavigationFrame(m_mainContent);
 
-      m_nvvMain.SelectionChanged += ViewModel.OnNavigationSelectionChanged;
-      m_nvvMain.SelectionChanged += this.OnNavigationSelectionChanged;
+      DialogService dialogService = (DialogService)Ioc.Default.GetRequiredService<IDialogService>();
+      dialogService.StatusBarIcon = m_statusBarIcon;
+      dialogService.StatusBarText = m_statusBarText;
+
+      m_navigationView.SelectionChanged += ViewModel.OnNavigationSelectionChanged;
+      m_navigationView.SelectionChanged += this.OnNavigationSelectionChanged;
     }
 
     public void OnNavigationSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-      m_statusBar.IsOpen = false; //make sure status bar is hidden when switching between screens
+      m_statusBarIcon.Glyph = "";
+      m_statusBarText.Text = "";
     }
   }
 }
