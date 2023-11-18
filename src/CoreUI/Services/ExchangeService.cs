@@ -89,6 +89,6 @@ namespace TradeSharp.CoreUI.Services
 
     public Task<Exchange> CopyAsync(Exchange item) => throw new NotImplementedException();
     public Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
-    public Task<int> ExportAsync(string filename) => throw new NotImplementedException();
+    public Task<long> ExportAsync(string filename) => throw new NotImplementedException();
   }
 }

@@ -47,15 +47,17 @@ namespace TradeSharp.CoreUI.Services
     private ILoggerFactory m_loggerFactory;
     private IInstrumentRepository m_instrumentRepository;
     private IDataStoreService m_dataStoreService;
+    private IDialogService m_dialogService;
     [ObservableProperty] private Instrument? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Instrument> m_items;
 
     //constructors
-    public InstrumentService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IInstrumentRepository instrumentRepository)
+    public InstrumentService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IDialogService dialogService, IInstrumentRepository instrumentRepository)
     {
       m_loggerFactory = loggerFactory;
       m_instrumentRepository = instrumentRepository;
       m_dataStoreService = dataStoreService;
+      m_dialogService = dialogService;
       m_items = new ObservableCollection<Instrument>();
     }
 
@@ -119,17 +121,17 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
-    public Task<int> ExportAsync(string filename)
+    public async Task<long> ExportAsync(string filename)
     {
-      int result = 0;
+      long result = 0;
 
       string extension = Path.GetExtension(filename).ToLower();
       if (extension == extensionCSV)
-        result = exportCSV(filename);
+        result = await exportCSV(filename);
       else if (extension == extensionJSON)
         result = exportJSON(filename);
 
-      return Task.FromResult(result);
+      return result;
     }
 
     //properties
@@ -150,12 +152,14 @@ namespace TradeSharp.CoreUI.Services
     private async Task<ImportReplaceResult> importCSV(ImportSettings importSettings)
     {
       ImportReplaceResult result = new ImportReplaceResult();
+      //await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Parsing instruments from \"{importSettings.Filename}\"");
       ILogger logger = m_loggerFactory.CreateLogger($"Importing instruments - \"{importSettings.Filename}\"");
 
       using (var reader = new StreamReader(importSettings.Filename))
       using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
       {
         //read the header record
+        //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, reader.BaseStream.Length, 0);
         if (csv.Read() && csv.ReadHeader() && csv.HeaderRecord != null)
         {
           int lineNo = 0;
@@ -236,9 +240,17 @@ namespace TradeSharp.CoreUI.Services
               logger.LogWarning($"Failed to find exchange \"{exchange}\" for instrument \"{ticker}\", defaulting to global exchange.");
 
             fileInstruments.Add(new Instrument(Guid.NewGuid(), attributes, tag, type, ticker, name, description, inceptionDate, new List<Guid>(), exchangeId, new List<Guid>()));
+            //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, reader.BaseStream.Length, reader.BaseStream.Position);
           }
 
-          if (fileInstruments.Count > 0) result.Severity = IDialogService.StatusMessageSeverity.Success;
+          if (fileInstruments.Count > 0)
+          {
+            result.Severity = IDialogService.StatusMessageSeverity.Success;
+            //await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Importing instruments from \"{importSettings.Filename}\"");
+            //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, fileInstruments.Count, 0);
+          }
+
+          long instrumentsProcessed = 0;
           foreach (Instrument fileInstrument in fileInstruments)
           {
             if (definedInstruments.TryGetValue(fileInstrument.Ticker, out Instrument? definedInstrument))
@@ -271,6 +283,9 @@ namespace TradeSharp.CoreUI.Services
               await m_instrumentRepository.AddAsync(fileInstrument);
               result.Created++;
             }
+
+            instrumentsProcessed++;
+            //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, fileInstruments.Count, instrumentsProcessed);
           }
         }
       }
@@ -283,26 +298,38 @@ namespace TradeSharp.CoreUI.Services
       throw new NotImplementedException();
     }
 
-    private int exportCSV(string filename)
+    private async Task<long> exportCSV(string filename)
     {
-      int result = 0;
+      long result = 0;
 
       using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
       {
+        //await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exporting instruments to \"{filename}\"");
+        IList<Instrument> instruments = m_dataStoreService.GetInstruments();
+        //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, instruments.Count, 0);
+
         file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate},{tokenCsvTag},{tokenCsvAttributes}");
-        
-        foreach (Instrument instrument in m_dataStoreService.GetInstruments())
+
+        foreach (Instrument instrument in instruments)
         {
           string instrumentDefinition = ((int)instrument.Type).ToString();
+          instrumentDefinition += ", ";
           instrumentDefinition += instrument.Ticker.ToUpper();
+          instrumentDefinition += ", ";
           instrumentDefinition += instrument.Name;
+          instrumentDefinition += ", ";
           instrumentDefinition += instrument.Description;
+          instrumentDefinition += ", ";
           instrumentDefinition += instrument.PrimaryExchangeId.ToString();
+          instrumentDefinition += ", ";
           instrumentDefinition += instrument.InceptionDate.ToString();
+          instrumentDefinition += ", ";
           instrumentDefinition += instrument.Tag;
+          instrumentDefinition += ", ";
           instrumentDefinition += ((int)instrument.AttributeSet).ToString();
           file.WriteLine(instrumentDefinition);
           result++;
+          //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, instruments.Count, result);
         }
       }
 

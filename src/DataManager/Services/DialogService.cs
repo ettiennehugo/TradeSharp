@@ -54,22 +54,22 @@ namespace TradeSharp.WinDataManager.Services
 
     public Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message)
     {
-      StatusBarText.DispatcherQueue.TryEnqueue(() =>
+      StatusBarText.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
       {
         //see glyphs used at - https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-ui-symbol-font
         switch (severity)
         {
           case StatusMessageSeverity.Success:
-            StatusBarIcon.Glyph = "&#xE73E;";
+            StatusBarIcon.Glyph = "\uE73E";
             break;
           case StatusMessageSeverity.Information:
-            StatusBarIcon.Glyph = "&#xE946;";
+            StatusBarIcon.Glyph = "\uE946";
             break;
           case StatusMessageSeverity.Warning:
-            StatusBarIcon.Glyph = "&#xE128;";
+            StatusBarIcon.Glyph = "\uE128";
             break;
           case StatusMessageSeverity.Error:
-            StatusBarIcon.Glyph = "&#xE783;";
+            StatusBarIcon.Glyph = "\uE783";
             break;
         }
 
@@ -77,6 +77,44 @@ namespace TradeSharp.WinDataManager.Services
           StatusBarText.Text = $"{title} - {message}";
         else
           StatusBarText.Text = $"{message}";
+      });
+
+      return Task.CompletedTask;
+    }
+
+    public Task ShowStatusProgressAsync(StatusProgressState state, long minimum, long maximum, long value)
+    {
+      StatusBarProgress.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+      {      
+        switch (state)
+        {
+          case StatusProgressState.Reset:
+            StatusBarProgress.IsIndeterminate = false;
+            StatusBarProgress.IsActive = false;
+            StatusBarProgress.Minimum = 0;
+            StatusBarProgress.Maximum = 100;
+            StatusBarProgress.Value = 0;
+            break;
+          case StatusProgressState.Normal:
+            StatusBarProgress.IsIndeterminate = false;
+            StatusBarProgress.IsActive = false;
+            StatusBarProgress.Minimum = minimum >= 0 ? minimum : 0;
+            StatusBarProgress.Maximum = maximum >= StatusBarProgress.Minimum ? maximum : StatusBarProgress.Minimum;
+            StatusBarProgress.Value = value;
+            break;
+          case StatusProgressState.Indeterminate:
+            StatusBarProgress.IsIndeterminate = true;
+            StatusBarProgress.IsActive = false;
+            break;
+          case StatusProgressState.Paused:
+            StatusBarProgress.IsIndeterminate = false;
+            StatusBarProgress.IsActive = true;
+            break;
+          case StatusProgressState.Error:
+            StatusBarProgress.IsIndeterminate = false;
+            StatusBarProgress.IsActive = false;
+            break;
+        }
       });
 
       return Task.CompletedTask;
@@ -421,6 +459,7 @@ namespace TradeSharp.WinDataManager.Services
     //properties
     public FontIcon StatusBarIcon { get; set; }
     public TextBlock StatusBarText { get; set; }
+    public ProgressRing StatusBarProgress { get; set; }
 
     //methods
     [DllImport("user32.dll")]

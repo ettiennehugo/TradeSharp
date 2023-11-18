@@ -27,6 +27,21 @@ namespace TradeSharp.WinDataManager
 
 
     //constructors
+ 
+
+
+    //TODO: Need to add a high level exception handler as a catch all for errors.
+    //  - If you try to import a file already open in Excel this breaks.
+    //  - Set status when an import/export operation is started (currently it would notify you when it ends).
+    //  - See how you can indicate a lot of different async processes (e.g. maybe a list of overlayed progress rings)
+    //     - Create an API for this related to the progress control in the status bar - this should support creating it with a proper tooltip, updating the state and 
+    //       removing it once the process is done.
+    //     - Currently the progress bar would always be visible, make it so it only shows up when a process is under way.
+    //  - Profile the import operations for CSV and JSON and check where you can optimize them.
+
+
+
+    
     public MainWindow()
     {
       this.InitializeComponent();
@@ -64,6 +79,7 @@ namespace TradeSharp.WinDataManager
       DialogService dialogService = (DialogService)Ioc.Default.GetRequiredService<IDialogService>();
       dialogService.StatusBarIcon = m_statusBarIcon;
       dialogService.StatusBarText = m_statusBarText;
+      dialogService.StatusBarProgress = m_statusBarProgress;
 
       m_navigationView.SelectionChanged += ViewModel.OnNavigationSelectionChanged;
       m_navigationView.SelectionChanged += this.OnNavigationSelectionChanged;

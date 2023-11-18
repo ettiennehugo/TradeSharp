@@ -62,17 +62,19 @@ namespace TradeSharp.CoreUI.Services
     private IDataStoreService m_dataStoreService;
     private ILoggerFactory m_loggerFactory;
     private IInstrumentGroupRepository m_instrumentGroupRepository;
+    private IDialogService m_dialogService;
     [ObservableProperty] private ITreeNodeType<Guid, InstrumentGroup>? m_selectedNode;
     [ObservableProperty] private ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> m_selectedNodes;
     [ObservableProperty] private ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> m_nodes;
     [ObservableProperty] private ObservableCollection<InstrumentGroup> m_items;
 
     //constructors
-    public InstrumentGroupService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IInstrumentGroupRepository instrumentGroupRepository)
+    public InstrumentGroupService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IDialogService dialogService, IInstrumentGroupRepository instrumentGroupRepository)
     {
       m_loggerFactory = loggerFactory;
       m_dataStoreService = dataStoreService;
       m_instrumentGroupRepository = instrumentGroupRepository;
+      m_dialogService = dialogService;
       m_selectedNodes = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
       m_items = new ObservableCollection<InstrumentGroup>();
       m_nodes = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();

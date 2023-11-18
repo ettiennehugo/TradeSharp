@@ -73,7 +73,7 @@ namespace TradeSharp.CoreUI.Services
 
     public Task<Country> CopyAsync(Country item) => throw new NotImplementedException();
     public Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
-    public Task<int> ExportAsync(string filename) => throw new NotImplementedException();
+    public Task<long> ExportAsync(string filename) => throw new NotImplementedException();
 
     //properties
     public event EventHandler<Country>? SelectedItemChanged;

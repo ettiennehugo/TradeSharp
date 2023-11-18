@@ -78,6 +78,18 @@ namespace TradeSharp.CoreUI.Services
       Error
     }
 
+    /// <summary>
+    /// State of the status progress bar.
+    /// </summary>
+    public enum StatusProgressState
+    {
+      Reset,          //reset the progress bar to indicate no operation in progress
+      Normal,         //normal operation value between the given minimum and maximum
+      Indeterminate,  //indeterminate state - typically waiting for something to happen before progress can be determined
+      Paused,         //paused state - the operation has entered a paused state
+      Error,          //error state - operation has reached an error state
+    }
+
     //attributes
 
 
@@ -87,6 +99,7 @@ namespace TradeSharp.CoreUI.Services
     //methods
     Task ShowPopupMessageAsync(string message);
     Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
+    Task ShowStatusProgressAsync(StatusProgressState state, long minimum, long maximum, long value);
 
     Task<CountryInfo?> ShowSelectCountryAsync();
 

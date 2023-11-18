@@ -81,7 +81,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
       if (filename != null)
       {
-        int exportCount = await m_itemsService.ExportAsync(filename);
+        long exportCount = await m_itemsService.ExportAsync(filename);
         await m_dialogService.ShowStatusMessageAsync(exportCount == 0 ? IDialogService.StatusMessageSeverity.Warning : IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} instruments");
       }
     }
