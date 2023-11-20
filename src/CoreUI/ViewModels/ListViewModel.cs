@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Collections;
 using TradeSharp.CoreUI.Services;
-using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -11,7 +11,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// Base class for models that support the viewing of items in a list supplied by an items service, commands are exposed to crete/update/delete items from the list.
   /// The model optionally uses a parent Id when lists of items needs to be displayed that are dependent on a specific parent Id from the IDataSourceService.
   /// </summary>
-  public abstract class ListViewModel <TItem> : ViewModelBase
+  public abstract partial class ListViewModel <TItem> : ViewModelBase
     where TItem : class
   {
     //constants
@@ -96,18 +96,17 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     public ObservableCollection<TItem> Items => m_itemsService.Items;
 
+    public string StatusMessage => m_itemsService.StatusMessage;
+    public double StatusProgress => m_itemsService.StatusProgress;
+
     //methods
     public async void OnRefresh()
     {
-      using (StartInProgress())
-      {
-        await OnRefreshAsync();
-      }
+      await OnRefreshAsync();
     }
 
     protected async Task OnRefreshAsync()
     {
-      StartInProgress();
       await m_itemsService.RefreshAsync();
     }
 
@@ -137,12 +136,6 @@ namespace TradeSharp.CoreUI.ViewModels
         await OnRefreshAsync();
         SelectedItem = Items.FirstOrDefault();
       }
-
-      IDialogService dialogService = Ioc.Default.GetRequiredService<IDialogService>();
-      if (count > 0)
-        await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} items");
-      else
-        await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "Failure", $"Deleted {count} items");
     }
   }
 }

@@ -1,21 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
-using System;
-using System.Globalization;
-using System.Net.NetworkInformation;
-using System.Net;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.ConstrainedExecution;
-using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.X86;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
-using System.Text;
+﻿using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using Microsoft.VisualBasic;
-using static System.Net.WebRequestMethods;
 
 namespace TradeSharp.Common
 {
@@ -86,8 +70,9 @@ namespace TradeSharp.Common
     protected RegionInfo m_regionInfo;
 
     //constructors
-    // TODO: In .Net 8 there is a custom CountryAndRegionInfoBuilder that allows custom defintions, rather use that for international culture and reqion definitions.
-    //static CountryInfo() 
+    //TODO: See whether you can create a custom culture in .Net8 here.
+    //  - https://learn.microsoft.com/en-us/dotnet/api/system.globalization.cultureandregioninfobuilder?view=netframework-4.8.1&devlangs=csharp&f1url=%3FappId%3DDev16IDEF1%26l%3DEN-US%26k%3Dk(CultureAndRegionInfoBuilder)%3Bk(SolutionItemsProject)%3Bk(DevLang-csharp)%26rd%3Dtrue
+    //static CountryInfo()
     //{
     //  CultureAndRegionInfoBuilder internationalCulture = new CultureAndRegionInfoBuilder(InternationalId, CultureAndRegionModifiers.None);
     //  internationalCulture.LoadDataFromCultureInfo(CultureInfo.CurrentCulture);

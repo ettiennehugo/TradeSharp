@@ -29,12 +29,16 @@ namespace TradeSharp.CoreUI.Services
     private ICountryRepository m_countryRepository;
     [ObservableProperty] private Country? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Country> m_items;
+    [ObservableProperty] private string m_statusMessage;
+    [ObservableProperty] private double m_statusProgress;
 
     //constructors
     public CountryService(ICountryRepository countryRepository)
     {
       m_countryRepository = countryRepository;
       m_items = new ObservableCollection<Country>();
+      m_statusMessage = "";
+      m_statusProgress = 0;
     }
 
     //finalizers

@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
 {
-    /// <summary>
-    /// Interface to be implemented by services that allow the manipulation of items in a list fashion. Services are defined to support dependency injection in MVVM.
-    /// The service overall supports viewing all the items and then viewing the details of a single item (SelectedItem)
-    /// </summary>
-    public interface IListItemsService<T>
+  /// <summary>
+  /// Interface to be implemented by services that allow the manipulation of items in a list fashion. Services are defined to support dependency injection in MVVM.
+  /// The service overall supports viewing all the items and then viewing the details of a single item (SelectedItem)
+  /// </summary>
+  public interface IListItemsService<T>
     {
         //constants
 
@@ -29,6 +24,8 @@ namespace TradeSharp.CoreUI.Services
         Guid ParentId { get; set; }
         T? SelectedItem { get; set; }
         ObservableCollection<T> Items { get; }
+        string StatusMessage { get; set; }  //status message for service operations
+        double StatusProgress { get; set; }  //status progress for service operations
 
         //events
         event EventHandler<T>? SelectedItemChanged;

@@ -29,7 +29,8 @@ namespace TradeSharp.CoreUI.Services
     private Guid m_parent;
     [ObservableProperty] private Exchange? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Exchange> m_items;
-
+    [ObservableProperty] private string m_statusMessage;
+    [ObservableProperty] private double m_statusProgress;
 
     //constructors
     public ExchangeService(IExchangeRepository exchangeRepository)
@@ -37,6 +38,8 @@ namespace TradeSharp.CoreUI.Services
       m_parent = Guid.Empty;
       m_exchangeRepository = exchangeRepository;
       m_items = new ObservableCollection<Exchange>();
+      m_statusMessage = "";
+      m_statusProgress = 0;
     }
 
     //finalizers

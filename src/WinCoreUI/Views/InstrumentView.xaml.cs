@@ -44,7 +44,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_dataStoreService = Ioc.Default.GetRequiredService<IDataStoreService>();
       Exchanges = m_dataStoreService.GetExchanges();
-      Instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "", InstrumentType.Stock, "", "", "", DateTime.Today, new List<Guid>(), Exchange.InternationalId, new List<Guid>());
+      Instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "", InstrumentType.Stock, "", "", "", DateTime.Today, Exchange.InternationalId, new List<Guid>());
       this.InitializeComponent();
     }
 

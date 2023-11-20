@@ -441,14 +441,13 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class Instrument : DataObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>
   {
-    public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, IList<Guid> instrumentGroupId, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds): base(id, attributeSet, tag)
+    public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds): base(id, attributeSet, tag)
     {
       Type = type;
       Ticker = ticker;
       Name = name;
       Description = description;
       InceptionDate = inceptionDate;
-      InstrumentGroupIds = instrumentGroupId;
       PrimaryExchangeId = primaryExhangeId;
       SecondaryExchangeIds = secondaryExchangeIds;
     }
@@ -458,7 +457,6 @@ namespace TradeSharp.Data
     [ObservableProperty] private string m_name;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private DateTime m_inceptionDate;
-    [ObservableProperty] private IList<Guid> m_instrumentGroupIds;
     [ObservableProperty] private Guid m_primaryExchangeId;
     [ObservableProperty] private IList<Guid> m_secondaryExchangeIds;
 
@@ -469,7 +467,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Instrument(Id, AttributeSet, Tag, Type, Ticker, Name, Description, InceptionDate, InstrumentGroupIds, PrimaryExchangeId, SecondaryExchangeIds);
+      return new Instrument(Id, AttributeSet, Tag, Type, Ticker, Name, Description, InceptionDate, PrimaryExchangeId, SecondaryExchangeIds);
     }
 
     public void Update(Instrument item)
@@ -481,7 +479,6 @@ namespace TradeSharp.Data
       Name = item.Name;
       Description = item.Description;
       InceptionDate = item.InceptionDate;
-      InstrumentGroupIds = item.InstrumentGroupIds;
       PrimaryExchangeId = item.PrimaryExchangeId;
       SecondaryExchangeIds = item.SecondaryExchangeIds;
     }

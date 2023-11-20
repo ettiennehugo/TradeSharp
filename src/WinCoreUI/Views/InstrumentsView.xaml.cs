@@ -36,21 +36,12 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private IDialogService m_dialogService;
+
 
     //constructors
     public InstrumentsView()
     {
       ViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
-      m_dialogService = Ioc.Default.GetRequiredService<IDialogService>();
-
-
-      //TODO: It seems like there is NO way to get this to show up before the window controls are instantiated.
-
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", "Loading instruments...");
-      m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Indeterminate, 0, 0, 0);
-
-
       this.InitializeComponent();
     }
 
@@ -63,22 +54,11 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public InstrumentViewModel ViewModel { get; }
 
-    //private async void Page_Loading(FrameworkElement sender, object args)
-    //{
-    //  await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", "Loading instruments...");
-    //  await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Indeterminate, 0, 0, 0);
-    //}
-
+    //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       ViewModel.RefreshCommand.Execute(null);
-//      await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", "");
-//      await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Reset, 0, 0, 0);
     }
-
-
-    //methods
-
 
   }
 }

@@ -112,7 +112,6 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public async virtual void EndEdit()
     {
-      using var _ = StartInProgress();
       await OnSaveAsync();
       EditItem = default;
       IsEditMode = false;

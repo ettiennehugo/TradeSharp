@@ -624,10 +624,11 @@ namespace TradeSharp.CoreUI.Services
 
       using (StreamReader file = new StreamReader(importSettings.Filename))
       {
-        JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd());
+        JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
+        ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
+
         if (documentNode != null)
         {
-          ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
           Dictionary<Guid, InstrumentGroup> definedInstrumentGroups = new Dictionary<Guid, InstrumentGroup>();
           IEnumerable<InstrumentGroup> instrumentGroups = await m_instrumentGroupRepository.GetItemsAsync();
           foreach (InstrumentGroup instrumentGroup in instrumentGroups) definedInstrumentGroups.Add(instrumentGroup.Id, instrumentGroup);
@@ -640,6 +641,8 @@ namespace TradeSharp.CoreUI.Services
           result.Severity = IDialogService.StatusMessageSeverity.Success;
           foreach (JsonObject? node in rootNodes) if (node != null) result = await importJsonNode(node!, importSettings.ImportReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, result);
         }
+        else
+          logger.LogError("Failed to parse file as a JSON file.");
       }
 
       return result;
@@ -747,7 +750,7 @@ namespace TradeSharp.CoreUI.Services
         {
           rootNodeIndex++;
           file.Write(rootNode.ToJsonString(options));
-          if (rootNodeIndex < rootNodeCount) file.WriteLine(",");
+          if (rootNodeIndex < rootNodeCount - 1) file.WriteLine(",");
         }
         file.WriteLine("");
         file.WriteLine("]");

@@ -1,17 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Repositories;
 using Microsoft.Extensions.Logging;
 using CsvHelper;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Globalization;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -28,6 +23,7 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenCsvInceptionDate = "inception date";
     private const string tokenCsvTag = "tag";
     private const string tokenCsvAttributes = "attributes";
+    private const string tokenJsonId = "Id";
     private const string tokenJsonType = "Type";
     private const string tokenJsonTicker = "Ticker";
     private const string tokenJsonName = "Name";
@@ -36,6 +32,7 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenJsonExchange = "Exchange";
     private const string tokenJsonInceptionDate = "Inception Date";
     private const string tokenJsonAttributes = "Attributes";
+    private const string tokenJsonSecondaryExchanges = "SecondaryExchanges";
 
     //enums
 
@@ -50,6 +47,8 @@ namespace TradeSharp.CoreUI.Services
     private IDialogService m_dialogService;
     [ObservableProperty] private Instrument? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Instrument> m_items;
+    [ObservableProperty] private string m_statusMessage;
+    [ObservableProperty] private double m_statusProgress;
 
     //constructors
     public InstrumentService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IDialogService dialogService, IInstrumentRepository instrumentRepository)
@@ -59,6 +58,8 @@ namespace TradeSharp.CoreUI.Services
       m_dataStoreService = dataStoreService;
       m_dialogService = dialogService;
       m_items = new ObservableCollection<Instrument>();
+      m_statusMessage = "";
+      m_statusProgress = 0;
     }
 
     //finalizers
@@ -138,9 +139,106 @@ namespace TradeSharp.CoreUI.Services
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
     public event EventHandler<Instrument>? SelectedItemChanged;
 
-    private Task<ImportReplaceResult> importJSON(ImportSettings importSettings)
+    private async Task<ImportReplaceResult> importJSON(ImportSettings importSettings)
     {
-      throw new NotImplementedException();
+      ImportReplaceResult result = new ImportReplaceResult();
+      result.Severity = IDialogService.StatusMessageSeverity.Success; //per default assume success
+      ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
+
+      using (StreamReader file = new StreamReader(importSettings.Filename))
+      {
+        JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
+
+        if (documentNode != null)
+        {
+          SortedDictionary<string, Exchange> definedExchanges = new SortedDictionary<string, Exchange>();
+          foreach (Exchange exchange in m_dataStoreService.GetExchanges()) definedExchanges.Add(exchange.Id.ToString(), exchange);
+          SortedDictionary<Guid, Instrument> definedInstruments = new SortedDictionary<Guid, Instrument>();
+          foreach (Instrument instrument in m_dataStoreService.GetInstruments()) definedInstruments.Add(instrument.Id, instrument);
+
+          JsonArray fileInstrumentsJson = documentNode.AsArray();
+          foreach (JsonObject? fileInstrumentJson in fileInstrumentsJson)
+          {
+            Guid id = (Guid)(fileInstrumentJson![tokenJsonId]!.AsValue().Deserialize(typeof(Guid)))!;
+            string? typeStr = (string?)(fileInstrumentJson![tokenJsonType]!.AsValue().Deserialize(typeof(string)));
+            InstrumentType type = (InstrumentType)Enum.Parse(typeof(InstrumentType), typeStr!);
+            string ticker = (string)(fileInstrumentJson![tokenJsonTicker]!.AsValue().Deserialize(typeof(string)))!;
+            string name = (string?)(fileInstrumentJson![tokenJsonName]!.AsValue().Deserialize(typeof(string))) ?? ticker;
+            string description = (string?)(fileInstrumentJson![tokenJsonDescription]!.AsValue().Deserialize(typeof(string))) ?? name;
+            string tag = (string?)(fileInstrumentJson![tokenJsonTag]!.AsValue().Deserialize(typeof(string))) ?? ticker;
+            Guid? exchangeId = (Guid?)(fileInstrumentJson![tokenJsonExchange]!.AsValue().Deserialize(typeof(Guid)));
+            string? inceptionDateStr = (string?)(fileInstrumentJson![tokenJsonInceptionDate]!.AsValue().Deserialize(typeof(string)))!;
+            DateTime inceptionDate = inceptionDateStr != null ? DateTime.Parse(inceptionDateStr) : DateTime.MinValue;
+            string? attributesStr = (string?)(fileInstrumentJson[tokenJsonAttributes]!.AsValue().Deserialize(typeof(string)));
+            Attributes attributes = attributesStr != null ? (Attributes)Enum.Parse(typeof(Attributes), attributesStr!) : InstrumentGroup.DefaultAttributeSet;
+
+            JsonArray? secondaryExchangesJson = fileInstrumentJson!.ContainsKey(tokenJsonSecondaryExchanges) ? fileInstrumentJson[tokenJsonSecondaryExchanges]!.AsArray() : null;
+            List<Guid> secondaryExchanges = new List<Guid>();
+
+            if (secondaryExchangesJson != null)
+            {
+              int index = 0;
+              foreach (JsonObject? secondaryExchangeJson in secondaryExchangesJson)
+              {
+                Guid? secondaryExchangeId = (Guid?)(fileInstrumentJson![tokenJsonId]!.AsValue().Deserialize(typeof(Guid)));
+                if (secondaryExchangeId != null)
+                {
+                  if (definedExchanges.TryGetValue(secondaryExchangeId.Value.ToString(), out Exchange? definedExchange)) 
+                    secondaryExchanges.Add(secondaryExchangeId.Value);
+                  else
+                  {
+                    logger.LogWarning($"No secondary Exchange with Guid \"{secondaryExchangeId.ToString()}\" at index {index} for instrument \"{ticker}\" found, discarding it.");
+                    result.Severity = IDialogService.StatusMessageSeverity.Warning;
+                  }
+                }
+                else
+                {
+                  logger.LogError($"Failed to parse secondary Exchange Guid at index {index} for instrument \"{ticker}\".");
+                  result.Severity = IDialogService.StatusMessageSeverity.Error;
+                }
+                index++;
+              }
+            }
+
+            if (definedInstruments.TryGetValue(id, out Instrument? definedInstrument))
+            {
+              switch (importSettings.ImportReplaceBehavior)
+              {
+                case ImportReplaceBehavior.Skip:
+                  logger.LogWarning($"Skipping - {name}, {description}, {tag}");
+                  result.Severity = IDialogService.StatusMessageSeverity.Warning;   //warn user of skipped items
+                  result.Skipped++;
+                  break;
+                case ImportReplaceBehavior.Replace:
+                  //replacing name, description, tag and all defined instruments
+                  logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
+                  await m_instrumentRepository.UpdateAsync(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, name, description, inceptionDate, exchangeId!.Value, secondaryExchanges));
+                  
+                  result.Replaced++;
+                  break;
+                case ImportReplaceBehavior.Update:
+                  //updating name, description, tag and merge in defined instruments
+                  logger.LogInformation($"Updating - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
+                  await m_instrumentRepository.UpdateAsync(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, name, description, inceptionDate, exchangeId!.Value, secondaryExchanges));
+                  result.Updated++;
+                  break;
+              }
+            }
+            else
+            {
+              await m_instrumentRepository.AddAsync(new Instrument(id, attributes, tag, type, ticker, name, description, inceptionDate, exchangeId!.Value, secondaryExchanges));
+              result.Created++;
+            }
+          }
+        }
+        else
+        {
+          logger.LogError("Failed to parse file as a JSON file.");
+          result.Severity = IDialogService.StatusMessageSeverity.Error;
+        }
+      }
+
+      return result;
     }
 
     //methods
@@ -164,7 +262,7 @@ namespace TradeSharp.CoreUI.Services
         {
           int lineNo = 0;
           bool parseError = false;
-          IList<Exchange> exchanges = m_dataStoreService.GetExchanges();          
+          IList<Exchange> exchanges = m_dataStoreService.GetExchanges();
           SortedDictionary<string, Instrument> definedInstruments = new SortedDictionary<string, Instrument>();
           foreach (Instrument instrument in m_dataStoreService.GetInstruments()) definedInstruments.Add(instrument.Ticker.ToUpper(), instrument);
           List<Instrument> fileInstruments = new List<Instrument>();
@@ -239,15 +337,12 @@ namespace TradeSharp.CoreUI.Services
             else
               logger.LogWarning($"Failed to find exchange \"{exchange}\" for instrument \"{ticker}\", defaulting to global exchange.");
 
-            fileInstruments.Add(new Instrument(Guid.NewGuid(), attributes, tag, type, ticker, name, description, inceptionDate, new List<Guid>(), exchangeId, new List<Guid>()));
-            //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, reader.BaseStream.Length, reader.BaseStream.Position);
+            fileInstruments.Add(new Instrument(Guid.NewGuid(), attributes, tag, type, ticker, name, description, inceptionDate, exchangeId, new List<Guid>()));
           }
 
           if (fileInstruments.Count > 0)
           {
             result.Severity = IDialogService.StatusMessageSeverity.Success;
-            //await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Importing instruments from \"{importSettings.Filename}\"");
-            //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, fileInstruments.Count, 0);
           }
 
           long instrumentsProcessed = 0;
@@ -293,12 +388,52 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
-    private int exportJSON(string filename)
+    private long exportJSON(string filename)
     {
-      throw new NotImplementedException();
+      long result = 0;
+
+      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+      {
+        IList<Instrument> instruments = m_dataStoreService.GetInstruments();
+        int instrumentIndex = 0;
+        int instrumentCount = instruments.Count;
+        JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
+
+        file.WriteLine("[");
+        foreach (Instrument instrument in instruments)
+        {
+          JsonObject instrumentJson = new JsonObject
+          {
+            [tokenJsonId] = instrument.Id.ToString(),
+            [tokenJsonType] = ((int)instrument.Type).ToString(),   //need to first cast to an integer otherwise it renders the tokens/words of the attribute set
+            [tokenJsonTicker] = instrument.Ticker,
+            [tokenJsonName] = instrument.Name,
+            [tokenJsonDescription] = instrument.Description,
+            [tokenJsonTag] = instrument.Tag,
+            [tokenJsonExchange] = instrument.PrimaryExchangeId,
+            [tokenJsonInceptionDate] = instrument.InceptionDate.ToString(),
+            [tokenJsonAttributes] = ((int)instrument.AttributeSet).ToString(),   //need to first cast to an integer otherwise it renders the tokens/words of the attribute set
+            [tokenJsonSecondaryExchanges] = new JsonArray()
+          };
+
+          if (instrument.SecondaryExchangeIds.Count > 0)
+          {
+            JsonArray secondaryExchanges = instrumentJson[tokenJsonSecondaryExchanges]!.AsArray();
+            foreach (Guid secondaryExchange in instrument.SecondaryExchangeIds) secondaryExchanges.Add(secondaryExchange.ToString());
+          }
+
+          file.Write(instrumentJson.ToJsonString(options));
+          result++;
+          if (instrumentIndex < instrumentCount - 1) file.WriteLine(",");
+        }
+        file.WriteLine("");
+        file.WriteLine("]");
+      }
+
+      return result;
     }
 
-    private async Task<long> exportCSV(string filename)
+    private Task<long> exportCSV(string filename)
     {
       long result = 0;
 
@@ -333,7 +468,7 @@ namespace TradeSharp.CoreUI.Services
         }
       }
 
-      return result;
+      return Task.FromResult(result);
     }
   }
 }

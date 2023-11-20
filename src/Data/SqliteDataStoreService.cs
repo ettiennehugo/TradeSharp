@@ -530,17 +530,6 @@ namespace TradeSharp.Data
           $")"
       );
 
-      foreach (Guid instrumentGroupId in instrument.InstrumentGroupIds)
-      {
-        ExecuteCommand(
-          $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
-            $"VALUES (" +
-              $"'{instrumentGroupId.ToString()}', " +
-              $"'{instrument.Id.ToString()}'" +
-            $")"
-        );
-      }
-
       foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
       {
         ExecuteCommand(
@@ -576,13 +565,8 @@ namespace TradeSharp.Data
 
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
-
-          List<Guid> instrumentGroupIds = new List<Guid>();
-
-          using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{instrumentId.ToString()}'"))
-            while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
           
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), instrumentGroupIds, reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -601,12 +585,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          List<Guid> instrumentGroupIds = new List<Guid>();
-
-          using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{instrumentId.ToString()}'"))
-            while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
-
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), instrumentGroupIds, reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -620,12 +599,7 @@ namespace TradeSharp.Data
           List<Guid> secondaryExchangeIds = new List<Guid>();
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{id.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
-
-          List<Guid> instrumentGroupIds = new List<Guid>();
-          using (var instrumentGroupReader = ExecuteReader($"SELECT InstrumentGroupId FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentId = '{id.ToString()}'"))
-            while (instrumentGroupReader.Read()) instrumentGroupIds.Add(instrumentGroupReader.GetGuid(0));
-
-          return new Instrument(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), instrumentGroupIds, reader.GetGuid(7), secondaryExchangeIds);
+          return new Instrument(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds);
         }
 
         return null;
@@ -644,18 +618,6 @@ namespace TradeSharp.Data
               $"InceptionDate = {instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
           $"WHERE Id = '{instrument.Id.ToString()}'"
       );
-
-      Delete(c_TableInstrumentGroupInstrument, instrument.Id, "InstrumentId");
-      foreach (Guid instrumentGroupId in instrument.InstrumentGroupIds)
-      {
-        ExecuteCommand(
-          $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
-            $"VALUES (" +
-              $"'{instrumentGroupId.ToString()}', " +
-              $"'{instrument.Id.ToString()}'" +
-            $")"
-        );
-      }
 
       Delete(c_TableInstrumentSecondaryExchange, instrument.Id, "InstrumentId");
       foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)

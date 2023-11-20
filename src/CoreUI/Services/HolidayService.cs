@@ -29,6 +29,8 @@ namespace TradeSharp.CoreUI.Services
     private Guid m_parent;
     [ObservableProperty] private Holiday? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Holiday> m_items;
+    [ObservableProperty] private string m_statusMessage;
+    [ObservableProperty] private double m_statusProgress;
 
     //constructors
     public HolidayService(IHolidayRepository holidayRepository)
@@ -36,6 +38,8 @@ namespace TradeSharp.CoreUI.Services
       m_parent = Guid.Empty;
       m_holidayRepository = holidayRepository;
       m_items = new ObservableCollection<Holiday>();
+      m_statusMessage = "";
+      m_statusProgress = 0;
     }
 
     //finalizers

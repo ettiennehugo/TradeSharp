@@ -33,13 +33,12 @@ namespace TradeSharp.WinDataManager
     //TODO: Need to add a high level exception handler as a catch all for errors.
     //  - If you try to import a file already open in Excel this breaks.
     //  - Set status when an import/export operation is started (currently it would notify you when it ends).
-    //  - See how you can indicate a lot of different async processes (e.g. maybe a list of overlayed progress rings)
+    //  - See how you can indicate a lot of different async processes (e.g. maybe a list of overlayed progress rings or list of progress bars)
     //     - Create an API for this related to the progress control in the status bar - this should support creating it with a proper tooltip, updating the state and 
     //       removing it once the process is done.
     //     - Currently the progress bar would always be visible, make it so it only shows up when a process is under way.
-    //  - Profile the import operations for CSV and JSON and check where you can optimize them.
-
-
+    //  - Implement the import/export JSON methods for instrument. 
+    //  - Profile the import operations for CSV and JSON and check where you can optimize them - the CSV is pretty slow when importing thousands of instruments.
 
     
     public MainWindow()
@@ -60,6 +59,11 @@ namespace TradeSharp.WinDataManager
     public MainWindowViewModel ViewModel { get; internal set; }
 
     //methods
+  
+
+    //TODO: Remove this code since you would not be handling different screen sizes.
+
+
     // Send message to use navigation between views if the window size is not large enough to display a list view and the related detailed data.
     private void OnSizeChanged(object sender, WindowSizeChangedEventArgs args)
     {

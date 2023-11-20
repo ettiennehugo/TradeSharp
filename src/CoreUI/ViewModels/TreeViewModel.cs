@@ -132,7 +132,6 @@ namespace TradeSharp.CoreUI.ViewModels
 
     protected async Task OnRefreshAsync()
     {
-      StartInProgress();
       await m_itemsService.RefreshAsync();
     }
 

@@ -98,8 +98,8 @@ namespace TradeSharp.CoreUI.Services
 
     //methods
     Task ShowPopupMessageAsync(string message);
-    Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
-    Task ShowStatusProgressAsync(StatusProgressState state, long minimum, long maximum, long value);
+    Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);          //TODO: Remove this if you MVVM it, also remove above enumeration or move it to a better place.
+    Task ShowStatusProgressAsync(StatusProgressState state, long minimum, long maximum, long value);    //TODO: Remove this if you MVVM it, also remove above enumeration or more it to a better place.
 
     Task<CountryInfo?> ShowSelectCountryAsync();
 

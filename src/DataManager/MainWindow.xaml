@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Activated="Window_Activated"
     mc:Ignorable="d">
-  <Grid x:Name="m_main" RowDefinitions="32, *, 32">
+  <Grid x:Name="m_main" RowDefinitions="32, *">
     <Grid x:Name="m_titleBar" ColumnDefinitions="32, *"  Grid.Row="0" Grid.Column="0">
       <Image x:Name="m_titleBarIcon" Source="Assets/Square64x64.ico" HorizontalAlignment="Center" VerticalAlignment="Center" Width="24" Height="24"  Grid.Row="0" Grid.Column="0"/>
       <TextBlock x:Name="m_titleBarText" Text="TradeSharp Data Manager" TextAlignment="Left" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" Grid.Row="0" Grid.Column="1"/>
@@ -63,18 +63,20 @@
           </NavigationViewItem.Icon>
         </NavigationViewItem>
       </NavigationView.MenuItems>
-      <Frame x:Name="m_mainContent" Margin="16">
-        <Frame.ContentTransitions>
-          <TransitionCollection>
-            <NavigationThemeTransition/>
-          </TransitionCollection>
-        </Frame.ContentTransitions>
-      </Frame>
+      <Grid x:Name="m_contentLayout" RowDefinitions="*, 32">
+        <Frame x:Name="m_mainContent" Margin="16" Grid.Row="0" Grid.Column="0">
+          <Frame.ContentTransitions>
+            <TransitionCollection>
+              <NavigationThemeTransition/>
+            </TransitionCollection>
+          </Frame.ContentTransitions>
+        </Frame>
+        <Grid x:Name="m_statusBar" ColumnDefinitions="32, *, 32" Grid.Row="1" Grid.Column="0">
+          <FontIcon x:Name="m_statusBarIcon" FontFamily="Segoe MDL2 Assets" Glyph="" HorizontalAlignment="Left" Width="24" Height="24" Grid.Row="0" Grid.Column="0"/>
+          <TextBlock x:Name="m_statusBarText" Text="" TextAlignment="Left"  HorizontalAlignment="Stretch" VerticalAlignment="Center" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" Grid.Row="0" Grid.Column="1"/>
+          <ProgressRing x:Name="m_statusBarProgress" Minimum="0" Maximum="100" Value="0" Width="24" Height="24" IsIndeterminate="False" IsActive="False" Grid.Row="0" Grid.Column="2"/>
+        </Grid>
+      </Grid>
     </NavigationView>
-    <Grid x:Name="m_statusBar" ColumnDefinitions="32, *, 32" Grid.Row="2" Grid.Column="0">
-      <FontIcon x:Name="m_statusBarIcon" FontFamily="Segoe MDL2 Assets" Glyph="" HorizontalAlignment="Left" Width="24" Height="24" Grid.Row="0" Grid.Column="0"/>
-      <TextBlock x:Name="m_statusBarText" Text="" TextAlignment="Left"  HorizontalAlignment="Stretch" VerticalAlignment="Center" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" Grid.Row="0" Grid.Column="1"/>
-      <ProgressRing x:Name="m_statusBarProgress" Minimum="0" Maximum="100" Value="0" Width="24" Height="24" IsIndeterminate="False" IsActive="False" Grid.Row="0" Grid.Column="2"/>
-    </Grid>
   </Grid>
 </Window>

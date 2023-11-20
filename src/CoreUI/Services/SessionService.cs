@@ -29,6 +29,8 @@ namespace TradeSharp.CoreUI.Services
     private Guid m_parent;
     [ObservableProperty] private Session? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Session> m_items;
+    [ObservableProperty] private string m_statusMessage;
+    [ObservableProperty] private double m_statusProgress;
 
     //constructors
     public SessionService(ISessionRepository sessionRepository)
@@ -36,6 +38,8 @@ namespace TradeSharp.CoreUI.Services
       m_parent = Guid.Empty;
       m_sessionRepository = sessionRepository;
       m_items = new ObservableCollection<Session>();
+      m_statusMessage = "";
+      m_statusProgress = 0;
     }
 
     //finalizers
