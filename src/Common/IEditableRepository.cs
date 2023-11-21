@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TradeSharp.Common
+﻿namespace TradeSharp.Common
 {
-/// <summary>
-/// Interface to allow editibility of the data store for a specific type using a specific key type. 
-/// </summary>
+  /// <summary>
+  /// Interface to allow editibility of the data store for a specific type using a specific key type. 
+  /// </summary>
   public interface IEditableRepository<T, in TKey>
     where T : class
   {

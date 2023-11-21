@@ -6,6 +6,7 @@ using TradeSharp.CoreUI.Events;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.WinDataManager.Services;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 
 namespace TradeSharp.WinDataManager
 {
@@ -91,8 +92,30 @@ namespace TradeSharp.WinDataManager
 
     public void OnNavigationSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+      //m_statusBarIcon.Glyph = "";
+      //m_statusBarText.Text = "";
+
+      //Binding binding = new Binding
+      //{
+      //  Source = TitleLabel,
+      //  Path = new PropertyPath("Content"),
+      //};
+      //BottomLabel.SetBinding(ContentControl.ContentProperty, binding);
+
+    }
+
+    private void m_mainContent_Navigated(object sender, Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
       m_statusBarIcon.Glyph = "";
-      m_statusBarText.Text = "";
+      m_statusBarText.Text = "";      
+      m_statusBarProgress.Minimum = 0;
+      m_statusBarProgress.Maximum = 100;
+      m_statusBarProgress.Value = 0;
+
+      if (e.Content is Page)
+      {
+        
+      }
     }
   }
 }

@@ -30,7 +30,9 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] private Holiday? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Holiday> m_items;
     [ObservableProperty] private string m_statusMessage;
-    [ObservableProperty] private double m_statusProgress;
+    [ObservableProperty] private double m_statusProgressMin;
+    [ObservableProperty] private double m_statusProgressMax;
+    [ObservableProperty] private double m_statusProgressValue;
 
     //constructors
     public HolidayService(IHolidayRepository holidayRepository)
@@ -39,7 +41,9 @@ namespace TradeSharp.CoreUI.Services
       m_holidayRepository = holidayRepository;
       m_items = new ObservableCollection<Holiday>();
       m_statusMessage = "";
-      m_statusProgress = 0;
+      m_statusProgressMin = 0;
+      m_statusProgressMax = 100;
+      m_statusProgressValue = 0;
     }
 
     //finalizers

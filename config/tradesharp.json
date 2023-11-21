@@ -1,9 +1,8 @@
 {
   "General": {
-    "CultureFallback": "en-US",
     "TimeZone": "Local",
     "DataStore": {
-      "Typename": "TradeSharp.Data.SqliteDataStore,TradeSharp.Data.dll",
+      "Assembly": "TradeSharp.Data.SqliteDataStore,TradeSharp.Data.dll",
       "ConnectionString" : "TradeSharp.db"
     }
   },

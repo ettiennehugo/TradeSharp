@@ -64,7 +64,7 @@
         </NavigationViewItem>
       </NavigationView.MenuItems>
       <Grid x:Name="m_contentLayout" RowDefinitions="*, 32">
-        <Frame x:Name="m_mainContent" Margin="16" Grid.Row="0" Grid.Column="0">
+        <Frame x:Name="m_mainContent" Margin="16" Navigated="m_mainContent_Navigated" Grid.Row="0" Grid.Column="0">
           <Frame.ContentTransitions>
             <TransitionCollection>
               <NavigationThemeTransition/>

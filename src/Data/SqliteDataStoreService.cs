@@ -74,8 +74,8 @@ namespace TradeSharp.Data
       //Sqlite3 objects, functions - https://sqlite.org/c3ref/objlist.html, https://sqlite.org/c3ref/funclist.html
 
       //validate database type and setup the database connection
-      IConfigurationService.DataStoreConfiguration dataStoreConfiguration = (IConfigurationService.DataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.DataStore];
-      Trace.Assert(dataStoreConfiguration.Typename != this.GetType().Name, $"Incorrect data store \"{this.GetType().Name}\" instatiated against data store configuration \"{dataStoreConfiguration.Typename}\"");
+      IDataStoreConfiguration dataStoreConfiguration = (IDataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.DataStore];
+      Trace.Assert(dataStoreConfiguration.Assembly != this.GetType().Name, $"Incorrect data store \"{this.GetType().Name}\" instatiated against data store configuration \"{dataStoreConfiguration.Assembly}\"");
       string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
       m_databaseFile = string.Format("{0}\\{1}\\{2}", tradeSharpHome, Constants.DataDir, dataStoreConfiguration.ConnectionString);
 
@@ -169,10 +169,10 @@ namespace TradeSharp.Data
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations)} WHERE CountryId = '{id.ToString()}'"))
-          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
-        result += Delete(GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations), id, "CountryId");
-        CacheCountryFundamentalAssociations(dataProvider.Value);
+        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalAssociations)} WHERE CountryId = '{id.ToString()}'"))
+          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+        result += Delete(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalAssociations), id, "CountryId");
+        CacheCountryFundamentalAssociations(dataProvider.Key);
       }
 
       return result;
@@ -645,11 +645,11 @@ namespace TradeSharp.Data
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations)} WHERE InstrumentId = '{id.ToString()}'"))
-          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
-        result += Delete(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations), id, "InstrumentId");
-        result += deleteData(dataProvider.Value, ticker, null);
-        CacheInstrumentFundamentalAssociations(dataProvider.Value);
+        using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations)} WHERE InstrumentId = '{id.ToString()}'"))
+          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+        result += Delete(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations), id, "InstrumentId");
+        result += deleteData(dataProvider.Key, ticker, null);
+        CacheInstrumentFundamentalAssociations(dataProvider.Key);
       }
 
       return result;
@@ -696,8 +696,8 @@ namespace TradeSharp.Data
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        CacheCountryFundamentalAssociations(dataProvider.Value);
-        CacheInstrumentFundamentalAssociations(dataProvider.Value);
+        CacheCountryFundamentalAssociations(dataProvider.Key);
+        CacheInstrumentFundamentalAssociations(dataProvider.Key);
       }
       return result;
     }
@@ -705,7 +705,7 @@ namespace TradeSharp.Data
     public int DeleteFundamentalValues(Guid id)
     {
       int result = 0;
-      foreach (var dataProvider in m_configurationService.DataProviders) result += DeleteFundamentalValues(dataProvider.Value, id);
+      foreach (var dataProvider in m_configurationService.DataProviders) result += DeleteFundamentalValues(dataProvider.Key, id);
       return result;
     }
 
@@ -721,8 +721,8 @@ namespace TradeSharp.Data
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        CacheCountryFundamentalAssociations(dataProvider.Value);
-        CacheInstrumentFundamentalAssociations(dataProvider.Value);
+        CacheCountryFundamentalAssociations(dataProvider.Key);
+        CacheInstrumentFundamentalAssociations(dataProvider.Key);
       }
 
       return result;
@@ -1419,15 +1419,15 @@ namespace TradeSharp.Data
         //create data provider specific data tables if required
         foreach (var dataProvider in m_configurationService.DataProviders)
         {
-          if (!requireTableDefinitions(dataProvider.Value)) continue;
-          CreateCountryFundamentalAssociationTable(dataProvider.Value);
-          CreateCountryFundamentalValuesTable(dataProvider.Value);
-          CreateInstrumentFundamentalAssociationTable(dataProvider.Value);
-          CreateInstrumentFundamentalValuesTable(dataProvider.Value);
+          if (!requireTableDefinitions(dataProvider.Key)) continue;
+          CreateCountryFundamentalAssociationTable(dataProvider.Key);
+          CreateCountryFundamentalValuesTable(dataProvider.Key);
+          CreateInstrumentFundamentalAssociationTable(dataProvider.Key);
+          CreateInstrumentFundamentalValuesTable(dataProvider.Key);
           foreach (Resolution resolution in s_SupportedResolutions)
           {
-            CreateInstrumentDataTable(dataProvider.Value, resolution);
-            CreateInstrumentDataSyntheticTable(dataProvider.Value, resolution);
+            CreateInstrumentDataTable(dataProvider.Key, resolution);
+            CreateInstrumentDataSyntheticTable(dataProvider.Key, resolution);
           }
         }
 
@@ -1495,17 +1495,17 @@ namespace TradeSharp.Data
         //drop the data provider specific tables and indexes
         foreach (var dataProvider in m_configurationService.DataProviders)
         {
-          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableFundamentals));
-          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalAssociations));
-          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableCountryFundamentalValues));
-          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalAssociations));
-          DropTable(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentFundamentalValues));
+          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableFundamentals));
+          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalAssociations));
+          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalValues));
+          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations));
+          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalValues));
           foreach (Resolution resolution in s_SupportedResolutions)
           {
-            DropTable(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentData, resolution));
-            DropIndex(GetDataProviderDBName(dataProvider.Value, c_IndexInstrumentData, resolution));
-            DropTable(GetDataProviderDBName(dataProvider.Value, c_TableInstrumentDataSynthetic, resolution));
-            DropIndex(GetDataProviderDBName(dataProvider.Value, c_IndexInstrumentDataSynthetic, resolution));
+            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentData, resolution));
+            DropIndex(GetDataProviderDBName(dataProvider.Key, c_IndexInstrumentData, resolution));
+            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentDataSynthetic, resolution));
+            DropIndex(GetDataProviderDBName(dataProvider.Key, c_IndexInstrumentDataSynthetic, resolution));
           }
         }
 
@@ -1832,13 +1832,13 @@ namespace TradeSharp.Data
       result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableFundamentals}");
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, Data.SqliteDataStoreService.c_TableCountryFundamentalValues)}");
-        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, Data.SqliteDataStoreService.c_TableInstrumentFundamentalValues)}");
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableCountryFundamentalValues)}");
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentFundamentalValues)}");
 
         foreach (Resolution resolution in SupportedDataResolutions)
         {
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, Data.SqliteDataStoreService.c_TableInstrumentData, resolution)}");
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Value, Data.SqliteDataStoreService.c_TableInstrumentDataSynthetic, resolution)}");
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentData, resolution)}");
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentDataSynthetic, resolution)}");
         }
       }
 

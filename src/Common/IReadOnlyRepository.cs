@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TradeSharp.Common
+﻿namespace TradeSharp.Common
 {
   /// <summary>
   /// Interface for classes that facilitate read-only access to the data store for specific object types using a specific key type. 

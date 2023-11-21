@@ -1,27 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
-using Moq;
-using System.Security.Cryptography.X509Certificates;
-using System.Diagnostics.Metrics;
+﻿using Moq;
 using System.Globalization;
-using System.ComponentModel.DataAnnotations;
-using System.Reflection;
-using Newtonsoft.Json.Linq;
-using System.Runtime.InteropServices;
-using System.Diagnostics.Contracts;
-using static TradeSharp.Data.IDataStoreService;
 using TradeSharp.Common;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
-using System.Resources;
-using static System.Net.Mime.MediaTypeNames;
-using System.Xml.Linq;
-using static System.Collections.Specialized.BitVector32;
-using System.Collections;
-using static TradeSharp.Common.IConfigurationService;
 
 namespace TradeSharp.Data.Testing
 {
@@ -65,14 +44,15 @@ namespace TradeSharp.Data.Testing
       m_configuration = new Mock<IConfigurationService>(MockBehavior.Strict);
       m_configuration.Setup(x => x.CultureInfo).Returns(m_cultureEnglish);
       m_configuration.Setup(x => x.RegionInfo).Returns(m_regionInfo);
-      m_configuration.Setup(x => x.CultureFallback).Returns(new List<CultureInfo>(1) { m_cultureEnglish, m_cultureFrench }); //we use m_cultureGerman as the ANY language fallback
       Type testDataProviderType = typeof(TradeSharp.Data.Testing.TestDataProvider);
-      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, string>() { { "TestDataProvider1", "TestDataProvider1" }, { "TestDataProvider2", "TestDataProvider2" } });
+      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, IPluginConfiguration>() { 
+        { "TestDataProvider1", new PluginConfiguration("TestDataProvider1", "", new List<IPluginConfigurationProfile>()) }, 
+        { "TestDataProvider2", new PluginConfiguration("TestDataProvider2", "", new List<IPluginConfigurationProfile>()) } 
+      });
 
       m_generalConfiguration = new Dictionary<string, object>() {
           { IConfigurationService.GeneralConfiguration.TimeZone, (object)IConfigurationService.TimeZone.Local },
-          { IConfigurationService.GeneralConfiguration.CultureFallback, new List<CultureInfo>(1) { m_cultureEnglish } },
-          { IConfigurationService.GeneralConfiguration.DataStore, new IConfigurationService.DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), "TradeSharpTest.db") }
+          { IConfigurationService.GeneralConfiguration.DataStore, new DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), "TradeSharpTest.db") }
       };
 
       m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);
@@ -87,8 +67,9 @@ namespace TradeSharp.Data.Testing
 
       m_dataStore = new TradeSharp.Data.SqliteDataStoreService(m_configuration.Object);
 
-      //remove stale data from previous tests - this is to ensure proper test isolation
-     m_dataStore.ClearDatabase();
+      //remove stale data from previous tests - this is to ensure proper test isolation and create the default objects used by the database
+      m_dataStore.ClearDatabase();
+      m_dataStore.CreateDefaultObjects();
 
       //create common attributes used for testing
       m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "en-US");
@@ -458,8 +439,6 @@ namespace TradeSharp.Data.Testing
 
       m_dataStore.CreateInstrument(m_instrument);
 
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group1", "Test Instrument Group1 Description", Array.Empty<Guid>());
-      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "Test Instrument Group2", "Test Instrument Group2 Description", Array.Empty<Guid>());
       Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Guid.Empty);
       Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Guid.Empty);
 
@@ -479,14 +458,6 @@ namespace TradeSharp.Data.Testing
         $"AND PrimaryExchangeId = '{exchange.Id.ToString()}' " +
         $"AND InceptionDate = {dateTime.ToUniversalTime().ToBinary()}")
       , "Instrument not updated in database.");
-      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
-        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
-        $"AND InstrumentGroupId = '{instrumentGroup1.Id.ToString()}'")
-      , "Instrument not associated with instrument group 1.");
-      Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument,
-        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
-        $"AND InstrumentGroupId = '{instrumentGroup2.Id.ToString()}'")
-      , "Instrument not associated with instrument group 2.");
       Assert.AreEqual(1, m_dataStore.GetRowCount(Data.SqliteDataStoreService.c_TableInstrumentSecondaryExchange,
         $"InstrumentId = '{m_instrument.Id.ToString()}' " +
         $"AND ExchangeId = '{secondExchange.Id.ToString()}'")

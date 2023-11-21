@@ -48,7 +48,9 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] private Instrument? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Instrument> m_items;
     [ObservableProperty] private string m_statusMessage;
-    [ObservableProperty] private double m_statusProgress;
+    [ObservableProperty] private double m_statusProgressMin;
+    [ObservableProperty] private double m_statusProgressMax;
+    [ObservableProperty] private double m_statusProgressValue;
 
     //constructors
     public InstrumentService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IDialogService dialogService, IInstrumentRepository instrumentRepository)
@@ -59,7 +61,9 @@ namespace TradeSharp.CoreUI.Services
       m_dialogService = dialogService;
       m_items = new ObservableCollection<Instrument>();
       m_statusMessage = "";
-      m_statusProgress = 0;
+      m_statusProgressMin = 0;
+      m_statusProgressMax = 100;
+      m_statusProgressValue = 0;
     }
 
     //finalizers

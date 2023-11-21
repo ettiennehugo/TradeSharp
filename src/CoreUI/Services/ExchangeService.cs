@@ -30,7 +30,9 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] private Exchange? m_selectedItem;
     [ObservableProperty] private ObservableCollection<Exchange> m_items;
     [ObservableProperty] private string m_statusMessage;
-    [ObservableProperty] private double m_statusProgress;
+    [ObservableProperty] private double m_statusProgressMin;
+    [ObservableProperty] private double m_statusProgressMax;
+    [ObservableProperty] private double m_statusProgressValue;
 
     //constructors
     public ExchangeService(IExchangeRepository exchangeRepository)
@@ -39,7 +41,9 @@ namespace TradeSharp.CoreUI.Services
       m_exchangeRepository = exchangeRepository;
       m_items = new ObservableCollection<Exchange>();
       m_statusMessage = "";
-      m_statusProgress = 0;
+      m_statusProgressMin = 0;
+      m_statusProgressMax = 100;
+      m_statusProgressValue = 0;
     }
 
     //finalizers

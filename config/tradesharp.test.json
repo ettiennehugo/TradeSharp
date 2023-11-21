@@ -1,0 +1,41 @@
+{
+  "General": {
+    "TimeZone": "Local",
+    "DataStore": {
+      "Assembly": "TestDataStore,TestDataStore.dll",
+      "ConnectionString" : "TestDataStore.db"
+    }
+  },
+  "DataProviders": {
+    "TestDataProvider1": {
+      "Assembly": "TestDataProvider1Assembly",
+      "Profile1": {
+        "Description" :  "Profile1Description",
+        "TestDataProvider1Profile1Key1": "TestDataProvider1Profile1Value1",
+        "TestDataProvider1Profile1Key2": "TestDataProvider1Profile1Value2",
+      },
+      "Profile2": {
+        "Description": "Profile2Description",
+        "TestDataProvider1Profile2Key1": "TestDataProvider1Profile2Value1",
+        "TestDataProvider1Profile2Key2": "TestDataProvider1Profile2Value2",
+        "TestDataProvider1Profile2Key3": "TestDataProvider1Profile2Value3"
+      }
+    },
+    "TestDataProvider2": {
+      "Assembly": "TestDataProvider2Assembly",
+      "Profile1": {
+        "Description": "Profile1Description",
+        "TestDataProvider2Profile1Key1": "TestDataProvider2Profile1Value1",
+      },
+      "Profile2": {
+        "Description": "Profile2Description",
+        "TestDataProvider2Profile2Key1": "TestDataProvider2Profile2Value1",
+        "TestDataProvider2Profile2Key2": "TestDataProvider2Profile2Value2",
+        "TestDataProvider2Profile2Key3": "TestDataProvider2Profile2Value3",
+        "TestDataProvider2Profile2Key4": "TestDataProvider2Profile2Value4",
+      }
+    }
+  },
+  "Brokers": {},
+  "Extensions": {}
+}

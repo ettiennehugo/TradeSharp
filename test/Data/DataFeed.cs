@@ -61,22 +61,21 @@ namespace TradeSharp.Data.Testing
       m_configuration = new Mock<IConfigurationService>(MockBehavior.Strict);
       m_configuration.Setup(x => x.CultureInfo).Returns(m_cultureEnglish);
       m_configuration.Setup(x => x.RegionInfo).Returns(m_regionInfo);
-      m_configuration.Setup(x => x.CultureFallback).Returns(new List<CultureInfo>(1) { m_cultureEnglish });
       Type testDataProviderType = typeof(TestDataProvider);
-      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, string>() { { testDataProviderType.AssemblyQualifiedName, "TestDataProvider" } });
+      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, IPluginConfiguration>() { { "TestDataProvider", new PluginConfiguration(testDataProviderType.AssemblyQualifiedName!, "", new List<IPluginConfigurationProfile>()) } });
 
       m_generalConfiguration = new Dictionary<string, object>() {
           { IConfigurationService.GeneralConfiguration.TimeZone, (object)IConfigurationService.TimeZone.Local },
-          { IConfigurationService.GeneralConfiguration.CultureFallback, new List<CultureInfo>(1) { m_cultureEnglish } },
-          { IConfigurationService.GeneralConfiguration.DataStore, new IConfigurationService.DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), "TradeSharpTest.db") }
+          { IConfigurationService.GeneralConfiguration.DataStore, new DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), "TradeSharpTest.db") }
       };
 
       m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);
 
       m_dataStore = new TradeSharp.Data.SqliteDataStoreService(m_configuration.Object);
 
-      //clear the database before starting the tests
+      //remove stale data from previous tests - this is to ensure proper test isolation and create the default objects used by the database
       m_dataStore.ClearDatabase();
+      m_dataStore.CreateDefaultObjects();
 
       //create common attributes used for testing
       m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "en-US");
