@@ -30,7 +30,7 @@ namespace TradeSharp.CoreUI.Services
     TKey ParentId { get; set; }
     TKey Id { get; set; }
     TItem Item { get; set; }
-    ObservableCollection<ITreeNodeType<TKey, TItem>> Children { get; set; }
+    ObservableCollection<ITreeNodeType<TKey, TItem>> Children { get; }
 
     //methods
     Task RefreshAsync();

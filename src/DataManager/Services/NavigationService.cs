@@ -58,11 +58,11 @@ namespace TradeSharp.WinDataManager.Services
     private string m_currentPage = string.Empty;
     public string CurrentPage => m_currentPage;
 
-    private Frame? _frame;
-    private Frame Frame => _frame ??= m_initNavigationService.Frame;
+    private Frame? m_frame;
+    private Frame Frame => m_frame ??= m_initNavigationService.Frame;
 
-    private Dictionary<string, Type>? _pages;
-    private Dictionary<string, Type> Pages => _pages ??= m_initNavigationService.Pages;
+    private Dictionary<string, Type>? m_pages;
+    private Dictionary<string, Type> Pages => m_pages ??= m_initNavigationService.Pages;
 
     //methods
     public Task GoBackAsync()

@@ -10,7 +10,7 @@ using System.Text.Json.Nodes;
 
 namespace TradeSharp.CoreUI.Services
 {
-  public partial class InstrumentService : ObservableObject, IListItemsService<Instrument>
+    public partial class InstrumentService : ObservableObject, IInstrumentService
   {
     //constants
     private const string extensionCSV = ".csv";
@@ -45,12 +45,7 @@ namespace TradeSharp.CoreUI.Services
     private IInstrumentRepository m_instrumentRepository;
     private IDataStoreService m_dataStoreService;
     private IDialogService m_dialogService;
-    [ObservableProperty] private Instrument? m_selectedItem;
-    [ObservableProperty] private ObservableCollection<Instrument> m_items;
-    [ObservableProperty] private string m_statusMessage;
-    [ObservableProperty] private double m_statusProgressMin;
-    [ObservableProperty] private double m_statusProgressMax;
-    [ObservableProperty] private double m_statusProgressValue;
+    private Instrument? m_selectedItem;
 
     //constructors
     public InstrumentService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IDialogService dialogService, IInstrumentRepository instrumentRepository)
@@ -59,11 +54,8 @@ namespace TradeSharp.CoreUI.Services
       m_instrumentRepository = instrumentRepository;
       m_dataStoreService = dataStoreService;
       m_dialogService = dialogService;
-      m_items = new ObservableCollection<Instrument>();
-      m_statusMessage = "";
-      m_statusProgressMin = 0;
-      m_statusProgressMax = 100;
-      m_statusProgressValue = 0;
+      m_selectedItem = null;
+      Items = new ObservableCollection<Instrument>();
     }
 
     //finalizers
@@ -141,15 +133,24 @@ namespace TradeSharp.CoreUI.Services
 
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
-    public event EventHandler<Instrument>? SelectedItemChanged;
+    
+    public event EventHandler<Instrument?>? SelectedItemChanged;
+    public Instrument? SelectedItem
+    {
+      get => m_selectedItem;
+      set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
+    }
 
+    public ObservableCollection<Instrument> Items { get; set; }
+
+    //methods
     private async Task<ImportReplaceResult> importJSON(ImportSettings importSettings)
     {
       ImportReplaceResult result = new ImportReplaceResult();
       result.Severity = IDialogService.StatusMessageSeverity.Success; //per default assume success
       ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
 
-      using (StreamReader file = new StreamReader(importSettings.Filename))
+      using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       {
         JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
 
@@ -257,7 +258,7 @@ namespace TradeSharp.CoreUI.Services
       //await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Parsing instruments from \"{importSettings.Filename}\"");
       ILogger logger = m_loggerFactory.CreateLogger($"Importing instruments - \"{importSettings.Filename}\"");
 
-      using (var reader = new StreamReader(importSettings.Filename))
+      using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
       {
         //read the header record

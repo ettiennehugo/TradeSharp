@@ -41,8 +41,8 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public HolidaysView()
     {
-      this.InitializeComponent();
       ViewModel = Ioc.Default.GetRequiredService<HolidayViewModel>();
+      this.InitializeComponent();
     }
 
     //finalizers

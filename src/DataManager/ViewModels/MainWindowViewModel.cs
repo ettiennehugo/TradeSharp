@@ -1,21 +1,18 @@
 ﻿using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.CoreUI.ViewModels;
-using TradeSharp.WinCoreUI.Views;
 using TradeSharp.WinDataManager.Services;
 using TradeSharp.WinDataManager.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TradeSharp.WinDataManager.ViewModels
 {
   /// <summary>
   /// View model class to facilitate the navigation between the different views of the data manager application.
   /// </summary>
-  public class MainWindowViewModel : ViewModelBase
+  public partial class MainWindowViewModel : ViewModelBase
   {
     //constants
 
@@ -42,7 +39,7 @@ namespace TradeSharp.WinDataManager.ViewModels
       { INavigationService.DataManager.Instruments, typeof(WinCoreUI.Views.InstrumentsView) },
       { INavigationService.DataManager.InstrumentGroups, typeof(WinCoreUI.Views.InstrumentGroupsView) },
       //{ INavigationService.DataManager.FundamentalData, typeof(BlankView) },
-      { INavigationService.DataManager.InstrumentData, typeof(BlankView) },
+      { INavigationService.DataManager.InstrumentData, typeof(WinCoreUI.Views.InstrumentBarsDataView) },
       { INavigationService.DataManager.Settings, typeof(BlankView) }
     };
 
@@ -59,7 +56,7 @@ namespace TradeSharp.WinDataManager.ViewModels
 
 
     //properties
-
+    [ObservableProperty] string m_statusMessage;
 
     //methods
     public void SetNavigationFrame(Frame frame) => m_initNavigationService.Initialize(frame, m_pages);
@@ -68,6 +65,9 @@ namespace TradeSharp.WinDataManager.ViewModels
     {
       if (args.SelectedItem is NavigationViewItem navigationItem)
       {
+        //clear any status information displayed
+        StatusMessage = "";
+
         switch (navigationItem.Tag)
         {
           case INavigationService.DataManager.Brokers:

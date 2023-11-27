@@ -41,10 +41,10 @@ namespace TradeSharp.Data.Testing
     private DateTime m_instrumentInceptionDate;
     private DateTime m_fromDateTime;
     private DateTime m_toDateTime;
-    private Dictionary<Resolution, BarData> m_testBarData;
-    private Dictionary<Resolution, BarData> m_testBarDataReversed;
-    private Level1Data m_level1TestData;
-    private Level1Data m_level1TestDataReversed;
+    private Dictionary<Resolution, DataCacheBars> m_testBarData;
+    private Dictionary<Resolution, DataCacheBars> m_testBarDataReversed;
+    private DataCacheLevel1 m_level1TestData;
+    private DataCacheLevel1 m_level1TestDataReversed;
 
     //constructors
     public DataFeed()
@@ -85,8 +85,8 @@ namespace TradeSharp.Data.Testing
       m_instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST", "TestInstrument", "TestInstrumentDescription", m_instrumentInceptionDate, m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
 
       //create some test data for the instrument
-      m_testBarData = new Dictionary<Resolution, BarData>();
-      m_testBarDataReversed = new Dictionary<Resolution, BarData>();
+      m_testBarData = new Dictionary<Resolution, DataCacheBars>();
+      m_testBarDataReversed = new Dictionary<Resolution, DataCacheBars>();
 
       //create required exchange in the database for the instrument in question
       m_dataStore.CreateExchange(m_exchange);
@@ -114,7 +114,7 @@ namespace TradeSharp.Data.Testing
       double price = 0.0;
       long size = 0;
       bool synthetic = false;
-      m_level1TestData = new Level1Data(0);
+      m_level1TestData = new DataCacheLevel1(0);
       m_level1TestData.Count = count;
       m_level1TestData.DateTime = new List<DateTime>(m_level1TestData.Count); for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.DateTime.Add(m_fromDateTime.AddSeconds(i)); }
       m_level1TestData.Bid = new List<double>(m_level1TestData.Count); price = 100.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Bid.Add(price); price += 1.0; }
@@ -128,7 +128,7 @@ namespace TradeSharp.Data.Testing
       m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, m_level1TestData);
 
       //data feed would reverse the data according to date/time so we need to reverse it here to match
-      m_level1TestDataReversed = new Level1Data(0);
+      m_level1TestDataReversed = new DataCacheLevel1(0);
       m_level1TestDataReversed.Count = count;
       m_level1TestDataReversed.DateTime = m_level1TestData.DateTime.Reverse().ToArray();
       m_level1TestDataReversed.Bid = m_level1TestData.Bid.Reverse().ToArray();
@@ -142,7 +142,7 @@ namespace TradeSharp.Data.Testing
       //create bar resolution test data
       foreach (Resolution resolution in m_dataStore.SupportedDataResolutions)
       {
-        BarData barData = new BarData(0);
+        DataCacheBars barData = new DataCacheBars(0);
         barData.Count = count;
 
         switch (resolution)
@@ -178,7 +178,7 @@ namespace TradeSharp.Data.Testing
         m_testBarData.Add(resolution, barData);
 
         //data feed would reverse the data according to date/time so we need to reverse it here to match
-        BarData reversedBarData = new BarData(0);
+        DataCacheBars reversedBarData = new DataCacheBars(0);
         reversedBarData.Count = count;
         reversedBarData.DateTime = barData.DateTime.Reverse().ToArray();
         reversedBarData.Open = barData.Open.Reverse().ToArray();
@@ -203,7 +203,7 @@ namespace TradeSharp.Data.Testing
       double price = 0.0;
       long size = 0;
       bool synthetic = false;
-      m_level1TestData = new Level1Data(0);
+      m_level1TestData = new DataCacheLevel1(0);
       m_level1TestData.Count = count;
       m_level1TestData.DateTime = new List<DateTime>(m_level1TestData.Count); for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.DateTime.Add(m_fromDateTime.AddSeconds(i)); }
       m_level1TestData.Bid = new List<double>(m_level1TestData.Count); price = 100.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Bid.Add(price); price += 1.0; }
@@ -215,7 +215,7 @@ namespace TradeSharp.Data.Testing
       m_level1TestData.Synthetic = new List<bool>(m_level1TestData.Count); synthetic = false; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Synthetic.Add(synthetic); synthetic = !synthetic; }
 
       //data feed would reverse the data according to date/time so we need to reverse it here to match
-      m_level1TestDataReversed = new Level1Data(0);
+      m_level1TestDataReversed = new DataCacheLevel1(0);
       m_level1TestDataReversed.Count = count;
       m_level1TestDataReversed.DateTime = m_level1TestData.DateTime.Reverse().ToArray();
       m_level1TestDataReversed.Bid = m_level1TestData.Bid.Reverse().ToArray();
@@ -229,7 +229,7 @@ namespace TradeSharp.Data.Testing
       //create bar resolution test data
       foreach (Resolution resolution in m_dataStore.SupportedDataResolutions)
       {
-        BarData barData = new BarData(0);
+        DataCacheBars barData = new DataCacheBars(0);
         barData.Count = count;
 
         switch (resolution)
@@ -264,7 +264,7 @@ namespace TradeSharp.Data.Testing
         m_testBarData.Add(resolution, barData);
 
         //data feed would reverse the data according to date/time so we need to reverse it here to match
-        BarData reversedBarData = new BarData(0);
+        DataCacheBars reversedBarData = new DataCacheBars(0);
         reversedBarData.Count = count;
         reversedBarData.DateTime = barData.DateTime.Reverse().ToArray();
         reversedBarData.Open = barData.Open.Reverse().ToArray();
@@ -286,7 +286,7 @@ namespace TradeSharp.Data.Testing
       int expectedBarCount = (int)Math.Ceiling((double)count / interval);
       if (resolution == Resolution.Minute && m_fromDateTime.Minute % interval != 0) expectedBarCount++; //add additional bar for the partial bar generated when the fromDateTime does not align by an exact minute boundary
 
-      BarData originalBarData = m_testBarDataReversed[resolution];
+      DataCacheBars originalBarData = m_testBarDataReversed[resolution];
       Assert.IsTrue(count <= originalBarData.Count, "Count should be less than generated set of bars.");
 
       DateTime currentDateTime = new DateTime(m_fromDateTime.Ticks);
@@ -447,7 +447,7 @@ namespace TradeSharp.Data.Testing
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
       Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Both);
       
-      Data.BarData barData = m_testBarDataReversed[resolution];
+      Data.DataCacheBars barData = m_testBarDataReversed[resolution];
 
       for (int i = 0; i < dataFeed.Count; i++)
       {
@@ -503,7 +503,7 @@ namespace TradeSharp.Data.Testing
           }
           break;
         case Resolution.Minute:
-          BarData barData = m_testBarDataReversed[resolution];
+          DataCacheBars barData = m_testBarDataReversed[resolution];
 
           for (int i = 0; i < dataFeed.Count; i++)
           {

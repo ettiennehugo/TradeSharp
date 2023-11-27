@@ -74,7 +74,6 @@
         <Grid x:Name="m_statusBar" ColumnDefinitions="32, *, 32" Grid.Row="1" Grid.Column="0">
           <FontIcon x:Name="m_statusBarIcon" FontFamily="Segoe MDL2 Assets" Glyph="" HorizontalAlignment="Left" Width="24" Height="24" Grid.Row="0" Grid.Column="0"/>
           <TextBlock x:Name="m_statusBarText" Text="" TextAlignment="Left"  HorizontalAlignment="Stretch" VerticalAlignment="Center" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" Grid.Row="0" Grid.Column="1"/>
-          <ProgressRing x:Name="m_statusBarProgress" Minimum="0" Maximum="100" Value="0" Width="24" Height="24" IsIndeterminate="False" IsActive="False" Grid.Row="0" Grid.Column="2"/>
         </Grid>
       </Grid>
     </NavigationView>

@@ -29,10 +29,10 @@ namespace TradeSharp.CoreUI.Services
 
 
     //attributes
-    private ITreeItemsService<Guid, InstrumentGroup> m_instrumentGroupService;
+    private IInstrumentGroupService m_instrumentGroupService;
 
     //constructors
-    public InstrumentGroupNodeType(ITreeItemsService<Guid, InstrumentGroup> service, InstrumentGroup item)
+    public InstrumentGroupNodeType(IInstrumentGroupService service, InstrumentGroup item)
     {
       m_instrumentGroupService = service;
       Item = item;
@@ -58,7 +58,7 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] private Guid m_parentId;
     [ObservableProperty] private Guid m_id;
     [ObservableProperty] private InstrumentGroup m_item;
-    [ObservableProperty] private ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> m_children;
+    public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> Children { get; internal set; }
 
     //methods
 

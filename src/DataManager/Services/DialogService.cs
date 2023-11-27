@@ -82,44 +82,6 @@ namespace TradeSharp.WinDataManager.Services
       return Task.CompletedTask;
     }
 
-    public Task ShowStatusProgressAsync(StatusProgressState state, long minimum, long maximum, long value)
-    {
-      StatusBarProgress.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
-      {      
-        switch (state)
-        {
-          case StatusProgressState.Reset:
-            StatusBarProgress.IsIndeterminate = false;
-            StatusBarProgress.IsActive = false;
-            StatusBarProgress.Minimum = 0;
-            StatusBarProgress.Maximum = 100;
-            StatusBarProgress.Value = 0;
-            break;
-          case StatusProgressState.Normal:
-            StatusBarProgress.IsIndeterminate = false;
-            StatusBarProgress.IsActive = false;
-            StatusBarProgress.Minimum = minimum >= 0 ? minimum : 0;
-            StatusBarProgress.Maximum = maximum >= StatusBarProgress.Minimum ? maximum : StatusBarProgress.Minimum;
-            StatusBarProgress.Value = value;
-            break;
-          case StatusProgressState.Indeterminate:
-            StatusBarProgress.IsIndeterminate = true;
-            StatusBarProgress.IsActive = false;
-            break;
-          case StatusProgressState.Paused:
-            StatusBarProgress.IsIndeterminate = false;
-            StatusBarProgress.IsActive = true;
-            break;
-          case StatusProgressState.Error:
-            StatusBarProgress.IsIndeterminate = false;
-            StatusBarProgress.IsActive = false;
-            break;
-        }
-      });
-
-      return Task.CompletedTask;
-    }
-
     public async Task<CountryInfo?> ShowSelectCountryAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
@@ -455,6 +417,21 @@ namespace TradeSharp.WinDataManager.Services
 
       return null;
     }
+
+    public Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution)
+    {
+
+      throw new NotImplementedException();   //TODO: Implement view for this.
+
+    }
+
+    public Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData)
+    {
+
+      throw new NotImplementedException();    //TODO: Implement view for this.
+
+    }
+
 
     //properties
     public FontIcon StatusBarIcon { get; set; }

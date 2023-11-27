@@ -13,7 +13,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for instrument group objects.
   /// </summary>
-  public partial class InstrumentGroupService : ObservableObject, ITreeItemsService<Guid, InstrumentGroup>
+  public partial class InstrumentGroupService : ObservableObject, IInstrumentGroupService
   {
     //constants
     private const string extensionCSV = ".csv";
@@ -63,10 +63,10 @@ namespace TradeSharp.CoreUI.Services
     private ILoggerFactory m_loggerFactory;
     private IInstrumentGroupRepository m_instrumentGroupRepository;
     private IDialogService m_dialogService;
-    [ObservableProperty] private ITreeNodeType<Guid, InstrumentGroup>? m_selectedNode;
-    [ObservableProperty] private ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> m_selectedNodes;
-    [ObservableProperty] private ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> m_nodes;
-    [ObservableProperty] private ObservableCollection<InstrumentGroup> m_items;
+    private ITreeNodeType<Guid, InstrumentGroup>? m_selectedNode;
+    public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> SelectedNodes { get; set; }
+    public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> Nodes { get; internal set; }
+    public ObservableCollection<InstrumentGroup> Items { get; internal set; }
 
     //constructors
     public InstrumentGroupService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IDialogService dialogService, IInstrumentGroupRepository instrumentGroupRepository)
@@ -75,9 +75,10 @@ namespace TradeSharp.CoreUI.Services
       m_dataStoreService = dataStoreService;
       m_instrumentGroupRepository = instrumentGroupRepository;
       m_dialogService = dialogService;
-      m_selectedNodes = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
-      m_items = new ObservableCollection<InstrumentGroup>();
-      m_nodes = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
+      m_selectedNode = null;
+      SelectedNodes = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
+      Items = new ObservableCollection<InstrumentGroup>();
+      Nodes = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
     }
 
     //finalizers
@@ -90,7 +91,14 @@ namespace TradeSharp.CoreUI.Services
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
     public Guid RootNodeId => InstrumentGroup.InstrumentGroupRoot;
 
-    public event EventHandler<InstrumentGroup>? SelectedNodeChanged;
+    public event EventHandler<ITreeNodeType<Guid, InstrumentGroup>?>? SelectedNodeChanged;
+    public ITreeNodeType<Guid, InstrumentGroup>? SelectedNode 
+    { 
+      get => m_selectedNode; 
+      set { SetProperty(ref m_selectedNode, value); SelectedNodeChanged?.Invoke(this, m_selectedNode); } 
+    }
+
+
 
     //methods
     public async Task<ITreeNodeType<Guid, InstrumentGroup>> AddAsync(ITreeNodeType<Guid, InstrumentGroup> node)
@@ -98,7 +106,7 @@ namespace TradeSharp.CoreUI.Services
       await m_instrumentGroupRepository.AddAsync(node.Item);
       await RefreshAsync(node.Item.ParentId);
       SelectedNode = getNode(node.Item.Id);
-      SelectedNodeChanged?.Invoke(this, SelectedNode!.Item);
+      SelectedNodeChanged?.Invoke(this, SelectedNode);
       return node;
     }
 
@@ -113,7 +121,7 @@ namespace TradeSharp.CoreUI.Services
       await parentNode!.RefreshAsync();
       SelectedNode = getNode(result);
 
-      SelectedNodeChanged?.Invoke(this, SelectedNode!.Item);
+      SelectedNodeChanged?.Invoke(this, SelectedNode);
 
       return SelectedNode!;
     }
@@ -131,18 +139,22 @@ namespace TradeSharp.CoreUI.Services
 
     public async Task RefreshAsync()
     {
-      //load all the items
+      //need to clear nodes/items in reverse order to TRY and avoid memory corruption
+      Nodes.Clear();
       Items.Clear();
+
+      //load all the items
       var result = await m_instrumentGroupRepository.GetItemsAsync();
       foreach (var item in result) Items.Add(item);
 
       //populate the nodes list of root nodes
-      Nodes.Clear();
+      //TODO: There is a bug in this code where the Add would result in an ExceptionAccessViolation, it's some threading issue since it does not occur consistenly.
       foreach (var item in Items)
-        if (item.ParentId == InstrumentGroup.InstrumentGroupRoot) Nodes.Add(new InstrumentGroupNodeType(this, item));
+        if (item.ParentId == InstrumentGroup.InstrumentGroupRoot)
+          Nodes.Add(new InstrumentGroupNodeType(this, item));
 
       SelectedNode = Nodes.FirstOrDefault(x => x.ParentId == InstrumentGroup.InstrumentGroupRoot); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
-      if (SelectedNode != null) SelectedNodeChanged?.Invoke(this, SelectedNode.Item);
+      if (SelectedNode != null) SelectedNodeChanged?.Invoke(this, SelectedNode);
     }
 
     private void removeNodes(Guid parentId)
@@ -239,7 +251,7 @@ namespace TradeSharp.CoreUI.Services
       Dictionary<string, InstrumentGroupRecord> fileInstrumentGroups = new Dictionary<string, InstrumentGroupRecord>();
       List<InstrumentGroupRecord> currentLineRecords = new List<InstrumentGroupRecord>();
 
-      using (var reader = new StreamReader(importSettings.Filename))
+      using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
       {
         //construct the set of instrument groups to be imported
@@ -622,7 +634,7 @@ namespace TradeSharp.CoreUI.Services
     {
       ImportReplaceResult result = new ImportReplaceResult();
 
-      using (StreamReader file = new StreamReader(importSettings.Filename))
+      using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       {
         JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
         ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");

@@ -14,7 +14,7 @@ namespace TradeSharp.CoreUI.Services
     /// <summary>
     /// Observable service class for country objects.
     /// </summary>
-    public partial class CountryService : ObservableObject, IListItemsService<Country>
+    public partial class CountryService : ObservableObject, ICountryService
   {
     //constants
 
@@ -27,22 +27,14 @@ namespace TradeSharp.CoreUI.Services
 
     //attributes
     private ICountryRepository m_countryRepository;
-    [ObservableProperty] private Country? m_selectedItem;
-    [ObservableProperty] private ObservableCollection<Country> m_items;
-    [ObservableProperty] private string m_statusMessage;
-    [ObservableProperty] private double m_statusProgressMin;
-    [ObservableProperty] private double m_statusProgressMax;
-    [ObservableProperty] private double m_statusProgressValue;
+    private Country? m_selectedItem;
 
     //constructors
     public CountryService(ICountryRepository countryRepository)
     {
       m_countryRepository = countryRepository;
-      m_items = new ObservableCollection<Country>();
-      m_statusMessage = "";
-      m_statusProgressMin = 0;
-      m_statusProgressMax = 100;
-      m_statusProgressValue = 0;
+      m_selectedItem = null;
+      Items = new ObservableCollection<Country>();
     }
 
     //finalizers
@@ -84,8 +76,16 @@ namespace TradeSharp.CoreUI.Services
     public Task<long> ExportAsync(string filename) => throw new NotImplementedException();
 
     //properties
-    public event EventHandler<Country>? SelectedItemChanged;
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } } //countries to not have a parent
+
+    public event EventHandler<Country?>? SelectedItemChanged;
+    public Country? SelectedItem
+    {
+      get => m_selectedItem;
+      set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, value); }
+    }
+
+    public ObservableCollection<Country> Items { get; set; }
 
     //methods
 

@@ -96,20 +96,15 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     public ObservableCollection<TItem> Items => m_itemsService.Items;
 
-    public string StatusMessage => m_itemsService.StatusMessage;
-    public double StatusProgressMin => m_itemsService.StatusProgressMin;
-    public double StatusProgressMax => m_itemsService.StatusProgressMax;
-    public double StatusProgressValue => m_itemsService.StatusProgressValue;
-
     //methods
     public async void OnRefresh()
     {
       await OnRefreshAsync();
     }
 
-    protected async Task OnRefreshAsync()
+    protected Task OnRefreshAsync()
     {
-      await m_itemsService.RefreshAsync();
+      return m_itemsService.RefreshAsync();
     }
 
     public abstract void OnAdd();

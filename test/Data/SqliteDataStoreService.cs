@@ -536,7 +536,34 @@ namespace TradeSharp.Data.Testing
         $"AND Low = {low.ToString()} " +
         $"AND Close = {close.ToString()} " +
         $"AND Volume = {volume.ToString()} ")
-      , "Actual bar value not persisted to database.");
+      , "Bar value not persisted to database.");
+    }
+
+    [TestMethod]
+    [DataRow(PriceDataType.Actual)]
+    [DataRow(PriceDataType.Synthetic)]
+    public void UpdateData_SingleLevel1DataPersist_Success(PriceDataType priceDataType)
+    {
+      DateTime dateTime = DateTime.Now.ToUniversalTime();
+      double bid = 1.0;
+      long bidSize = 2;
+      double ask = 3.0;
+      long askSize = 4;
+      double last = 5.0;
+      long lastSize = 6;
+
+      m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime, bid, bidSize, ask, askSize, last, lastSize, priceDataType == PriceDataType.Synthetic);
+
+      Assert.AreEqual(1, m_dataStore.GetRowCount(m_dataStore.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDataStoreService.c_TableInstrumentDataSynthetic : Data.SqliteDataStoreService.c_TableInstrumentData, Resolution.Level1),
+        $"Ticker = '{m_instrument.Ticker}' " +
+        $"AND DateTime = {dateTime.ToBinary()} " +
+        $"AND Bid = {bid.ToString()} " +
+        $"AND BidSize = {bidSize.ToString()} " +
+        $"AND Ask = {ask.ToString()} " +
+        $"AND AskSize = {askSize.ToString()} " +
+        $"AND Last = {last.ToString()} " +
+        $"AND LastSize = {lastSize.ToString()} ")
+      , "Bar value not persisted to database.");
     }
 
     [TestMethod]
@@ -596,7 +623,7 @@ namespace TradeSharp.Data.Testing
     public void UpdateData_RangeBarDataPersist_Success(Resolution resolution, PriceDataType priceDataType)
     {
       DateTime dateTime = DateTime.Now.ToUniversalTime();
-      BarData barData = new BarData(5);
+      DataCacheBars barData = new DataCacheBars(5);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5) };
       barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0 };
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0 };
@@ -633,7 +660,7 @@ namespace TradeSharp.Data.Testing
     public void UpdateData_RangeBarDataUpdate_Success(Resolution resolution, PriceDataType priceDataType)
     {
       DateTime dateTime = DateTime.Now.ToUniversalTime();
-      BarData barData = new BarData(5);
+      DataCacheBars barData = new DataCacheBars(5);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5) };
       barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0 };
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0 };
@@ -657,7 +684,7 @@ namespace TradeSharp.Data.Testing
         , "Original bar value from list not persisted to database.");
       }
 
-      barData = new BarData(5);
+      barData = new DataCacheBars(5);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5) };
       barData.Open = new List<double> { 211.0, 121.0, 131.0, 141.0, 151.0 };
       barData.High = new List<double> { 112.0, 222.0, 132.0, 142.0, 152.0 };
@@ -1471,7 +1498,7 @@ namespace TradeSharp.Data.Testing
     public void DeleteInstrument_InstrumentAndRelatedDataRemoved_Success()
     {
       DateTime dateTime = DateTime.Now.ToUniversalTime();  //bar data must always be stored in UTC datetime
-      BarData barData = new BarData(10);
+      DataCacheBars barData = new DataCacheBars(10);
       barData.DateTime = new List<DateTime> { dateTime.AddDays(1), dateTime.AddDays(2), dateTime.AddDays(3), dateTime.AddDays(4), dateTime.AddDays(5), dateTime.AddDays(6), dateTime.AddDays(7), dateTime.AddDays(8), dateTime.AddDays(9), dateTime.AddDays(10) };
       barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
@@ -2010,7 +2037,7 @@ namespace TradeSharp.Data.Testing
     public void GetBarData_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
     {
       DateTime dateTime = DateTime.Now.ToUniversalTime();
-      BarData barData = new BarData(10);
+      DataCacheBars barData = new DataCacheBars(10);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
                                               dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10) };
       barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
@@ -2022,10 +2049,131 @@ namespace TradeSharp.Data.Testing
 
       m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
-      DataCache dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime, dateTime.AddMinutes(10), resolution, priceDataType);
+      IList<IBarData> dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), priceDataType);
       Assert.AreEqual(barData.Count / 2, dataResult.Count, "GetBarData did not return the correct number of bars.");
 
-      BarData dataResultDetails = (BarData)dataResult.Data;
+      for (int index = 0; index < barData.Count; index++)
+      {
+        if ((priceDataType == PriceDataType.Synthetic && !dataResult[index].Synthetic) || (priceDataType == PriceDataType.Actual && dataResult[index].Synthetic)) continue;
+        Assert.IsTrue(barData.DateTime.Contains(dataResult[index].DateTime), string.Format("Bar data {0} not found.", dataResult[index].DateTime));
+      }
+    }
+
+    [TestMethod]
+    [DataRow(Resolution.Minute)]
+    [DataRow(Resolution.Day)]
+    public void GetBarData_ReturnsActualVsSyntheticSingleBarData_Success(Resolution resolution)
+    {
+      DateTime dateTime = DateTime.Now.ToUniversalTime();
+      DataCacheBars barData = new DataCacheBars(10);
+      barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
+                                              dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10) };
+      barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
+      barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
+      barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
+      barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
+      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
+      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
+
+      m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+
+      IBarData? dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime.AddMinutes(5), PriceDataType.Actual);
+      Assert.IsNotNull(dataResult, "Actual: Create actual data were not found.");
+      Assert.AreEqual(barData.DateTime[5] , dataResult.DateTime, "DateTime was not returned correctly.");
+      Assert.AreEqual(barData.Open[5] , dataResult.Open, "Open was not returned correctly.");
+      Assert.AreEqual(barData.High[5] , dataResult.High, "High was not returned correctly.");
+      Assert.AreEqual(barData.Low[5] , dataResult.Low, "Low was not returned correctly.");
+      Assert.AreEqual(barData.Close[5] , dataResult.Close, "Close was not returned correctly.");
+      Assert.AreEqual(barData.Volume[5] , dataResult.Volume, "Volume was not returned correctly.");
+      Assert.AreEqual(barData.Synthetic[5] , dataResult.Synthetic, "Synthetic was not returned correctly.");
+
+      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime.AddMinutes(5), PriceDataType.Synthetic);
+      Assert.IsNull(dataResult, "Synthetic: Uncreated synthetic data were found.");
+
+      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime.AddMinutes(6), PriceDataType.Actual);
+      Assert.IsNull(dataResult, "Actual: Created synthetic data were found.");
+
+      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime.AddMinutes(6), PriceDataType.Synthetic);
+      Assert.IsNotNull(dataResult, "Synthetic: Create actual data were not found.");
+      Assert.AreEqual(barData.DateTime[6], dataResult.DateTime, "Synthetic: DateTime was not returned correctly.");
+      Assert.AreEqual(barData.Open[6], dataResult.Open, "Synthetic: Open was not returned correctly.");
+      Assert.AreEqual(barData.High[6], dataResult.High, "Synthetic: High was not returned correctly.");
+      Assert.AreEqual(barData.Low[6], dataResult.Low, "Synthetic: Low was not returned correctly.");
+      Assert.AreEqual(barData.Close[6], dataResult.Close, "Synthetic: Close was not returned correctly.");
+      Assert.AreEqual(barData.Volume[6], dataResult.Volume, "Synthetic: Volume was not returned correctly.");
+      Assert.AreEqual(barData.Synthetic[6], dataResult.Synthetic, "Synthetic: Synthetic was not returned correctly.");
+    }
+
+    [TestMethod]
+    [DataRow(Resolution.Level1, PriceDataType.Actual)]
+    [DataRow(Resolution.Level1, PriceDataType.Synthetic)]
+    public void GetLevel1Data_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
+    {
+      DateTime dateTime = DateTime.Now.ToUniversalTime();
+      DataCacheLevel1 level1Data = new DataCacheLevel1(10);
+      level1Data.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
+                                              dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10) };
+      level1Data.Bid = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
+      level1Data.BidSize = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
+      level1Data.Ask = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
+      level1Data.AskSize = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
+      level1Data.Last = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
+      level1Data.LastSize = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
+      level1Data.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
+
+      m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, level1Data);
+
+      ILevel1Data? dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(5), PriceDataType.Actual);
+      Assert.IsNotNull(dataResult, "Actual: Create actual data were not found.");
+      Assert.AreEqual(level1Data.DateTime[5], dataResult.DateTime, "DateTime was not returned correctly.");
+      Assert.AreEqual(level1Data.Bid[5], dataResult.Bid, "Bid was not returned correctly.");
+      Assert.AreEqual(level1Data.BidSize[5], dataResult.BidSize, "BidSize was not returned correctly.");
+      Assert.AreEqual(level1Data.Ask[5], dataResult.Ask, "Ask was not returned correctly.");
+      Assert.AreEqual(level1Data.AskSize[5], dataResult.AskSize, "AskSize was not returned correctly.");
+      Assert.AreEqual(level1Data.Last[5], dataResult.Last, "Last was not returned correctly.");
+      Assert.AreEqual(level1Data.LastSize[5], dataResult.LastSize, "LastSize was not returned correctly.");
+
+      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(5), PriceDataType.Synthetic);
+      Assert.IsNull(dataResult, "Synthetic: Uncreated synthetic data were found.");
+
+      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(6), PriceDataType.Actual);
+      Assert.IsNull(dataResult, "Actual: Created synthetic data were found.");
+
+      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(6), PriceDataType.Synthetic);
+      Assert.IsNotNull(dataResult, "Synthetic: Create actual data were not found.");
+      Assert.AreEqual(level1Data.DateTime[6], dataResult.DateTime, "Synthetic: DateTime was not returned correctly.");
+      Assert.AreEqual(level1Data.Bid[6], dataResult.Bid, "Synthetic: Bid was not returned correctly.");
+      Assert.AreEqual(level1Data.BidSize[6], dataResult.BidSize, "Synthetic: BidSize was not returned correctly.");
+      Assert.AreEqual(level1Data.Ask[6], dataResult.Ask, "Synthetic: Ask was not returned correctly.");
+      Assert.AreEqual(level1Data.AskSize[6], dataResult.AskSize, "Synthetic: AskSize was not returned correctly.");
+      Assert.AreEqual(level1Data.Last[6], dataResult.Last, "Synthetic: Last was not returned correctly.");
+      Assert.AreEqual(level1Data.LastSize[6], dataResult.LastSize, "Synthetic: LastSize was not returned correctly.");
+    }
+
+    [TestMethod]
+    [DataRow(Resolution.Minute, PriceDataType.Actual)]
+    [DataRow(Resolution.Day, PriceDataType.Actual)]
+    [DataRow(Resolution.Minute, PriceDataType.Synthetic)]
+    [DataRow(Resolution.Day, PriceDataType.Synthetic)]
+    public void GetDataCache_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
+    {
+      DateTime dateTime = DateTime.Now.ToUniversalTime();
+      DataCacheBars barData = new DataCacheBars(10);
+      barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
+                                              dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10) };
+      barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
+      barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
+      barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
+      barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
+      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
+      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
+
+      m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+
+      DataCache dataResult = m_dataStore.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), priceDataType);
+      Assert.AreEqual(barData.Count / 2, dataResult.Count, "GetDataCache did not return the correct number of bars.");
+
+      DataCacheBars dataResultDetails = (DataCacheBars)dataResult.Data;
       for (int index = 0; index < barData.Count; index++)
       {
         if ((priceDataType == PriceDataType.Synthetic && !barData.Synthetic[index]) || (priceDataType == PriceDataType.Actual && barData.Synthetic[index])) continue;
@@ -2036,10 +2184,10 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     [DataRow(Resolution.Minute)]
     [DataRow(Resolution.Day)]
-    public void GetBarData_ReturnsActualAndSyntheticBarData_Success(Resolution resolution)
+    public void GetDataCache_ReturnsActualAndSyntheticBarData_Success(Resolution resolution)
     {
       DateTime dateTime = DateTime.Now.ToUniversalTime();  //bar data must always be stored in UTC datetime
-      BarData barData = new BarData(10);
+      DataCacheBars barData = new DataCacheBars(10);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
                                               dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10) };
       barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
@@ -2051,10 +2199,10 @@ namespace TradeSharp.Data.Testing
 
       m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
-      DataCache dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime, dateTime.AddMinutes(10), resolution, PriceDataType.Both);
-      Assert.AreEqual(barData.Count, dataResult.Count, "GetBarData did not return the correct number of bars.");
+      DataCache dataResult = m_dataStore.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), PriceDataType.Both);
+      Assert.AreEqual(barData.Count, dataResult.Count, "GetDataCache did not return the correct number of bars.");
 
-      BarData dataResultDetails = (BarData)dataResult.Data;
+      DataCacheBars dataResultDetails = (DataCacheBars)dataResult.Data;
       for (int index = 0; index < barData.Count; index++)
         Assert.IsTrue(dataResultDetails.DateTime.Contains(barData.DateTime[index]), string.Format("Bar data {0} not found.", barData.DateTime[index]));
     }

@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using TradeSharp.Data;
 
-namespace TradeSharp.CoreUI.Repositories
+namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
-  /// Generic interface for instrument data repositories, in general controls the key settings to retrieve instrument data from the data base.
+  /// Instrument data service interface, mainly encapsulating the key information used to populate the underlying repository.
   /// </summary>
-  public interface IInstrumentDataRepository
+  public interface IInstrumentDataService
   {
     //constants
 
@@ -31,10 +31,9 @@ namespace TradeSharp.CoreUI.Repositories
     DateTime Start { get; set; }
     DateTime End { get; set; }
     Resolution Resolution { get; set; }
-    PriceDataType PriceDataType {  get; set; }
+    PriceDataType PriceDataType { get; set; }
 
     //methods
-
 
 
   }

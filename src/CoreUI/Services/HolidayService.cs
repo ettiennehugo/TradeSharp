@@ -13,7 +13,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for holiday objects.
   /// </summary>
-  public partial class HolidayService : ObservableObject, IListItemsService<Holiday>
+  public partial class HolidayService : ObservableObject, IHolidayService
   {
     //constants
 
@@ -27,23 +27,15 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     private IHolidayRepository m_holidayRepository;
     private Guid m_parent;
-    [ObservableProperty] private Holiday? m_selectedItem;
-    [ObservableProperty] private ObservableCollection<Holiday> m_items;
-    [ObservableProperty] private string m_statusMessage;
-    [ObservableProperty] private double m_statusProgressMin;
-    [ObservableProperty] private double m_statusProgressMax;
-    [ObservableProperty] private double m_statusProgressValue;
+    private Holiday? m_selectedItem;
 
     //constructors
     public HolidayService(IHolidayRepository holidayRepository)
     {
       m_parent = Guid.Empty;
       m_holidayRepository = holidayRepository;
-      m_items = new ObservableCollection<Holiday>();
-      m_statusMessage = "";
-      m_statusProgressMin = 0;
-      m_statusProgressMax = 100;
-      m_statusProgressValue = 0;
+      m_selectedItem = null;
+      Items = new ObservableCollection<Holiday>();
     }
 
     //finalizers
@@ -68,7 +60,14 @@ namespace TradeSharp.CoreUI.Services
       }
     }
 
-    public event EventHandler<Holiday>? SelectedItemChanged;
+    public event EventHandler<Holiday?>? SelectedItemChanged;
+    public Holiday? SelectedItem
+    {
+      get => m_selectedItem;
+      set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
+    }
+
+    public ObservableCollection<Holiday> Items { get; set; }
 
     //methods
     public async Task<Holiday> AddAsync(Holiday item)

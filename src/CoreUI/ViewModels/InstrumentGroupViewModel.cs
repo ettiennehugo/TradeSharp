@@ -28,7 +28,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //constructors
-    public InstrumentGroupViewModel(ITreeItemsService<Guid, InstrumentGroup> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
+    public InstrumentGroupViewModel(IInstrumentGroupService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand(OnDelete, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Deletable));
@@ -43,7 +43,7 @@ namespace TradeSharp.CoreUI.ViewModels
       Guid parentId = SelectedNode != null ? SelectedNode.Item.Id : InstrumentGroup.InstrumentGroupRoot;
       InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync(parentId);
       if (newInstrumentGroup != null)
-        await m_itemsService.AddAsync(new InstrumentGroupNodeType(m_itemsService, newInstrumentGroup));
+        await m_itemsService.AddAsync(new InstrumentGroupNodeType((IInstrumentGroupService)m_itemsService, newInstrumentGroup));
     }
 
     public async override void OnUpdate()

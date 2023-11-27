@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.CoreUI.ViewModels;
-using TradeSharp.Common;
+﻿using TradeSharp.Common;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -98,8 +92,7 @@ namespace TradeSharp.CoreUI.Services
 
     //methods
     Task ShowPopupMessageAsync(string message);
-    Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);          //TODO: Remove this if you MVVM it, also remove above enumeration or move it to a better place.
-    Task ShowStatusProgressAsync(StatusProgressState state, long minimum, long maximum, long value);    //TODO: Remove this if you MVVM it, also remove above enumeration or more it to a better place.
+    Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
 
     Task<CountryInfo?> ShowSelectCountryAsync();
 
@@ -121,5 +114,9 @@ namespace TradeSharp.CoreUI.Services
     Task<InstrumentGroup?> ShowUpdateInstrumentGroupAsync(InstrumentGroup instrumentGroup);
     Task<ImportSettings?> ShowImportInstrumentGroupsAsync();
     Task<string?> ShowExportInstrumentGroupsAsync();
+
+    Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution);
+    Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData);
+
   }
 }

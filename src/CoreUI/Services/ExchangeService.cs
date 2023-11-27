@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.CoreUI.Repositories;
 using TradeSharp.Data;
@@ -13,7 +8,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for exchange objects.
   /// </summary>
-  public partial class ExchangeService : ObservableObject, IListItemsService<Exchange>
+  public partial class ExchangeService : ObservableObject, IExchangeService
   {
     //constants
 
@@ -27,23 +22,15 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     private IExchangeRepository m_exchangeRepository;
     private Guid m_parent;
-    [ObservableProperty] private Exchange? m_selectedItem;
-    [ObservableProperty] private ObservableCollection<Exchange> m_items;
-    [ObservableProperty] private string m_statusMessage;
-    [ObservableProperty] private double m_statusProgressMin;
-    [ObservableProperty] private double m_statusProgressMax;
-    [ObservableProperty] private double m_statusProgressValue;
+    private Exchange? m_selectedItem;
 
     //constructors
     public ExchangeService(IExchangeRepository exchangeRepository)
     {
       m_parent = Guid.Empty;
       m_exchangeRepository = exchangeRepository;
-      m_items = new ObservableCollection<Exchange>();
-      m_statusMessage = "";
-      m_statusProgressMin = 0;
-      m_statusProgressMax = 100;
-      m_statusProgressValue = 0;
+      m_selectedItem = null;
+      Items = new ObservableCollection<Exchange>();
     }
 
     //finalizers
@@ -67,7 +54,14 @@ namespace TradeSharp.CoreUI.Services
       }
     }
 
-    public event EventHandler<Exchange>? SelectedItemChanged;
+    public event EventHandler<Exchange?>? SelectedItemChanged;
+    public Exchange? SelectedItem
+    {
+      get => m_selectedItem;
+      set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
+    }
+
+    public ObservableCollection<Exchange> Items { get; set; }
 
     //methods
     public async Task<Exchange> AddAsync(Exchange item)

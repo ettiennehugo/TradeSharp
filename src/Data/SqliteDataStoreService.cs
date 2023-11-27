@@ -1,7 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using System.Xml.Linq;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data
@@ -395,9 +393,6 @@ namespace TradeSharp.Data
     {
       return Delete(c_TableSession, id);
     }
-
-
-    //TODO: Needs to Update, Delete using the object instance. Also, needs to set the AttributeSet.
 
     public void CreateInstrumentGroup(InstrumentGroup instrumentGroup)
     {
@@ -948,7 +943,35 @@ namespace TradeSharp.Data
       ExecuteCommand(command);
     }
 
-    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, BarData bars)
+    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize, bool synthetic)
+    {
+      //create database command
+      string command;
+      string tableName;
+      string normalizedTicker = ticker.ToUpper();
+
+      if (!synthetic)
+        tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1);
+      else
+        tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, Resolution.Level1);
+
+      command =
+        $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
+          $"VALUES (" +
+            $"'{normalizedTicker}', " +
+            $"{dateTime.ToUniversalTime().ToBinary()}, " +
+            $"{bid}, " +
+            $"{bidSize}, " +
+            $"{ask}, " +
+            $"{askSize}, " +
+            $"{last}, " +
+            $"{lastSize}" + 
+        $")";
+
+      ExecuteCommand(command);
+    }
+
+    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DataCacheBars bars)
     {
       //level 1 data can not be updated by his method
       if (resolution == Resolution.Level1) throw new ArgumentException("Update for bar data can not update Level 1 data.");
@@ -990,7 +1013,7 @@ namespace TradeSharp.Data
       }
     }
 
-    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Level1Data level1Data)
+    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DataCacheLevel1 level1Data)
     {
       if (level1Data.Count == 0) throw new ArgumentException("Update data count should not be zero.");
 
@@ -1211,7 +1234,7 @@ namespace TradeSharp.Data
       }
 
       DataCache dataCache = new DataCache(dataProviderName, instrumentId, resolution, priceDataType, from, to, list.Count);
-      BarData barData = (BarData)dataCache.Data;
+      DataCacheBars barData = (DataCacheBars)dataCache.Data;
 
       int i = 0;
       foreach (var bar in list)
@@ -1247,7 +1270,7 @@ namespace TradeSharp.Data
     /// <summary>
     /// Loads level 1 tick data from the database and returns the populated DataCache structure.
     /// </summary>
-    public DataCache GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, PriceDataType priceDataType)
+    public DataCache GetDataCache(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, PriceDataType priceDataType)
     {
       //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
       DateTime fromUtc = from.ToUniversalTime();
@@ -1321,7 +1344,7 @@ namespace TradeSharp.Data
       }
 
       DataCache dataCache = new DataCache(dataProviderName, instrumentId, Resolution.Level1, priceDataType, from, to, list.Count);
-      Level1Data level1Data = (Level1Data)dataCache.Data;
+      DataCacheLevel1 level1Data = (DataCacheLevel1)dataCache.Data;
 
       int i = 0;
       foreach (var entry in list)
@@ -1340,7 +1363,200 @@ namespace TradeSharp.Data
       return dataCache;
     }
 
-    public DataCache GetInstrumentData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType)
+    public IBarData? GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, PriceDataType priceDataType)
+    {
+      if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
+
+      //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
+      DateTime dateTimeUtc = dateTime.ToUniversalTime();
+      string command;
+      string normalizedTicker = ticker.ToUpper();
+
+      //load actual data if required
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      {
+        command =
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime == {dateTimeUtc.ToUniversalTime().ToBinary()}";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+          if (reader.Read())
+            return new BarData(resolution, reader.GetDateTime(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false);
+      }
+
+      //load synthetic price data if required
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      {
+        command =
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {dateTimeUtc.ToUniversalTime().ToBinary()}";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+          if (reader.Read())
+            return new BarData(resolution, reader.GetDateTime(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true);
+      }
+
+      return null;
+    }
+
+    public IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType)
+    {
+      if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
+
+      //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
+      DateTime fromUtc = from.ToUniversalTime();
+      DateTime toUtc = to.ToUniversalTime();
+
+      //create database command
+      SortedDictionary<DateTime, BarData> result = new SortedDictionary<DateTime, BarData>();
+      string command;
+      string normalizedTicker = ticker.ToUpper();
+
+      //load actual data if required
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      {
+        command =
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {fromUtc.ToBinary()} " +
+              $"AND DateTime <= {toUtc.ToBinary()} " +
+            $"ORDER BY DateTime ASC";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+        {
+          while (reader.Read())
+          {
+            var dateTime = reader.GetDateTime(1);
+            result.Add(dateTime, new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
+          }
+        }
+      }
+
+      //load synthetic price data if required
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      {
+        command =
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {fromUtc.ToBinary()} " +
+              $"AND DateTime <= {toUtc.ToBinary()} " +
+            $"ORDER BY DateTime ASC";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+        {
+          while (reader.Read())
+          {
+            var dateTime = reader.GetDateTime(1);
+            if (!result.ContainsKey(dateTime))
+              result.Add(dateTime, new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
+          }
+        }
+      }
+
+      return [.. result.Values];
+    }
+
+    public ILevel1Data? GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, PriceDataType priceDataType)
+    {
+      //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
+      DateTime dateTimeUtc = dateTime.ToUniversalTime();
+
+      //create database command
+      string command;
+      string normalizedTicker = ticker.ToUpper();
+
+      //get actual bar data
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      {
+        command =
+          $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime == {dateTimeUtc.ToBinary()}";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+          if (reader.Read())
+            return new Level1Data(reader.GetDateTime(0), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false);
+      }
+
+      //get synthetic bar data
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      {
+        command =
+          $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, Resolution.Level1)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime == {dateTimeUtc.ToBinary()}";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+          if (reader.Read())
+            return new Level1Data(reader.GetDateTime(0), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true);
+      }
+
+      return null;
+    }
+
+    public IList<ILevel1Data> GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, PriceDataType priceDataType)
+    {
+      //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
+      DateTime fromUtc = from.ToUniversalTime();
+      DateTime toUtc = to.ToUniversalTime();
+
+      //create database command
+      SortedDictionary<DateTime, Level1Data> result = new SortedDictionary<DateTime, Level1Data>();
+
+      string command;
+      string normalizedTicker = ticker.ToUpper();
+
+      //get actual bar data
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      {
+        command =
+          $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {fromUtc.ToBinary()} " +
+              $"AND DateTime <= {toUtc.ToBinary()} " +
+            $"ORDER BY DateTime ASC";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+          while (reader.Read())
+          {
+            DateTime dateTime = reader.GetDateTime(0);
+            result.Add(dateTime, new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false));
+          }
+      }
+
+      //get synthetic bar data
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      {
+        command =
+          $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, Resolution.Level1)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {fromUtc.ToBinary()} " +
+              $"AND DateTime <= {toUtc.ToBinary()} " +
+            $"ORDER BY DateTime ASC";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+          while (reader.Read())
+          {
+            DateTime dateTime = reader.GetDateTime(0);
+            if (!result.ContainsKey(dateTime))
+              result.Add(dateTime, new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true));
+          }
+      }
+
+      return [.. result.Values];
+    }
+
+    public DataCache GetDataCache(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType)
     {
       switch (resolution)
       {
@@ -1352,7 +1568,7 @@ namespace TradeSharp.Data
           return GetBarData(dataProviderName, instrumentId, ticker, from, to, resolution, priceDataType);
 
         case Resolution.Level1:
-          return GetLevel1Data(dataProviderName, instrumentId, ticker, from, to, priceDataType);
+          return GetDataCache(dataProviderName, instrumentId, ticker, from, to, priceDataType);
 
         default:
           throw new ArgumentException("Unknown resolution.");

@@ -13,7 +13,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for session objects.
   /// </summary>
-  public partial class SessionService : ObservableObject, IListItemsService<Session>
+  public partial class SessionService : ObservableObject, ISessionService
   {
     //constants
 
@@ -27,23 +27,14 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     private ISessionRepository m_sessionRepository;
     private Guid m_parent;
-    [ObservableProperty] private Session? m_selectedItem;
-    [ObservableProperty] private ObservableCollection<Session> m_items;
-    [ObservableProperty] private string m_statusMessage;
-    [ObservableProperty] private double m_statusProgressMin;
-    [ObservableProperty] private double m_statusProgressMax;
-    [ObservableProperty] private double m_statusProgressValue;
+    private Session? m_selectedItem;
 
     //constructors
     public SessionService(ISessionRepository sessionRepository)
     {
       m_parent = Guid.Empty;
       m_sessionRepository = sessionRepository;
-      m_items = new ObservableCollection<Session>();
-      m_statusMessage = "";
-      m_statusProgressMin = 0;
-      m_statusProgressMax = 100;
-      m_statusProgressValue = 0;
+      Items = new ObservableCollection<Session>();
     }
 
     //finalizers
@@ -68,7 +59,14 @@ namespace TradeSharp.CoreUI.Services
       }
     }
 
-    public event EventHandler<Session>? SelectedItemChanged;
+    public event EventHandler<Session?>? SelectedItemChanged;
+    public Session? SelectedItem
+    {
+      get => m_selectedItem;
+      set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
+    }
+
+    public ObservableCollection<Session> Items { get; set; }
 
     //methods
     public async Task<Session> AddAsync(Session item)

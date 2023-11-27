@@ -208,7 +208,7 @@ namespace TradeSharp.Data
     //methods
     protected void refreshDataCache()
     {
-      DataCache dataCache = m_dataStore.GetInstrumentData(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
+      DataCache dataCache = m_dataStore.GetDataCache(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
       IConfigurationService.TimeZone timeZone = (IConfigurationService.TimeZone)m_configuration.General[IConfigurationService.GeneralConfiguration.TimeZone];
 
 
@@ -220,7 +220,7 @@ namespace TradeSharp.Data
         case Resolution.Week:
         case Resolution.Month:
           {
-            BarData barData = (BarData)dataCache.Data;
+            DataCacheBars barData = (DataCacheBars)dataCache.Data;
             Count = (int)Math.Ceiling((double)barData.Count / Interval);
             if (Resolution == Resolution.Minute && (From.Minute % Interval != 0)) Count++;  //add an extra partial bar if the from date is not aligned to the interval
             m_dateTimeData = new DateTime[Count];
@@ -317,7 +317,7 @@ namespace TradeSharp.Data
           break;
         case Resolution.Level1:
           {
-            Level1Data level1Data = (Level1Data)dataCache.Data;
+            DataCacheLevel1 level1Data = (DataCacheLevel1)dataCache.Data;
 
             for (int i = 0; i < level1Data.Count; i++)
               switch (timeZone)

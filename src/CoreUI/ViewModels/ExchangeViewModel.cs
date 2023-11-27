@@ -1,10 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Common;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 
@@ -28,7 +22,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //constructors
-    public ExchangeViewModel(IListItemsService<Exchange> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
+    public ExchangeViewModel(IExchangeService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
@@ -53,7 +47,6 @@ namespace TradeSharp.CoreUI.ViewModels
         SelectedItem = exchange;
         Items.Add(exchange);
         await OnRefreshAsync();
-
       }
     }
 

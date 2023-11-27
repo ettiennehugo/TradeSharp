@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -34,7 +29,7 @@ namespace TradeSharp.CoreUI.Services
     ObservableCollection<TItem> Items { get; }    //flat list of all items
 
     //events
-    event EventHandler<TItem>? SelectedNodeChanged;
+    event EventHandler<ITreeNodeType<TKey, TItem>?>? SelectedNodeChanged;
 
     //methods
     Task RefreshAsync();

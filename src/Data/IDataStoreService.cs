@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
 using System.ComponentModel;
-using static TradeSharp.Data.Country;
 
 namespace TradeSharp.Data
 {
@@ -251,7 +244,7 @@ namespace TradeSharp.Data
       {
         switch (result.DayOfWeek)
         {
-          //TBD: This will not always work correctly if you have holidays close together, it will move the holiday to the previsou Friday or next Monday
+          //TBD: This will not always work correctly if you have holidays close together, it will move the holiday to the previous Friday or next Monday
           //     but if those days are also holidays then it will be incorrect. For now this solution will do, to fix it you'd need to have the notion
           //     of a holiday calendar that is a parent of this holiday object and this holiday object can then refer to it to get the other holidays to
           //     adjust itself correctly.
@@ -644,15 +637,14 @@ namespace TradeSharp.Data
     }
   }
 
-
   //TBD: Determine whether it is necessary to make these objects observable since it might become super slow.
 
   /// <summary>
   /// Represents the data cache around price bar data.
   /// </summary>
-  public class BarData
+  public class DataCacheBars
   {
-    public BarData(int count)
+    public DataCacheBars(int count)
     {
       Count = count;
       DateTime = new DateTime[count];
@@ -680,10 +672,9 @@ namespace TradeSharp.Data
   ///       case the underlying storage structure would need to be adjusted - would probably need some custom memory implementation
   ///       that implements the IList interface.
   /// </summary>
-  public class Level1Data
-
+  public class DataCacheLevel1
   {
-    public Level1Data(int count)
+    public DataCacheLevel1(int count)
     {
       Count = count;
       DateTime = new DateTime[count];
@@ -732,11 +723,11 @@ namespace TradeSharp.Data
         case Resolution.Day:
         case Resolution.Week:
         case Resolution.Month:
-          Data = new BarData(count);
+          Data = new DataCacheBars(count);
           break;
         //tick data
         case Resolution.Level1:
-          Data = new Level1Data(count);
+          Data = new DataCacheLevel1(count);
           break;
       }
     }
@@ -775,7 +766,7 @@ namespace TradeSharp.Data
 
 
     //properties
-    public IList<Resolution> SupportedDataResolutions { get; }
+    IList<Resolution> SupportedDataResolutions { get; }
 
     /// <summary>
     /// Start a transaction if the data store supports transactional updates.
@@ -790,100 +781,104 @@ namespace TradeSharp.Data
     /// <summary>
     /// Country definition interface.
     /// </summary>
-    public void CreateCountry(Country country);
-    public void UpdateCountry(Country country);
-    public Country? GetCountry(Guid id);
-    public IList<Country> GetCountries();
-    public int DeleteCountry(Guid id);
+    void CreateCountry(Country country);
+    void UpdateCountry(Country country);
+    Country? GetCountry(Guid id);
+    IList<Country> GetCountries();
+    int DeleteCountry(Guid id);
 
     /// <summary>
     /// Exchange definition interface.
     /// </summary>
-    public void CreateExchange(Exchange exchange);
-    public Exchange? GetExchange(Guid id);
-    public IList<Exchange> GetExchanges();
-    public void UpdateExchange(Exchange exchange);
-    public int DeleteExchange(Guid id);
+    void CreateExchange(Exchange exchange);
+    Exchange? GetExchange(Guid id);
+    IList<Exchange> GetExchanges();
+    void UpdateExchange(Exchange exchange);
+    int DeleteExchange(Guid id);
 
     /// <summary>
     /// Country and exchange holiday inerface.
     /// </summary>
-    public void CreateHoliday(Holiday holiday);
-    public Holiday? GetHoliday(Guid id);
-    public IList<Holiday> GetHolidays(Guid parentId);
-    public IList<Holiday> GetHolidays();
-    public void UpdateHoliday(Holiday holiday);
-    public int DeleteHoliday(Guid id);
+    void CreateHoliday(Holiday holiday);
+    Holiday? GetHoliday(Guid id);
+    IList<Holiday> GetHolidays(Guid parentId);
+    IList<Holiday> GetHolidays();
+    void UpdateHoliday(Holiday holiday);
+    int DeleteHoliday(Guid id);
 
     /// <summary>
     /// Create/update a trading session definition on a given PrimaryExchange.
     /// </summary>
-    public void CreateSession(Session session);
-    public Session? GetSession(Guid id);
-    public IList<Session> GetSessions(Guid exchangeId);
-    public IList<Session> GetSessions();
-    public void UpdateSession(Session session);
-    public int DeleteSession(Guid id);
+    void CreateSession(Session session);
+    Session? GetSession(Guid id);
+    IList<Session> GetSessions(Guid exchangeId);
+    IList<Session> GetSessions();
+    void UpdateSession(Session session);
+    int DeleteSession(Guid id);
 
     /// <summary>
     /// Instrument group definition interface.
     /// </summary>
-    public void CreateInstrumentGroup(InstrumentGroup instrumentGroup);
-    public void CreateInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
-    public InstrumentGroup? GetInstrumentGroup(Guid id);
-    public IList<InstrumentGroup> GetInstrumentGroups();
-    public IList<Guid> GetInstrumentGroupInstruments(Guid instrumentGroupId);
-    public void UpdateInstrumentGroup(InstrumentGroup instrumentGroup);
-    public int DeleteInstrumentGroup(Guid id);
-    public int DeleteInstrumentGroupChild(Guid parentId, Guid childId);
-    public int DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
+    void CreateInstrumentGroup(InstrumentGroup instrumentGroup);
+    void CreateInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
+    InstrumentGroup? GetInstrumentGroup(Guid id);
+    IList<InstrumentGroup> GetInstrumentGroups();
+    IList<Guid> GetInstrumentGroupInstruments(Guid instrumentGroupId);
+    void UpdateInstrumentGroup(InstrumentGroup instrumentGroup);
+    int DeleteInstrumentGroup(Guid id);
+    int DeleteInstrumentGroupChild(Guid parentId, Guid childId);
+    int DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
 
     /// <summary>
     /// Instrument definition interface.
     /// </summary>
-    public void CreateInstrument(Instrument instrument);
-    public void AddInstrumentToExchange(Guid instrument, Guid exchange);
-    public IList<Instrument> GetInstruments();
-    public IList<Instrument> GetInstruments(InstrumentType instrumentType);
-    public Instrument? GetInstrument(Guid id);
-    public void UpdateInstrument(Instrument instrument);
-    public int DeleteInstrument(Instrument instrument);
-    public int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId);
+    void CreateInstrument(Instrument instrument);
+    void AddInstrumentToExchange(Guid instrument, Guid exchange);
+    IList<Instrument> GetInstruments();
+    IList<Instrument> GetInstruments(InstrumentType instrumentType);
+    Instrument? GetInstrument(Guid id);
+    void UpdateInstrument(Instrument instrument);
+    int DeleteInstrument(Instrument instrument);
+    int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId);
 
     /// <summary>
     /// Fundamental definition interface.
     /// </summary>
-    public void CreateFundamental(Fundamental fundamental);
-    public IList<Fundamental> GetFundamentals();
+    void CreateFundamental(Fundamental fundamental);
+    IList<Fundamental> GetFundamentals();
 
     //UPDATE??
 
-    public int DeleteFundamental(Guid id);
-    public int DeleteFundamentalValues(Guid id);
-    public int DeleteFundamentalValues(string dataProviderName, Guid id);
+    int DeleteFundamental(Guid id);
+    int DeleteFundamentalValues(Guid id);
+    int DeleteFundamentalValues(string dataProviderName, Guid id);
 
-    public void CreateCountryFundamental(CountryFundamental fundamental);
-    public IList<CountryFundamental> GetCountryFundamentals(string dataProviderName);
-    public void UpdateCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime, double value);
-    public int DeleteCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId);
-    public int DeleteCountryFundamentalValue(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime);
+    void CreateCountryFundamental(CountryFundamental fundamental);
+    IList<CountryFundamental> GetCountryFundamentals(string dataProviderName);
+    void UpdateCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime, double value);
+    int DeleteCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId);
+    int DeleteCountryFundamentalValue(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime);
 
-    public void CreateInstrumentFundamental(InstrumentFundamental fundamental);
-    public IList<InstrumentFundamental> GetInstrumentFundamentals(string dataProviderName);
-    public void UpdateInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime, double value);
-    public int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId);
-    public int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime);
+    void CreateInstrumentFundamental(InstrumentFundamental fundamental);
+    IList<InstrumentFundamental> GetInstrumentFundamentals(string dataProviderName);
+    void UpdateInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime, double value);
+    int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId);
+    int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime);
 
     /// <summary>
     /// Create/update price data from a given DataProvider for a given instrument. Synthetic data that was generated can be set for a given instrument as well in the event that the specific
     /// DataProvider has missing intervals of data.
     /// </summary>
-    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume, bool synthetic);
-    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, BarData bars);
-    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Level1Data bars);
-    public int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime, bool? synthetic = null);
-    public int DeleteData(string dataProviderName, string ticker, Resolution? resolution = null, DateTime? from = null, DateTime? to = null, bool? synthetic = null);
-    public DataCache GetInstrumentData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);
-
+    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume, bool synthetic);
+    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize, bool synthetic);
+    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DataCacheBars bars);
+    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DataCacheLevel1 bars);
+    int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime, bool? synthetic = null);
+    int DeleteData(string dataProviderName, string ticker, Resolution? resolution = null, DateTime? from = null, DateTime? to = null, bool? synthetic = null);
+    IBarData? GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, PriceDataType priceDataType);
+    IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);
+    ILevel1Data? GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, PriceDataType priceDataType);
+    IList<ILevel1Data> GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, PriceDataType priceDataType);
+    DataCache GetDataCache(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);
   }
 }

@@ -26,6 +26,7 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       m_navigationService = navigationService;
       m_dialogService = dialogService;
+      StatusMessage = "";
     }
 
     //finalizers
@@ -35,7 +36,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-
+    [ObservableProperty] string m_statusMessage;
 
     //methods
 
