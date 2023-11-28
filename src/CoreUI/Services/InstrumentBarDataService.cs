@@ -22,13 +22,14 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     private IInstrumentBarDataRepository m_repository;
     private IBarData? m_selectedItem;
+    private Instrument? m_instrument;
 
     //constructors
     public InstrumentBarDataService(IInstrumentBarDataRepository repository) 
     {
       m_repository = repository;
       DataProvider = "";
-      InstrumentId = Guid.Empty;
+      Instrument = null;
       Ticker = "";
       Start = DateTime.MinValue;
       End = DateTime.MaxValue;
@@ -90,9 +91,20 @@ namespace TradeSharp.CoreUI.Services
     }
 
     //properties
-    public Guid ParentId { get => InstrumentId; set { InstrumentId = value; } } //instrument is considered the parent of the service
+    public Guid ParentId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); } //not supported, instrument bar data requires a complex key
+
     public string DataProvider { get => m_repository.DataProvider; set => m_repository.DataProvider = value; }
-    public Guid InstrumentId { get => m_repository.InstrumentId; set => m_repository.InstrumentId = value; }
+    
+    public Instrument? Instrument 
+    {
+      get => m_instrument;
+      set
+      {
+        m_instrument = value;
+        m_repository.InstrumentId = m_instrument != null ? m_instrument.Id : Guid.Empty;
+      }
+    }
+    
     public string Ticker { get => m_repository.Ticker; set => m_repository.Ticker = value; }
     public DateTime Start { get => m_repository.Start; set => m_repository.Start = value; }
     public DateTime End { get => m_repository.End; set => m_repository.End = value; }

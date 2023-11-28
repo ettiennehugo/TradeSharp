@@ -117,6 +117,5 @@ namespace TradeSharp.CoreUI.Services
 
     Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution);
     Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData);
-
   }
 }

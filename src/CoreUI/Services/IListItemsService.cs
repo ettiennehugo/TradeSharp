@@ -2,11 +2,18 @@
 
 namespace TradeSharp.CoreUI.Services
 {
-    /// <summary>
-    /// Interface to be implemented by services that allow the manipulation of items in a list fashion. Services are defined to support dependency injection in MVVM.
-    /// The service overall supports viewing all the items and then viewing the details of a single item (SelectedItem)
-    /// </summary>
-    public interface IListItemsService<T>
+  /// <summary>
+  /// Interface to be implemented by services that allow the manipulation of items in a list fashion. Services are defined to support dependency injection in MVVM.
+  /// The service overall supports viewing all the items and then viewing the details of a single item (SelectedItem)
+  /// </summary>
+  
+
+
+  //TODO: See whether you can make a paged version of this list.
+
+
+
+  public interface IListItemsService<T>
   {
     //constants
 

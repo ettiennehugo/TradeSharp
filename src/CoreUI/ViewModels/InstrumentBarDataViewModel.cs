@@ -1,6 +1,7 @@
 ﻿using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -26,6 +27,10 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       m_service = service;
       Resolution = m_service.Resolution;
+      AddCommand = new RelayCommand(OnAdd, () => DataProvider != "" && Instrument != null && Ticker != ""); //view model must be keyed correctly before adding new items
+      UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
+      DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
+      CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => SelectedItem != null);
     }
 
     //finalizers
@@ -43,19 +48,31 @@ namespace TradeSharp.CoreUI.ViewModels
         Items.Add(barData);
         await OnRefreshAsync();
       }
-
     }
 
-    public override void OnUpdate()
+    public async override void OnUpdate()
     {
-      throw new NotImplementedException();
+      if (SelectedItem != null)
+      {
+        var updatedBar = await m_dialogService.ShowUpdateBarDataAsync(SelectedItem);
+        if (updatedBar != null)
+        {
+          await m_service.UpdateAsync(updatedBar);
+          await OnRefreshAsync();
+        }
+      }
     }
 
     //properties
-    [ObservableProperty] private Resolution m_resolution;
+    public string DataProvider { get => m_service.DataProvider; set => m_service.DataProvider = value; }
+    public Resolution Resolution { get => m_service.Resolution; set => m_service.Resolution = value; }
+    public Instrument? Instrument { get => m_service.Instrument; set => m_service.Instrument = value; }
+    public string Ticker { get => m_service.Ticker; set => m_service.Ticker= value; }
+    public DateTime Start{ get => m_service.Start; set => m_service.Start= value; }
+    public DateTime End { get => m_service.End ; set => m_service.End = value; }
+    public PriceDataType PriceDataType { get => m_service.PriceDataType; set => m_service.PriceDataType = value; }
 
     //methods
-
 
 
   }

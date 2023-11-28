@@ -40,7 +40,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-    public RelayCommand<object?> CopyCommand { get; internal set; }
+
 
     //methods
     public async override void OnAdd()
@@ -68,7 +68,7 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public async void OnCopy(object? target)
+    public async override void OnCopy(object? target)
     {
       if (target == null) return; //should not occur if UI menu is setup correctly, just do nothing
 

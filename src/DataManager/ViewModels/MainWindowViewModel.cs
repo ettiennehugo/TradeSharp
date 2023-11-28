@@ -39,7 +39,7 @@ namespace TradeSharp.WinDataManager.ViewModels
       { INavigationService.DataManager.Instruments, typeof(WinCoreUI.Views.InstrumentsView) },
       { INavigationService.DataManager.InstrumentGroups, typeof(WinCoreUI.Views.InstrumentGroupsView) },
       //{ INavigationService.DataManager.FundamentalData, typeof(BlankView) },
-      { INavigationService.DataManager.InstrumentData, typeof(WinCoreUI.Views.InstrumentBarsDataView) },
+      { INavigationService.DataManager.InstrumentData, typeof(WinCoreUI.Views.InstrumentDataView) },
       { INavigationService.DataManager.Settings, typeof(BlankView) }
     };
 

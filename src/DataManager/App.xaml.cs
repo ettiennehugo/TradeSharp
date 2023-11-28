@@ -47,6 +47,7 @@ namespace TradeSharp.WinDataManager
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
       registerServices();
+      initServiceCaches();
       m_window = new MainWindow();
       m_window.Activate();
     }
@@ -94,16 +95,14 @@ namespace TradeSharp.WinDataManager
       );
     }
 
-
-
-    //void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-    //{
-    //  // process unhandled exception
-
-    //  //TODO
-
-    //  // prevent default unhandled exception processing
-    //  e.Handled = true;
-    //}
+    /// <summary>
+    /// Fires off loading of services that support large data sets to cache data where possible.
+    /// NOTE: All methods called here should be async to avoid hanging up the UI thread.
+    /// </summary>
+    private void initServiceCaches() 
+    {
+      var instrumentService = Ioc.Default.GetRequiredService<IInstrumentService>();
+      instrumentService.RefreshAsync();
+    }
   }
 }

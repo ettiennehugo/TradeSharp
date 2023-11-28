@@ -33,6 +33,7 @@ namespace TradeSharp.CoreUI.ViewModels
       AddCommand = new RelayCommand(OnAdd);
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
+      CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => SelectedItem != null);
       RefreshCommand = new RelayCommand(OnRefresh);
       RefreshCommandAsync = new AsyncRelayCommand(OnRefreshAsync);
     }
@@ -47,6 +48,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public RelayCommand AddCommand { get; internal set; }
     public RelayCommand UpdateCommand { get; internal set; }
     public RelayCommand<object?> DeleteCommand { get; internal set; }
+    public RelayCommand<object?> CopyCommand { get; internal set; }
     public RelayCommand RefreshCommand { get; internal set; }
     public AsyncRelayCommand RefreshCommandAsync { get; internal set; }
 
@@ -110,7 +112,32 @@ namespace TradeSharp.CoreUI.ViewModels
     public abstract void OnAdd();
     public abstract void OnUpdate();
 
-    public async void OnDelete(object? target)
+    public async virtual void OnCopy(object? target)
+    {
+      int count = 0;
+      if (target is TItem)
+      {
+        TItem item = (TItem)target;
+        Items.Remove(item);
+        await m_itemsService.CopyAsync(item);
+        SelectedItem = Items.FirstOrDefault();
+        count++;
+      }
+      else if (target is IList)
+      {
+        IList items = (IList)target;
+        foreach (TItem item in items)
+        {
+          await m_itemsService.CopyAsync(item);
+          count++;
+        }
+
+        await OnRefreshAsync();
+        SelectedItem = Items.FirstOrDefault();
+      }
+    }
+
+    public async virtual void OnDelete(object? target)
     {
       int count = 0;
       if (target is TItem)

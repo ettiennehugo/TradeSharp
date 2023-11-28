@@ -8,11 +8,7 @@
     mc:Ignorable="d"
     xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"
     xmlns:winui="using:CommunityToolkit.WinUI.UI.Controls"
-    xmlns:system="using:System"
     Loaded="UserControl_Loaded">
-  <UserControl.Resources>
-    <wincoreuicommon:EnumValueDescriptionConverter x:Key="EnumValueDescriptionConverter"/>
-  </UserControl.Resources>
   <Grid x:Name="m_main" RowDefinitions="Auto, *">
     <StackPanel x:Name="m_toolbar" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">

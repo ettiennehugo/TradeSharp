@@ -1,108 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Page
+<UserControl
     x:Class="TradeSharp.WinCoreUI.Views.InstrumentBarsDataView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:TradeSharp.WinCoreUI.Views"
+    xmlns:winui="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:winui="using:CommunityToolkit.WinUI.UI.Controls" 
-    xmlns:data="using:TradeSharp.Data"
-    mc:Ignorable="d"
-    Loaded="Page_Loaded"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-  <Grid x:Name="m_main" RowDefinitions="Auto, Auto, *, Auto, 2*, Auto, 4*">
-    <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
+    Loaded="UserControl_Loaded"
+    mc:Ignorable="d">
+  <UserControl.Resources>
+    <wincoreuicommon:BoolToStringConverter x:Key="BoolToSyntheticConverter" FalseValue="Actual" TrueValue="Synthetic"/>
+  </UserControl.Resources>
+    <Grid x:Name="m_main" RowDefinitions="Auto, *">
+    <StackPanel x:Name="m_toolbar" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
-        <AppBarButton x:Name="m_refreshCommand" Icon="Refresh" Click="m_refreshCommand_Click" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarButton x:Name="m_buttonRefresh" Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarSeparator/>
+        <AppBarButton x:Name="m_buttonAdd" Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add bar" IsCompact="True"/>
+        <AppBarButton x:Name="m_buttonEdit" Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update bar" IsCompact="True"/>
+        <AppBarButton x:Name="m_buttonDelete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}" ToolTipService.ToolTip="Delete bar(s)" IsCompact="True"/>
+        <AppBarSeparator/>
+        <AppBarButton x:Name="m_buttonCopy"  Icon="Copy" Label="Copy bar(s)" IsCompact="True">
+          <AppBarButton.Flyout>
+            <MenuFlyout x:Name="m_copyFlyout">
+              <MenuFlyoutSubItem x:Name="m_copyToMinute" Text="To minute"/>
+              <MenuFlyoutSubItem x:Name="m_copyToHour" Text="To hour"/>
+              <MenuFlyoutSubItem x:Name="m_copyToDay" Text="To day"/>
+              <MenuFlyoutSubItem x:Name="m_copyToWeek" Text="To week"/>
+              <MenuFlyoutSubItem x:Name="m_copyToMonth" Text="To month"/>
+            </MenuFlyout>
+          </AppBarButton.Flyout>
+        </AppBarButton>
+        <AppBarSeparator/>
+        <AppBarElementContainer x:Name="m_filterContainer">
+          <StackPanel Orientation="Horizontal">
+            <DatePicker x:Name="m_startDate" Margin="8,8,0,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}"/>
+            <TimePicker x:Name="m_startTime" ClockIdentifier="24HourClock" Margin="0,8,8,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}"/>
+            <TextBlock Text="-" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <DatePicker x:Name="m_endDate" Margin="8,8,0,8" ToolTipService.ToolTip="{x:Bind FilterEndTooltip, Mode=OneWay}"/>
+            <TimePicker x:Name="m_endTime" ClockIdentifier="24HourClock" Margin="0,8,8,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}"/>
+          </StackPanel>
+        </AppBarElementContainer>
+        <AppBarButton x:Name="m_resetFilter" Icon="Clear" ToolTipService.ToolTip="Reset filter" Click="m_resetFilter_Click" IsCompact="True"/>
       </CommandBar>
     </StackPanel>
-    <TextBlock x:Name="m_dataProvidersHeader" Text="Data Providers" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="1" Grid.Column="0"/>
-    <ListView x:Name="m_dataProviders" SelectionMode="Single" ItemsSource="{x:Bind DataProviders}" SelectionChanged="m_dataProviders_SelectionChanged" Grid.Row="2" Grid.Column="0"/>
-    <TextBlock x:Name="m_instrumentsHeader" Text="Instruments" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="3" Grid.Column="0"/>
-    <Grid x:Name="m_instrumentGrid" RowDefinitions="Auto, *" Grid.Row="4" Grid.Column="0">
-      <StackPanel Orientation="Horizontal"  Grid.Row="0" Grid.Column="0">
-        <TextBlock x:Name="m_instrumentFilterFieldsLabel" Text="Match by" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-        <ComboBox x:Name="m_filterMatchFields" Width="200" Margin="8"  HorizontalAlignment="Left" SelectedIndex="3" SelectionChanged="m_filterMatchFields_SelectionChanged">
-          <ComboBox.Items>
-            <ComboBoxItem>Ticker</ComboBoxItem>
-            <ComboBoxItem>Name</ComboBoxItem>
-            <ComboBoxItem>Description</ComboBoxItem>
-            <ComboBoxItem>Any</ComboBoxItem>
-          </ComboBox.Items>
-        </ComboBox>
-        <TextBlock x:Name="m_instrumentFilterLabel" Text="using filter" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-        <TextBox x:Name="m_instrumentFilter" Width="300" PlaceholderText="filter expression" Margin="8" HorizontalAlignment="Left" TextChanged="m_instrumentFilter_TextChanged"/>
-      </StackPanel>
-      <ListView x:Name="m_instruments" SelectionMode="Single" ItemsSource="{x:Bind FilteredInstruments}" SelectionChanged="m_instruments_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Auto" Grid.Row="2" Grid.Column="0">
-        <ListView.ItemTemplate>
-          <DataTemplate x:Name="InstrumentDataTeplate" x:DataType="data:Instrument">
-            <StackPanel Orientation="Horizontal">
-              <TextBlock x:Name="m_instrumentTickerLbl" Text="{x:Bind Ticker}" Margin="0,0,8,0" Style="{ThemeResource BaseTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-              <TextBlock x:Name="m_instrumentLblSeparator" Text="-" Margin="8,0,8,0" Style="{ThemeResource BodyTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-              <TextBlock x:Name="m_instrumentNameLbl" Text="{x:Bind Name}" Margin="8,0,0,0" Style="{ThemeResource BodyTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-            </StackPanel>
-          </DataTemplate>
-        </ListView.ItemTemplate>
-        <ListView.ItemsPanel>
-          <ItemsPanelTemplate>
-            <winui:WrapPanel Orientation="Vertical"/>
-          </ItemsPanelTemplate>
-        </ListView.ItemsPanel>
-      </ListView>
-    </Grid>
-    <TextBlock x:Name="m_instrumentDataHeader" Text="Instrument Data" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="5" Grid.Column="0"/>
-    <TabView x:Name="m_tabView" TabWidthMode="Equal" SelectedIndex="0" IsAddTabButtonVisible="False" Grid.Row="6" Grid.Column="0">
-      <TabViewItem x:Name="m_minutesTab" IsClosable="False">
-        <TabViewItem.Header>
-          <StackPanel Orientation="Horizontal">
-            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC48;"/>
-            <TextBlock Text="Minutes" VerticalAlignment="Center" Margin="10,0,0,0" />
-          </StackPanel>
-        </TabViewItem.Header>
-
-
-      </TabViewItem>
-      <TabViewItem x:Name="m_hoursTab" IsClosable="False">
-        <TabViewItem.Header>
-          <StackPanel Orientation="Horizontal">
-            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC49;" />
-            <TextBlock Text="Hours" VerticalAlignment="Center" Margin="10,0,0,0" />
-          </StackPanel>
-        </TabViewItem.Header>
-
-
-      </TabViewItem>
-      <TabViewItem x:Name="m_daysTab" IsClosable="False">
-        <TabViewItem.Header>
-          <StackPanel Orientation="Horizontal">
-            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE787;" />
-            <TextBlock Text="Days" VerticalAlignment="Center" Margin="10,0,0,0" />
-          </StackPanel>
-        </TabViewItem.Header>
-
-
-      </TabViewItem>
-      <TabViewItem x:Name="m_weeksTab" IsClosable="False">
-        <TabViewItem.Header>
-          <StackPanel Orientation="Horizontal">
-            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C0;" />
-            <TextBlock Text="Weeks" VerticalAlignment="Center" Margin="10,0,0,0" />
-          </StackPanel>
-        </TabViewItem.Header>
-
-
-      </TabViewItem>
-      <TabViewItem x:Name="m_monthsTab" IsClosable="False">
-        <TabViewItem.Header>
-          <StackPanel Orientation="Horizontal">
-            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8BF;" />
-            <TextBlock Text="Months" VerticalAlignment="Center" Margin="10,0,0,0" />
-          </StackPanel>
-        </TabViewItem.Header>
-
-
-      </TabViewItem>
-    </TabView>
+    <winui:DataGrid x:Name="m_dataTable" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"  Grid.Row="1" Grid.Column="0">
+      <winui:DataGrid.Columns>
+        <winui:DataGridTextColumn x:Name="m_columnDateTime" Width="Auto" Header="Date/Time" Binding="{Binding DateTime}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnOpen" Width="Auto" Header="Open" Binding="{Binding Open}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnHigh" Width="Auto" Header="High" Binding="{Binding High}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnLow" Width="Auto" Header="Low" Binding="{Binding Low}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnClose" Width="Auto" Header="Close" Binding="{Binding Close}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnVolume" Width="Auto" Header="Volume" Binding="{Binding Volume}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnSynthetic" Width="Auto" Header="Synthetic" Binding="{Binding Synthetic, Converter={StaticResource BoolToSyntheticConverter}}" IsReadOnly="True"/>
+      </winui:DataGrid.Columns>
+    </winui:DataGrid>
   </Grid>
-</Page>
+</UserControl>
