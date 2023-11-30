@@ -61,7 +61,10 @@ namespace TradeSharp.Data
     [ObservableProperty] private bool m_synthetic;
 
     //methods
-
+    public IBarData Clone()
+    {
+      return new BarData(Resolution, DateTime, Open, High, Low, Close, Volume, Synthetic); 
+    }
 
   }
 }

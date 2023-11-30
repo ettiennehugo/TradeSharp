@@ -74,14 +74,14 @@ namespace TradeSharp.WinDataManager
           .AddSingleton<ISessionRepository, SessionRepository>()
           .AddSingleton<IInstrumentRepository, InstrumentRepository>()
           .AddSingleton<IInstrumentGroupRepository, InstrumentGroupRepository>()
-          .AddSingleton<IInstrumentBarDataRepository, InstrumentBarDataRepository>()
+          .AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>() //this repository must be transient as it requires keying around the resolution passed from the view model which is also transient
           .AddSingleton<ICountryService, CountryService>()
           .AddSingleton<IHolidayService, HolidayService>()
           .AddSingleton<IExchangeService, ExchangeService>()
           .AddSingleton<ISessionService, SessionService>()
           .AddSingleton<IInstrumentService, InstrumentService>()
           .AddSingleton<IInstrumentGroupService, InstrumentGroupService>()
-          .AddSingleton<IInstrumentBarDataService, InstrumentBarDataService>()
+          .AddTransient<IInstrumentBarDataService, InstrumentBarDataService>() //this service must be transient as it requires keying around the resolution passed from the view model which is also transient
           .AddScoped<CountryViewModel>()
           .AddScoped<CountryItemViewModel>()
           .AddScoped<HolidayViewModel>()
@@ -90,7 +90,7 @@ namespace TradeSharp.WinDataManager
           .AddScoped<SessionViewModel>()
           .AddScoped<InstrumentViewModel>()
           .AddScoped<InstrumentGroupViewModel>()
-          .AddScoped<InstrumentBarDataViewModel>()
+          .AddTransient<InstrumentBarDataViewModel>()
           .BuildServiceProvider()
       );
     }

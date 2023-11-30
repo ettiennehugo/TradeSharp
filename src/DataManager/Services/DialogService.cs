@@ -228,7 +228,7 @@ namespace TradeSharp.WinDataManager.Services
 
       ContentDialogResult result = await dialog.ShowAsync();
       if (result == ContentDialogResult.Primary) return view.Session;
-      
+
       return null;
     }
 
@@ -389,9 +389,9 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
-        Width=575,
-        MaxWidth=1920,
-        MaxHeight=1080,
+        Width = 575,
+        MaxWidth = 1920,
+        MaxHeight = 1080,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -418,20 +418,51 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution)
+    public async Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution, DateTime dateTime, bool synthetic)
     {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.InstrumentBarDataView view = new WinCoreUI.Views.InstrumentBarDataView();
+      view.Resolution = resolution;
+      view.Date = dateTime.Date;
+      view.Time = dateTime.TimeOfDay;
+      view.Synthetic = synthetic;
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+        Title = "Create new bar data",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
 
-      throw new NotImplementedException();   //TODO: Implement view for this.
+      ContentDialogResult result = await dialog.ShowAsync();
+      if (result == ContentDialogResult.Primary) return view.BarData;
 
+      return null;
     }
 
-    public Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData)
+    public async Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData)
     {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.InstrumentBarDataView view = new WinCoreUI.Views.InstrumentBarDataView(barData.Clone());
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+        Title = "Create new bar data",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+      };
 
-      throw new NotImplementedException();    //TODO: Implement view for this.
+      ContentDialogResult result = await dialog.ShowAsync();
+      if (result == ContentDialogResult.Primary) return view.BarData;
 
+      return null;
     }
-
 
     //properties
     public FontIcon StatusBarIcon { get; set; }

@@ -1,4 +1,5 @@
 ﻿using TradeSharp.Data;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Repositories;
@@ -28,12 +29,11 @@ namespace TradeSharp.CoreUI.Services
     public InstrumentBarDataService(IInstrumentBarDataRepository repository) 
     {
       m_repository = repository;
-      DataProvider = "";
+      DataProvider = string.Empty;
       Instrument = null;
-      Ticker = "";
       Start = DateTime.MinValue;
       End = DateTime.MaxValue;
-      Resolution = Resolution;
+      Resolution = Resolution.Day;
       PriceDataType = PriceDataType.Both;
       m_selectedItem = null;
       Items = new ObservableCollection<IBarData>();
@@ -101,11 +101,10 @@ namespace TradeSharp.CoreUI.Services
       set
       {
         m_instrument = value;
-        m_repository.InstrumentId = m_instrument != null ? m_instrument.Id : Guid.Empty;
+        m_repository.Instrument = m_instrument;
       }
     }
     
-    public string Ticker { get => m_repository.Ticker; set => m_repository.Ticker = value; }
     public DateTime Start { get => m_repository.Start; set => m_repository.Start = value; }
     public DateTime End { get => m_repository.End; set => m_repository.End = value; }
     public Resolution Resolution { get => m_repository.Resolution; set => m_repository.Resolution = value; }

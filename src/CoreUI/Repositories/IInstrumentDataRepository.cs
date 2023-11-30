@@ -26,8 +26,7 @@ namespace TradeSharp.CoreUI.Repositories
 
     //properties
     string DataProvider { get; set; }
-    Guid InstrumentId { get; set; }
-    string Ticker { get; set; }
+    Instrument? Instrument { get; set; }
     DateTime Start { get; set; }
     DateTime End { get; set; }
     Resolution Resolution { get; set; }

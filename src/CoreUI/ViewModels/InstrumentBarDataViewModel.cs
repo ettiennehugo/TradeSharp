@@ -1,7 +1,7 @@
 ﻿using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.DependencyInjection;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -20,14 +20,24 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    private IInstrumentBarDataService m_service;
+    private string m_dataProvider;
+    private Resolution m_resolution;
+    private Instrument? m_instrument;
+    private DateTime m_start;
+    private DateTime m_end;
+    private PriceDataType m_priceDataType;
 
     //constructors
     public InstrumentBarDataViewModel(IInstrumentBarDataService service, INavigationService navigationService, IDialogService dialogService) : base(service, navigationService, dialogService)
     {
-      m_service = service;
-      Resolution = m_service.Resolution;
-      AddCommand = new RelayCommand(OnAdd, () => DataProvider != "" && Instrument != null && Ticker != ""); //view model must be keyed correctly before adding new items
+      Resolution = Resolution.Day;
+      DataProvider = string.Empty;
+      Instrument = null;
+      Start = DateTime.MinValue;
+      End = DateTime.MaxValue;
+      PriceDataType = PriceDataType.Both;
+
+      AddCommand = new RelayCommand(OnAdd); //, () => DataProvider != "" && Instrument != null); //view model must be keyed correctly before adding new items
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
       CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => SelectedItem != null);
@@ -39,11 +49,11 @@ namespace TradeSharp.CoreUI.ViewModels
     //interface implementations
     public async override void OnAdd()
     {
-      IBarData? barData = await m_dialogService.ShowCreateBarDataAsync(Resolution);
+      IBarData? barData = await m_dialogService.ShowCreateBarDataAsync(Resolution, DateTime.Now, PriceDataType == PriceDataType.Synthetic);
       if (barData != null)
       {
         barData.Resolution = Resolution;
-        await m_service.AddAsync(barData);
+        await m_itemsService.AddAsync(barData);
         SelectedItem = barData;
         Items.Add(barData);
         await OnRefreshAsync();
@@ -57,20 +67,19 @@ namespace TradeSharp.CoreUI.ViewModels
         var updatedBar = await m_dialogService.ShowUpdateBarDataAsync(SelectedItem);
         if (updatedBar != null)
         {
-          await m_service.UpdateAsync(updatedBar);
+          await m_itemsService.UpdateAsync(updatedBar);
           await OnRefreshAsync();
         }
       }
     }
 
     //properties
-    public string DataProvider { get => m_service.DataProvider; set => m_service.DataProvider = value; }
-    public Resolution Resolution { get => m_service.Resolution; set => m_service.Resolution = value; }
-    public Instrument? Instrument { get => m_service.Instrument; set => m_service.Instrument = value; }
-    public string Ticker { get => m_service.Ticker; set => m_service.Ticker= value; }
-    public DateTime Start{ get => m_service.Start; set => m_service.Start= value; }
-    public DateTime End { get => m_service.End ; set => m_service.End = value; }
-    public PriceDataType PriceDataType { get => m_service.PriceDataType; set => m_service.PriceDataType = value; }
+    public string DataProvider { get => m_dataProvider; set { SetProperty(ref m_dataProvider, value); ((IInstrumentBarDataService)m_itemsService).DataProvider = value; } }
+    public Resolution Resolution { get => m_resolution; set { SetProperty(ref m_resolution, value); ((IInstrumentBarDataService)m_itemsService).Resolution = value; } }
+    public Instrument? Instrument { get => m_instrument; set { SetProperty(ref m_instrument, value); ((IInstrumentBarDataService)m_itemsService).Instrument = value; } }
+    public DateTime Start{ get => m_start; set { SetProperty(ref m_start, value); ((IInstrumentBarDataService)m_itemsService).Start = value; } }
+    public DateTime End { get => m_end ; set { SetProperty(ref m_end, value); ((IInstrumentBarDataService)m_itemsService).End = value; } }
+    public PriceDataType PriceDataType { get => m_priceDataType; set { SetProperty(ref m_priceDataType, value); ((IInstrumentBarDataService)m_itemsService).PriceDataType = value; } }
 
     //methods
 

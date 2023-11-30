@@ -115,7 +115,7 @@ namespace TradeSharp.CoreUI.Services
     Task<ImportSettings?> ShowImportInstrumentGroupsAsync();
     Task<string?> ShowExportInstrumentGroupsAsync();
 
-    Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution);
+    Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution, DateTime dateTime, bool synthetic);
     Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData);
   }
 }

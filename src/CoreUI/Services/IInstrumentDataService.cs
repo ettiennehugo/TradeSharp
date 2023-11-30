@@ -27,7 +27,6 @@ namespace TradeSharp.CoreUI.Services
     //properties
     string DataProvider { get; set; }
     Instrument? Instrument { get; set; }
-    string Ticker { get; set; }
     DateTime Start { get; set; }
     DateTime End { get; set; }
     Resolution Resolution { get; set; }

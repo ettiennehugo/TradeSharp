@@ -41,7 +41,6 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public static readonly DependencyProperty DataProviderProperty = DependencyProperty.Register("DataProvider", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata(""));
     public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register("Resolution", typeof(Resolution), typeof(InstrumentBarsDataView), new PropertyMetadata(Resolution.Minute));
-    public static readonly DependencyProperty TickerProperty = DependencyProperty.Register("Ticker", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata(""));
     public static readonly DependencyProperty InstrumentProperty = DependencyProperty.Register("Instrument", typeof(Instrument), typeof(InstrumentBarsDataView), new PropertyMetadata(null));
     public static readonly DependencyProperty StartProperty = DependencyProperty.Register("Start", typeof(DateTime), typeof(InstrumentBarsDataView), new PropertyMetadata(DateTime.MinValue));
     public static readonly DependencyProperty EndProperty = DependencyProperty.Register("End", typeof(DateTime), typeof(InstrumentBarsDataView), new PropertyMetadata(DateTime.MaxValue));
@@ -68,6 +67,7 @@ namespace TradeSharp.WinCoreUI.Views
             FilterStartTooltip = "Filter start date/time";
             FilterEndTooltip = "Filter end date/time";
             m_startDate.DayVisible = true;
+            m_startDate.Margin = new Thickness(8, 8, 0, 8);   //place date/time controls right next to each other
             m_endDate.DayVisible = true;
             m_startTime.Visibility = Visibility.Visible;
             m_endTime.Visibility = Visibility.Visible;
@@ -76,6 +76,7 @@ namespace TradeSharp.WinCoreUI.Views
             FilterStartTooltip = "Filter start date/hour";
             FilterEndTooltip = "Filter end date/hour";
             m_startDate.DayVisible = true;
+            m_startDate.Margin = new Thickness(8, 8, 0, 8);
             m_endDate.DayVisible = true;
             m_startTime.Visibility = Visibility.Visible;
             m_endTime.Visibility = Visibility.Visible;
@@ -85,6 +86,7 @@ namespace TradeSharp.WinCoreUI.Views
             FilterStartTooltip = "Filter start date";
             FilterEndTooltip = "Filter end date";
             m_startDate.DayVisible = true;
+            m_startDate.Margin = new Thickness(8, 8, 8, 8);   //since time is hidden leave some space between start date field and separating "-"
             m_endDate.DayVisible = true;
             m_startTime.Visibility = Visibility.Collapsed;
             m_endTime.Visibility = Visibility.Collapsed;
@@ -93,6 +95,7 @@ namespace TradeSharp.WinCoreUI.Views
             FilterStartTooltip = "Filter start date";
             FilterEndTooltip = "Filter end date";
             m_startDate.DayVisible = false;
+            m_startDate.Margin = new Thickness(8, 8, 8, 8);
             m_endDate.DayVisible = false;
             m_startTime.Visibility = Visibility.Collapsed;
             m_endTime.Visibility = Visibility.Collapsed;
@@ -104,7 +107,6 @@ namespace TradeSharp.WinCoreUI.Views
     }
     
     public Instrument? Instrument { get => (Instrument?)GetValue(InstrumentProperty); set { SetValue(InstrumentProperty, value); ViewModel.Instrument = value; } }
-    public string Ticker { get => (string)GetValue(TickerProperty); set { SetValue(TickerProperty, value); ViewModel.Ticker = value; } }
     public DateTime Start { get => (DateTime)GetValue(StartProperty); set { SetValue(StartProperty, value); ViewModel.Start = value; } }
     public DateTime End { get => (DateTime)GetValue(EndProperty); set { SetValue(EndProperty, value); ViewModel.Start = value; } }
     public PriceDataType PriceDataType { get => (PriceDataType)GetValue(PriceDataTypeProperty); set { SetValue(PriceDataTypeProperty, value); ViewModel.PriceDataType = value; } }

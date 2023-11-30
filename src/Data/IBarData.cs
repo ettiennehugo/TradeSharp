@@ -29,7 +29,6 @@
     bool Synthetic { get; set; }
 
     //methods
-
-
+    IBarData Clone();
   }
 }

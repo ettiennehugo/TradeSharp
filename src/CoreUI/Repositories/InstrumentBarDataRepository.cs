@@ -23,9 +23,8 @@ namespace TradeSharp.CoreUI.Repositories
     //constructors
     public InstrumentBarDataRepository(IDataStoreService dataStoreService) 
     {
-      DataProvider = "";
-      InstrumentId = Guid.Empty;
-      Ticker = "";
+      DataProvider = string.Empty;
+      Instrument = null;
       Start = DateTime.MinValue;
       End = DateTime.MaxValue;
       Resolution = Resolution.Day;
@@ -40,37 +39,36 @@ namespace TradeSharp.CoreUI.Repositories
     public Task<IBarData?> GetItemAsync(DateTime id)
     {
       throwIfNotKeyed();
-      return Task.FromResult(m_dataStore.GetBarData(DataProvider, InstrumentId, Ticker, Resolution, id, PriceDataType));
+      return Task.FromResult(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id, PriceDataType));
     }
 
     public Task<IEnumerable<IBarData>> GetItemsAsync()
     {
       throwIfNotKeyed();
-      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, InstrumentId, Ticker, Resolution, Start, End, PriceDataType));
+      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, Start, End, PriceDataType));
     }
 
     public Task<IBarData> AddAsync(IBarData item)
     {
       throwIfNotKeyed();
-      return Task.Run(() => { m_dataStore.UpdateData(DataProvider, InstrumentId, Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); return item; } );
+      return Task.Run(() => { m_dataStore.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); return item; } );
     }
 
     public Task<IBarData> UpdateAsync(IBarData item)
     {
       throwIfNotKeyed();
-      return Task.Run(() => { m_dataStore.UpdateData(DataProvider, InstrumentId, Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); return item; });
+      return Task.Run(() => { m_dataStore.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); return item; });
     }
 
     public Task<bool> DeleteAsync(IBarData item)
     {
       throwIfNotKeyed();
-      return Task.FromResult(m_dataStore.DeleteData(DataProvider, Ticker, Resolution, item.DateTime, item.Synthetic) != 0);
+      return Task.FromResult(m_dataStore.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime, item.Synthetic) != 0);
     }
 
     //properties
     public string DataProvider { get; set; }
-    public Guid InstrumentId { get; set; }
-    public string Ticker { get; set; }
+    public Instrument? Instrument { get; set; }
     public DateTime Start { get; set; }
     public DateTime End { get; set; }
     public Resolution Resolution { get; set; }
@@ -80,8 +78,7 @@ namespace TradeSharp.CoreUI.Repositories
     private void throwIfNotKeyed()
     {
       if (DataProvider == "") throw new KeyNotFoundException("DataProvider must have a value.");
-      if (InstrumentId == Guid.Empty) throw new KeyNotFoundException("InstrumentId must have a value.");
-      if (Ticker == "") throw new KeyNotFoundException("Ticker must have a value.");
+      if (Instrument == null) throw new KeyNotFoundException("Instrument must have a value.");
     }
   }
 }

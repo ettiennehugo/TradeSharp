@@ -17,6 +17,7 @@
     <None Remove="Views\ExchangeView.xaml" />
     <None Remove="Views\HolidaysView.xaml" />
     <None Remove="Views\ImportView.xaml" />
+    <None Remove="Views\InstrumentBarDataView.xaml" />
     <None Remove="Views\InstrumentBarsDataView.xaml" />
     <None Remove="Views\InstrumentDataView.xaml" />
     <None Remove="Views\InstrumentGroupsView.xaml" />
@@ -96,6 +97,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Remove="Views\InstrumentsView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\InstrumentBarDataView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\InstrumentBarsDataView.xaml">

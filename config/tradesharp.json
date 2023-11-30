@@ -7,7 +7,10 @@
     }
   },
   "DataProviders": {
-    "StockDataOrg" : ""
+    "StockDataOrg": "",
+    "PolygonIO": "",
+    "DTNIQFeed": "",
+    "InteractiveBrokers": "",
   },
   "Brokers": { },
   "Extensions": { }
