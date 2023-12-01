@@ -22,7 +22,7 @@
       </CommandBar>
     </StackPanel>
     <TextBlock x:Name="m_dataProvidersHeader" Text="Data Providers" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="1" Grid.Column="0"/>
-    <ListView x:Name="m_dataProviders" SelectionMode="Single" ItemsSource="{x:Bind DataProviders}" Grid.Row="2" Grid.Column="0"/>
+    <ListView x:Name="m_dataProviders" SelectionMode="Single" ItemsSource="{x:Bind DataProviders}" SelectionChanged="m_dataProviders_SelectionChanged" Grid.Row="2" Grid.Column="0"/>
     <TextBlock x:Name="m_instrumentsHeader" Text="Instruments" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="3" Grid.Column="0"/>
     <Grid x:Name="m_instruments" RowDefinitions="Auto, *" Grid.Row="4" Grid.Column="0">
       <StackPanel Orientation="Horizontal"  Grid.Row="0" Grid.Column="0">
@@ -38,7 +38,7 @@
         <TextBlock x:Name="m_instrumentFilterLabel" Text="using filter" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
         <TextBox x:Name="m_instrumentFilter" Width="300" PlaceholderText="filter expression" Margin="8" HorizontalAlignment="Left" TextChanged="m_instrumentFilter_TextChanged"/>
       </StackPanel>
-      <ListView x:Name="m_instrumentsGrid" SelectionMode="Single" ItemsSource="{x:Bind FilteredInstruments}" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Auto" uie:ListViewExtensions.ItemContainerStretchDirection="Horizontal" Grid.Row="2" Grid.Column="0">
+      <ListView x:Name="m_instrumentsGrid" SelectionMode="Single" ItemsSource="{x:Bind FilteredInstruments}" SelectionChanged="m_instrumentsGrid_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Auto" uie:ListViewExtensions.ItemContainerStretchDirection="Horizontal" Grid.Row="2" Grid.Column="0">
         <ListView.ItemTemplate>
           <DataTemplate x:Name="InstrumentDataTeplate" x:DataType="data:Instrument">
             <StackPanel Orientation="Horizontal">

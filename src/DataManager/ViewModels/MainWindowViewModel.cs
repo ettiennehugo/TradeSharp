@@ -6,6 +6,7 @@ using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.WinDataManager.Services;
 using TradeSharp.WinDataManager.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Threading.Tasks;
 
 namespace TradeSharp.WinDataManager.ViewModels
 {
@@ -105,5 +106,14 @@ namespace TradeSharp.WinDataManager.ViewModels
         }
       }
     }
+
+    public override void OnAdd() => throw new NotImplementedException();
+    public override void OnUpdate() => throw new NotImplementedException();
+    public override void OnDelete(object target) => throw new NotImplementedException();
+    protected override Task OnRefreshAsync() => throw new NotImplementedException();
+    public override void OnClearSelection() => throw new NotImplementedException();
+    public override void OnCopy(object target) => throw new NotImplementedException();
+    public override void OnImport() => throw new NotImplementedException();
+    public override void OnExport() => throw new NotImplementedException();
   }
 }

@@ -34,15 +34,9 @@ namespace TradeSharp.CoreUI.ViewModels
     public TreeViewModel(ITreeItemsService<TKey, TItem> itemService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
     {
       m_itemsService = itemService;
-      AddCommand = new RelayCommand(OnAdd);
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null);
-      DeleteCommand = new RelayCommand(OnDelete, () => SelectedNode != null || SelectedNodes.Count > 0);
+      DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
       ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null | SelectedNodes.Count > 0);
-      RefreshCommand = new RelayCommand(OnRefresh);
-      RefreshCommandAsync = new AsyncRelayCommand(OnRefreshAsync);
-      CopyCommand = new RelayCommand(OnCopy);
-      ImportCommand = new RelayCommand(OnImport);
-      ExportCommand = new RelayCommand(OnExport);
     }
 
     //finalizers
@@ -64,15 +58,7 @@ namespace TradeSharp.CoreUI.ViewModels
         //      before the toolbar is ready to use and thus you end up with stale command button states.
         m_itemsService.SelectedNode = value;
         OnPropertyChanged();
-        AddCommand.NotifyCanExecuteChanged();
-        UpdateCommand.NotifyCanExecuteChanged();
-        DeleteCommand.NotifyCanExecuteChanged();
-        ClearSelectionCommand.NotifyCanExecuteChanged();
-        RefreshCommand.NotifyCanExecuteChanged();
-        RefreshCommandAsync.NotifyCanExecuteChanged();
-        CopyCommand.NotifyCanExecuteChanged();
-        ImportCommand.NotifyCanExecuteChanged();
-        ExportCommand.NotifyCanExecuteChanged();
+        NotifyCanExecuteChanged();
       }
     }
 
@@ -88,15 +74,7 @@ namespace TradeSharp.CoreUI.ViewModels
         //      before the toolbar is ready to use and thus you end up with stale command button states.
         m_itemsService.SelectedNodes = value;
         OnPropertyChanged();
-        AddCommand.NotifyCanExecuteChanged();
-        UpdateCommand.NotifyCanExecuteChanged();
-        DeleteCommand.NotifyCanExecuteChanged();
-        ClearSelectionCommand.NotifyCanExecuteChanged();
-        RefreshCommand.NotifyCanExecuteChanged();
-        RefreshCommandAsync.NotifyCanExecuteChanged();
-        CopyCommand.NotifyCanExecuteChanged();
-        ImportCommand.NotifyCanExecuteChanged();
-        ExportCommand.NotifyCanExecuteChanged();
+        NotifyCanExecuteChanged();
       }
     }
 
@@ -105,41 +83,19 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     public ObservableCollection<ITreeNodeType<TKey, TItem>> Nodes => m_itemsService.Nodes;
 
-    /// <summary>
-    /// Set of supported operation.
-    /// </summary>
-    public RelayCommand AddCommand { get; internal set; }
-    public RelayCommand UpdateCommand { get; internal set; }
-    public RelayCommand DeleteCommand { get; internal set; }
-    public RelayCommand ClearSelectionCommand { get; internal set; }
-    public RelayCommand RefreshCommand { get; internal set; }
-    public AsyncRelayCommand RefreshCommandAsync { get; internal set; }
-    public RelayCommand CopyCommand { get; internal set; }
-    public RelayCommand ImportCommand { get; internal set; }
-    public RelayCommand ExportCommand { get; internal set; }
-
     //methods
-    public void OnClearSelection()
+    public override void OnClearSelection()
     {
       SelectedNode = null;
       SelectedNodes.Clear();
     }
 
-    public async void OnRefresh()
-    {
-      await OnRefreshAsync();
-    }
-
-    protected async Task OnRefreshAsync()
+    protected override async Task OnRefreshAsync()
     {
       await m_itemsService.RefreshAsync();
     }
 
-    public abstract void OnAdd();
-    public abstract void OnUpdate();
-    public abstract void OnCopy();
-
-    public async void OnDelete()
+    public override async void OnDelete(object? target)
     {
       int count = 0;
 
@@ -167,7 +123,7 @@ namespace TradeSharp.CoreUI.ViewModels
         await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "Failure", $"Deleted {count} nodes");
     }
 
-    public async void OnImport()
+    public override async void OnImport()
     {
       ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
 
@@ -179,7 +135,7 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public async void OnExport()
+    public override async void OnExport()
     {
       string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
 

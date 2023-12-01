@@ -36,8 +36,7 @@ namespace TradeSharp.CoreUI.ViewModels
       Start = DateTime.MinValue;
       End = DateTime.MaxValue;
       PriceDataType = PriceDataType.Both;
-
-      AddCommand = new RelayCommand(OnAdd); //, () => DataProvider != "" && Instrument != null); //view model must be keyed correctly before adding new items
+      AddCommand = new RelayCommand(OnAdd, () => DataProvider != string.Empty && Instrument != null); //view model must be keyed correctly before allowing the adding new items
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
       CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => SelectedItem != null);
@@ -74,12 +73,71 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     //properties
-    public string DataProvider { get => m_dataProvider; set { SetProperty(ref m_dataProvider, value); ((IInstrumentBarDataService)m_itemsService).DataProvider = value; } }
-    public Resolution Resolution { get => m_resolution; set { SetProperty(ref m_resolution, value); ((IInstrumentBarDataService)m_itemsService).Resolution = value; } }
-    public Instrument? Instrument { get => m_instrument; set { SetProperty(ref m_instrument, value); ((IInstrumentBarDataService)m_itemsService).Instrument = value; } }
-    public DateTime Start{ get => m_start; set { SetProperty(ref m_start, value); ((IInstrumentBarDataService)m_itemsService).Start = value; } }
-    public DateTime End { get => m_end ; set { SetProperty(ref m_end, value); ((IInstrumentBarDataService)m_itemsService).End = value; } }
-    public PriceDataType PriceDataType { get => m_priceDataType; set { SetProperty(ref m_priceDataType, value); ((IInstrumentBarDataService)m_itemsService).PriceDataType = value; } }
+    public string DataProvider
+    {
+      get => m_dataProvider;
+      set
+      {
+        SetProperty(ref m_dataProvider, value);
+        ((IInstrumentBarDataService)m_itemsService).DataProvider = value;
+        NotifyCanExecuteChanged();
+      }
+    }
+
+    public Resolution Resolution
+    {
+      get => m_resolution;
+      set
+      {
+        SetProperty(ref m_resolution, value);
+        ((IInstrumentBarDataService)m_itemsService).Resolution = value;
+        NotifyCanExecuteChanged();
+      }
+    }
+
+    public Instrument? Instrument
+    {
+      get => m_instrument;
+      set
+      {
+        SetProperty(ref m_instrument, value);
+        ((IInstrumentBarDataService)m_itemsService).Instrument = value;
+        NotifyCanExecuteChanged();
+      }
+    }
+
+    public DateTime Start
+    {
+      get => m_start;
+      set
+      {
+        SetProperty(ref m_start, value);
+        ((IInstrumentBarDataService)m_itemsService).Start = value;
+        NotifyCanExecuteChanged();
+      }
+    }
+
+    public DateTime End
+    {
+      get => m_end;
+      set
+      {
+        SetProperty(ref m_end, value);
+        ((IInstrumentBarDataService)m_itemsService).End = value;
+        NotifyCanExecuteChanged();
+      }
+    }
+
+    public PriceDataType PriceDataType
+    {
+      get => m_priceDataType;
+      set
+      {
+        SetProperty(ref m_priceDataType, value);
+        ((IInstrumentBarDataService)m_itemsService).PriceDataType = value;
+        NotifyCanExecuteChanged();
+      }
+    }
 
     //methods
 

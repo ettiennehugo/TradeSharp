@@ -137,5 +137,23 @@ namespace TradeSharp.WinCoreUI.Views
       await m_instrumentService.RefreshAsync();
       filterInstruments();
     }
+
+    private void m_dataProviders_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      m_minuteBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_hoursBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_daysBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_weeksBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_monthsBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+    }
+
+    private void m_instrumentsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      m_minuteBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+      m_hoursBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+      m_daysBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+      m_weeksBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+      m_monthsBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+    }
   }
 }

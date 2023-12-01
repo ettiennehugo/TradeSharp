@@ -30,12 +30,9 @@ namespace TradeSharp.CoreUI.ViewModels
     public ListViewModel(IListItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
     {
       m_itemsService = itemsService;
-      AddCommand = new RelayCommand(OnAdd);
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
       CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => SelectedItem != null);
-      RefreshCommand = new RelayCommand(OnRefresh);
-      RefreshCommandAsync = new AsyncRelayCommand(OnRefreshAsync);
     }
 
     //finalizers
@@ -45,12 +42,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-    public RelayCommand AddCommand { get; internal set; }
-    public RelayCommand UpdateCommand { get; internal set; }
-    public RelayCommand<object?> DeleteCommand { get; internal set; }
-    public RelayCommand<object?> CopyCommand { get; internal set; }
-    public RelayCommand RefreshCommand { get; internal set; }
-    public AsyncRelayCommand RefreshCommandAsync { get; internal set; }
+
 
     /// <summary>
     /// ParentId used when items displayed are dependent on a specific parent object.
@@ -63,11 +55,7 @@ namespace TradeSharp.CoreUI.ViewModels
         if (m_itemsService.ParentId != value)
         {
           m_itemsService.ParentId = value;
-          AddCommand.NotifyCanExecuteChanged();
-          UpdateCommand.NotifyCanExecuteChanged();
-          DeleteCommand.NotifyCanExecuteChanged();
-          RefreshCommand.NotifyCanExecuteChanged();
-          RefreshCommandAsync.NotifyCanExecuteChanged();
+          NotifyCanExecuteChanged();
           OnPropertyChanged();
         }
       }
@@ -85,11 +73,7 @@ namespace TradeSharp.CoreUI.ViewModels
         //      before the toolbar is ready to use and thus you end up with stale command button states.
         m_itemsService.SelectedItem = value;
         OnPropertyChanged();
-        AddCommand.NotifyCanExecuteChanged();
-        UpdateCommand.NotifyCanExecuteChanged();
-        DeleteCommand.NotifyCanExecuteChanged();
-        RefreshCommand.NotifyCanExecuteChanged();
-        RefreshCommandAsync.NotifyCanExecuteChanged();
+        NotifyCanExecuteChanged();
       }
     }
 
@@ -99,20 +83,12 @@ namespace TradeSharp.CoreUI.ViewModels
     public ObservableCollection<TItem> Items => m_itemsService.Items;
 
     //methods
-    public async void OnRefresh()
-    {
-      await OnRefreshAsync();
-    }
-
-    protected Task OnRefreshAsync()
+    protected override Task OnRefreshAsync()
     {
       return m_itemsService.RefreshAsync();
     }
 
-    public abstract void OnAdd();
-    public abstract void OnUpdate();
-
-    public async virtual void OnCopy(object? target)
+    public async override void OnCopy(object? target)
     {
       int count = 0;
       if (target is TItem)
@@ -137,7 +113,7 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public async virtual void OnDelete(object? target)
+    public async override void OnDelete(object? target)
     {
       int count = 0;
       if (target is TItem)
@@ -161,5 +137,15 @@ namespace TradeSharp.CoreUI.ViewModels
         SelectedItem = Items.FirstOrDefault();
       }
     }
+
+    public override void OnClearSelection()
+    {
+      SelectedItem = null;
+    }
+
+    //sub-classes can override these methods if the support import/export behavior
+    public override void OnImport() => throw new NotImplementedException();
+    public override void OnExport() => throw new NotImplementedException();
+    
   }
 }

@@ -19,15 +19,9 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    public RelayCommand ImportCommand { get; internal set; }
-    public RelayCommand ExportCommand { get; internal set; }
 
     //constructors
-    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService): base(itemsService, navigationService, dialogService)
-    {
-      ImportCommand = new RelayCommand(OnImport);
-      ExportCommand = new RelayCommand(OnExport);
-    }
+    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService): base(itemsService, navigationService, dialogService) { }
 
     //finalizers
 
@@ -58,7 +52,7 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public async void OnImport()
+    public override async void OnImport()
     {
       ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
 
@@ -70,7 +64,7 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public async void OnExport()
+    public override async void OnExport()
     {
       string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
 

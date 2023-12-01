@@ -88,7 +88,6 @@ namespace TradeSharp.CoreUI.ViewModels
     public abstract TItem CreateCopy(TItem item);
     public abstract Task OnSaveAsync();
     public virtual Task OnEndEditAsync() => Task.CompletedTask;
-    protected abstract void OnAdd();
 
     public virtual void BeginEdit()
     {
