@@ -8,6 +8,7 @@
     xmlns:uie="using:CommunityToolkit.WinUI"
     xmlns:wcui="using:TradeSharp.WinCoreUI.Views"  
     xmlns:wcuicommon="using:TradeSharp.WinCoreUI.Common"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:data="using:TradeSharp.Data"
     mc:Ignorable="d"
     Loaded="Page_Loaded"
@@ -38,7 +39,7 @@
         <TextBlock x:Name="m_instrumentFilterLabel" Text="using filter" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
         <TextBox x:Name="m_instrumentFilter" Width="300" PlaceholderText="filter expression" Margin="8" HorizontalAlignment="Left" TextChanged="m_instrumentFilter_TextChanged"/>
       </StackPanel>
-      <ListView x:Name="m_instrumentsGrid" SelectionMode="Single" ItemsSource="{x:Bind FilteredInstruments}" SelectionChanged="m_instrumentsGrid_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Auto" uie:ListViewExtensions.ItemContainerStretchDirection="Horizontal" Grid.Row="2" Grid.Column="0">
+      <ListView x:Name="m_instrumentsGrid" SelectionMode="Single" ItemsSource="{x:Bind Instruments}" SelectionChanged="m_instrumentsGrid_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Auto" uie:ListViewExtensions.ItemContainerStretchDirection="Horizontal" Grid.Row="2" Grid.Column="0">
         <ListView.ItemTemplate>
           <DataTemplate x:Name="InstrumentDataTeplate" x:DataType="data:Instrument">
             <StackPanel Orientation="Horizontal">

@@ -20,7 +20,6 @@
         <AppBarButton x:Name="m_buttonAdd" Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add bar" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonEdit" Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update bar" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonDelete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}" ToolTipService.ToolTip="Delete bar(s)" IsCompact="True"/>
-        <AppBarSeparator/>
         <AppBarButton x:Name="m_buttonCopy"  Icon="Copy" Label="Copy bar(s)" IsCompact="True">
           <AppBarButton.Flyout>
             <MenuFlyout x:Name="m_copyFlyout">
@@ -31,6 +30,17 @@
               <MenuFlyoutSubItem x:Name="m_copyToMonth" Text="To month"/>
             </MenuFlyout>
           </AppBarButton.Flyout>
+        </AppBarButton>
+        <AppBarSeparator/>
+        <AppBarButton Command="{x:Bind ViewModel.ImportCommand}" ToolTipService.ToolTip="Import bar data" IsCompact="True">
+          <AppBarButton.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE802;"/>
+          </AppBarButton.Icon>
+        </AppBarButton>
+        <AppBarButton Command="{x:Bind ViewModel.ExportCommand}" ToolTipService.ToolTip="Export bar data" IsCompact="True">
+          <AppBarButton.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE803;"/>
+          </AppBarButton.Icon>
         </AppBarButton>
         <AppBarSeparator/>
         <AppBarElementContainer x:Name="m_filterContainer">

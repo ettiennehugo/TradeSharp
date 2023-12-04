@@ -83,10 +83,8 @@ namespace TradeSharp.WinDataManager
           .AddSingleton<IInstrumentGroupService, InstrumentGroupService>()
           .AddTransient<IInstrumentBarDataService, InstrumentBarDataService>() //this service must be transient as it requires keying around the resolution passed from the view model which is also transient
           .AddScoped<CountryViewModel>()
-          //.AddScoped<CountryItemViewModel>()
           .AddScoped<HolidayViewModel>()
           .AddScoped<ExchangeViewModel>()
-          //.AddScoped<ExchangeItemViewModel>()
           .AddScoped<SessionViewModel>()
           .AddScoped<InstrumentViewModel>()
           .AddScoped<InstrumentGroupViewModel>()

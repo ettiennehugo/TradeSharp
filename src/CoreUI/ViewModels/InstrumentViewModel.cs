@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Common.Collections;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 

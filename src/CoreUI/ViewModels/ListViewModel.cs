@@ -78,9 +78,9 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     /// <summary>
-    /// List of items maintained by the view model.
+    /// List of items maintained by the view model, for large collections redefine this a.
     /// </summary>
-    public ObservableCollection<TItem> Items => m_itemsService.Items;
+    public virtual ObservableCollection<TItem> Items => m_itemsService.Items;
 
     //methods
     protected override Task OnRefreshAsync()
@@ -143,7 +143,7 @@ namespace TradeSharp.CoreUI.ViewModels
       SelectedItem = null;
     }
 
-    //sub-classes can override these methods if the support import/export behavior
+    //sub-classes can override these methods if they support import/export behavior
     public override void OnImport() => throw new NotImplementedException();
     public override void OnExport() => throw new NotImplementedException();
     

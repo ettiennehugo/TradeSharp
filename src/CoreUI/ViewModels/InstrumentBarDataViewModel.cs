@@ -72,6 +72,16 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
+    public override void OnImport()
+    {
+      base.OnImport();  //TODO: Implement import of bar data.
+    }
+
+    public override void OnExport()
+    {
+      base.OnExport();  //TODO: Implement export of bar data.
+    }
+
     //properties
     public string DataProvider
     {
