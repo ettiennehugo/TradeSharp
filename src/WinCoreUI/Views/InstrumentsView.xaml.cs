@@ -1,11 +1,11 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.WinUI.UI;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Data;
 using System;
-using TradeSharp.CoreUI.Services;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -39,7 +39,6 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentsView()
     {
       ViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
-      Instruments = new AdvancedCollectionView(ViewModel.Items, true); 
       this.InitializeComponent();
     }
 
@@ -51,21 +50,17 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public InstrumentViewModel ViewModel { get; }
-    public AdvancedCollectionView Instruments { get; }
-
 
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       if (ViewModel.Items.Count == 0) ViewModel.RefreshCommand.Execute(null);
+      m_instruments.ItemsSource = ViewModel.Items;
     }
 
-    public bool filter(object o)
+    public bool filter(Instrument instrument)
     {
       if (m_instrumentFilter == null || m_instrumentFilter.Text.Length == 0) return true; //no filter specified - m_instrumentFilter is null on screen init
-
-      if (o == null || o is not Instrument) return false;
-      Instrument instrument = (Instrument)o;
 
       switch ((FilterField)m_filterMatchFields.SelectedIndex)
       {
@@ -82,16 +77,28 @@ namespace TradeSharp.WinCoreUI.Views
       return false;   //in general should not happen if match field is mandatory selection
     }
 
+    private void refreshFilter()
+    {
+      if (m_instrumentFilter == null) return;
+
+      //show all items on clear filter text
+      if (m_instrumentFilter.Text.Length == 0)
+      {
+        if (m_instruments.ItemsSource != ViewModel.Items) m_instruments.ItemsSource = ViewModel.Items;
+        return;
+      }
+
+      m_instruments.ItemsSource = new ObservableCollection<Instrument>(from instrument in ViewModel.Items where filter(instrument) select instrument);
+    }
+
     private void m_instrumentFilter_TextChanged(object sender, TextChangedEventArgs e)
     {
-      Instruments.Filter = new Predicate<object>(filter);
-      Instruments.RefreshFilter();
+      refreshFilter();
     }
 
     private void m_filterMatchFields_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-      Instruments.Filter = new Predicate<object>(filter);
-      Instruments.RefreshFilter();
+      refreshFilter();
     }
 
 
