@@ -51,7 +51,7 @@
         </AppBarElementContainer>
       </CommandBar>
     </StackPanel>
-    <winui:DataGrid x:Name="m_instruments" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Grid.Row="1" Grid.Column="0">
+    <winui:DataGrid x:Name="m_instruments" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Grid.Row="1" Grid.Column="0">
       <winui:DataGrid.Columns>
         <winui:DataGridTextColumn x:Name="m_columnInstrumentType" Width="Auto" Header="Type" Binding="{Binding Type, Mode=OneWay, Converter={StaticResource EnumValueDescriptionConverter}}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnTicker" Width="Auto" Header="Ticker" Binding="{Binding Ticker, Mode=OneWay}" IsReadOnly="True"/>

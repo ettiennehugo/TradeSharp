@@ -1708,7 +1708,7 @@ namespace TradeSharp.Data.Testing
       m_dataStore.CreateExchange(thirdExchange);
 
       IList<Exchange> exchanges = m_dataStore.GetExchanges();
-      Assert.AreEqual(3, exchanges.Count, "Returned exchange holiday count is not correct.");
+      Assert.AreEqual(4, exchanges.Count, "Returned exchange holiday count is not correct.");  //+1 for the Global Exchange
       Assert.IsNotNull(exchanges.Where(x => x.Id == m_exchange.Id && x.CountryId == m_exchange.CountryId && x.TimeZone.Id == m_exchange.TimeZone.Id).Single(), "m_exchange not returned in stored data.");
       Assert.IsNotNull(exchanges.Where(x => x.Id == secondExchange.Id && x.CountryId == secondExchange.CountryId && x.TimeZone.Id == secondExchange.TimeZone.Id).Single(), "secondExchange not returned in stored data.");
       Assert.IsNotNull(exchanges.Where(x => x.Id == thirdExchange.Id && x.CountryId == thirdExchange.CountryId && x.TimeZone.Id == thirdExchange.TimeZone.Id).Single(), "thirdExchange not returned in stored data.");
@@ -2052,11 +2052,8 @@ namespace TradeSharp.Data.Testing
       IList<IBarData> dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), priceDataType);
       Assert.AreEqual(barData.Count / 2, dataResult.Count, "GetBarData did not return the correct number of bars.");
 
-      for (int index = 0; index < barData.Count; index++)
-      {
-        if ((priceDataType == PriceDataType.Synthetic && !dataResult[index].Synthetic) || (priceDataType == PriceDataType.Actual && dataResult[index].Synthetic)) continue;
+      for (int index = 0; index < dataResult.Count; index++)
         Assert.IsTrue(barData.DateTime.Contains(dataResult[index].DateTime), string.Format("Bar data {0} not found.", dataResult[index].DateTime));
-      }
     }
 
     [TestMethod]
@@ -2064,10 +2061,26 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Day)]
     public void GetBarData_ReturnsActualVsSyntheticSingleBarData_Success(Resolution resolution)
     {
-      DateTime dateTime = DateTime.Now.ToUniversalTime();
+      DateTime startDateTime = DateTime.Now.ToUniversalTime();
       DataCacheBars barData = new DataCacheBars(10);
-      barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
-                                              dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10) };
+      DateTime actualBarDateTime = DateTime.Now.ToUniversalTime();
+      DateTime syntheticBarDateTime = DateTime.Now.ToUniversalTime();
+
+      if (resolution == Resolution.Minute)
+      {
+        barData.DateTime = new List<DateTime> { startDateTime.AddMinutes(1), startDateTime.AddMinutes(2), startDateTime.AddMinutes(3), startDateTime.AddMinutes(4), startDateTime.AddMinutes(5),
+                                                startDateTime.AddMinutes(6), startDateTime.AddMinutes(7), startDateTime.AddMinutes(8), startDateTime.AddMinutes(9), startDateTime.AddMinutes(10) };
+        syntheticBarDateTime = startDateTime.AddMinutes(5);
+        actualBarDateTime = startDateTime.AddMinutes(6);
+      }
+      else
+      {
+        barData.DateTime = new List<DateTime> { startDateTime.AddDays(1), startDateTime.AddDays(2), startDateTime.AddDays(3), startDateTime.AddDays(4), startDateTime.AddDays(5),
+                                                startDateTime.AddDays(6), startDateTime.AddDays(7), startDateTime.AddDays(8), startDateTime.AddDays(9), startDateTime.AddDays(10) };
+        syntheticBarDateTime = startDateTime.AddDays(5);
+        actualBarDateTime = startDateTime.AddDays(6);
+      }
+
       barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
@@ -2077,31 +2090,31 @@ namespace TradeSharp.Data.Testing
 
       m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
-      IBarData? dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime.AddMinutes(5), PriceDataType.Actual);
-      Assert.IsNotNull(dataResult, "Actual: Create actual data were not found.");
-      Assert.AreEqual(barData.DateTime[5] , dataResult.DateTime, "DateTime was not returned correctly.");
-      Assert.AreEqual(barData.Open[5] , dataResult.Open, "Open was not returned correctly.");
-      Assert.AreEqual(barData.High[5] , dataResult.High, "High was not returned correctly.");
-      Assert.AreEqual(barData.Low[5] , dataResult.Low, "Low was not returned correctly.");
-      Assert.AreEqual(barData.Close[5] , dataResult.Close, "Close was not returned correctly.");
-      Assert.AreEqual(barData.Volume[5] , dataResult.Volume, "Volume was not returned correctly.");
-      Assert.AreEqual(barData.Synthetic[5] , dataResult.Synthetic, "Synthetic was not returned correctly.");
+      IBarData? dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, syntheticBarDateTime, PriceDataType.Synthetic);
+      Assert.IsNotNull(dataResult, "Synthetic: Create synthetic data were not found.");
+      Assert.AreEqual(barData.DateTime[4] , dataResult.DateTime, "DateTime was not returned correctly.");
+      Assert.AreEqual(barData.Open[4] , dataResult.Open, "Open was not returned correctly.");
+      Assert.AreEqual(barData.High[4] , dataResult.High, "High was not returned correctly.");
+      Assert.AreEqual(barData.Low[4] , dataResult.Low, "Low was not returned correctly.");
+      Assert.AreEqual(barData.Close[4] , dataResult.Close, "Close was not returned correctly.");
+      Assert.AreEqual(barData.Volume[4] , dataResult.Volume, "Volume was not returned correctly.");
+      Assert.AreEqual(barData.Synthetic[4] , dataResult.Synthetic, "Synthetic was not returned correctly.");
 
-      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime.AddMinutes(5), PriceDataType.Synthetic);
+      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, syntheticBarDateTime, PriceDataType.Actual);
       Assert.IsNull(dataResult, "Synthetic: Uncreated synthetic data were found.");
 
-      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime.AddMinutes(6), PriceDataType.Actual);
+      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, actualBarDateTime, PriceDataType.Synthetic);
       Assert.IsNull(dataResult, "Actual: Created synthetic data were found.");
 
-      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime.AddMinutes(6), PriceDataType.Synthetic);
-      Assert.IsNotNull(dataResult, "Synthetic: Create actual data were not found.");
-      Assert.AreEqual(barData.DateTime[6], dataResult.DateTime, "Synthetic: DateTime was not returned correctly.");
-      Assert.AreEqual(barData.Open[6], dataResult.Open, "Synthetic: Open was not returned correctly.");
-      Assert.AreEqual(barData.High[6], dataResult.High, "Synthetic: High was not returned correctly.");
-      Assert.AreEqual(barData.Low[6], dataResult.Low, "Synthetic: Low was not returned correctly.");
-      Assert.AreEqual(barData.Close[6], dataResult.Close, "Synthetic: Close was not returned correctly.");
-      Assert.AreEqual(barData.Volume[6], dataResult.Volume, "Synthetic: Volume was not returned correctly.");
-      Assert.AreEqual(barData.Synthetic[6], dataResult.Synthetic, "Synthetic: Synthetic was not returned correctly.");
+      dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, actualBarDateTime, PriceDataType.Actual);
+      Assert.IsNotNull(dataResult, "Actual: Create actual data were not found.");
+      Assert.AreEqual(barData.DateTime[5], dataResult.DateTime, "Synthetic: DateTime was not returned correctly.");
+      Assert.AreEqual(barData.Open[5], dataResult.Open, "Synthetic: Open was not returned correctly.");
+      Assert.AreEqual(barData.High[5], dataResult.High, "Synthetic: High was not returned correctly.");
+      Assert.AreEqual(barData.Low[5], dataResult.Low, "Synthetic: Low was not returned correctly.");
+      Assert.AreEqual(barData.Close[5], dataResult.Close, "Synthetic: Close was not returned correctly.");
+      Assert.AreEqual(barData.Volume[5], dataResult.Volume, "Synthetic: Volume was not returned correctly.");
+      Assert.AreEqual(barData.Synthetic[5], dataResult.Synthetic, "Synthetic: Synthetic was not returned correctly.");
     }
 
     [TestMethod]
@@ -2123,31 +2136,31 @@ namespace TradeSharp.Data.Testing
 
       m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, level1Data);
 
-      ILevel1Data? dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(5), PriceDataType.Actual);
+      ILevel1Data? dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(4), PriceDataType.Actual);
       Assert.IsNotNull(dataResult, "Actual: Create actual data were not found.");
-      Assert.AreEqual(level1Data.DateTime[5], dataResult.DateTime, "DateTime was not returned correctly.");
-      Assert.AreEqual(level1Data.Bid[5], dataResult.Bid, "Bid was not returned correctly.");
-      Assert.AreEqual(level1Data.BidSize[5], dataResult.BidSize, "BidSize was not returned correctly.");
-      Assert.AreEqual(level1Data.Ask[5], dataResult.Ask, "Ask was not returned correctly.");
-      Assert.AreEqual(level1Data.AskSize[5], dataResult.AskSize, "AskSize was not returned correctly.");
-      Assert.AreEqual(level1Data.Last[5], dataResult.Last, "Last was not returned correctly.");
-      Assert.AreEqual(level1Data.LastSize[5], dataResult.LastSize, "LastSize was not returned correctly.");
+      Assert.AreEqual(level1Data.DateTime[3], dataResult.DateTime, "DateTime was not returned correctly.");
+      Assert.AreEqual(level1Data.Bid[3], dataResult.Bid, "Bid was not returned correctly.");
+      Assert.AreEqual(level1Data.BidSize[3], dataResult.BidSize, "BidSize was not returned correctly.");
+      Assert.AreEqual(level1Data.Ask[3], dataResult.Ask, "Ask was not returned correctly.");
+      Assert.AreEqual(level1Data.AskSize[3], dataResult.AskSize, "AskSize was not returned correctly.");
+      Assert.AreEqual(level1Data.Last[3], dataResult.Last, "Last was not returned correctly.");
+      Assert.AreEqual(level1Data.LastSize[3], dataResult.LastSize, "LastSize was not returned correctly.");
 
-      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(5), PriceDataType.Synthetic);
+      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(4), PriceDataType.Synthetic);
       Assert.IsNull(dataResult, "Synthetic: Uncreated synthetic data were found.");
 
-      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(6), PriceDataType.Actual);
+      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(5), PriceDataType.Actual);
       Assert.IsNull(dataResult, "Actual: Created synthetic data were found.");
 
-      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(6), PriceDataType.Synthetic);
+      dataResult = m_dataStore.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(5), PriceDataType.Synthetic);
       Assert.IsNotNull(dataResult, "Synthetic: Create actual data were not found.");
-      Assert.AreEqual(level1Data.DateTime[6], dataResult.DateTime, "Synthetic: DateTime was not returned correctly.");
-      Assert.AreEqual(level1Data.Bid[6], dataResult.Bid, "Synthetic: Bid was not returned correctly.");
-      Assert.AreEqual(level1Data.BidSize[6], dataResult.BidSize, "Synthetic: BidSize was not returned correctly.");
-      Assert.AreEqual(level1Data.Ask[6], dataResult.Ask, "Synthetic: Ask was not returned correctly.");
-      Assert.AreEqual(level1Data.AskSize[6], dataResult.AskSize, "Synthetic: AskSize was not returned correctly.");
-      Assert.AreEqual(level1Data.Last[6], dataResult.Last, "Synthetic: Last was not returned correctly.");
-      Assert.AreEqual(level1Data.LastSize[6], dataResult.LastSize, "Synthetic: LastSize was not returned correctly.");
+      Assert.AreEqual(level1Data.DateTime[4], dataResult.DateTime, "Synthetic: DateTime was not returned correctly.");
+      Assert.AreEqual(level1Data.Bid[4], dataResult.Bid, "Synthetic: Bid was not returned correctly.");
+      Assert.AreEqual(level1Data.BidSize[4], dataResult.BidSize, "Synthetic: BidSize was not returned correctly.");
+      Assert.AreEqual(level1Data.Ask[4], dataResult.Ask, "Synthetic: Ask was not returned correctly.");
+      Assert.AreEqual(level1Data.AskSize[4], dataResult.AskSize, "Synthetic: AskSize was not returned correctly.");
+      Assert.AreEqual(level1Data.Last[4], dataResult.Last, "Synthetic: Last was not returned correctly.");
+      Assert.AreEqual(level1Data.LastSize[4], dataResult.LastSize, "Synthetic: LastSize was not returned correctly.");
     }
 
     [TestMethod]

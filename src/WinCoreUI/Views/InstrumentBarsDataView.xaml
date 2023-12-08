@@ -45,17 +45,17 @@
         <AppBarSeparator/>
         <AppBarElementContainer x:Name="m_filterContainer">
           <StackPanel Orientation="Horizontal">
-            <DatePicker x:Name="m_startDate" Margin="8,8,0,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}"/>
-            <TimePicker x:Name="m_startTime" ClockIdentifier="24HourClock" Margin="0,8,8,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}"/>
+            <DatePicker x:Name="m_startDate" Margin="8,8,0,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}" DateChanged="m_startDate_DateChanged"/>
+            <TimePicker x:Name="m_startTime" ClockIdentifier="24HourClock" Margin="0,8,8,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}" TimeChanged="m_startTime_TimeChanged"/>
             <TextBlock Text="-" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            <DatePicker x:Name="m_endDate" Margin="8,8,0,8" ToolTipService.ToolTip="{x:Bind FilterEndTooltip, Mode=OneWay}"/>
-            <TimePicker x:Name="m_endTime" ClockIdentifier="24HourClock" Margin="0,8,8,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}"/>
+            <DatePicker x:Name="m_endDate" Margin="8,8,0,8" ToolTipService.ToolTip="{x:Bind FilterEndTooltip, Mode=OneWay}" DateChanged="m_endDate_DateChanged"/>
+            <TimePicker x:Name="m_endTime" ClockIdentifier="24HourClock" Margin="0,8,8,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}" TimeChanged="m_endTime_TimeChanged"/>
           </StackPanel>
         </AppBarElementContainer>
         <AppBarButton x:Name="m_resetFilter" Icon="Clear" ToolTipService.ToolTip="Reset filter" Click="m_resetFilter_Click" IsCompact="True"/>
       </CommandBar>
     </StackPanel>
-    <winui:DataGrid x:Name="m_dataTable" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"  Grid.Row="1" Grid.Column="0">
+    <winui:DataGrid x:Name="m_dataTable" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"  Grid.Row="1" Grid.Column="0">
       <winui:DataGrid.Columns>
         <winui:DataGridTextColumn x:Name="m_columnDateTime" Width="Auto" Header="Date/Time" Binding="{Binding DateTime}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnOpen" Width="Auto" Header="Open" Binding="{Binding Open}" IsReadOnly="True"/>

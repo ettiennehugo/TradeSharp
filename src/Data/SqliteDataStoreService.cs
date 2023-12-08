@@ -990,11 +990,7 @@ namespace TradeSharp.Data
 
         for (int index = 0; index < bars.Count; index++)
         {
-          if (!bars.Synthetic[index])
-            tableName = barTableName;
-          else
-            tableName = syntheticTableName;
-
+          tableName = bars.Synthetic[index] ? syntheticTableName : barTableName;
           command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
             $"VALUES (" +
               $"'{normalizedTicker}', " +
@@ -1030,11 +1026,7 @@ namespace TradeSharp.Data
 
         for (int index = 0; index < level1Data.Count; index++)
         {
-          if (!level1Data.Synthetic[index])
-            tableName = barTableName;
-          else
-            tableName = syntheticTableName;
-
+          tableName = level1Data.Synthetic[index] ? syntheticTableName : barTableName;
           command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
             $"VALUES (" +
               $"'{normalizedTicker}', " +
@@ -1383,7 +1375,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new BarData(resolution, reader.GetDateTime(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false);
+            return new BarData(resolution, DateTime.FromBinary(reader.GetInt64(1)), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false);
       }
 
       //load synthetic price data if required
@@ -1393,11 +1385,11 @@ namespace TradeSharp.Data
           $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
             $"WHERE " +
               $"Ticker = '{normalizedTicker}' " +
-              $"AND DateTime >= {dateTimeUtc.ToUniversalTime().ToBinary()}";
+              $"AND DateTime == {dateTimeUtc.ToUniversalTime().ToBinary()}";
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new BarData(resolution, reader.GetDateTime(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true);
+            return new BarData(resolution, DateTime.FromBinary(reader.GetInt64(1)), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true);
       }
 
       return null;
@@ -1431,7 +1423,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = reader.GetDateTime(1);
+            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
             result.Add(dateTime, new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -1452,7 +1444,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = reader.GetDateTime(1);
+            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
             if (!result.ContainsKey(dateTime))
               result.Add(dateTime, new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -1482,7 +1474,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new Level1Data(reader.GetDateTime(0), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false);
+            return new Level1Data(DateTime.FromBinary(reader.GetInt64(0)), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false);
       }
 
       //get synthetic bar data
@@ -1496,7 +1488,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new Level1Data(reader.GetDateTime(0), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true);
+            return new Level1Data(DateTime.FromBinary(reader.GetInt64(0)), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true);
       }
 
       return null;
@@ -1528,7 +1520,7 @@ namespace TradeSharp.Data
         using (SqliteDataReader reader = ExecuteReader(command))
           while (reader.Read())
           {
-            DateTime dateTime = reader.GetDateTime(0);
+            DateTime dateTime = DateTime.FromBinary(reader.GetInt64(0));
             result.Add(dateTime, new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
       }
@@ -1547,7 +1539,7 @@ namespace TradeSharp.Data
         using (SqliteDataReader reader = ExecuteReader(command))
           while (reader.Read())
           {
-            DateTime dateTime = reader.GetDateTime(0);
+            DateTime dateTime = DateTime.FromBinary(reader.GetInt64(0));
             if (!result.ContainsKey(dateTime))
               result.Add(dateTime, new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }

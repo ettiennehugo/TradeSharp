@@ -24,7 +24,7 @@
     <TextBox x:Name="m_high" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))(\.[0-9]*)?$" Text="{x:Bind BarData.High, Mode=TwoWay}" Grid.Column="1" Grid.Row="3"/>
     <TextBox x:Name="m_low" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))(\.[0-9]*)?$" Text="{x:Bind BarData.Low, Mode=TwoWay}" Grid.Column="1" Grid.Row="4"/>
     <TextBox x:Name="m_close" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))(\.[0-9]*)?$" Text="{x:Bind BarData.Close, Mode=TwoWay}" Grid.Column="1" Grid.Row="5"/>
-    <TextBox x:Name="m_volume" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))(\.[0-9]*)?$" Text="{x:Bind BarData.Volume, Mode=TwoWay}" Grid.Column="1" Grid.Row="6"/>
+    <TextBox x:Name="m_volume" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))$" Text="{x:Bind BarData.Volume, Mode=TwoWay}" Grid.Column="1" Grid.Row="6"/>
     <ComboBox x:Name="m_synthetic" Width="150" HorizontalAlignment="Left" SelectedIndex="{x:Bind SyntheticSelectionIndex, Mode=TwoWay}" Grid.Column="1" Grid.Row="7">
       <ComboBoxItem>Actual</ComboBoxItem>
       <ComboBoxItem>Synthetic</ComboBoxItem>
