@@ -46,7 +46,7 @@ namespace TradeSharp.WinCoreUI.Views
       this.InitializeComponent();
       m_parentId = parentId;
       m_name.Text = "New Holiday";
-      Holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "TagValue", m_parentId, m_name.Text, HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
+      Holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributeSet, "", m_parentId, m_name.Text, HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
     }
 
     public HolidayView(Holiday holiday)
@@ -73,11 +73,11 @@ namespace TradeSharp.WinCoreUI.Views
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      Utilities.populateComboBoxFromEnum(ref m_holidayType, typeof(HolidayType));
-      Utilities.populateComboBoxFromEnum(ref m_month, typeof(Months));
-      Utilities.populateComboBoxFromEnum(ref m_dayOfWeek, typeof(DayOfWeek));
-      Utilities.populateComboBoxFromEnum(ref m_weekOfMonth, typeof(WeekOfMonth));
-      Utilities.populateComboBoxFromEnum(ref m_moveWeekendHoliday, typeof(MoveWeekendHoliday));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_holidayType, typeof(HolidayType));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_month, typeof(Months));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_dayOfWeek, typeof(DayOfWeek));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_weekOfMonth, typeof(WeekOfMonth));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_moveWeekendHoliday, typeof(MoveWeekendHoliday));
     }
 
     private void m_holidayType_SelectionChanged(object sender, SelectionChangedEventArgs e)

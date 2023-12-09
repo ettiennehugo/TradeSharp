@@ -27,7 +27,7 @@
     <TextBlock x:Name="m_instrumentsHeader" Text="Instruments" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="3" Grid.Column="0"/>
     <Grid x:Name="m_instruments" RowDefinitions="Auto, *" Grid.Row="4" Grid.Column="0">
       <StackPanel Orientation="Horizontal"  Grid.Row="0" Grid.Column="0">
-        <TextBlock x:Name="m_instrumentFilterFieldsLabel" Text="Match by" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+        <TextBlock x:Name="m_instrumentFilterFieldsLabel" Text="Filter by" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
         <ComboBox x:Name="m_filterMatchFields" Width="200" Margin="8"  HorizontalAlignment="Left" SelectedIndex="3" SelectionChanged="m_filterMatchFields_SelectionChanged">
           <ComboBox.Items>
             <ComboBoxItem>Ticker</ComboBoxItem>
@@ -36,8 +36,8 @@
             <ComboBoxItem>Any</ComboBoxItem>
           </ComboBox.Items>
         </ComboBox>
-        <TextBlock x:Name="m_instrumentFilterLabel" Text="using filter" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-        <TextBox x:Name="m_instrumentFilter" Width="300" PlaceholderText="filter expression" Margin="8" HorizontalAlignment="Left" TextChanged="m_instrumentFilter_TextChanged"/>
+        <TextBlock x:Name="m_instrumentFilterLabel" Text="using" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+        <TextBox x:Name="m_instrumentFilter" Width="300" PlaceholderText="expression" Margin="8" HorizontalAlignment="Left" TextChanged="m_instrumentFilter_TextChanged"/>
       </StackPanel>
       <ListView x:Name="m_instrumentsGrid" SelectionMode="Single" ItemsSource="{x:Bind Instruments}" SelectionChanged="m_instrumentsGrid_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Grid.Row="2" Grid.Column="0">
         <ListView.ItemTemplate>
@@ -60,7 +60,7 @@
             <TextBlock Text="Minutes" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_minuteBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Minute" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}" PriceDataType="Both"/>
+        <wcui:InstrumentBarsDataView x:Name="m_minuteBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Minute" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
       </TabViewItem>
       <TabViewItem x:Name="m_hoursTab" IsClosable="False">
         <TabViewItem.Header>
@@ -69,7 +69,7 @@
             <TextBlock Text="Hours" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_hoursBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Hour" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}" PriceDataType="Both"/>
+        <wcui:InstrumentBarsDataView x:Name="m_hoursBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Hour" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
       </TabViewItem>
       <TabViewItem x:Name="m_daysTab" IsClosable="False">
         <TabViewItem.Header>
@@ -78,7 +78,7 @@
             <TextBlock Text="Days" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_daysBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Day" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}" PriceDataType="Both"/>
+        <wcui:InstrumentBarsDataView x:Name="m_daysBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Day" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
       </TabViewItem>
       <TabViewItem x:Name="m_weeksTab" IsClosable="False">
         <TabViewItem.Header>
@@ -87,7 +87,7 @@
             <TextBlock Text="Weeks" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_weeksBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Week" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}" PriceDataType="Both"/>
+        <wcui:InstrumentBarsDataView x:Name="m_weeksBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Week" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
       </TabViewItem>
       <TabViewItem x:Name="m_monthsTab" IsClosable="False">
         <TabViewItem.Header>
@@ -96,7 +96,7 @@
             <TextBlock Text="Months" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_monthsBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Month" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}" PriceDataType="Both"/>
+        <wcui:InstrumentBarsDataView x:Name="m_monthsBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Month" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
       </TabViewItem>
     </TabView>
   </Grid>

@@ -3,7 +3,7 @@
   /// <summary>
   /// Bar data interface to represent a single bar of data over a specific time period.
   /// </summary>
-  public interface IBarData
+  public interface IBarData: IComparable
   {
 
     //constants

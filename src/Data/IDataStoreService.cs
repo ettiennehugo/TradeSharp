@@ -11,9 +11,9 @@ namespace TradeSharp.Data
   /// </summary>
   public enum PriceDataType
   {
+    Both,       //keep this as the default and UI controls like combo's work well with zero index selector on the default
     Actual,
-    Synthetic,
-    Both
+    Synthetic
   }
 
   /// <summary>

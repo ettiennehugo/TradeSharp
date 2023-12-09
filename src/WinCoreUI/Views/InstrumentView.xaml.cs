@@ -74,7 +74,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      Utilities.populateComboBoxFromEnum(ref m_type, typeof(InstrumentType));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_type, typeof(InstrumentType));
       m_primaryExchange.SelectedIndex = 0;
     }
 

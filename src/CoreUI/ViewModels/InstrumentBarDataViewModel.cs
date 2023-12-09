@@ -33,29 +33,31 @@ namespace TradeSharp.CoreUI.ViewModels
       Resolution = Resolution.Day;
       DataProvider = string.Empty;
       Instrument = null;
-      Start = DateTime.MinValue;
-      End = DateTime.MaxValue;
-      PriceDataType = PriceDataType.Both;
       AddCommand = new RelayCommand(OnAdd, () => DataProvider != string.Empty && Instrument != null); //view model must be keyed correctly before allowing the adding new items
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
-      CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => SelectedItem != null);
-    }
+      CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
+      CopyToSyntheticCommand = new RelayCommand<object?>(OnCopyToSynthetic, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
+      CopyToActualCommand = new RelayCommand<object?>(OnCopyToActual, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
+      CopyToHourCommand = new RelayCommand<object?>(OnCopyToHour, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution == Resolution.Minute);
+      CopyToDayCommand = new RelayCommand<object?>(OnCopyToDay, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
+      CopyToWeekCommand = new RelayCommand<object?>(OnCopyToWeek, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
+      CopyToMonthCommand = new RelayCommand<object?>(OnCopyToMonth, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day || Resolution == Resolution.Week));
+      CopyToAllCommand = new RelayCommand<object?>(OnCopyToAll, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution != Resolution.Month);
+  }
 
-    //finalizers
+  //finalizers
 
 
-    //interface implementations
-    public async override void OnAdd()
+  //interface implementations
+  public async override void OnAdd()
     {
-      IBarData? barData = await m_dialogService.ShowCreateBarDataAsync(Resolution, DateTime.Now, PriceDataType == PriceDataType.Synthetic);
-      if (barData != null)
+      IBarData? newBar = await m_dialogService.ShowCreateBarDataAsync(Resolution, DateTime.Now, PriceDataType.Both);
+      if (newBar != null)
       {
-        barData.Resolution = Resolution;
-        await m_itemsService.AddAsync(barData);
-        SelectedItem = barData;
-        Items.Add(barData);
-        await OnRefreshAsync();
+        newBar.Resolution = Resolution;
+        await m_itemsService.AddAsync(newBar);
+        SelectedItem = newBar;
       }
     }
 
@@ -67,7 +69,7 @@ namespace TradeSharp.CoreUI.ViewModels
         if (updatedBar != null)
         {
           await m_itemsService.UpdateAsync(updatedBar);
-          await OnRefreshAsync();
+          SelectedItem = updatedBar;
         }
       }
     }
@@ -82,7 +84,50 @@ namespace TradeSharp.CoreUI.ViewModels
       base.OnExport();  //TODO: Implement export of bar data.
     }
 
+    public virtual void OnCopyToSynthetic(object? selection)
+    {
+      //TODO
+    }
+
+    public virtual void OnCopyToActual(object? selection)
+    {
+      //TODO
+    }
+
+    public virtual void OnCopyToHour(object? selection)
+    {
+      //TODO
+    }
+
+    public virtual void OnCopyToDay(object? selection)
+    {
+      //TODO
+    }
+
+    public virtual void OnCopyToWeek(object? selection)
+    {
+      //TODO
+    }
+
+    public virtual void OnCopyToMonth(object? selection)
+    {
+      //TODO
+    }
+
+    public virtual void OnCopyToAll(object? selection)
+    {
+      //TODO
+    }
+
     //properties
+    public RelayCommand<object?> CopyToSyntheticCommand { get; internal set; }
+    public RelayCommand<object?> CopyToActualCommand { get; internal set; }
+    public RelayCommand<object?> CopyToHourCommand { get; internal set; }
+    public RelayCommand<object?> CopyToDayCommand { get; internal set; }
+    public RelayCommand<object?> CopyToWeekCommand { get; internal set; }
+    public RelayCommand<object?> CopyToMonthCommand { get; internal set; }
+    public RelayCommand<object?> CopyToAllCommand { get; internal set; }
+
     public string DataProvider
     {
       get => m_dataProvider;
@@ -90,6 +135,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         SetProperty(ref m_dataProvider, value);
         ((IInstrumentBarDataService)m_itemsService).DataProvider = value;
+        if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }
@@ -101,6 +147,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         SetProperty(ref m_resolution, value);
         ((IInstrumentBarDataService)m_itemsService).Resolution = value;
+        if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }
@@ -112,39 +159,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         SetProperty(ref m_instrument, value);
         ((IInstrumentBarDataService)m_itemsService).Instrument = value;
-        NotifyCanExecuteChanged();
-      }
-    }
-
-    public DateTime Start
-    {
-      get => m_start;
-      set
-      {
-        SetProperty(ref m_start, value);
-        ((IInstrumentBarDataService)m_itemsService).Start = value;
-        NotifyCanExecuteChanged();
-      }
-    }
-
-    public DateTime End
-    {
-      get => m_end;
-      set
-      {
-        SetProperty(ref m_end, value);
-        ((IInstrumentBarDataService)m_itemsService).End = value;
-        NotifyCanExecuteChanged();
-      }
-    }
-
-    public PriceDataType PriceDataType
-    {
-      get => m_priceDataType;
-      set
-      {
-        SetProperty(ref m_priceDataType, value);
-        ((IInstrumentBarDataService)m_itemsService).PriceDataType = value;
+        if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }

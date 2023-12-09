@@ -36,7 +36,7 @@
         <AppBarSeparator/>
         <AppBarElementContainer x:Name="m_filterContainer">
           <StackPanel Orientation="Horizontal"  Grid.Row="0" Grid.Column="0">
-            <TextBlock x:Name="m_instrumentFilterFieldsLabel" Text="Match by" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBlock x:Name="m_instrumentFilterFieldsLabel" Text="Filter by" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <ComboBox x:Name="m_filterMatchFields" Width="200" Margin="8"  HorizontalAlignment="Left" SelectedIndex="3" SelectionChanged="m_filterMatchFields_SelectionChanged">
               <ComboBox.Items>
                 <ComboBoxItem>Ticker</ComboBoxItem>
@@ -45,8 +45,8 @@
                 <ComboBoxItem>Any</ComboBoxItem>
               </ComboBox.Items>
             </ComboBox>
-            <TextBlock x:Name="m_instrumentFilterLabel" Text="using filter" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-            <TextBox x:Name="m_instrumentFilter" Width="300" PlaceholderText="filter expression" Margin="8" HorizontalAlignment="Left" TextChanged="m_instrumentFilter_TextChanged"/>
+            <TextBlock x:Name="m_instrumentFilterLabel" Text="using" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBox x:Name="m_instrumentFilter" Width="300" PlaceholderText="expression" Margin="8" HorizontalAlignment="Left" TextChanged="m_instrumentFilter_TextChanged"/>
           </StackPanel>
         </AppBarElementContainer>
       </CommandBar>

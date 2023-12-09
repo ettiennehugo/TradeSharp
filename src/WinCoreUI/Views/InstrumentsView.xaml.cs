@@ -54,7 +54,7 @@ namespace TradeSharp.WinCoreUI.Views
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      if (ViewModel.Items.Count == 0) ViewModel.RefreshCommand.Execute(null);
+      if (ViewModel.Items.Count == 0) ViewModel.RefreshCommandAsync.ExecuteAsync(null);
       m_instruments.ItemsSource = ViewModel.Items;
     }
 

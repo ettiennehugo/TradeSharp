@@ -31,10 +31,7 @@ namespace TradeSharp.CoreUI.Services
       m_repository = repository;
       DataProvider = string.Empty;
       Instrument = null;
-      Start = DateTime.MinValue;
-      End = DateTime.MaxValue;
       Resolution = Resolution.Day;
-      PriceDataType = PriceDataType.Both;
       m_selectedItem = null;
       Items = new ObservableCollection<IBarData>();
     }
@@ -46,22 +43,24 @@ namespace TradeSharp.CoreUI.Services
     public async Task<IBarData> AddAsync(IBarData item)
     {
       var result = await m_repository.AddAsync(item);
+      Utilities.SortedInsert(item, Items);
       SelectedItem = result;
       SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
     }
 
-    public Task<IBarData> CopyAsync(IBarData item) => throw new NotImplementedException();
+    public Task<IBarData> CopyAsync(IBarData item) => throw new NotImplementedException();  //TODO: Need to figure out how this would occur, maybe override method to support copy to different resolutions and PriceTypes.
 
     public async Task<bool> DeleteAsync(IBarData item)
     {
       bool result = await m_repository.DeleteAsync(item);
-
       if (item == SelectedItem)
       {
         SelectedItemChanged?.Invoke(this, SelectedItem);
         SelectedItem = null;
       }
+
+      Items.Remove(item);
 
       return result;
     }
@@ -85,9 +84,20 @@ namespace TradeSharp.CoreUI.Services
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
-    public Task<IBarData> UpdateAsync(IBarData item)
+    public async Task<IBarData> UpdateAsync(IBarData item)
     {
-      return m_repository.UpdateAsync(item);
+      IBarData barData = await m_repository.UpdateAsync(item);
+      
+      //the bar editor does not allow modification of the DateTime and Synthetic settings
+      for (int i = 0; i < Items.Count(); i++)
+        if (barData.Equals(item))
+        {
+          Items.RemoveAt(i);
+          Items.Insert(i, barData);
+          return barData;
+        }
+
+      return barData;
     }
 
     //properties
@@ -104,12 +114,8 @@ namespace TradeSharp.CoreUI.Services
         m_repository.Instrument = m_instrument;
       }
     }
-    
-    public DateTime Start { get => m_repository.Start; set => m_repository.Start = value; }
-    public DateTime End { get => m_repository.End; set => m_repository.End = value; }
-    public Resolution Resolution { get => m_repository.Resolution; set => m_repository.Resolution = value; }
-    public PriceDataType PriceDataType { get => m_repository.PriceDataType; set => m_repository.PriceDataType = value; }
 
+    public Resolution Resolution { get => m_repository.Resolution; set => m_repository.Resolution = value; }
     public event EventHandler<IBarData?>? SelectedItemChanged;
     public IBarData? SelectedItem 
     { 

@@ -57,7 +57,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      Utilities.populateComboBoxFromEnum(ref m_dayOfWeek, typeof(DayOfWeek));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_dayOfWeek, typeof(DayOfWeek));
     }
 
     //methods

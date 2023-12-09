@@ -20,14 +20,18 @@
         <AppBarButton x:Name="m_buttonAdd" Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add bar" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonEdit" Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update bar" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonDelete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}" ToolTipService.ToolTip="Delete bar(s)" IsCompact="True"/>
-        <AppBarButton x:Name="m_buttonCopy"  Icon="Copy" Label="Copy bar(s)" IsCompact="True">
+        <AppBarButton x:Name="m_buttonCopy"  Icon="Copy" Command="{x:Bind ViewModel.CopyCommand}" Label="Copy bar(s)" IsCompact="True">
           <AppBarButton.Flyout>
             <MenuFlyout x:Name="m_copyFlyout">
-              <MenuFlyoutSubItem x:Name="m_copyToMinute" Text="To minute"/>
-              <MenuFlyoutSubItem x:Name="m_copyToHour" Text="To hour"/>
-              <MenuFlyoutSubItem x:Name="m_copyToDay" Text="To day"/>
-              <MenuFlyoutSubItem x:Name="m_copyToWeek" Text="To week"/>
-              <MenuFlyoutSubItem x:Name="m_copyToMonth" Text="To month"/>
+              <MenuFlyoutItem x:Name="m_copyToSynthetic" Text="Synthetic" ToolTipService.ToolTip="Copy actual data to synthetic data" Command="{x:Bind ViewModel.CopyToSyntheticCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
+              <MenuFlyoutItem x:Name="m_copyToActual" Text="Actual" ToolTipService.ToolTip="Copy synthetic data to actual data" Command="{x:Bind ViewModel.CopyToActualCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
+              <MenuFlyoutSeparator/>
+              <MenuFlyoutItem x:Name="m_copyToHour" Text="Hour" ToolTipService.ToolTip="Copy data to hourly resolution scaling it appropriately" Command="{x:Bind ViewModel.CopyToHourCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
+              <MenuFlyoutItem x:Name="m_copyToDay" Text="Day" ToolTipService.ToolTip="Copy data to daily resolution scaling it appropriately"  Command="{x:Bind ViewModel.CopyToDayCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
+              <MenuFlyoutItem x:Name="m_copyToWeek" Text="Week" ToolTipService.ToolTip="Copy data to weekly resolution scaling it appropriately" Command="{x:Bind ViewModel.CopyToWeekCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
+              <MenuFlyoutItem x:Name="m_copyToMonth" Text="Month" ToolTipService.ToolTip="Copy data to monthly resolution scaling it appropriately" Command="{x:Bind ViewModel.CopyToMonthCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
+              <MenuFlyoutSeparator/>
+              <MenuFlyoutItem x:Name="m_copyToAll" Text="All"  ToolTipService.ToolTip="Copy data to all larger resolutions scaling it appropriately" Command="{x:Bind ViewModel.CopyToAllCommand}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
             </MenuFlyout>
           </AppBarButton.Flyout>
         </AppBarButton>
@@ -45,6 +49,8 @@
         <AppBarSeparator/>
         <AppBarElementContainer x:Name="m_filterContainer">
           <StackPanel Orientation="Horizontal">
+            <TextBlock x:Name="m_filterLbl" Margin="8" VerticalAlignment="Center" Text="Filter by"/>
+            <ComboBox x:Name="m_priceDataType" Margin="8,8,0,8" ToolTipService.ToolTip="Filter price data type" SelectionChanged="m_priceDataType_SelectionChanged"/>
             <DatePicker x:Name="m_startDate" Margin="8,8,0,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}" DateChanged="m_startDate_DateChanged"/>
             <TimePicker x:Name="m_startTime" ClockIdentifier="24HourClock" Margin="0,8,8,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}" TimeChanged="m_startTime_TimeChanged"/>
             <TextBlock Text="-" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -58,7 +64,7 @@
     <winui:DataGrid x:Name="m_dataTable" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"  Grid.Row="1" Grid.Column="0">
       <winui:DataGrid.Columns>
         <winui:DataGridTextColumn x:Name="m_columnDateTime" Width="Auto" Header="Date/Time" Binding="{Binding DateTime}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnOpen" Width="Auto" Header="Open" Binding="{Binding Open}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnOpen" Width="Auto" Header="Open" Binding="{Binding Open}" IsReadOnly="True" />
         <winui:DataGridTextColumn x:Name="m_columnHigh" Width="Auto" Header="High" Binding="{Binding High}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnLow" Width="Auto" Header="Low" Binding="{Binding Low}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnClose" Width="Auto" Header="Close" Binding="{Binding Close}" IsReadOnly="True"/>

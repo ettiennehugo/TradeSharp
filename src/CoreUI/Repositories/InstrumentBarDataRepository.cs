@@ -25,10 +25,7 @@ namespace TradeSharp.CoreUI.Repositories
     {
       DataProvider = string.Empty;
       Instrument = null;
-      Start = DateTime.MinValue;
-      End = DateTime.MaxValue;
       Resolution = Resolution.Day;
-      PriceDataType = PriceDataType.Both; //by default return all available data
       m_dataStore = dataStoreService;
     }
 
@@ -39,13 +36,19 @@ namespace TradeSharp.CoreUI.Repositories
     public Task<IBarData?> GetItemAsync(DateTime id)
     {
       throwIfNotKeyed();
-      return Task.FromResult(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id, PriceDataType));
+      return Task.FromResult(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id, PriceDataType.Both));
     }
 
     public Task<IEnumerable<IBarData>> GetItemsAsync()
     {
       throwIfNotKeyed();
-      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, Start, End, PriceDataType));
+      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue, PriceDataType.Both));
+    }
+
+    public Task<IEnumerable<IBarData>> GetItemsAsync(DateTime start, DateTime end)
+    {
+      throwIfNotKeyed();
+      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end, PriceDataType.Both));
     }
 
     public Task<IBarData> AddAsync(IBarData item)
@@ -69,15 +72,12 @@ namespace TradeSharp.CoreUI.Repositories
     //properties
     public string DataProvider { get; set; }
     public Instrument? Instrument { get; set; }
-    public DateTime Start { get; set; }
-    public DateTime End { get; set; }
     public Resolution Resolution { get; set; }
-    public PriceDataType PriceDataType { get; set; }
 
     //methods
     private void throwIfNotKeyed()
     {
-      if (DataProvider == "") throw new KeyNotFoundException("DataProvider must have a value.");
+      if (DataProvider == string.Empty) throw new KeyNotFoundException("DataProvider must have a value.");
       if (Instrument == null) throw new KeyNotFoundException("Instrument must have a value.");
     }
   }

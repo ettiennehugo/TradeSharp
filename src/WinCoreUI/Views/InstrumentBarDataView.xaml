@@ -17,7 +17,7 @@
     <TextBlock x:Name="m_lowLbl" Text="Low" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4"/>
     <TextBlock x:Name="m_closeLbl" Text="Close" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5"/>
     <TextBlock x:Name="m_volumeLbl" Text="Volume" VerticalAlignment="Center" Grid.Column="0" Grid.Row="6"/>
-    <TextBlock x:Name="m_syntehticLbl" Text="Synthetic" VerticalAlignment="Center" Grid.Column="0" Grid.Row="7"/>
+    <TextBlock x:Name="m_syntheticLbl" Text="Synthetic" VerticalAlignment="Center" Grid.Column="0" Grid.Row="7"/>
     <DatePicker x:Name="m_date" Date="{x:Bind Date, Mode=TwoWay}" Grid.Column="1" Grid.Row="0"/>
     <TimePicker x:Name="m_time" ClockIdentifier="24HourClock" Time="{x:Bind Time, Mode=TwoWay}" Grid.Column="1"  Grid.Row="1"/>
     <TextBox x:Name="m_open" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))(\.[0-9]*)?$" Text="{x:Bind BarData.Open, Mode=TwoWay}" Grid.Column="1" Grid.Row="2"/>

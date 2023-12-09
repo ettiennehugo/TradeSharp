@@ -85,7 +85,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      Utilities.populateComboBoxFromEnum(ref m_replaceBehavior, typeof(ImportReplaceBehavior));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_replaceBehavior, typeof(ImportReplaceBehavior));
     }
 
     //methods
