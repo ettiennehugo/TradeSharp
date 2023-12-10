@@ -445,7 +445,7 @@ namespace TradeSharp.Data.Testing
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Both);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
       
       Data.DataCacheBars barData = m_testBarDataReversed[resolution];
 
@@ -479,7 +479,7 @@ namespace TradeSharp.Data.Testing
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Both);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
 
       switch (resolution)
       {
@@ -646,7 +646,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval <= 30 ? 30 : interval;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 0, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Both);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;
@@ -789,7 +789,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval <= 30 ? 30 : interval;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 3, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Both);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;
@@ -843,7 +843,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval * 10;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 0, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, Resolution.Level1, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Both);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, Resolution.Level1, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;

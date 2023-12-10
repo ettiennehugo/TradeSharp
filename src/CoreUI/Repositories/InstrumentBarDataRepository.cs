@@ -36,19 +36,19 @@ namespace TradeSharp.CoreUI.Repositories
     public Task<IBarData?> GetItemAsync(DateTime id)
     {
       throwIfNotKeyed();
-      return Task.FromResult(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id, PriceDataType.Both));
+      return Task.FromResult(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id, PriceDataType.All)); //all data is always returned and filtered down in service/view model/UI
     }
 
     public Task<IEnumerable<IBarData>> GetItemsAsync()
     {
       throwIfNotKeyed();
-      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue, PriceDataType.Both));
+      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue, PriceDataType.All)); //all data is always returned and filtered down in service/view model/UI
     }
 
     public Task<IEnumerable<IBarData>> GetItemsAsync(DateTime start, DateTime end)
     {
       throwIfNotKeyed();
-      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end, PriceDataType.Both));
+      return Task.FromResult<IEnumerable<IBarData>>(m_dataStore.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end, PriceDataType.All)); //all data is always returned and filtered down in service/view model/UI
     }
 
     public Task<IBarData> AddAsync(IBarData item)

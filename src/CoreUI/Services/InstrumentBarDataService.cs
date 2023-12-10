@@ -1,8 +1,8 @@
 ﻿using TradeSharp.Data;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Repositories;
+using CommunityToolkit.Mvvm.DependencyInjection;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -23,12 +23,11 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     private IInstrumentBarDataRepository m_repository;
     private IBarData? m_selectedItem;
-    private Instrument? m_instrument;
 
     //constructors
-    public InstrumentBarDataService(IInstrumentBarDataRepository repository) 
+    public InstrumentBarDataService() 
     {
-      m_repository = repository;
+      m_repository = Ioc.Default.GetRequiredService<IInstrumentBarDataRepository>();  //need to do this to get a unique transient repository instance associated with this specific service
       DataProvider = string.Empty;
       Instrument = null;
       Resolution = Resolution.Day;
@@ -104,17 +103,7 @@ namespace TradeSharp.CoreUI.Services
     public Guid ParentId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); } //not supported, instrument bar data requires a complex key
 
     public string DataProvider { get => m_repository.DataProvider; set => m_repository.DataProvider = value; }
-    
-    public Instrument? Instrument 
-    {
-      get => m_instrument;
-      set
-      {
-        m_instrument = value;
-        m_repository.Instrument = m_instrument;
-      }
-    }
-
+    public Instrument? Instrument { get => m_repository.Instrument; set => m_repository.Instrument = value; }
     public Resolution Resolution { get => m_repository.Resolution; set => m_repository.Resolution = value; }
     public event EventHandler<IBarData?>? SelectedItemChanged;
     public IBarData? SelectedItem 

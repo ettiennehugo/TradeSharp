@@ -1816,7 +1816,7 @@ namespace TradeSharp.Data.Testing
       m_dataStore.CreateSession(postMarketSession);
 
       IList<Session> sessions = m_dataStore.GetSessions();
-      Assert.AreEqual(3, sessions.Count, "Returned exchange holiday count is not correct.");
+      Assert.AreEqual(10, sessions.Count, "Returned session count is not correct.");    //+7 for the global exchange that also has sessions for all week days for 24/7 trading
       Assert.IsNotNull(sessions.Where(x => x.Id == preMarketSession.Id && x.Name == preMarketSession.Name && x.ExchangeId == preMarketSession.ExchangeId && x.DayOfWeek == preMarketSession.DayOfWeek && x.Start == preMarketSession.Start && x.End == preMarketSession.End).Single(), "pre-market session not returned in stored data.");
       Assert.IsNotNull(sessions.Where(x => x.Id == mainSession.Id && x.Name == mainSession.Name && x.ExchangeId == mainSession.ExchangeId && x.DayOfWeek == mainSession.DayOfWeek && x.Start == mainSession.Start && x.End == mainSession.End).Single(), "main session not returned in stored data.");
       Assert.IsNotNull(sessions.Where(x => x.Id == postMarketSession.Id && x.Name == postMarketSession.Name && x.ExchangeId == postMarketSession.ExchangeId && x.DayOfWeek == postMarketSession.DayOfWeek && x.Start == postMarketSession.Start && x.End == postMarketSession.End).Single(), "post-market session not returned in stored data.");
@@ -2212,7 +2212,7 @@ namespace TradeSharp.Data.Testing
 
       m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
-      DataCache dataResult = m_dataStore.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), PriceDataType.Both);
+      DataCache dataResult = m_dataStore.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), PriceDataType.Merged);
       Assert.AreEqual(barData.Count, dataResult.Count, "GetDataCache did not return the correct number of bars.");
 
       DataCacheBars dataResultDetails = (DataCacheBars)dataResult.Data;

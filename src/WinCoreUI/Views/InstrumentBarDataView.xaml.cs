@@ -30,7 +30,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       BarData = new BarData(Resolution, new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds), 0, 0, 0, 0, 0, false);
       this.InitializeComponent();
-      m_synthetic.Visibility = PriceDataType == PriceDataType.Both ? Visibility.Visible : Visibility.Collapsed;
+      m_synthetic.Visibility = PriceDataType == PriceDataType.Merged ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public InstrumentBarDataView(IBarData barData)
@@ -38,11 +38,10 @@ namespace TradeSharp.WinCoreUI.Views
       BarData = barData;
       this.InitializeComponent();
       Resolution = barData.Resolution;
-      //user can not edit the DateTime and Synthetic state of an existing bar
+      //user can not edit the DateTime and Synthetic state of an existing bar (copy can be used to move data)
       m_date.IsEnabled = false;
       m_time.IsEnabled = false;
       m_synthetic.IsEnabled = false;
-      m_synthetic.Visibility = PriceDataType == PriceDataType.Both ? Visibility.Visible : Visibility.Collapsed;
     }
 
     //finalizers
@@ -52,7 +51,7 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //properties
-    public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register("Resolution", typeof(Resolution), typeof(InstrumentBarsDataView), new PropertyMetadata(Resolution.Minute));
+    public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register("Resolution", typeof(Resolution), typeof(InstrumentBarsDataView), new PropertyMetadata(Resolution.Day));
     public static readonly DependencyProperty DateProperty = DependencyProperty.Register("Date", typeof(DateTimeOffset), typeof(InstrumentBarsDataView), new PropertyMetadata(new DateTimeOffset(1980, 1, 1, 12, 0, 0, new TimeSpan(0, 0, 0))));
     public static readonly DependencyProperty TimeProperty = DependencyProperty.Register("Time", typeof(TimeSpan), typeof(InstrumentBarsDataView), new PropertyMetadata(new TimeSpan(0, 0, 0)));
     public static readonly DependencyProperty PriceDataTypeProperty = DependencyProperty.Register("PriceDataType", typeof(PriceDataType), typeof(InstrumentBarsDataView), new PropertyMetadata(PriceDataType.Actual));
@@ -96,7 +95,7 @@ namespace TradeSharp.WinCoreUI.Views
       get => (PriceDataType)GetValue(PriceDataTypeProperty); 
       set { 
         SetValue(PriceDataTypeProperty, value);
-        if (m_synthetic != null) m_synthetic.Visibility = value == PriceDataType.Both ? Visibility.Visible : Visibility.Collapsed;
+        if (m_synthetic != null) m_synthetic.Visibility = value == PriceDataType.Merged ? Visibility.Visible : Visibility.Collapsed;
         SyntheticSelectionIndex = value == PriceDataType.Synthetic ? 0 : 1; 
       } 
     }
@@ -112,10 +111,19 @@ namespace TradeSharp.WinCoreUI.Views
       Time = BarData.DateTime.TimeOfDay;
     }
 
-    private void Page_Unloaded(object sender, RoutedEventArgs e)
+    private void m_date_DateChanged(object sender, DatePickerValueChangedEventArgs e)
+    {
+      BarData.DateTime = new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds);
+    }
+
+    private void m_time_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
+    {
+      BarData.DateTime = new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds);
+    }
+
+    private void m_synthetic_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
       BarData.Synthetic = SyntheticSelectionIndex == 1;
-      BarData.DateTime = new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds);
     }
   }
 }

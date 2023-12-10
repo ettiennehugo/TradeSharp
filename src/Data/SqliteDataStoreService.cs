@@ -1,4 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using TradeSharp.Common;
 
@@ -1182,7 +1184,7 @@ namespace TradeSharp.Data
       string normalizedTicker = ticker.ToUpper();
 
       //load actual data if required
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
@@ -1203,7 +1205,7 @@ namespace TradeSharp.Data
       }
 
       //load synthetic price data if required
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
@@ -1219,7 +1221,7 @@ namespace TradeSharp.Data
           {
             var dateTime = DateTime.FromBinary(reader.GetInt64(1));
 
-            if (!list.ContainsKey(dateTime))
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !list.ContainsKey(dateTime))) //either all/syntehtic data returned or merged with actual override synthetic data
               list.Add(dateTime, new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
         }
@@ -1275,7 +1277,7 @@ namespace TradeSharp.Data
       string normalizedTicker = ticker.ToUpper();
 
       //get actual bar data
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1)} " +
@@ -1304,7 +1306,7 @@ namespace TradeSharp.Data
       }
 
       //get synthetic bar data
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, Resolution.Level1)} " +
@@ -1329,7 +1331,7 @@ namespace TradeSharp.Data
             level1DB.Synthetic = true;
             list.Add(level1DB.DateTime, level1DB);
 
-            if (!list.ContainsKey(level1DB.DateTime))
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !list.ContainsKey(level1DB.DateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               list.Add(level1DB.DateTime, level1DB);
           }
         }
@@ -1365,7 +1367,7 @@ namespace TradeSharp.Data
       string normalizedTicker = ticker.ToUpper();
 
       //load actual data if required
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
@@ -1379,7 +1381,7 @@ namespace TradeSharp.Data
       }
 
       //load synthetic price data if required
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
@@ -1409,7 +1411,7 @@ namespace TradeSharp.Data
       string normalizedTicker = ticker.ToUpper();
 
       //load actual data if required
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
@@ -1430,7 +1432,7 @@ namespace TradeSharp.Data
       }
 
       //load synthetic price data if required
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
@@ -1445,7 +1447,7 @@ namespace TradeSharp.Data
           while (reader.Read())
           {
             var dateTime = DateTime.FromBinary(reader.GetInt64(1));
-            if (!result.ContainsKey(dateTime))
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.ContainsKey(dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(dateTime, new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
         }
@@ -1464,7 +1466,7 @@ namespace TradeSharp.Data
       string normalizedTicker = ticker.ToUpper();
 
       //get actual bar data
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1)} " +
@@ -1478,7 +1480,7 @@ namespace TradeSharp.Data
       }
 
       //get synthetic bar data
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, Resolution.Level1)} " +
@@ -1507,7 +1509,7 @@ namespace TradeSharp.Data
       string normalizedTicker = ticker.ToUpper();
 
       //get actual bar data
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1)} " +
@@ -1526,7 +1528,7 @@ namespace TradeSharp.Data
       }
 
       //get synthetic bar data
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.Both)
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
         command =
           $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, Resolution.Level1)} " +
@@ -1540,7 +1542,7 @@ namespace TradeSharp.Data
           while (reader.Read())
           {
             DateTime dateTime = DateTime.FromBinary(reader.GetInt64(0));
-            if (!result.ContainsKey(dateTime))
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.ContainsKey(dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(dateTime, new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
       }

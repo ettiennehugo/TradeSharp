@@ -23,12 +23,9 @@ namespace TradeSharp.CoreUI.ViewModels
     private string m_dataProvider;
     private Resolution m_resolution;
     private Instrument? m_instrument;
-    private DateTime m_start;
-    private DateTime m_end;
-    private PriceDataType m_priceDataType;
 
     //constructors
-    public InstrumentBarDataViewModel(IInstrumentBarDataService service, INavigationService navigationService, IDialogService dialogService) : base(service, navigationService, dialogService)
+    public InstrumentBarDataViewModel(INavigationService navigationService, IDialogService dialogService) : base(Ioc.Default.GetRequiredService<IInstrumentBarDataService>(), navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
     {
       Resolution = Resolution.Day;
       DataProvider = string.Empty;
@@ -52,7 +49,7 @@ namespace TradeSharp.CoreUI.ViewModels
   //interface implementations
   public async override void OnAdd()
     {
-      IBarData? newBar = await m_dialogService.ShowCreateBarDataAsync(Resolution, DateTime.Now, PriceDataType.Both);
+      IBarData? newBar = await m_dialogService.ShowCreateBarDataAsync(Resolution, DateTime.Now, PriceDataType.Merged);
       if (newBar != null)
       {
         newBar.Resolution = Resolution;
@@ -87,36 +84,43 @@ namespace TradeSharp.CoreUI.ViewModels
     public virtual void OnCopyToSynthetic(object? selection)
     {
       //TODO
+      throw new NotImplementedException();
     }
 
     public virtual void OnCopyToActual(object? selection)
     {
       //TODO
+      throw new NotImplementedException();
     }
 
     public virtual void OnCopyToHour(object? selection)
     {
       //TODO
+      throw new NotImplementedException();
     }
 
     public virtual void OnCopyToDay(object? selection)
     {
       //TODO
+      throw new NotImplementedException();
     }
 
     public virtual void OnCopyToWeek(object? selection)
     {
       //TODO
+      throw new NotImplementedException();
     }
 
     public virtual void OnCopyToMonth(object? selection)
     {
       //TODO
+      throw new NotImplementedException();
     }
 
     public virtual void OnCopyToAll(object? selection)
     {
       //TODO
+      throw new NotImplementedException();
     }
 
     //properties

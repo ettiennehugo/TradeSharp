@@ -11,9 +11,10 @@ namespace TradeSharp.Data
   /// </summary>
   public enum PriceDataType
   {
-    Both,       //keep this as the default and UI controls like combo's work well with zero index selector on the default
-    Actual,
-    Synthetic
+    All,         //return actual and synthetic data, no override - keep this as the default and UI controls like combo's work well with zero index selector on the default
+    Merged,      //return actual and syntehtic data merged, actual bars overriding synthetic bar definitions - should be default for charting
+    Actual,      //return only actual data
+    Synthetic    //return only synthetic data
   }
 
   /// <summary>
