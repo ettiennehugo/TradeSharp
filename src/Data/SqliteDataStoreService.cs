@@ -1168,6 +1168,11 @@ namespace TradeSharp.Data
       return result;
     }
 
+    private static int compareBarData(Tuple<DateTime, double, double, double, double, long, bool> x, Tuple<DateTime, double, double, double, double, long, bool> y)
+    {
+      return x.Item1.CompareTo(y.Item1);
+    }
+
     public DataCache GetBarData(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, Resolution resolution, PriceDataType priceDataType)
     {
       //validate inputs
@@ -1178,7 +1183,7 @@ namespace TradeSharp.Data
       DateTime toUtc = to.ToUniversalTime();
 
       //create database command
-      SortedDictionary<DateTime, Tuple<DateTime, double, double, double, double, long, bool>> list = new SortedDictionary<DateTime, Tuple<DateTime, double, double, double, double, long, bool>>();
+      List<Tuple<DateTime, double, double, double, double, long, bool>> list = new List<Tuple<DateTime, double, double, double, double, long, bool>>();
 
       string command;
       string normalizedTicker = ticker.ToUpper();
@@ -1199,7 +1204,7 @@ namespace TradeSharp.Data
           while (reader.Read())
           {
             var dateTime = DateTime.FromBinary(reader.GetInt64(1));
-            list.Add(dateTime, new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
+            list.Add(new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
       }
@@ -1221,25 +1226,26 @@ namespace TradeSharp.Data
           {
             var dateTime = DateTime.FromBinary(reader.GetInt64(1));
 
-            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !list.ContainsKey(dateTime))) //either all/syntehtic data returned or merged with actual override synthetic data
-              list.Add(dateTime, new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !list.Exists(x => x.Item1 == dateTime))) //either all/syntehtic data returned or merged with actual override synthetic data
+              list.Add(new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
         }
       }
 
       DataCache dataCache = new DataCache(dataProviderName, instrumentId, resolution, priceDataType, from, to, list.Count);
       DataCacheBars barData = (DataCacheBars)dataCache.Data;
+      list.Sort(compareBarData);
 
       int i = 0;
       foreach (var bar in list)
       {
-        barData.DateTime[i] = bar.Value.Item1;
-        barData.Open[i] = bar.Value.Item2;
-        barData.High[i] = bar.Value.Item3;
-        barData.Low[i] = bar.Value.Item4;
-        barData.Close[i] = bar.Value.Item5;
-        barData.Volume[i] = bar.Value.Item6;
-        barData.Synthetic[i] = bar.Value.Item7;
+        barData.DateTime[i] = bar.Item1;
+        barData.Open[i] = bar.Item2;
+        barData.High[i] = bar.Item3;
+        barData.Low[i] = bar.Item4;
+        barData.Close[i] = bar.Item5;
+        barData.Volume[i] = bar.Item6;
+        barData.Synthetic[i] = bar.Item7;
         i++;
       }
 
@@ -1261,6 +1267,11 @@ namespace TradeSharp.Data
       public bool Synthetic;
     }
 
+    private static int compareLevel1Data(Level1DBRecord x, Level1DBRecord y)
+    {
+      return x.DateTime.CompareTo(y.DateTime);
+    }
+
     /// <summary>
     /// Loads level 1 tick data from the database and returns the populated DataCache structure.
     /// </summary>
@@ -1271,7 +1282,7 @@ namespace TradeSharp.Data
       DateTime toUtc = to.ToUniversalTime();
 
       //create database command
-      SortedDictionary<DateTime, Level1DBRecord> list = new SortedDictionary<DateTime, Level1DBRecord>();
+      List<Level1DBRecord> list = new List<Level1DBRecord>();
 
       string command;
       string normalizedTicker = ticker.ToUpper();
@@ -1300,7 +1311,7 @@ namespace TradeSharp.Data
             level1DB.Last = reader.GetDouble(5);
             level1DB.LastSize = reader.GetInt64(6);
             level1DB.Synthetic = false;
-            list.Add(level1DB.DateTime, level1DB);
+            list.Add(level1DB);
           }
         }
       }
@@ -1329,28 +1340,29 @@ namespace TradeSharp.Data
             level1DB.Last = reader.GetDouble(5);
             level1DB.LastSize = reader.GetInt64(6);
             level1DB.Synthetic = true;
-            list.Add(level1DB.DateTime, level1DB);
+            list.Add(level1DB);
 
-            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !list.ContainsKey(level1DB.DateTime))) //either all/synthetic data returned or merged with actual override synthetic data
-              list.Add(level1DB.DateTime, level1DB);
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !list.Exists(x => x.DateTime == level1DB.DateTime))) //either all/synthetic data returned or merged with actual override synthetic data
+              list.Add(level1DB);
           }
         }
       }
 
       DataCache dataCache = new DataCache(dataProviderName, instrumentId, Resolution.Level1, priceDataType, from, to, list.Count);
       DataCacheLevel1 level1Data = (DataCacheLevel1)dataCache.Data;
+      list.Sort(compareLevel1Data);
 
       int i = 0;
       foreach (var entry in list)
       {
-        level1Data.DateTime[i] = entry.Value.DateTime;
-        level1Data.Bid[i] = entry.Value.Bid;
-        level1Data.BidSize[i] = entry.Value.BidSize;
-        level1Data.Ask[i] = entry.Value.Ask;
-        level1Data.AskSize[i] = entry.Value.AskSize;
-        level1Data.Last[i] = entry.Value.Last;
-        level1Data.LastSize[i] = entry.Value.LastSize;
-        level1Data.Synthetic[i] = entry.Value.Synthetic;
+        level1Data.DateTime[i] = entry.DateTime;
+        level1Data.Bid[i] = entry.Bid;
+        level1Data.BidSize[i] = entry.BidSize;
+        level1Data.Ask[i] = entry.Ask;
+        level1Data.AskSize[i] = entry.AskSize;
+        level1Data.Last[i] = entry.Last;
+        level1Data.LastSize[i] = entry.LastSize;
+        level1Data.Synthetic[i] = entry.Synthetic;
         i++;
       }
 
@@ -1397,6 +1409,11 @@ namespace TradeSharp.Data
       return null;
     }
 
+    private static int compareBarData(IBarData x, IBarData y)
+    {
+      return x.DateTime.CompareTo(y.DateTime);
+    }
+
     public IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType)
     {
       if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
@@ -1406,7 +1423,7 @@ namespace TradeSharp.Data
       DateTime toUtc = to.ToUniversalTime();
 
       //create database command
-      SortedDictionary<DateTime, BarData> result = new SortedDictionary<DateTime, BarData>();
+      List<IBarData> result = new List<IBarData>();
       string command;
       string normalizedTicker = ticker.ToUpper();
 
@@ -1426,7 +1443,7 @@ namespace TradeSharp.Data
           while (reader.Read())
           {
             var dateTime = DateTime.FromBinary(reader.GetInt64(1));
-            result.Add(dateTime, new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
+            result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
       }
@@ -1447,13 +1464,14 @@ namespace TradeSharp.Data
           while (reader.Read())
           {
             var dateTime = DateTime.FromBinary(reader.GetInt64(1));
-            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.ContainsKey(dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
-              result.Add(dateTime, new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
+              result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
         }
       }
 
-      return [.. result.Values];
+      result.Sort(compareBarData);
+      return result;
     }
 
     public ILevel1Data? GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, PriceDataType priceDataType)
@@ -1496,6 +1514,11 @@ namespace TradeSharp.Data
       return null;
     }
 
+    private static int compareLevel1Data(ILevel1Data x, ILevel1Data y)
+    {
+      return x.DateTime.CompareTo(y.DateTime);
+    }
+
     public IList<ILevel1Data> GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, PriceDataType priceDataType)
     {
       //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
@@ -1503,7 +1526,7 @@ namespace TradeSharp.Data
       DateTime toUtc = to.ToUniversalTime();
 
       //create database command
-      SortedDictionary<DateTime, Level1Data> result = new SortedDictionary<DateTime, Level1Data>();
+      List<ILevel1Data> result = new List<ILevel1Data>();
 
       string command;
       string normalizedTicker = ticker.ToUpper();
@@ -1523,7 +1546,7 @@ namespace TradeSharp.Data
           while (reader.Read())
           {
             DateTime dateTime = DateTime.FromBinary(reader.GetInt64(0));
-            result.Add(dateTime, new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false));
+            result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
       }
 
@@ -1542,12 +1565,13 @@ namespace TradeSharp.Data
           while (reader.Read())
           {
             DateTime dateTime = DateTime.FromBinary(reader.GetInt64(0));
-            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.ContainsKey(dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
-              result.Add(dateTime, new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true));
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
+              result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
       }
 
-      return [.. result.Values];
+      result.Sort(compareLevel1Data);
+      return result;
     }
 
     public DataCache GetDataCache(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType)

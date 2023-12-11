@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Specialized;
+using System.Collections.Generic;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.ViewModels;
@@ -228,21 +229,38 @@ namespace TradeSharp.WinCoreUI.Views
 
       //show all items vs show filtered items
       PriceDataType selectedPriceDataType = m_priceDataType.SelectedIndex != -1 ? (PriceDataType)m_priceDataType.SelectedIndex : 0; //on initialization the selected index will be -1 as the default
-      if (startDateTime.Equals(s_defaultStartDateTime) && endDateTime.Equals(s_defaultEndDateTime) && (selectedPriceDataType == PriceDataType.Merged || selectedPriceDataType == PriceDataType.All))
+      if (startDateTime.Equals(s_defaultStartDateTime) && endDateTime.Equals(s_defaultEndDateTime) && selectedPriceDataType == PriceDataType.All)
       {
         m_dataTable.ItemsSource = ViewModel.Items;
+      }
+      else if (selectedPriceDataType == PriceDataType.Merged)
+      {
+        //this code assumes that the ViewModel returns ALL the data bars - merge will firstly use actual bars and only use synthetic bars if no actual bar exists
+        List<IBarData> items = new List<IBarData>();
+        DateTime? lastDateProcessed = null;
+        foreach (IBarData bar in ViewModel.Items)
+        {
+          if (!(bar.DateTime >= startDateTime && bar.DateTime <= endDateTime)) {
+            lastDateProcessed = bar.DateTime;
+            continue;  //skip bars outside of date/time filter
+          }
+
+          if (bar.Synthetic && lastDateProcessed != null && bar.DateTime == lastDateProcessed) continue; //skip synthetic bars if actual bar was already added
+
+          lastDateProcessed = bar.DateTime;
+          items.Add(bar);
+        }
+        m_dataTable.ItemsSource = new ObservableCollection<IBarData>(items);
       }
       else
       {
         m_dataTable.ItemsSource = new ObservableCollection<IBarData>(
           from bar in ViewModel.Items
           where bar.DateTime >= startDateTime && bar.DateTime <= endDateTime &&   //filter according to DateTime
-                                            (selectedPriceDataType == PriceDataType.All || selectedPriceDataType == PriceDataType.Merged || 
-                                            (selectedPriceDataType == PriceDataType.Actual && !bar.Synthetic) || (selectedPriceDataType == PriceDataType.Synthetic && bar.Synthetic))    //filter according to PriceDataType selection
+                (selectedPriceDataType == PriceDataType.All || (selectedPriceDataType == PriceDataType.Actual && !bar.Synthetic) || (selectedPriceDataType == PriceDataType.Synthetic && bar.Synthetic))    //filter according to PriceDataType selection
           select bar
         );
       }
-
     }
 
     private void m_startDate_DateChanged(object sender, DatePickerValueChangedEventArgs e)
