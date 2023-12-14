@@ -33,6 +33,8 @@ namespace TradeSharp.CoreUI.ViewModels
       AddCommand = new RelayCommand(OnAdd, () => DataProvider != string.Empty && Instrument != null); //view model must be keyed correctly before allowing the adding new items
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
+      ImportCommand = new RelayCommand(OnImport, () => DataProvider != string.Empty && Instrument != null);
+      ExportCommand = new RelayCommand(OnExport, () => DataProvider != string.Empty && Instrument != null && Items.Count > 0);
       CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
       CopyToSyntheticCommand = new RelayCommand<object?>(OnCopyToSynthetic, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
       CopyToActualCommand = new RelayCommand<object?>(OnCopyToActual, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
@@ -71,25 +73,38 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public override void OnImport()
+    public override async void OnImport()
     {
-      base.OnImport();  //TODO: Implement import of bar data.
+      ImportSettings? importSettings = await m_dialogService.ShowImportBarDataAsync();
+
+      if (importSettings != null)
+      {
+        ImportReplaceResult importResult = await m_itemsService.ImportAsync(importSettings);
+        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", $"Import result - Created({importResult.Created}), Skipped({importResult.Skipped}), Updated({importResult.Updated}), Replaced({importResult.Replaced})");
+        await OnRefreshAsync();
+      }
     }
 
-    public override void OnExport()
+    public override async void OnExport()
     {
-      base.OnExport();  //TODO: Implement export of bar data.
+      string? filename = await m_dialogService.ShowExportBarDataAsync();
+
+      if (filename != null)
+      {
+        long exportCount = await m_itemsService.ExportAsync(filename);
+        await m_dialogService.ShowStatusMessageAsync(exportCount == 0 ? IDialogService.StatusMessageSeverity.Warning : IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} instruments");
+      }
     }
 
     public virtual void OnCopyToSynthetic(object? selection)
     {
-      //TODO
+      //TODO: Copy selected bar data as synthetic bars
       throw new NotImplementedException();
     }
 
     public virtual void OnCopyToActual(object? selection)
     {
-      //TODO
+      //TODO: Copy selected bar data as actual bars
       throw new NotImplementedException();
     }
 

@@ -1230,11 +1230,14 @@ namespace TradeSharp.Data
               list.Add(new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
         }
+
+        //sort in the synthetic bar data if not just syntehtic bars are returned
+        //PERFORMANCE: Since the list is already sorted the above list.Add could be optimized into a binary insert, List has a BinarySearch method but it requires an object instance. 
+        if (priceDataType != PriceDataType.Synthetic) list.Sort(compareBarData);
       }
 
       DataCache dataCache = new DataCache(dataProviderName, instrumentId, resolution, priceDataType, from, to, list.Count);
       DataCacheBars barData = (DataCacheBars)dataCache.Data;
-      list.Sort(compareBarData);
 
       int i = 0;
       foreach (var bar in list)
@@ -1346,11 +1349,14 @@ namespace TradeSharp.Data
               list.Add(level1DB);
           }
         }
+
+        //sort in the synthetic bar data if not just syntehtic bars are returned
+        //PERFORMANCE: Since the list is already sorted the above list.Add could be optimized into a binary insert, List has a BinarySearch method but it requires an object instance. 
+        if (priceDataType != PriceDataType.Synthetic) list.Sort(compareLevel1Data);
       }
 
       DataCache dataCache = new DataCache(dataProviderName, instrumentId, Resolution.Level1, priceDataType, from, to, list.Count);
       DataCacheLevel1 level1Data = (DataCacheLevel1)dataCache.Data;
-      list.Sort(compareLevel1Data);
 
       int i = 0;
       foreach (var entry in list)
@@ -1468,9 +1474,12 @@ namespace TradeSharp.Data
               result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
         }
+
+        //sort in the synthetic bar data if not just synthetic data is returned
+        //PERFORMANCE: Since the list is already sorted the above result.Add could be optimized into a binary insert, List has a BinarySearch method but it requires an object instance. 
+        if (priceDataType != PriceDataType.Synthetic) result.Sort(compareBarData);
       }
 
-      result.Sort(compareBarData);
       return result;
     }
 
@@ -1568,9 +1577,13 @@ namespace TradeSharp.Data
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
+
+
+        //sort in the synthetic bar data if not just synthetic data is returned
+        //PERFORMANCE: Since the list is already sorted the above result.Add could be optimized into a binary insert, List has a BinarySearch method but it requires an object instance. 
+        if (priceDataType != PriceDataType.Synthetic) result.Sort(compareLevel1Data);
       }
 
-      result.Sort(compareLevel1Data);
       return result;
     }
 

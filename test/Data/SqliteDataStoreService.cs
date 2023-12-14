@@ -2057,6 +2057,35 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
+    [DataRow(Resolution.Minute, PriceDataType.Merged)]
+    [DataRow(Resolution.Day, PriceDataType.Merged)]
+    [DataRow(Resolution.Minute, PriceDataType.All)]
+    [DataRow(Resolution.Day, PriceDataType.All)]
+    public void GetBarData_ReturnsMergedVsAllBarData_Success(Resolution resolution, PriceDataType priceDataType)
+    {
+      DateTime dateTime = DateTime.Now.ToUniversalTime();
+      DataCacheBars barData = new DataCacheBars(15);
+      barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
+                                              dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10),
+                                              dateTime.AddMinutes(10), dateTime.AddMinutes(11), dateTime.AddMinutes(11), dateTime.AddMinutes(12), dateTime.AddMinutes(12) };  //duplicates of previous bars
+      barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0, 311.0, 321.0, 331.0, 341.0, 351.0 };
+      barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0, 312.0, 322.0, 332.0, 342.0, 352.0 };
+      barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0, 313.0, 323.0, 333.0, 343.0, 353.0 };
+      barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0, 314.0, 324.0, 334.0, 344.0, 354.0 };
+      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255, 315, 325, 335, 345, 355 };
+      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false, true, false, true, false, true };
+
+      m_dataStore.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+
+      IList<IBarData> dataResult = m_dataStore.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(12), priceDataType);
+      int expectedCount = priceDataType == PriceDataType.All ? barData.Count : barData.Count - 3; //-3 since there are 3 duplicate bars that would be discarded under the Merge operation
+      Assert.AreEqual(expectedCount, dataResult.Count, "GetBarData did not return the correct number of bars.");
+
+      for (int index = 0; index < dataResult.Count; index++)
+        Assert.IsTrue(barData.DateTime.Contains(dataResult[index].DateTime), string.Format("Bar data {0} not found.", dataResult[index].DateTime));
+    }
+
+    [TestMethod]
     [DataRow(Resolution.Minute)]
     [DataRow(Resolution.Day)]
     public void GetBarData_ReturnsActualVsSyntheticSingleBarData_Success(Resolution resolution)

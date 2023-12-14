@@ -22,12 +22,12 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
-    <TextBlock x:Name="m_filenameLabel" Width="150" Text="Filename" Grid.Column="0" Grid.Row="0"/>
+    <TextBlock x:Name="m_filenameLabel" Width="150" Text="Filename" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
     <TextBox x:Name="m_filename" Width="400" Text="{x:Bind ImportSettings.Filename, Mode=TwoWay}" PlaceholderText="Enter filename" Grid.Column="1" Grid.Row="0"/>
     <Button x:Name="m_browse" Click="m_browse_Click" Grid.Column="2" Grid.Row="0" Padding="0,0,0,0">
       <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE773;"/>
     </Button>
-    <TextBlock x:Name="m_replaceBehaviorLabel" Text="Replace Behavior" Grid.Column="0" Grid.Row="1"/>
+    <TextBlock x:Name="m_replaceBehaviorLabel" Text="Replace Behavior" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1"/>
     <ComboBox x:Name="m_replaceBehavior" SelectedIndex="{x:Bind ImportSettings.ImportReplaceBehavior, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="1"/>
   </Grid>
 </Page>

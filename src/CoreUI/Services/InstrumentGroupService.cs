@@ -192,31 +192,30 @@ namespace TradeSharp.CoreUI.Services
       return Task.FromResult(node);
     }
 
-    public async Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings)
+    public Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings)
     {
-      ImportReplaceResult result = new ImportReplaceResult();
-
       string extension = Path.GetExtension(importSettings.Filename).ToLower();
       if (extension == extensionCSV)
-        result = await importCSV(importSettings);
+        return importCSV(importSettings);
       else if (extension == extensionJSON)
-        result = await importJSON(importSettings);
-
-      return result;
+        return importJSON(importSettings);
+      return Task.FromResult(new ImportReplaceResult());  //should not be reached
     }
 
-    public async Task<int> ExportAsync(string filename)
+    public Task<int> ExportAsync(string filename)
     {
-      int result = 0;
+      return Task.Run(async () =>
+      {
+        int result = 0;
+        IDictionary<Guid, Tuple<InstrumentGroup, bool>> leafNodes = await getLeafInstrumentGroups();
+        string extension = Path.GetExtension(filename).ToLower();
+        if (extension == extensionCSV)
+          result = exportCSV(filename, leafNodes);
+        else if (extension == extensionJSON)
+          result = exportJSON(filename, leafNodes);
 
-      IDictionary<Guid, Tuple<InstrumentGroup, bool>> leafNodes = await getLeafInstrumentGroups();
-      string extension = Path.GetExtension(filename).ToLower();
-      if (extension == extensionCSV)
-        result = exportCSV(filename, leafNodes);
-      else if (extension == extensionJSON)
-        result = exportJSON(filename, leafNodes);
-
-      return result;
+        return result;
+      });
     }
 
     private ITreeNodeType<Guid, InstrumentGroup>? getNode(Guid instrumentGroupId)
@@ -242,172 +241,176 @@ namespace TradeSharp.CoreUI.Services
     /// Uses - https://joshclose.github.io/CsvHelper/examples/reading/get-dynamic-records/
     ///   - Only instrument group names are imported and is used for the description as well.
     /// </summary>
-    private async Task<ImportReplaceResult> importCSV(ImportSettings importSettings)
+    private Task<ImportReplaceResult> importCSV(ImportSettings importSettings)
     {
-      ImportReplaceResult result = new ImportReplaceResult();
-      ILogger logger = m_loggerFactory.CreateLogger($"Importing instrument groups - \"{importSettings.Filename}\"");
-
-      Dictionary<string, InstrumentGroup> definedInstrumentGroups = new Dictionary<string, InstrumentGroup>();
-      Dictionary<string, InstrumentGroupRecord> fileInstrumentGroups = new Dictionary<string, InstrumentGroupRecord>();
-      List<InstrumentGroupRecord> currentLineRecords = new List<InstrumentGroupRecord>();
-
-      using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
-      using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+      return Task.Run(async () =>
       {
-        //construct the set of instrument groups to be imported
-        if (csv.Read() && csv.ReadHeader() && csv.HeaderRecord != null)
+        ImportReplaceResult result = new ImportReplaceResult();
+        ILogger logger = m_loggerFactory.CreateLogger($"Importing instrument groups - \"{importSettings.Filename}\"");
+
+        Dictionary<string, InstrumentGroup> definedInstrumentGroups = new Dictionary<string, InstrumentGroup>();
+        Dictionary<string, InstrumentGroupRecord> fileInstrumentGroups = new Dictionary<string, InstrumentGroupRecord>();
+        List<InstrumentGroupRecord> currentLineRecords = new List<InstrumentGroupRecord>();
+
+        using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+        using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
         {
-          int lineNo = 0;
-          bool parseError = false;
-
-          while (csv.Read() && !parseError)
+          //construct the set of instrument groups to be imported
+          if (csv.Read() && csv.ReadHeader() && csv.HeaderRecord != null)
           {
-            string name = "";
-            string description = "";
-            string tag = "";
-            string ticker = "";
-            Attributes attributes = InstrumentGroup.DefaultAttributeSet; 
+            int lineNo = 1; //header row is on line 0
+            bool parseError = false;
 
-            lineNo++;
-
-            for (int columnIndex = csv.HeaderRecord.Count() - 1; columnIndex >= 0; columnIndex--)
+            while (csv.Read() && !parseError)
             {
-              string? columnValue = null;
-              if (csv.TryGetField(columnIndex, out columnValue))
+              string name = "";
+              string description = "";
+              string tag = "";
+              string ticker = "";
+              Attributes attributes = InstrumentGroup.DefaultAttributeSet;
+
+              lineNo++;
+
+              for (int columnIndex = csv.HeaderRecord.Count() - 1; columnIndex >= 0; columnIndex--)
               {
-                if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvName)
+                string? columnValue = null;
+                if (csv.TryGetField(columnIndex, out columnValue))
                 {
-                  name = columnValue!;
-                  if (description == "") description = name;
-                  if (tag == "") tag = name;
-
-                  //create new group to be added for this line
-                  currentLineRecords.Add(new InstrumentGroupRecord(SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot, Guid.NewGuid(), name, description, tag, ticker, attributes));
-
-                  //reset field values
-                  name = "";
-                  description = "";
-                  tag = "";
-                  ticker = "";
-                }
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDescription)
-                  description = columnValue!;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTag)
-                  tag = columnValue!;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTicker)
-                  ticker = columnValue!;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvAttributes)
-                  attributes = (Attributes)Enum.Parse(typeof(Attributes), columnValue!);
-
-                //resolve the parent id's and add the objects as required - we use the tag as the key since it should be a unique key value used for the instrument groups
-                if (columnIndex == 0)
-                {
-                  Guid previousId = SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot;
-                  currentLineRecords.Reverse();
-                  foreach (InstrumentGroupRecord instrumentGroupRecord in currentLineRecords)
+                  if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvName)
                   {
-                    //keep existing id and parent if record already exists
-                    if (fileInstrumentGroups.TryGetValue(instrumentGroupRecord.Tag, out InstrumentGroupRecord? existingRecord))
-                    {
-                      instrumentGroupRecord.ParentId = existingRecord.ParentId;
-                      instrumentGroupRecord.Id = existingRecord.Id;
-                    }
-                    else
-                    {
-                      instrumentGroupRecord.ParentId = previousId;
-                      fileInstrumentGroups.Add(instrumentGroupRecord.Tag, instrumentGroupRecord);
-                    }
+                    name = columnValue!;
+                    if (description == "") description = name;
+                    if (tag == "") tag = name;
 
-                    previousId = instrumentGroupRecord.Id;
+                    //create new group to be added for this line
+                    currentLineRecords.Add(new InstrumentGroupRecord(SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot, Guid.NewGuid(), name, description, tag, ticker, attributes));
+
+                    //reset field values
+                    name = "";
+                    description = "";
+                    tag = "";
+                    ticker = "";
                   }
+                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDescription)
+                    description = columnValue!;
+                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTag)
+                    tag = columnValue!;
+                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTicker)
+                    ticker = columnValue!;
+                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvAttributes)
+                    attributes = (Attributes)Enum.Parse(typeof(Attributes), columnValue!);
 
-                  currentLineRecords.Clear();
+                  //resolve the parent id's and add the objects as required - we use the tag as the key since it should be a unique key value used for the instrument groups
+                  if (columnIndex == 0)
+                  {
+                    Guid previousId = SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot;
+                    currentLineRecords.Reverse();
+                    foreach (InstrumentGroupRecord instrumentGroupRecord in currentLineRecords)
+                    {
+                      //keep existing id and parent if record already exists
+                      if (fileInstrumentGroups.TryGetValue(instrumentGroupRecord.Tag, out InstrumentGroupRecord? existingRecord))
+                      {
+                        instrumentGroupRecord.ParentId = existingRecord.ParentId;
+                        instrumentGroupRecord.Id = existingRecord.Id;
+                      }
+                      else
+                      {
+                        instrumentGroupRecord.ParentId = previousId;
+                        fileInstrumentGroups.Add(instrumentGroupRecord.Tag, instrumentGroupRecord);
+                      }
+
+                      previousId = instrumentGroupRecord.Id;
+                    }
+
+                    currentLineRecords.Clear();
+                  }
                 }
               }
             }
-          }
 
-          if (!parseError)
-          {
-            //assume success at this point
-            result.Severity = IDialogService.StatusMessageSeverity.Success;
-
-            //get the set of instrument groups already defined and update the parentId and Id keys for groups loaded from the file
-            IEnumerable<InstrumentGroup> persistedInstrumentGroups = await m_instrumentGroupRepository.GetItemsAsync();
-            foreach (InstrumentGroup instrumentGroup in persistedInstrumentGroups)
+            if (!parseError)
             {
-              string tag = instrumentGroup.Tag.Length != 0 ? instrumentGroup.Tag : instrumentGroup.Name;
-              definedInstrumentGroups.Add(tag, instrumentGroup);
+              //assume success at this point
+              result.Severity = IDialogService.StatusMessageSeverity.Success;
 
-              //update any instrument groups defined in the file with the existing parentId and Id keys defined for the instrument group
-              if (fileInstrumentGroups.TryGetValue(tag, out InstrumentGroupRecord? instrumentGroupRecord))
+              //get the set of instrument groups already defined and update the parentId and Id keys for groups loaded from the file
+              IEnumerable<InstrumentGroup> persistedInstrumentGroups = await m_instrumentGroupRepository.GetItemsAsync();
+              foreach (InstrumentGroup instrumentGroup in persistedInstrumentGroups)
               {
-                //update any children to use the persisted instrument group Id and parent Id
-                foreach (KeyValuePair<string, InstrumentGroupRecord> child in fileInstrumentGroups)
-                  if (child.Value.ParentId == instrumentGroupRecord.Id) child.Value.ParentId = instrumentGroup.Id;
+                string tag = instrumentGroup.Tag.Length != 0 ? instrumentGroup.Tag : instrumentGroup.Name;
+                definedInstrumentGroups.Add(tag, instrumentGroup);
 
-                //update the instrument group as well
-                instrumentGroupRecord.ParentId = instrumentGroup.ParentId;
-                instrumentGroupRecord.Id = instrumentGroup.Id;
-              }
-            }
-
-            //update/create instrument groups in the repository
-            foreach (KeyValuePair<string, InstrumentGroupRecord> fileInstrumentGroup in fileInstrumentGroups)
-            {
-              if (definedInstrumentGroups.TryGetValue(fileInstrumentGroup.Key, out InstrumentGroup? definedInstrumentGroup))
-              {
-                switch (importSettings.ImportReplaceBehavior)
+                //update any instrument groups defined in the file with the existing parentId and Id keys defined for the instrument group
+                if (fileInstrumentGroups.TryGetValue(tag, out InstrumentGroupRecord? instrumentGroupRecord))
                 {
-                  case ImportReplaceBehavior.Skip:
-                    logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag}");
-                    result.Severity = IDialogService.StatusMessageSeverity.Warning;   //warn user of skipped items
-                    result.Skipped++;
-                    break;
-                  case ImportReplaceBehavior.Replace:
-                    //will update the name, description and tag and remove instrument associations
-                    logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
-                    await m_instrumentGroupRepository.UpdateAsync(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, new List<Guid>()));
-                    result.Replaced++;
-                    break;
-                  case ImportReplaceBehavior.Update:
-                    //will update the name and description and keep all the associated instruments                  
-                    logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
-                    await m_instrumentGroupRepository.UpdateAsync(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, definedInstrumentGroup.Instruments));
-                    result.Updated++;
-                    break;
+                  //update any children to use the persisted instrument group Id and parent Id
+                  foreach (KeyValuePair<string, InstrumentGroupRecord> child in fileInstrumentGroups)
+                    if (child.Value.ParentId == instrumentGroupRecord.Id) child.Value.ParentId = instrumentGroup.Id;
+
+                  //update the instrument group as well
+                  instrumentGroupRecord.ParentId = instrumentGroup.ParentId;
+                  instrumentGroupRecord.Id = instrumentGroup.Id;
                 }
               }
-              else if (fileInstrumentGroup.Value.Ticker.Length == 0)
-              {
-                logger.LogInformation($"Creating - {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
-                await m_instrumentGroupRepository.AddAsync(new InstrumentGroup(fileInstrumentGroup.Value.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, fileInstrumentGroup.Value.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, new List<Guid>()));
-                result.Created++;
-              }
-            }
 
-            //create/update any instrument associations based on tickers given
-            IList<Instrument> instruments = m_dataStoreService.GetInstruments();
-            foreach (KeyValuePair<string, InstrumentGroupRecord> fileInstrumentGroup in fileInstrumentGroups)
-              if (fileInstrumentGroup.Value.Ticker.Length != 0)
+              //update/create instrument groups in the repository
+              foreach (KeyValuePair<string, InstrumentGroupRecord> fileInstrumentGroup in fileInstrumentGroups)
               {
-                Instrument? instrument = instruments.FirstOrDefault(x => x.Ticker.ToLower() == fileInstrumentGroup.Value.Ticker.ToLower());
-                if (instrument != null)
-                  m_dataStoreService.CreateInstrumentGroupInstrument(fileInstrumentGroup.Value.Id, instrument.Id);
-                else
-                  logger.LogError($"Instrument with ticker \"{fileInstrumentGroup.Value.Ticker}\" not defined, association with instrument group \"{fileInstrumentGroup.Value.Name}\" not created - define instruments first before importing instrument groups.");
+                if (definedInstrumentGroups.TryGetValue(fileInstrumentGroup.Key, out InstrumentGroup? definedInstrumentGroup))
+                {
+                  switch (importSettings.ImportReplaceBehavior)
+                  {
+                    case ImportReplaceBehavior.Skip:
+                      logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag}");
+                      result.Severity = IDialogService.StatusMessageSeverity.Warning;   //warn user of skipped items
+                      result.Skipped++;
+                      break;
+                    case ImportReplaceBehavior.Replace:
+                      //will update the name, description and tag and remove instrument associations
+                      logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
+                      await m_instrumentGroupRepository.UpdateAsync(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, new List<Guid>()));
+                      result.Replaced++;
+                      break;
+                    case ImportReplaceBehavior.Update:
+                      //will update the name and description and keep all the associated instruments                  
+                      logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
+                      await m_instrumentGroupRepository.UpdateAsync(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, definedInstrumentGroup.Instruments));
+                      result.Updated++;
+                      break;
+                  }
+                }
+                else if (fileInstrumentGroup.Value.Ticker.Length == 0)
+                {
+                  logger.LogInformation($"Creating - {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
+                  await m_instrumentGroupRepository.AddAsync(new InstrumentGroup(fileInstrumentGroup.Value.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, fileInstrumentGroup.Value.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, new List<Guid>()));
+                  result.Created++;
+                }
               }
+
+              //create/update any instrument associations based on tickers given
+              IList<Instrument> instruments = m_dataStoreService.GetInstruments();
+              foreach (KeyValuePair<string, InstrumentGroupRecord> fileInstrumentGroup in fileInstrumentGroups)
+                if (fileInstrumentGroup.Value.Ticker.Length != 0)
+                {
+                  Instrument? instrument = instruments.FirstOrDefault(x => x.Ticker.ToLower() == fileInstrumentGroup.Value.Ticker.ToLower());
+                  if (instrument != null)
+                    m_dataStoreService.CreateInstrumentGroupInstrument(fileInstrumentGroup.Value.Id, instrument.Id);
+                  else
+                    logger.LogError($"Instrument with ticker \"{fileInstrumentGroup.Value.Ticker}\" not defined, association with instrument group \"{fileInstrumentGroup.Value.Name}\" not created - define instruments first before importing instrument groups.");
+                }
+            }
           }
         }
-      }
 
-      return result;
+        return result;
+      });
+
     }
 
     /// <summary>
     /// Returns the set of defined leaf instrument groups, that would be groups that have one or more instruments or groups that have no children.
     /// </summary>
-    private async Task<IDictionary<Guid, Tuple<InstrumentGroup, bool>>> getLeafInstrumentGroups()
+    private async Task<IDictionary<Guid, Tuple<InstrumentGroup, bool>>> getLeafInstrumentGroups()   //TODO: Look where this is used, if this is in a thread already just run it there don't thread it again.
     {
       SortedDictionary<Guid, Tuple<InstrumentGroup, bool>> result = new SortedDictionary<Guid, Tuple<InstrumentGroup, bool>>();
       IEnumerable<InstrumentGroup> instrumentGroups = await m_instrumentGroupRepository.GetItemsAsync();
@@ -630,34 +633,37 @@ namespace TradeSharp.CoreUI.Services
     ///     "instruments" : [ ticker1, ... , tickerN ]
     ///   }
     /// </summary>
-    private async Task<ImportReplaceResult> importJSON(ImportSettings importSettings)
+    private Task<ImportReplaceResult> importJSON(ImportSettings importSettings)
     {
-      ImportReplaceResult result = new ImportReplaceResult();
-
-      using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+      return Task.Run(async() =>
       {
-        JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
-        ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
+        ImportReplaceResult result = new ImportReplaceResult();
 
-        if (documentNode != null)
+        using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
         {
-          Dictionary<Guid, InstrumentGroup> definedInstrumentGroups = new Dictionary<Guid, InstrumentGroup>();
-          IEnumerable<InstrumentGroup> instrumentGroups = await m_instrumentGroupRepository.GetItemsAsync();
-          foreach (InstrumentGroup instrumentGroup in instrumentGroups) definedInstrumentGroups.Add(instrumentGroup.Id, instrumentGroup);
+          JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
+          ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
 
-          Dictionary<string, Instrument> definedInstruments = new Dictionary<string, Instrument>();
-          IList<Instrument> instruments = m_dataStoreService.GetInstruments();
-          foreach (Instrument instrument in instruments) definedInstruments.Add(instrument.Ticker, instrument);
+          if (documentNode != null)
+          {
+            Dictionary<Guid, InstrumentGroup> definedInstrumentGroups = new Dictionary<Guid, InstrumentGroup>();
+            IEnumerable<InstrumentGroup> instrumentGroups = await m_instrumentGroupRepository.GetItemsAsync();
+            foreach (InstrumentGroup instrumentGroup in instrumentGroups) definedInstrumentGroups.Add(instrumentGroup.Id, instrumentGroup);
 
-          JsonArray rootNodes = documentNode.AsArray();
-          result.Severity = IDialogService.StatusMessageSeverity.Success;
-          foreach (JsonObject? node in rootNodes) if (node != null) result = await importJsonNode(node!, importSettings.ImportReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, result);
+            Dictionary<string, Instrument> definedInstruments = new Dictionary<string, Instrument>();
+            IList<Instrument> instruments = m_dataStoreService.GetInstruments();
+            foreach (Instrument instrument in instruments) definedInstruments.Add(instrument.Ticker, instrument);
+
+            JsonArray rootNodes = documentNode.AsArray();
+            result.Severity = IDialogService.StatusMessageSeverity.Success;
+            foreach (JsonObject? node in rootNodes) if (node != null) result = await importJsonNode(node!, importSettings.ImportReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, result);
+          }
+          else
+            logger.LogError("Failed to parse file as a JSON file.");
         }
-        else
-          logger.LogError("Failed to parse file as a JSON file.");
-      }
 
-      return result;
+        return result;
+      });
     }
 
     private async Task<ImportReplaceResult> importJsonNode(JsonObject node, ImportReplaceBehavior importReplaceBehavior, Dictionary<Guid, InstrumentGroup> definedInstrumentGroups, Dictionary<string, Instrument> definedInstruments, ILogger logger, ImportReplaceResult result)

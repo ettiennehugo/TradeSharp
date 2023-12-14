@@ -464,6 +464,47 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
+    public async Task<ImportSettings?> ShowImportBarDataAsync()
+    {
+      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView();
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = initNavigationService.Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+        Title = "Import Bar Data",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+        Width = 575,
+      };
+
+      ContentDialogResult result = await dialog.ShowAsync();
+      if (result == ContentDialogResult.Primary) return view.ImportSettings;
+
+      return null;
+    }
+
+    public async Task<string?> ShowExportBarDataAsync()
+    {
+      //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
+      FileOpenPicker openPicker = new FileOpenPicker();
+      openPicker.ViewMode = PickerViewMode.Thumbnail;
+      openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      openPicker.FileTypeFilter.Add(".csv");
+      openPicker.FileTypeFilter.Add(".json");
+
+      var hwnd = GetActiveWindow();
+      InitializeWithWindow.Initialize(openPicker, hwnd);
+
+      StorageFile file = await openPicker.PickSingleFileAsync();
+      if (file != null) return file.Path;
+
+      return null;
+    }
+
+
     //properties
     public FontIcon StatusBarIcon { get; set; }
     public TextBlock StatusBarText { get; set; }

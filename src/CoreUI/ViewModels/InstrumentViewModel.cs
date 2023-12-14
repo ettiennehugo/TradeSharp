@@ -54,7 +54,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override async void OnImport()
     {
-      ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
+      ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentsAsync();
 
       if (importSettings != null)
       {
@@ -66,7 +66,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override async void OnExport()
     {
-      string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
+      string? filename = await m_dialogService.ShowExportInstrumentsAsync();
 
       if (filename != null)
       {
