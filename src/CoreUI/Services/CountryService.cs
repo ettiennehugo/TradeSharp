@@ -72,8 +72,8 @@ namespace TradeSharp.CoreUI.Services
     public Task<Country> UpdateAsync(Country item) => m_countryRepository.UpdateAsync(item);
 
     public Task<Country> CopyAsync(Country item) => throw new NotImplementedException();
-    public Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
-    public Task<long> ExportAsync(string filename) => throw new NotImplementedException();
+    public Task<ImportResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
+    public Task<ExportResult> ExportAsync(string filename) => throw new NotImplementedException();
 
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } } //countries to not have a parent

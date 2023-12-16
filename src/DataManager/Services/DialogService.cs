@@ -297,7 +297,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportInstrumentsAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView();
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, false);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -379,7 +379,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportInstrumentGroupsAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView();
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, false);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -467,7 +467,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportBarDataAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView();
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(true, true);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -489,16 +489,16 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<string?> ShowExportBarDataAsync()
     {
       //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
-      FileOpenPicker openPicker = new FileOpenPicker();
-      openPicker.ViewMode = PickerViewMode.Thumbnail;
-      openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
-      openPicker.FileTypeFilter.Add(".csv");
-      openPicker.FileTypeFilter.Add(".json");
+      FileSavePicker savePicker = new FileSavePicker();
+      savePicker.DefaultFileExtension = ".csv";
+      savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      savePicker.FileTypeChoices.Add("CSV", new List<string>() { ".csv" }); //default to CSV as it is more compact and faster to write
+      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" }); 
 
       var hwnd = GetActiveWindow();
-      InitializeWithWindow.Initialize(openPicker, hwnd);
+      InitializeWithWindow.Initialize(savePicker, hwnd);
 
-      StorageFile file = await openPicker.PickSingleFileAsync();
+      StorageFile file = await savePicker.PickSaveFileAsync();
       if (file != null) return file.Path;
 
       return null;

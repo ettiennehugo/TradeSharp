@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Diagnostics;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Repositories;
@@ -103,25 +104,36 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentRepository.UpdateAsync(item);
     }
 
-    public Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings)
+    public Task<ImportResult> ImportAsync(ImportSettings importSettings)
     {
       string extension = Path.GetExtension(importSettings.Filename).ToLower();
       if (extension == extensionCSV)
         return importCSV(importSettings);
       else if (extension == extensionJSON)
         return importJSON(importSettings);
-      return Task.FromResult(new ImportReplaceResult());  //should never be reached
+
+      //should never be reached if all supported file types are handled
+      ImportResult result = new();
+      StackFrame? stackFrame = new StackTrace(true).GetFrame(0);
+      result.Severity = IDialogService.StatusMessageSeverity.Error;
+      result.StatusMessage = $"Invalid program state: Unable to handle file type \"{importSettings.Filename}\" for import. ({stackFrame!.GetFileName()}:{stackFrame!.GetFileLineNumber()})";
+      return Task.FromResult(result);
     }
 
-    public Task<long> ExportAsync(string filename)
+    public Task<ExportResult> ExportAsync(string filename)
     {
       string extension = Path.GetExtension(filename).ToLower();
       if (extension == extensionCSV)
         return exportCSV(filename);
       else if (extension == extensionJSON)
         return exportJSON(filename);
-      long result = 0;
-      return Task.FromResult(result);   //should never be reached
+
+      //should never be reached if all supported file types are handled
+      ExportResult result = new();
+      StackFrame? stackFrame = new StackTrace(true).GetFrame(0);
+      result.Severity = IDialogService.StatusMessageSeverity.Error;
+      result.StatusMessage = $"Invalid program state: Unable to handle file type \"{filename}\" for export. ({stackFrame!.GetFileName()}:{stackFrame!.GetFileLineNumber()})";
+      return Task.FromResult(result);
     }
 
     //properties
@@ -137,11 +149,15 @@ namespace TradeSharp.CoreUI.Services
     public ObservableCollection<Instrument> Items { get; set; }
 
     //methods
-    private Task<ImportReplaceResult> importJSON(ImportSettings importSettings)
+    private Task<ImportResult> importJSON(ImportSettings importSettings)
     {
       return Task.Run(() =>
       {
-        ImportReplaceResult result = new ImportReplaceResult();
+        ImportResult result = new ImportResult();
+        long skippedCount = 0;
+        long updatedCount = 0;
+        long replacedCount = 0;
+        long createdCount = 0;
         result.Severity = IDialogService.StatusMessageSeverity.Success; //per default assume success
         ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
 
@@ -187,14 +203,15 @@ namespace TradeSharp.CoreUI.Services
                       secondaryExchanges.Add(secondaryExchangeId.Value);
                     else
                     {
-                      logger.LogWarning($"No secondary Exchange with Guid \"{secondaryExchangeId.ToString()}\" at index {index} for instrument \"{ticker}\" found, discarding it.");
                       result.Severity = IDialogService.StatusMessageSeverity.Warning;
+                      logger.LogWarning($"No secondary Exchange with Guid \"{secondaryExchangeId.ToString()}\" at index {index} for instrument \"{ticker}\" found, discarding it.");
                     }
                   }
                   else
                   {
-                    logger.LogError($"Failed to parse secondary Exchange Guid at index {index} for instrument \"{ticker}\".");
                     result.Severity = IDialogService.StatusMessageSeverity.Error;
+                    result.StatusMessage = $"Failed to parse secondary Exchange Guid at index {index} for instrument \"{ticker}\".";
+                    logger.LogError(result.StatusMessage);
                   }
                   index++;
                 }
@@ -202,41 +219,43 @@ namespace TradeSharp.CoreUI.Services
 
               if (definedInstruments.TryGetValue(id, out Instrument? definedInstrument))
               {
-                switch (importSettings.ImportReplaceBehavior)
+                switch (importSettings.ReplaceBehavior)
                 {
                   case ImportReplaceBehavior.Skip:
                     logger.LogWarning($"Skipping - {name}, {description}, {tag}");
                     result.Severity = IDialogService.StatusMessageSeverity.Warning;   //warn user of skipped items
-                    result.Skipped++;
+                    skippedCount++;
                     break;
                   case ImportReplaceBehavior.Replace:
                     //replacing name, description, tag and all defined instruments
                     logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
                     m_instrumentRepository.UpdateAsync(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, name, description, inceptionDate, exchangeId!.Value, secondaryExchanges));
-                    result.Replaced++;
+                    replacedCount++;
                     break;
                   case ImportReplaceBehavior.Update:
                     //updating name, description, tag and merge in defined instruments
                     logger.LogInformation($"Updating - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
                     m_instrumentRepository.UpdateAsync(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, name, description, inceptionDate, exchangeId!.Value, secondaryExchanges));
-                    result.Updated++;
+                    updatedCount++;
                     break;
                 }
               }
               else
               {
                 m_instrumentRepository.AddAsync(new Instrument(id, attributes, tag, type, ticker, name, description, inceptionDate, exchangeId!.Value, secondaryExchanges));
-                result.Created++;
+                createdCount++;
               }
             }
           }
           else
           {
-            logger.LogError("Failed to parse file as a JSON file.");
+            result.StatusMessage = $"Failed to parse file \"{importSettings.Filename}\" as a JSON file.";
             result.Severity = IDialogService.StatusMessageSeverity.Error;
+            logger.LogError(result.StatusMessage);
           }
         }
 
+        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Import success: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\"";
         return result;
       });
     }
@@ -247,11 +266,15 @@ namespace TradeSharp.CoreUI.Services
     ///   Type, Ticker, Name, Description, Exchange, Inception Date, Tag, Attributes
     /// Uses - https://joshclose.github.io/CsvHelper/examples/reading/get-dynamic-records/
     /// </summary>
-    private Task<ImportReplaceResult> importCSV(ImportSettings importSettings)
+    private Task<ImportResult> importCSV(ImportSettings importSettings)
     {
       return Task.Run(() =>
       {
-        ImportReplaceResult result = new ImportReplaceResult();
+        ImportResult result = new ImportResult();
+        long skippedCount = 0;
+        long updatedCount = 0;
+        long replacedCount = 0;
+        long createdCount = 0;
         ILogger logger = m_loggerFactory.CreateLogger($"Importing instruments - \"{importSettings.Filename}\"");
 
         using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
@@ -335,7 +358,11 @@ namespace TradeSharp.CoreUI.Services
               if (primaryExchange != null)
                 exchangeId = primaryExchange!.Id;
               else
-                logger.LogWarning($"Failed to find exchange \"{exchange}\" for instrument \"{ticker}\", defaulting to global exchange.");
+              {
+                result.Severity = IDialogService.StatusMessageSeverity.Warning;
+                result.StatusMessage = $"Failed to find exchange \"{exchange}\" for instrument \"{ticker}\", defaulting to global exchange.";
+                logger.LogWarning(result.StatusMessage);
+              }
 
               fileInstruments.Add(new Instrument(Guid.NewGuid(), attributes, tag, type, ticker, name, description, inceptionDate, exchangeId, new List<Guid>()));
             }
@@ -347,25 +374,25 @@ namespace TradeSharp.CoreUI.Services
             {
               if (definedInstruments.TryGetValue(fileInstrument.Ticker, out Instrument? definedInstrument))
               {
-                switch (importSettings.ImportReplaceBehavior)
+                switch (importSettings.ReplaceBehavior)
                 {
                   case ImportReplaceBehavior.Skip:
                     logger.LogWarning($"Skipping - {fileInstrument.Ticker}");
                     result.Severity = IDialogService.StatusMessageSeverity.Warning;
-                    result.Skipped++;
+                    skippedCount++;
                     break;
                   case ImportReplaceBehavior.Replace:
                     logger.LogInformation($"Replacing - {fileInstrument.Ticker}");
                     fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
                     m_instrumentRepository.UpdateAsync(fileInstrument);
-                    result.Replaced++;
+                    replacedCount++;
                     break;
                   case ImportReplaceBehavior.Update:
                     logger.LogInformation($"Updating - {fileInstrument.Ticker}");
                     fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
                     fileInstrument.SecondaryExchangeIds = definedInstrument.SecondaryExchangeIds;
                     m_instrumentRepository.UpdateAsync(fileInstrument);
-                    result.Updated++;
+                    updatedCount++;
                     break;
                 }
               }
@@ -373,7 +400,7 @@ namespace TradeSharp.CoreUI.Services
               {
                 logger.LogInformation($"Creating - {fileInstrument.Ticker}");
                 m_instrumentRepository.AddAsync(fileInstrument);
-                result.Created++;
+                createdCount++;
               }
 
               instrumentsProcessed++;
@@ -381,15 +408,22 @@ namespace TradeSharp.CoreUI.Services
           }
         }
 
+        if (result.Severity == IDialogService.StatusMessageSeverity.Success)
+          result.StatusMessage = "Import success: ";
+        else
+          result.StatusMessage = "Import with warning/error: " + result.StatusMessage;
+        result.StatusMessage += $"Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\".";
+
         return result;
       });
     }
 
-    private Task<long> exportJSON(string filename)
+    private Task<ExportResult> exportJSON(string filename)
     {
-      return Task.Run(() =>
+      return Task.Run<ExportResult>(() =>
       {
-        long result = 0;
+        ExportResult result = new();
+        long exportCount = 0;
         using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
         {
           IList<Instrument> instruments = m_dataStoreService.GetInstruments();
@@ -421,27 +455,28 @@ namespace TradeSharp.CoreUI.Services
             }
 
             file.Write(instrumentJson.ToJsonString(options));
-            result++;
+            exportCount++;
             if (instrumentIndex < instrumentCount - 1) file.WriteLine(",");
           }
           file.WriteLine("");
           file.WriteLine("]");
         }
 
+        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} instruments to \"{filename}\"";
         return result;
       });
     }
 
-    private Task<long> exportCSV(string filename)
+    private Task<ExportResult> exportCSV(string filename)
     {
-      return Task.Run(() =>
+      return Task.Run<ExportResult>(() =>
       {
-        long result = 0;
+        ExportResult result = new();
+        long exportCount = 0;
+
         using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
         {
-          //await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exporting instruments to \"{filename}\"");
           IList<Instrument> instruments = m_dataStoreService.GetInstruments();
-          //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, instruments.Count, 0);
 
           file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate},{tokenCsvTag},{tokenCsvAttributes}");
 
@@ -463,11 +498,11 @@ namespace TradeSharp.CoreUI.Services
             instrumentDefinition += ", ";
             instrumentDefinition += ((int)instrument.AttributeSet).ToString();
             file.WriteLine(instrumentDefinition);
-            result++;
-            //await m_dialogService.ShowStatusProgressAsync(IDialogService.StatusProgressState.Normal, 0, instruments.Count, result);
+            exportCount++;
           }
         }
 
+        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} instruments to \"{filename}\"";
         return Task.FromResult(result);
       });
     }

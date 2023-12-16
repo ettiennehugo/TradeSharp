@@ -129,8 +129,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
       if (importSettings != null)
       {
-        ImportReplaceResult importResult = await m_itemsService.ImportAsync(importSettings);
-        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", $"Import result - Created({importResult.Created}), Skipped({importResult.Skipped}), Updated({importResult.Updated}), Replaced({importResult.Replaced})");
+        ImportResult importResult = await m_itemsService.ImportAsync(importSettings);
+        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
         await OnRefreshAsync();
       }
     }
@@ -141,8 +141,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
       if (filename != null)
       {
-        int exportCount = await m_itemsService.ExportAsync(filename);
-        await m_dialogService.ShowStatusMessageAsync(exportCount == 0 ? IDialogService.StatusMessageSeverity.Warning : IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} instrument groups");
+        ExportResult exportResult = await m_itemsService.ExportAsync(filename);
+        await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
       }
     }
   }

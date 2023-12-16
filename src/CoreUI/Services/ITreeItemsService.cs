@@ -39,7 +39,7 @@ namespace TradeSharp.CoreUI.Services
     Task<ITreeNodeType<TKey, TItem>> UpdateAsync(ITreeNodeType<TKey, TItem> item);
     Task<bool> DeleteAsync(ITreeNodeType<TKey, TItem> item);
     Task<ITreeNodeType<TKey, TItem>> CopyAsync(ITreeNodeType<TKey, TItem> item);
-    Task<ImportReplaceResult> ImportAsync(ImportSettings importSettings);
-    Task<int> ExportAsync(string filename);
+    Task<ImportResult> ImportAsync(ImportSettings importSettings);
+    Task<ExportResult> ExportAsync(string filename);
   }
 }

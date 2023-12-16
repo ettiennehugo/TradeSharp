@@ -44,10 +44,12 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //constructors
-    public ImportView()
+    public ImportView(bool showDateTimeTimeZone, bool showDefaultPriceDataType)
     {
       ImportSettings = new ImportSettings();
       this.InitializeComponent();
+      if (!showDateTimeTimeZone) m_layoutGrid.RowDefinitions[1].Height = new GridLength(0); //hide date/time timezone selector
+      if (!showDefaultPriceDataType) m_layoutGrid.RowDefinitions[2].Height = new GridLength(0); //hide date/time timezone selector
     }
 
     //finalizers
@@ -85,6 +87,8 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportDataDateTimeTimeZone));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_defaultPriceDataType, typeof(ImportDefaultPriceDataType));
       WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_replaceBehavior, typeof(ImportReplaceBehavior));
     }
 

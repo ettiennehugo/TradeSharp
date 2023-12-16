@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TradeSharp.CoreUI.Services
 {
-
+  //types
   /// <summary>
   /// Behavior when importing instrument groups or instruments when an item already exists in the database.
   /// </summary>
@@ -16,39 +16,68 @@ namespace TradeSharp.CoreUI.Services
   }
 
   /// <summary>
-  /// Results from import operation in terms of entries skipped, updated or replaced in the data store.
+  /// Timezone of the date/time values specified in a instrument data file being imported.
   /// </summary>
-  public class ImportReplaceResult
+  public enum ImportDataDateTimeTimeZone
   {
-    public ImportReplaceResult()
+    UTC,
+    Exchange,
+    Local,    //local machine timezone
+  }
+
+  public enum ImportDefaultPriceDataType
+  {
+    Actual = PriceDataType.Actual,
+    Synthetic = PriceDataType.Synthetic,
+  }
+
+  /// <summary>
+  /// Results from import operation with the specific outcome. Success state is set per default and other states must be explicitly set.
+  /// </summary>
+  public class ImportResult
+  {
+    public ImportResult()
     {
-      Severity = IDialogService.StatusMessageSeverity.Error;
-      Created = 0;
-      Skipped = 0;
-      Updated = 0;
-      Replaced = 0;
+      Severity = IDialogService.StatusMessageSeverity.Success;
+      StatusMessage = string.Empty;
     }
 
     public IDialogService.StatusMessageSeverity Severity;
-    public int Created;
-    public int Skipped;
-    public int Updated;
-    public int Replaced;
+    public string StatusMessage;
   }
 
-  //types
   /// <summary>
-  /// Settings to use for importing instrument groups and instruments.
+  /// Results from export operation with specific outcome. Success state is set per default and other states must be explicitly set.
+  /// </summary>
+  public class ExportResult
+  {
+    public ExportResult()
+    {
+      Severity = IDialogService.StatusMessageSeverity.Success;
+      StatusMessage = string.Empty;
+    }
+
+    public IDialogService.StatusMessageSeverity Severity;
+    public string StatusMessage;
+  }
+
+
+  /// <summary>
+  /// Settings to use for importing instrument groups, instruments and instrument data.
   /// </summary>
   public partial class ImportSettings: ObservableObject
   {
     public ImportSettings()
     {
-      m_importReplaceBehavior = ImportReplaceBehavior.Skip;
-      m_filename = "";
+      ReplaceBehavior = ImportReplaceBehavior.Skip;
+      DateTimeTimeZone = ImportDataDateTimeTimeZone.Exchange;
+      DefaultPriceDataType = ImportDefaultPriceDataType.Actual;
+      Filename = "";
     }
 
-    [ObservableProperty] ImportReplaceBehavior m_importReplaceBehavior;
+    [ObservableProperty] ImportReplaceBehavior m_replaceBehavior;
+    [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] ImportDefaultPriceDataType m_defaultPriceDataType;
     [ObservableProperty] string m_filename;
   }
 
