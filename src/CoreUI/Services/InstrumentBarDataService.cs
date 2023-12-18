@@ -40,7 +40,7 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenJsonHigh = "high";
     private const string tokenJsonLow = "low";
     private const string tokenJsonClose = "close";
-    private const string tokenJsonVolume = "Volume";
+    private const string tokenJsonVolume = "volume";
     private const string tokenJsonSynthetic = "synthetic";
 
     //enums
@@ -72,29 +72,35 @@ namespace TradeSharp.CoreUI.Services
 
 
     //interface implementations
-    public async Task<IBarData> AddAsync(IBarData item)
+    public Task<IBarData> AddAsync(IBarData item)
     {
-      var result = await m_repository.AddAsync(item);
-      Utilities.SortedInsert(item, Items);
-      SelectedItem = result;
-      SelectedItemChanged?.Invoke(this, SelectedItem);
-      return result;
+      return Task.Run(async () =>
+      {
+        var result = await m_repository.AddAsync(item);
+        Utilities.SortedInsert(item, Items);
+        SelectedItem = result;
+        SelectedItemChanged?.Invoke(this, SelectedItem);
+        return result;
+      });
     }
 
     public Task<IBarData> CopyAsync(IBarData item) => throw new NotImplementedException();  //TODO: Need to figure out how this would occur, maybe override method to support copy to different resolutions and PriceTypes.
 
-    public async Task<bool> DeleteAsync(IBarData item)
+    public Task<bool> DeleteAsync(IBarData item)
     {
-      bool result = await m_repository.DeleteAsync(item);
-      if (item == SelectedItem)
+      return Task.Run(async () =>
       {
-        SelectedItemChanged?.Invoke(this, SelectedItem);
-        SelectedItem = null;
-      }
+        bool result = await m_repository.DeleteAsync(item);
+        if (item == SelectedItem)
+        {
+          SelectedItemChanged?.Invoke(this, SelectedItem);
+          SelectedItem = null;
+        }
 
-      Items.Remove(item);
+        Items.Remove(item);
 
-      return result;
+        return result;
+      });
     }
 
     public Task<ExportResult> ExportAsync(string filename)
@@ -129,29 +135,35 @@ namespace TradeSharp.CoreUI.Services
       return Task.FromResult(result);
     }
 
-    public async Task RefreshAsync()
+    public Task RefreshAsync()
     {
-      var result = await m_repository.GetItemsAsync();
-      Items.Clear();
-      SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
-      foreach (var item in result) Items.Add(item);
-      if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+      return Task.Run(async () =>
+      {
+        var result = await m_repository.GetItemsAsync();
+        Items.Clear();
+        SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
+        foreach (var item in result) Items.Add(item);
+        if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+      });
     }
 
-    public async Task<IBarData> UpdateAsync(IBarData item)
+    public Task<IBarData> UpdateAsync(IBarData item)
     {
-      IBarData barData = await m_repository.UpdateAsync(item);
+      return Task.Run(async () =>
+      {
+        IBarData barData = await m_repository.UpdateAsync(item);
 
-      //the bar editor does not allow modification of the DateTime and Synthetic settings
-      for (int i = 0; i < Items.Count(); i++)
-        if (barData.Equals(item))
-        {
-          Items.RemoveAt(i);
-          Items.Insert(i, barData);
-          return barData;
-        }
+        //the bar editor does not allow modification of the DateTime and Synthetic settings
+        for (int i = 0; i < Items.Count(); i++)
+          if (barData.Equals(item))
+          {
+            Items.RemoveAt(i);
+            Items.Insert(i, barData);
+            return barData;
+          }
 
-      return barData;
+        return barData;
+      });
     }
 
     //properties
@@ -172,9 +184,9 @@ namespace TradeSharp.CoreUI.Services
     //methods
     /// <summary>
     /// Import the bar data from a csv file that has the following formats:
-    ///   datetime, open, high, low, close, volume[, synthetic]
+    ///   datetime, open, high, low, close, volume[, id, synthetic]
     /// OR
-    ///   date, time, open, high, low, close, volume[, synthetic]
+    ///   date, time, open, high, low, close, volume[, id, synthetic]
     /// If synthetic field is not present the default synthetic setting is used from the ImportSettings structure.
     /// Fields can be in any order but the above values are required.
     /// </summary>
@@ -185,193 +197,173 @@ namespace TradeSharp.CoreUI.Services
         ImportResult result = new ImportResult();
         ILogger logger = m_loggerFactory.CreateLogger($"Importing instruments - \"{importSettings.Filename}\"");
         long barsUpdated = 0;
-        
-        Exchange? exchange = m_dataStoreService.GetExchange(Instrument!.PrimaryExchangeId);
-        if (exchange == null && importSettings.DateTimeTimeZone == ImportDataDateTimeTimeZone.Exchange)
+
+        //make sure we can retrieve the primary exhange for the instrument if we are importing date/time in the Exchange timezone
+        Exchange? exchange = null;
+        if (importSettings.DateTimeTimeZone == ImportDataDateTimeTimeZone.Exchange)
         {
-          logger.LogError($"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.");
-          result.Severity = IDialogService.StatusMessageSeverity.Error;
-        }
-        else
-        {
-          using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
-          using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+          exchange = m_dataStoreService.GetExchange(Instrument!.PrimaryExchangeId);
+          if (exchange == null)
           {
-            //read the header record
-            result.Severity = IDialogService.StatusMessageSeverity.Success;
-            if (csv.Read() && csv.ReadHeader() && csv.HeaderRecord != null)
-            {
-              int lineNo = 1; //header row is on line 0
-
-              //validate that the header contains valid date/time specification and required fields before trying to parse the data
-              bool dateTimeFound = false;
-              bool dateFound = false;
-              bool timeFound = false;
-              bool openFound = false;
-              bool highFound = false;
-              bool lowFound = false;
-              bool closeFound = false;
-              bool volumeFound = false;
-              //synthetic field not required, will default it if not found
-              for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
-              {
-                if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDateTime)
-                  dateTimeFound = true;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDate)
-                  dateFound = true;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTime)
-                  timeFound = true;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvOpen)
-                  openFound = true;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvHigh)
-                  highFound = true;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvLow)
-                  lowFound = true;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvClose)
-                  closeFound = true;
-                else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvVolume)
-                  volumeFound = true;
-              }
-
-              if (!dateTimeFound || !(dateFound && timeFound))
-              {
-                result.StatusMessage = "DateTime or (Date and Time) fields are required to import bar data.";
-                result.Severity = IDialogService.StatusMessageSeverity.Error;
-                logger.LogError(result.StatusMessage);
-              }
-
-              if (!openFound || !highFound || !lowFound || !closeFound || !volumeFound)
-              {
-                result.StatusMessage = "Open, high, low, close and volume fields are required to import bar data.";
-                result.Severity = IDialogService.StatusMessageSeverity.Error;
-                logger.LogError(result.StatusMessage);
-              }
-
-              //parse the file data
-              while (csv.Read() && result.Severity != IDialogService.StatusMessageSeverity.Error)
-              {
-                DateTime? dateTime = null;
-                DateOnly? date = null;
-                TimeOnly? time = null;
-                double open = 0.0;
-                double high = 0.0;
-                double low = 0.0;
-                double close = 0.0;
-                long volume = 0;
-                bool synthetic = importSettings.DefaultPriceDataType == ImportDefaultPriceDataType.Synthetic; //default synthetic bar settings
-
-                lineNo++;
-                try
-                {
-                  for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
-                  {
-                    string? columnValue = null;
-                    if (csv.TryGetField(columnIndex, out columnValue))
-                    {
-                      if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDateTime)
-                      {
-                        switch (importSettings.DateTimeTimeZone)
-                        {
-                          case ImportDataDateTimeTimeZone.UTC:
-                            dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
-                            break;
-                          case ImportDataDateTimeTimeZone.Exchange:
-                            //parse date as local time, convert it so exhange timezone and then convert that to UTC timezone
-                            dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
-                            DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
-                            dateTime = dateTimeOffset.DateTime.ToUniversalTime();
-                            break;
-                          case ImportDataDateTimeTimeZone.Local:
-                            //adjust local time to UTC time use by database layer
-                            dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
-                            break;
-                        }
-                      }
-                      else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDate)
-                      {
-                        //parse date and convert it later before creating the bar
-                        switch (importSettings.DateTimeTimeZone)
-                        {
-                          case ImportDataDateTimeTimeZone.UTC:
-                            date = DateOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
-                            break;
-                          case ImportDataDateTimeTimeZone.Exchange:
-                            date = DateOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
-                            break;
-                          case ImportDataDateTimeTimeZone.Local:
-                            //adjust local time to UTC time use by database layer
-                            date = DateOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
-                            break;
-                        }
-                      }
-                      else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTime)
-                      {
-                        //parse time and convert it later before creating the bar
-                        switch (importSettings.DateTimeTimeZone)
-                        {
-                          case ImportDataDateTimeTimeZone.UTC:
-                            time = TimeOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
-                            break;
-                          case ImportDataDateTimeTimeZone.Exchange:
-                            time = TimeOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
-                            break;
-                          case ImportDataDateTimeTimeZone.Local:
-                            time = TimeOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
-                            break;
-                        }
-                      }
-                      else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvOpen)
-                        open = double.Parse(columnValue!);
-                      else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvHigh)
-                        high = double.Parse(columnValue!);
-                      else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvLow)
-                        low = double.Parse(columnValue!);
-                      else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvClose)
-                        close = double.Parse(columnValue!);
-                      else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvVolume)
-                        volume = long.Parse(columnValue!);
-                      else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvSynthetic)
-                        synthetic = bool.Parse(columnValue!);
-                    }
-                  }
-
-                  //adjust date/time when separate date and time fields are used and convert it to UTC for database use
-                  if (date != null && time != null)
-                    switch (importSettings.DateTimeTimeZone)
-                    {
-                      case ImportDataDateTimeTimeZone.UTC:
-                      case ImportDataDateTimeTimeZone.Local:
-                        dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Utc);
-                        break;
-                      case ImportDataDateTimeTimeZone.Exchange:
-                        dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Local);
-                        DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
-                        dateTime = dateTimeOffset.DateTime.ToUniversalTime();
-                        break;
-                    }
-
-                  BarData barData = new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume, synthetic);
-                  m_repository.UpdateAsync(barData);
-                  barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
-                }
-                catch (Exception e)
-                {
-                  result.Severity = IDialogService.StatusMessageSeverity.Error;
-                  result.StatusMessage = $"Failed to parse bar on line {lineNo} with exception \"{e.Message}\".";
-                  logger.LogError(result.StatusMessage);
-                }
-              }
-            }
-            else
-            {
-              result.Severity = IDialogService.StatusMessageSeverity.Error;
-              result.StatusMessage = $"Unable to parse header.";
-              logger.LogError(result.StatusMessage);
-            }
+            logger.LogError($"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.");
+            result.Severity = IDialogService.StatusMessageSeverity.Error;
+            return result;
           }
         }
 
-        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Created/updated {barsUpdated} bars.";
+        //try to import the data from the file
+        using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+        using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+        {
+          //read the header record
+          result.Severity = IDialogService.StatusMessageSeverity.Success;
+          if (csv.Read() && csv.ReadHeader() && csv.HeaderRecord != null)
+          {
+            int lineNo = 1; //header row is on line 0
+
+            //validate that the header contains valid date/time specification and required fields before trying to parse the data
+            bool dateTimeFound = false;
+            bool dateFound = false;
+            bool timeFound = false;
+            bool openFound = false;
+            bool highFound = false;
+            bool lowFound = false;
+            bool closeFound = false;
+            bool volumeFound = false;
+            //synthetic field not required, will default it if not found
+            for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
+            {
+              if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDateTime)
+                dateTimeFound = true;
+              else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDate)
+                dateFound = true;
+              else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTime)
+                timeFound = true;
+              else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvOpen)
+                openFound = true;
+              else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvHigh)
+                highFound = true;
+              else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvLow)
+                lowFound = true;
+              else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvClose)
+                closeFound = true;
+              else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvVolume)
+                volumeFound = true;
+            }
+
+            if (!dateTimeFound && !(dateFound && timeFound))
+            {
+              result.StatusMessage = "DateTime or (Date and Time) fields are required to import bar data.";
+              result.Severity = IDialogService.StatusMessageSeverity.Error;
+              logger.LogError(result.StatusMessage);
+            }
+
+            if (!openFound || !highFound || !lowFound || !closeFound || !volumeFound)
+            {
+              result.StatusMessage = "Open, high, low, close and volume fields are required to import bar data.";
+              result.Severity = IDialogService.StatusMessageSeverity.Error;
+              logger.LogError(result.StatusMessage);
+            }
+
+            //parse the file data
+            while (csv.Read() && result.Severity != IDialogService.StatusMessageSeverity.Error)
+            {
+              DateTime? dateTime = null;
+              DateOnly? date = null;
+              TimeOnly? time = null;
+              double open = 0.0;
+              double high = 0.0;
+              double low = 0.0;
+              double close = 0.0;
+              long volume = 0;
+              bool synthetic = importSettings.DefaultPriceDataType == ImportDefaultPriceDataType.Synthetic; //default synthetic bar settings
+
+              lineNo++;
+              try
+              {
+                for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
+                {
+                  string? columnValue = null;
+                  if (csv.TryGetField(columnIndex, out columnValue))
+                  {
+                    if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDateTime)
+                    {
+                      switch (importSettings.DateTimeTimeZone)
+                      {
+                        case ImportDataDateTimeTimeZone.UTC:
+                          dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
+                          break;
+                        case ImportDataDateTimeTimeZone.Exchange:
+                          //parse date as local time, convert it so exhange timezone and then convert that to UTC timezone
+                          dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
+                          DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
+                          dateTime = dateTimeOffset.DateTime.ToUniversalTime();
+                          break;
+                        case ImportDataDateTimeTimeZone.Local:
+                          //adjust local time to UTC time use by database layer
+                          dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
+                          break;
+                      }
+                    }
+                    else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDate)
+                      date = DateOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
+                    else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTime)
+                      time = TimeOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
+                    else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvOpen)
+                      open = double.Parse(columnValue!);
+                    else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvHigh)
+                      high = double.Parse(columnValue!);
+                    else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvLow)
+                      low = double.Parse(columnValue!);
+                    else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvClose)
+                      close = double.Parse(columnValue!);
+                    else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvVolume)
+                      volume = long.Parse(columnValue!);
+                    else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvSynthetic)
+                      synthetic = bool.Parse(columnValue!);
+                  }
+                }
+
+                //adjust date/time when separate date and time fields are used and convert it to UTC for database use
+                if (date != null && time != null)
+                  switch (importSettings.DateTimeTimeZone)
+                  {
+                    case ImportDataDateTimeTimeZone.UTC:
+                      dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Utc);
+                      break;
+                    case ImportDataDateTimeTimeZone.Local:
+                      dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Local);
+                      dateTime = dateTime.Value.ToUniversalTime();
+                      break;
+                    case ImportDataDateTimeTimeZone.Exchange:
+                      //create date/time without timezone and then set it on a date/time offset to the exchange timezone before convert to UTC
+                      dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Unspecified);
+                      DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
+                      dateTime = dateTimeOffset.DateTime.ToUniversalTime();
+                      break;
+                  }
+
+                BarData barData = new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume, synthetic);
+                m_repository.UpdateAsync(barData);
+                barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
+              }
+              catch (Exception e)
+              {
+                result.Severity = IDialogService.StatusMessageSeverity.Error;
+                result.StatusMessage = $"Failed to parse bar on line {lineNo} with exception \"{e.Message}\".";
+                logger.LogError(result.StatusMessage);
+              }
+            }
+          }
+          else
+          {
+            result.Severity = IDialogService.StatusMessageSeverity.Error;
+            result.StatusMessage = $"Unable to parse header.";
+            logger.LogError(result.StatusMessage);
+          }
+        }
+
+        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Created/updated {barsUpdated} bars from \"{importSettings.Filename}\".";
         return result;
       });
     }
@@ -384,74 +376,97 @@ namespace TradeSharp.CoreUI.Services
         ImportResult result = new ImportResult();
         long barIndex = 0;
         long barsUpdated = 0;
-        result.Severity = IDialogService.StatusMessageSeverity.Success; //per default assume success
         ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
-        Exchange? exchange = m_dataStoreService.GetExchange(Instrument!.PrimaryExchangeId);
-        if (exchange == null && importSettings.DateTimeTimeZone == ImportDataDateTimeTimeZone.Exchange)
+
+        //make sure we can retrieve the primary exhange for the instrument if we are importing date/time in the Exchange timezone
+        Exchange? exchange = null;
+        if (importSettings.DateTimeTimeZone == ImportDataDateTimeTimeZone.Exchange)
         {
-          result.Severity = IDialogService.StatusMessageSeverity.Error;
-          result.StatusMessage = $"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.";
-          logger.LogError(result.StatusMessage);
-        }
-        else
-        {
-          using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+          exchange = m_dataStoreService.GetExchange(Instrument!.PrimaryExchangeId);
+          if (exchange == null)
           {
-            JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
+            result.Severity = IDialogService.StatusMessageSeverity.Error;
+            result.StatusMessage = $"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.";
+            logger.LogError(result.StatusMessage);
+            return result;
+          }
+        }
 
-            if (documentNode != null)
+        //try to import the data from the file
+        using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+        {
+          JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
+
+          if (documentNode != null)
+          {
+            JsonArray barDataArray = documentNode.AsArray();
+            foreach (JsonObject? barDataJson in barDataArray)
             {
-              JsonArray barDataArray = documentNode.AsArray();
-              foreach (JsonObject? barDataJson in barDataArray)
+              barIndex++;
+              DateTime dateTime = DateTime.Now;
+
+              if (barDataJson!.ContainsKey(tokenJsonDateTime))
               {
-                barIndex++;
-                DateTime dateTime = DateTime.Now;
-
-                if (barDataJson!.ContainsKey(tokenJsonDateTime))
-                  dateTime = barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<DateTime>();
-                else if (barDataJson!.ContainsKey(tokenJsonDate) && barDataJson!.ContainsKey(tokenJsonTime))
-                {
-                   DateOnly date = barDataJson![tokenJsonDate]!.AsValue().Deserialize<DateOnly>();
-                   TimeOnly time = barDataJson![tokenJsonTime]!.AsValue().Deserialize<TimeOnly>();
-                   dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Local);
-                }
-                else
-                {
-                  result.Severity = IDialogService.StatusMessageSeverity.Error;
-                  result.StatusMessage = $"Bar at index {barIndex} does not contain a valid date/time specification.";  //JSON library contains zero information on where it found this data so the best we can do is use an index.
-                  logger.LogError(result.StatusMessage);
-                  continue; //skip to next bar definition
-                }
-
                 switch (importSettings.DateTimeTimeZone)
                 {
-                  //case ImportDataDateTimeTimeZone.UTC:  - nothing to do when the date is already UTC
+                  case ImportDataDateTimeTimeZone.UTC:
+                    dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
+                    break;
                   case ImportDataDateTimeTimeZone.Exchange:
-                    //set the parsed date to the change timezone and then adjust it to UTC
-                    DateTimeOffset dateTimeOffset = new DateTimeOffset(dateTime, exchange!.TimeZone.BaseUtcOffset);
+                    //parse date as local time, convert it so exhange timezone and then convert that to UTC timezone
+                    dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
+                    DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
                     dateTime = dateTimeOffset.DateTime.ToUniversalTime();
                     break;
                   case ImportDataDateTimeTimeZone.Local:
                     //adjust local time to UTC time use by database layer
-                    dateTime = dateTime.ToUniversalTime();
+                    dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
                     break;
                 }
-
-                double open = barDataJson![tokenJsonOpen]!.AsValue().Deserialize<double>();
-                double high = barDataJson![tokenJsonHigh]!.AsValue().Deserialize<double>();
-                double low = barDataJson![tokenJsonLow]!.AsValue().Deserialize<double>();
-                double close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
-                long volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<long>();
-                bool synthetic = barDataJson.ContainsKey(tokenJsonSynthetic) ? barDataJson![tokenJsonSynthetic]!.AsValue().Deserialize<bool>() : importSettings.DefaultPriceDataType == ImportDefaultPriceDataType.Synthetic;
-                BarData barData = new BarData(Resolution, dateTime, open, high, low, close, volume, synthetic);
-                m_repository.UpdateAsync(barData);
-                barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
               }
+              else if (barDataJson!.ContainsKey(tokenJsonDate) && barDataJson!.ContainsKey(tokenJsonTime))
+              {
+                DateOnly date = DateOnly.Parse(barDataJson![tokenJsonDate]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
+                TimeOnly time = TimeOnly.Parse(barDataJson![tokenJsonTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
+                switch (importSettings.DateTimeTimeZone)
+                {
+                  case ImportDataDateTimeTimeZone.UTC:
+                    dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Utc);
+                    break;
+                  case ImportDataDateTimeTimeZone.Local:
+                    dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Local);
+                    dateTime = dateTime.ToUniversalTime();
+                    break;
+                  case ImportDataDateTimeTimeZone.Exchange:
+                    //create date/time without timezone and then set it on a date/time offset to the exchange timezone before convert to UTC
+                    dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Unspecified);
+                    DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
+                    dateTime = dateTimeOffset.DateTime.ToUniversalTime();
+                    break;
+                }
+              }
+              else
+              {
+                result.Severity = IDialogService.StatusMessageSeverity.Error;
+                result.StatusMessage = $"Bar at index {barIndex} does not contain a valid date/time specification.";  //JSON library contains zero information on where it found this data so the best we can do is use an index.
+                logger.LogError(result.StatusMessage);
+                continue; //skip to next bar definition
+              }
+
+              double open = barDataJson![tokenJsonOpen]!.AsValue().Deserialize<double>();
+              double high = barDataJson![tokenJsonHigh]!.AsValue().Deserialize<double>();
+              double low = barDataJson![tokenJsonLow]!.AsValue().Deserialize<double>();
+              double close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
+              long volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<long>();
+              bool synthetic = barDataJson.ContainsKey(tokenJsonSynthetic) ? barDataJson![tokenJsonSynthetic]!.AsValue().Deserialize<bool>() : importSettings.DefaultPriceDataType == ImportDefaultPriceDataType.Synthetic;
+              BarData barData = new BarData(Resolution, dateTime, open, high, low, close, volume, synthetic);
+              m_repository.UpdateAsync(barData);
+              barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
             }
           }
         }
 
-        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Created/updated {barsUpdated} bars.";
+        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Created/updated {barsUpdated} bars from \"{importSettings.Filename}\".";
         return result;
       });
     }
@@ -481,7 +496,7 @@ namespace TradeSharp.CoreUI.Services
           foreach (IBarData barData in Items)
           {
             string barDataStr = "";
-            
+
             if (exchange != null)
             {
               DateTimeOffset dateTimeOffset = new DateTimeOffset(barData.DateTime.Ticks, exchange.TimeZone.BaseUtcOffset);
@@ -507,7 +522,7 @@ namespace TradeSharp.CoreUI.Services
           }
         }
 
-        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} bars to \"{filename}\"";
+        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} bars to \"{filename}\".";
         return result;
       });
     }
@@ -570,7 +585,7 @@ namespace TradeSharp.CoreUI.Services
           }
         }
 
-        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} bars to \"{filename}\"";
+        if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} bars to \"{filename}\".";
         return result;
       });
     }

@@ -61,7 +61,7 @@
         <AppBarButton x:Name="m_resetFilter" Icon="Clear" ToolTipService.ToolTip="Reset filter" Click="m_resetFilter_Click" IsCompact="True"/>
       </CommandBar>
     </StackPanel>
-    <winui:DataGrid x:Name="m_dataTable" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"  Grid.Row="1" Grid.Column="0">
+    <winui:DataGrid x:Name="m_dataTable" DataFetchSize="3" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"  Grid.Row="1" Grid.Column="0">
       <winui:DataGrid.Columns>
         <winui:DataGridTextColumn x:Name="m_columnDateTime" Width="Auto" Header="Date/Time" Binding="{Binding DateTime}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnOpen" Width="Auto" Header="Open" Binding="{Binding Open}" IsReadOnly="True" />

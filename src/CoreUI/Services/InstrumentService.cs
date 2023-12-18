@@ -17,6 +17,7 @@ namespace TradeSharp.CoreUI.Services
     private const string extensionCSV = ".csv";
     private const string extensionJSON = ".json";
     private const string tokenCsvType = "type";
+    private const string tokenCsvId = "id";
     private const string tokenCsvTicker = "ticker";
     private const string tokenCsvName = "name";
     private const string tokenCsvDescription = "description";
@@ -293,6 +294,7 @@ namespace TradeSharp.CoreUI.Services
             while (csv.Read() && !parseError)
             {
               InstrumentType type = InstrumentType.None;
+              Guid? id = null; 
               string ticker = "";
               string name = "";
               string description = "";
@@ -310,6 +312,8 @@ namespace TradeSharp.CoreUI.Services
                 {
                   if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvType)
                     type = (InstrumentType)Enum.Parse(typeof(InstrumentType), columnValue!);
+                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvId)
+                    id = Guid.Parse(columnValue!);
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTicker)
                     ticker = columnValue!.ToUpper();
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvName)
@@ -327,6 +331,7 @@ namespace TradeSharp.CoreUI.Services
                 }
               }
 
+              if (id == null) id = Guid.NewGuid();    //generate new instrument Id if no Id present in the CSV file
               if (description == "") description = name;
               if (tag == "") tag = ticker;
 
@@ -334,9 +339,9 @@ namespace TradeSharp.CoreUI.Services
               Exchange? primaryExchange = null;
               foreach (Exchange definedExchange in exchanges)
               {
-                if (Guid.TryParse(exchange, out Guid id))
+                if (Guid.TryParse(exchange, out Guid primaryExchangeId))
                 {
-                  if (id == definedExchange.Id)
+                  if (primaryExchangeId == definedExchange.Id)
                   {
                     primaryExchange = definedExchange;
                     break;
@@ -364,7 +369,7 @@ namespace TradeSharp.CoreUI.Services
                 logger.LogWarning(result.StatusMessage);
               }
 
-              fileInstruments.Add(new Instrument(Guid.NewGuid(), attributes, tag, type, ticker, name, description, inceptionDate, exchangeId, new List<Guid>()));
+              fileInstruments.Add(new Instrument((Guid)id!, attributes, tag, type, ticker, name, description, inceptionDate, exchangeId, new List<Guid>()));
             }
 
             if (fileInstruments.Count > 0) result.Severity = IDialogService.StatusMessageSeverity.Success;
@@ -478,11 +483,13 @@ namespace TradeSharp.CoreUI.Services
         {
           IList<Instrument> instruments = m_dataStoreService.GetInstruments();
 
-          file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate},{tokenCsvTag},{tokenCsvAttributes}");
+          file.WriteLine($"{tokenCsvType},{tokenCsvId},{tokenCsvTicker},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate},{tokenCsvTag},{tokenCsvAttributes}");
 
           foreach (Instrument instrument in instruments)
           {
             string instrumentDefinition = ((int)instrument.Type).ToString();
+            instrumentDefinition += ", ";
+            instrumentDefinition += instrument.Id.ToString();
             instrumentDefinition += ", ";
             instrumentDefinition += instrument.Ticker.ToUpper();
             instrumentDefinition += ", ";

@@ -43,7 +43,10 @@ namespace TradeSharp.CoreUI.ViewModels
       Guid parentId = SelectedNode != null ? SelectedNode.Item.Id : InstrumentGroup.InstrumentGroupRoot;
       InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync(parentId);
       if (newInstrumentGroup != null)
+      {
         await m_itemsService.AddAsync(new InstrumentGroupNodeType((IInstrumentGroupService)m_itemsService, newInstrumentGroup));
+        await m_itemsService.RefreshAsync(parentId);
+      }
     }
 
     public async override void OnUpdate()
@@ -53,7 +56,7 @@ namespace TradeSharp.CoreUI.ViewModels
         var updatedInstrumentGroup = await m_dialogService.ShowUpdateInstrumentGroupAsync(SelectedNode.Item);
         if (updatedInstrumentGroup != null)
         {
-          SelectedNode.Item = updatedInstrumentGroup;
+          SelectedNode.Item.Update(updatedInstrumentGroup);
           SelectedNode = await m_itemsService.UpdateAsync(SelectedNode!);
         }
       }

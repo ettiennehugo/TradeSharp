@@ -106,7 +106,7 @@ namespace TradeSharp.CoreUI.Services
     {
       await m_instrumentGroupRepository.AddAsync(node.Item);
       await RefreshAsync(node.Item.ParentId);
-      SelectedNode = getNode(node.Item.Id);
+      SelectedNode = getNode(node.Item.Id, Nodes);
       SelectedNodeChanged?.Invoke(this, SelectedNode);
       return node;
     }
@@ -117,10 +117,10 @@ namespace TradeSharp.CoreUI.Services
       clone.Id = Guid.NewGuid();
       var result = await m_instrumentGroupRepository.AddAsync(clone);
 
-      ITreeNodeType<Guid, InstrumentGroup>? parentNode = getNode(node.ParentId);
+      ITreeNodeType<Guid, InstrumentGroup>? parentNode = getNode(node.ParentId, Nodes);
       SelectedNode = null;
       await parentNode!.RefreshAsync();
-      SelectedNode = getNode(result);
+      SelectedNode = getNode(result, Nodes);
 
       SelectedNodeChanged?.Invoke(this, SelectedNode);
 
@@ -173,8 +173,7 @@ namespace TradeSharp.CoreUI.Services
       Items.Clear();
       var result = await m_instrumentGroupRepository.GetItemsAsync();
       foreach (var item in result) Items.Add(item);
-      removeNodes(parentId);
-      var parentNode = getNode(parentId);
+      var parentNode = getNode(parentId, Nodes);
       if (parentNode != null) await parentNode.RefreshAsync();
       SelectedNode = parentNode;
     }
@@ -229,18 +228,39 @@ namespace TradeSharp.CoreUI.Services
       });
     }
 
-    private ITreeNodeType<Guid, InstrumentGroup>? getNode(Guid instrumentGroupId)
+    /// <summary>
+    /// Search through the given set of nodes/sub-tree for the node with the given instrument group Id.
+    /// </summary>
+    private ITreeNodeType<Guid, InstrumentGroup>? getNode(Guid instrumentGroupId, IEnumerable<ITreeNodeType<Guid, InstrumentGroup>> nodes)
     {
-      foreach (ITreeNodeType<Guid, InstrumentGroup> instrumentGroupNode in Nodes)
+      //search current level of nodes
+      foreach (ITreeNodeType<Guid, InstrumentGroup> instrumentGroupNode in nodes)
         if (instrumentGroupNode.Item.Id == instrumentGroupId) return instrumentGroupNode;
 
-      return null;
+      //search children of current level
+      foreach (ITreeNodeType<Guid, InstrumentGroup> instrumentGroupNode in nodes)
+      {
+        ITreeNodeType<Guid, InstrumentGroup>? node = getNode(instrumentGroupId, instrumentGroupNode.Children);
+        if (node != null) return node;
+      }
+
+      return null;  //given instrument in not on this sub-tree of nodes
     }
 
-    private ITreeNodeType<Guid, InstrumentGroup>? getNode(InstrumentGroup instrumentGroup)
+    /// <summary>
+    /// Search through the given set of nodes/sub-tree for the given node.
+    /// </summary>
+    private ITreeNodeType<Guid, InstrumentGroup>? getNode(InstrumentGroup instrumentGroup, IEnumerable<ITreeNodeType<Guid, InstrumentGroup>> nodes)
     {
-      foreach (ITreeNodeType<Guid, InstrumentGroup> instrumentGroupNode in Nodes)
+      foreach (ITreeNodeType<Guid, InstrumentGroup> instrumentGroupNode in nodes)
         if (instrumentGroupNode.Item == instrumentGroup) return instrumentGroupNode;
+
+      //search children of current level
+      foreach (ITreeNodeType<Guid, InstrumentGroup> instrumentGroupNode in nodes)
+      {
+        ITreeNodeType<Guid, InstrumentGroup>? node = getNode(instrumentGroup, instrumentGroupNode.Children);
+        if (node != null) return node;
+      }
 
       return null;
     }

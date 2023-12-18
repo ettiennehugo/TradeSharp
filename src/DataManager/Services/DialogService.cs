@@ -297,7 +297,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportInstrumentsAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, false);
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, false, true);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -318,17 +318,16 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<string?> ShowExportInstrumentsAsync()
     {
-      //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
-      FileOpenPicker openPicker = new FileOpenPicker();
-      openPicker.ViewMode = PickerViewMode.Thumbnail;
-      openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
-      openPicker.FileTypeFilter.Add(".csv");
-      openPicker.FileTypeFilter.Add(".json");
+      FileSavePicker savePicker = new FileSavePicker();
+      savePicker.DefaultFileExtension = ".json";  //JSON allows better structure of the instrument definitions
+      savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
+      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" }); //default export to JSON
+      savePicker.FileTypeChoices.Add("CSV", new List<string>() { ".csv" });
 
       var hwnd = GetActiveWindow();
-      InitializeWithWindow.Initialize(openPicker, hwnd);
+      InitializeWithWindow.Initialize(savePicker, hwnd);
 
-      StorageFile file = await openPicker.PickSingleFileAsync();
+      StorageFile file = await savePicker.PickSaveFileAsync();
       if (file != null) return file.Path;
 
       return null;
@@ -379,7 +378,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportInstrumentGroupsAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, false);
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, false, true);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -467,7 +466,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportBarDataAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(true, true);
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(true, true, false);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
