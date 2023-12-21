@@ -265,7 +265,8 @@ namespace TradeSharp.CoreUI.Services
               logger.LogError(result.StatusMessage);
             }
 
-            //parse the file data
+            //parse the file data, first load the bars into a cache and then mass update the database (mass update is faster)
+            List<IBarData> bars = new List<IBarData>();
             while (csv.Read() && result.Severity != IDialogService.StatusMessageSeverity.Error)
             {
               DateTime? dateTime = null;
@@ -343,8 +344,7 @@ namespace TradeSharp.CoreUI.Services
                       break;
                   }
 
-                BarData barData = new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume, synthetic);
-                m_repository.UpdateAsync(barData);
+                bars.Add(new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume, synthetic));                
                 barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
               }
               catch (Exception e)
@@ -352,8 +352,11 @@ namespace TradeSharp.CoreUI.Services
                 result.Severity = IDialogService.StatusMessageSeverity.Error;
                 result.StatusMessage = $"Failed to parse bar on line {lineNo} with exception \"{e.Message}\".";
                 logger.LogError(result.StatusMessage);
+                bars.Clear();
               }
             }
+
+            if (bars.Count != 0) m_repository.UpdateAsync(bars);
           }
           else
           {
@@ -367,7 +370,6 @@ namespace TradeSharp.CoreUI.Services
         return result;
       });
     }
-
 
     private Task<ImportResult> importJSON(ImportSettings importSettings)
     {
@@ -400,6 +402,7 @@ namespace TradeSharp.CoreUI.Services
           if (documentNode != null)
           {
             JsonArray barDataArray = documentNode.AsArray();
+            List<IBarData> bars = new List<IBarData>();
             foreach (JsonObject? barDataJson in barDataArray)
             {
               barIndex++;
@@ -459,10 +462,11 @@ namespace TradeSharp.CoreUI.Services
               double close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
               long volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<long>();
               bool synthetic = barDataJson.ContainsKey(tokenJsonSynthetic) ? barDataJson![tokenJsonSynthetic]!.AsValue().Deserialize<bool>() : importSettings.DefaultPriceDataType == ImportDefaultPriceDataType.Synthetic;
-              BarData barData = new BarData(Resolution, dateTime, open, high, low, close, volume, synthetic);
-              m_repository.UpdateAsync(barData);
+              bars.Add(new BarData(Resolution, dateTime, open, high, low, close, volume, synthetic));
               barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
             }
+
+            if (bars.Count > 0) m_repository.UpdateAsync(bars);
           }
         }
 

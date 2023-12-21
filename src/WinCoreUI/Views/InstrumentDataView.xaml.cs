@@ -43,7 +43,6 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_configurationService = Ioc.Default.GetRequiredService<IConfigurationService>();
       m_instrumentService = Ioc.Default.GetRequiredService<IInstrumentService>();
-      ViewModel = Ioc.Default.GetRequiredService<InstrumentBarDataViewModel>();
       DataProviders = new ObservableCollection<string>();
       Instruments = new AdvancedCollectionView(m_instrumentService.Items, false);
       this.InitializeComponent();
@@ -59,7 +58,6 @@ namespace TradeSharp.WinCoreUI.Views
     public ObservableCollection<string> DataProviders { get; set; }
     public AdvancedCollectionView Instruments { get; }
     public InstrumentViewModel InstrumentViewModel { get; set; }
-    public InstrumentBarDataViewModel ViewModel { get; }
 
     //methods
     private async void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -113,6 +111,8 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_dataProviders_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+      m_massImport.IsEnabled = true;
+      m_massExport.IsEnabled = true;
       m_minuteBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
       m_hoursBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
       m_daysBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
@@ -127,6 +127,16 @@ namespace TradeSharp.WinCoreUI.Views
       m_daysBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
       m_weeksBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
       m_monthsBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+    }
+
+    private void m_massImport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+      throw new NotImplementedException();
+    }
+
+    private void m_massExport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+      throw new NotImplementedException();
     }
   }
 }

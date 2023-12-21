@@ -20,6 +20,17 @@
     <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
         <AppBarButton x:Name="m_refreshCommand" Icon="Refresh" Click="m_refreshCommand_Click" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarSeparator/>
+        <AppBarButton x:Name="m_massImport" Click="m_massImport_Click" IsEnabled="False" ToolTipService.ToolTip="Mass import bar data" IsCompact="True">
+          <AppBarButton.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE802;"/>
+          </AppBarButton.Icon>
+        </AppBarButton>
+        <AppBarButton x:Name="m_massExport" Click="m_massExport_Click" IsEnabled="False" ToolTipService.ToolTip="Mass export bar data" IsCompact="True">
+          <AppBarButton.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE803;"/>
+          </AppBarButton.Icon>
+        </AppBarButton>
       </CommandBar>
     </StackPanel>
     <TextBlock x:Name="m_dataProvidersHeader" Text="Data Providers" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="1" Grid.Column="0"/>

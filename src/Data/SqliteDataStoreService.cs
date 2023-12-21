@@ -973,11 +973,14 @@ namespace TradeSharp.Data
       ExecuteCommand(command);
     }
 
+    /// <summary>
+    /// Mass update of bar data is much faster than single UpdateData calls to use it for mass updated where appropriate.
+    /// </summary>
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DataCacheBars bars)
     {
       //level 1 data can not be updated by his method
       if (resolution == Resolution.Level1) throw new ArgumentException("Update for bar data can not update Level 1 data.");
-      if (bars.Count == 0) throw new ArgumentException("Update data count should not be zero.");
+      if (bars.Count == 0) return;
 
       //create database update
       using (var transaction = m_connection.BeginTransaction())
@@ -1002,6 +1005,47 @@ namespace TradeSharp.Data
               $"{bars.Low[index]}, " +
               $"{bars.Close[index]}, " +
               $"{bars.Volume[index]}" +
+            $")";
+
+          command.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+      }
+    }
+
+    /// <summary>
+    /// Mass update of bar data is much faster than single UpdateData calls to use it for mass updated where appropriate.
+    /// </summary>
+    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<IBarData> bars)
+    {
+      //level 1 data can not be updated by his method
+      if (resolution == Resolution.Level1) throw new ArgumentException("Update for bar data can not update Level 1 data.");
+      if (bars.Count == 0) return;
+
+      //create database update
+      using (var transaction = m_connection.BeginTransaction())
+      {
+        var command = m_connection.CreateCommand();
+        command.Transaction = transaction;
+
+        string tableName;
+        string normalizedTicker = ticker.ToUpper();
+        string barTableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
+        string syntheticTableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution);
+
+        foreach (IBarData bar in bars)
+        {
+          tableName = bar.Synthetic ? syntheticTableName : barTableName;
+          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
+            $"VALUES (" +
+              $"'{normalizedTicker}', " +
+              $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
+              $"{bar.Open}, " +
+              $"{bar.High}, " +
+              $"{bar.Low}, " +
+              $"{bar.Close}, " +
+              $"{bar.Volume}" +
             $")";
 
           command.ExecuteNonQuery();

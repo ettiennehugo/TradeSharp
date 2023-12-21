@@ -63,6 +63,12 @@ namespace TradeSharp.CoreUI.Repositories
       return Task.Run(() => { m_dataStore.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); return item; });
     }
 
+    public Task<long> UpdateAsync(IList<IBarData> items)
+    {
+      throwIfNotKeyed();
+      return Task.Run(() => { m_dataStore.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, items); return (long)items.Count; });
+    }
+
     public Task<bool> DeleteAsync(IBarData item)
     {
       throwIfNotKeyed();

@@ -25,6 +25,7 @@ namespace TradeSharp.CoreUI.Repositories
     Resolution Resolution { get; set; }
 
     //methods
-    Task<IEnumerable<T>> GetItemsAsync(DateTime start, DateTime end);
+    Task<long> UpdateAsync(IList<T> items);   //more performant mass update of items
+    Task<IEnumerable<T>> GetItemsAsync(DateTime start, DateTime end); 
   }
 }

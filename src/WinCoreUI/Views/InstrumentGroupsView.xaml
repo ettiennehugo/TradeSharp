@@ -34,7 +34,7 @@
     <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.VerticalScrollMode="Auto" Grid.Row="1" Grid.Column="0">
       <TreeView.ItemTemplate>
         <DataTemplate x:DataType="cuiservices:InstrumentGroupNodeType">
-          <TreeViewItem Content="{x:Bind Item.Name}" ItemsSource="{x:Bind Children}" IsExpanded="False"/>
+          <TreeViewItem Content="{x:Bind Item.Name, Mode=OneWay}" ItemsSource="{x:Bind Children}" IsExpanded="False"/>
         </DataTemplate>
       </TreeView.ItemTemplate>
     </TreeView>
