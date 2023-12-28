@@ -81,7 +81,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         ImportResult importResult = await m_itemsService.ImportAsync(importSettings);
         await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-        //await OnRefreshAsync();
+        //await OnRefreshAsync(); - TODO Need to be careful with this as it might cause a full reload of a huge amount of data.
       }
     }
 

@@ -24,12 +24,12 @@ namespace TradeSharp.WinCoreUI.Common
 
 
     //attributes
-    private IDataStoreService m_dataStoreService;
+    private IDatabase m_database;
 
     //constructors
     public ExchangeToIdConverter()
     {
-      m_dataStoreService = Ioc.Default.GetRequiredService<IDataStoreService>();
+      m_database = Ioc.Default.GetRequiredService<IDatabase>();
     }
 
     //finalizers
@@ -44,11 +44,11 @@ namespace TradeSharp.WinCoreUI.Common
     //methods
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-      Exchange? exchange = m_dataStoreService.GetExchange((Guid)value);
+      Exchange? exchange = m_database.GetExchange((Guid)value);
       if (exchange != null)
         return exchange;
       else
-        return m_dataStoreService.GetExchange(Exchange.InternationalId);
+        return m_database.GetExchange(Exchange.InternationalId);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

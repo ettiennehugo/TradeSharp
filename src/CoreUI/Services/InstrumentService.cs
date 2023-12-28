@@ -45,15 +45,15 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     private ILoggerFactory m_loggerFactory;
     private IInstrumentRepository m_instrumentRepository;
-    private IDataStoreService m_dataStoreService;
+    private IDatabase m_database;
     private Instrument? m_selectedItem;
 
     //constructors
-    public InstrumentService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IDialogService dialogService, IInstrumentRepository instrumentRepository)
+    public InstrumentService(ILoggerFactory loggerFactory, IDatabase database, IDialogService dialogService, IInstrumentRepository instrumentRepository)
     {
       m_loggerFactory = loggerFactory;
       m_instrumentRepository = instrumentRepository;
-      m_dataStoreService = dataStoreService;
+      m_database = database;
       m_selectedItem = null;
       Items = new ObservableCollection<Instrument>();
     }
@@ -169,9 +169,9 @@ namespace TradeSharp.CoreUI.Services
           if (documentNode != null)
           {
             SortedDictionary<string, Exchange> definedExchanges = new SortedDictionary<string, Exchange>();
-            foreach (Exchange exchange in m_dataStoreService.GetExchanges()) definedExchanges.Add(exchange.Id.ToString(), exchange);
+            foreach (Exchange exchange in m_database.GetExchanges()) definedExchanges.Add(exchange.Id.ToString(), exchange);
             SortedDictionary<Guid, Instrument> definedInstruments = new SortedDictionary<Guid, Instrument>();
-            foreach (Instrument instrument in m_dataStoreService.GetInstruments()) definedInstruments.Add(instrument.Id, instrument);
+            foreach (Instrument instrument in m_database.GetInstruments()) definedInstruments.Add(instrument.Id, instrument);
 
             JsonArray fileInstrumentsJson = documentNode.AsArray();
             foreach (JsonObject? fileInstrumentJson in fileInstrumentsJson)
@@ -286,9 +286,9 @@ namespace TradeSharp.CoreUI.Services
           {
             int lineNo = 1; //header row is on line 0
             bool parseError = false;
-            IList<Exchange> exchanges = m_dataStoreService.GetExchanges();
+            IList<Exchange> exchanges = m_database.GetExchanges();
             SortedDictionary<string, Instrument> definedInstruments = new SortedDictionary<string, Instrument>();
-            foreach (Instrument instrument in m_dataStoreService.GetInstruments()) definedInstruments.Add(instrument.Ticker.ToUpper(), instrument);
+            foreach (Instrument instrument in m_database.GetInstruments()) definedInstruments.Add(instrument.Ticker.ToUpper(), instrument);
             List<Instrument> fileInstruments = new List<Instrument>();
 
             while (csv.Read() && !parseError)
@@ -431,7 +431,7 @@ namespace TradeSharp.CoreUI.Services
         long exportCount = 0;
         using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
         {
-          IList<Instrument> instruments = m_dataStoreService.GetInstruments();
+          IList<Instrument> instruments = m_database.GetInstruments();
           int instrumentIndex = 0;
           int instrumentCount = instruments.Count;
           JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
@@ -481,7 +481,7 @@ namespace TradeSharp.CoreUI.Services
 
         using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
         {
-          IList<Instrument> instruments = m_dataStoreService.GetInstruments();
+          IList<Instrument> instruments = m_database.GetInstruments();
 
           file.WriteLine($"{tokenCsvType},{tokenCsvId},{tokenCsvTicker},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate},{tokenCsvTag},{tokenCsvAttributes}");
 

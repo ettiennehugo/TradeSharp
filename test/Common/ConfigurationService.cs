@@ -35,7 +35,7 @@ namespace Common
     [TestMethod]
     public void GeneralSettings_CheckParsing_Success() 
     {
-      IDataStoreConfiguration dataStoreConfiguration = (IDataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.DataStore];
+      IDataStoreConfiguration dataStoreConfiguration = (IDataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.Database];
       Assert.AreEqual(dataStoreConfiguration.Assembly, "TestDataStore,TestDataStore.dll", "Test data store assembly is incorrect");
       Assert.AreEqual(dataStoreConfiguration.ConnectionString, "TestDataStore.db", "Test data store connection string is incorrect");
       Assert.AreEqual((IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone], IConfigurationService.TimeZone.Local, "TimeZone value is not correct");

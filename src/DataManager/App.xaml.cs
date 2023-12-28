@@ -62,7 +62,7 @@ namespace TradeSharp.WinDataManager
         new ServiceCollection()  
           .AddSingleton<ILoggerFactory, NullLoggerFactory>()            //TODO: Implement or add a proper logger - C# book p.422 and https://blog.stephencleary.com/2018/05/microsoft-extensions-logging-part-1-introduction.html
           .AddSingleton<IConfigurationService, ConfigurationService>()
-          .AddSingleton<IDataStoreService, SqliteDataStoreService>()    //Sqlite is currently the only supported data store, if this changes we need to base this off configuration and add the services dynamically
+          .AddSingleton<IDatabase, SqliteDatabase>()    //Sqlite is currently the only supported data store, if this changes we need to base this off configuration and add the services dynamically
           .AddSingleton<IDialogService, DialogService>()
           .AddSingleton<INavigationService, NavigationService>()
           .AddSingleton<InitNavigationService>()

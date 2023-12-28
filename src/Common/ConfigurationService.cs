@@ -114,7 +114,7 @@ namespace TradeSharp.Common
             case IConfigurationService.GeneralConfiguration.TimeZone:
               General[IConfigurationService.GeneralConfiguration.TimeZone] = Enum.Parse(typeof(IConfigurationService.TimeZone), generalSetting.Value ?? "Local");
               break;
-            case IConfigurationService.GeneralConfiguration.DataStore:
+            case IConfigurationService.GeneralConfiguration.Database:
               var setting = new DataStoreConfiguration();
 
               foreach (IConfigurationSection subSetting in generalSetting.GetChildren())
@@ -127,7 +127,7 @@ namespace TradeSharp.Common
                     setting.ConnectionString = subSetting.Value!;
                     break;
                 }
-              General[IConfigurationService.GeneralConfiguration.DataStore] = setting;
+              General[IConfigurationService.GeneralConfiguration.Database] = setting;
               break;
           }
         }

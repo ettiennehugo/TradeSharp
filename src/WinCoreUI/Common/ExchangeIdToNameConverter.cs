@@ -21,12 +21,12 @@ namespace TradeSharp.WinCoreUI.Common
 
 
     //attributes
-    private IDataStoreService m_dataStoreService;
+    private IDatabase m_database;
 
     //constructors
     public ExchangeIdToNameConverter()
     {
-      m_dataStoreService = Ioc.Default.GetRequiredService<IDataStoreService>();
+      m_database = Ioc.Default.GetRequiredService<IDatabase>();
     }
 
     //finalizers
@@ -41,7 +41,7 @@ namespace TradeSharp.WinCoreUI.Common
     //methods
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-      Exchange? exchange = m_dataStoreService.GetExchange((Guid)value);
+      Exchange? exchange = m_database.GetExchange((Guid)value);
       if (exchange != null)
         return exchange.Name;
       else
@@ -50,7 +50,7 @@ namespace TradeSharp.WinCoreUI.Common
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
     {
-      IList<Exchange> exchanges = m_dataStoreService.GetExchanges();
+      IList<Exchange> exchanges = m_database.GetExchanges();
       string name = (string)value;
       foreach (Exchange exchange in exchanges)
         if (name == exchange.Name) return exchange.Id;

@@ -7,7 +7,7 @@ using static TradeSharp.Common.IConfigurationService;
 using TradeSharp.Common;
 using TradeSharp.Data;
 using Moq;
-using static TradeSharp.Data.IDataStoreService;
+using static TradeSharp.Data.IDatabase;
 using System.Globalization;
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
@@ -33,7 +33,7 @@ namespace TradeSharp.Data.Testing
     private CultureInfo m_cultureEnglish;
     private RegionInfo m_regionInfo;
     private Mock<IDataProvider> m_dataProvider;
-    private TradeSharp.Data.SqliteDataStoreService m_dataStore;
+    private TradeSharp.Data.SqliteDatabase m_database;
     private Country m_country;
     private TimeZoneInfo m_timeZone;
     private Exchange m_exchange;
@@ -66,16 +66,16 @@ namespace TradeSharp.Data.Testing
 
       m_generalConfiguration = new Dictionary<string, object>() {
           { IConfigurationService.GeneralConfiguration.TimeZone, (object)IConfigurationService.TimeZone.Local },
-          { IConfigurationService.GeneralConfiguration.DataStore, new DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDataStoreService).ToString(), "TradeSharpTest.db") }
+          { IConfigurationService.GeneralConfiguration.Database, new DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDatabase).ToString(), "TradeSharpTest.db") }
       };
 
       m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);
 
-      m_dataStore = new TradeSharp.Data.SqliteDataStoreService(m_configuration.Object);
+      m_database = new TradeSharp.Data.SqliteDatabase(m_configuration.Object);
 
       //remove stale data from previous tests - this is to ensure proper test isolation and create the default objects used by the database
-      m_dataStore.ClearDatabase();
-      m_dataStore.CreateDefaultObjects();
+      m_database.ClearDatabase();
+      m_database.CreateDefaultObjects();
 
       //create common attributes used for testing
       m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "en-US");
@@ -89,8 +89,8 @@ namespace TradeSharp.Data.Testing
       m_testBarDataReversed = new Dictionary<Resolution, DataCacheBars>();
 
       //create required exchange in the database for the instrument in question
-      m_dataStore.CreateExchange(m_exchange);
-      m_dataStore.CreateInstrument(m_instrument);
+      m_database.CreateExchange(m_exchange);
+      m_database.CreateInstrument(m_instrument);
     }
 
     //finalizers
@@ -125,7 +125,7 @@ namespace TradeSharp.Data.Testing
       m_level1TestData.LastSize = new List<long>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
       m_level1TestData.Synthetic = new List<bool>(m_level1TestData.Count); synthetic = false; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Synthetic.Add(synthetic); synthetic = !synthetic; }
 
-      m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, m_level1TestData);
+      m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, m_level1TestData);
 
       //data feed would reverse the data according to date/time so we need to reverse it here to match
       m_level1TestDataReversed = new DataCacheLevel1(0);
@@ -140,7 +140,7 @@ namespace TradeSharp.Data.Testing
       m_level1TestDataReversed.Synthetic = m_level1TestData.Synthetic.Reverse().ToArray();
 
       //create bar resolution test data
-      foreach (Resolution resolution in m_dataStore.SupportedDataResolutions)
+      foreach (Resolution resolution in m_database.SupportedDataResolutions)
       {
         DataCacheBars barData = new DataCacheBars(0);
         barData.Count = count;
@@ -174,7 +174,7 @@ namespace TradeSharp.Data.Testing
         barData.Synthetic = new List<bool>(barData.Count); synthetic = false; for (int i = 0; i < barData.Count; i++) { barData.Synthetic.Add(synthetic); synthetic = !synthetic; }
 
         m_toDateTime = m_fromDateTime.AddMonths(count); //just use the longest resolution for the to-date time
-        m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+        m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
         m_testBarData.Add(resolution, barData);
 
         //data feed would reverse the data according to date/time so we need to reverse it here to match
@@ -227,7 +227,7 @@ namespace TradeSharp.Data.Testing
       m_level1TestDataReversed.Synthetic = m_level1TestData.Synthetic.Reverse().ToArray();
 
       //create bar resolution test data
-      foreach (Resolution resolution in m_dataStore.SupportedDataResolutions)
+      foreach (Resolution resolution in m_database.SupportedDataResolutions)
       {
         DataCacheBars barData = new DataCacheBars(0);
         barData.Count = count;
@@ -445,7 +445,7 @@ namespace TradeSharp.Data.Testing
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
       
       Data.DataCacheBars barData = m_testBarDataReversed[resolution];
 
@@ -479,7 +479,7 @@ namespace TradeSharp.Data.Testing
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
 
       switch (resolution)
       {
@@ -646,7 +646,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval <= 30 ? 30 : interval;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 0, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;
@@ -789,7 +789,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval <= 30 ? 30 : interval;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 3, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;
@@ -843,7 +843,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval * 10;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 0, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, Resolution.Level1, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, Resolution.Level1, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;

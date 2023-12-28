@@ -25,12 +25,12 @@ namespace TradeSharp.WinCoreUI.Common
 
 
     //attributes
-    private IDataStoreService m_dataStoreService;
+    private IDatabase m_database;
 
     //constructors
     public CountryIdToDisplayNameConverter()
     {
-      m_dataStoreService = Ioc.Default.GetRequiredService<IDataStoreService>();
+      m_database = Ioc.Default.GetRequiredService<IDatabase>();
     }
 
 
@@ -44,7 +44,7 @@ namespace TradeSharp.WinCoreUI.Common
 
       if (value is Guid && (Guid)value != Guid.Empty) 
       {
-        Country? country = m_dataStoreService.GetCountry((Guid)value);
+        Country? country = m_database.GetCountry((Guid)value);
         result = country?.CountryInfo.CultureInfo.DisplayName ?? "<No country>";
       }
 
@@ -55,7 +55,7 @@ namespace TradeSharp.WinCoreUI.Common
     {
       string displayName = value.ToString();
 
-      IList<Country> countries = m_dataStoreService.GetCountries();
+      IList<Country> countries = m_database.GetCountries();
       Country? country = countries.FirstOrDefault<Country>(x => x.CountryInfo.CultureInfo.DisplayName == displayName);
 
       return country?.Id ?? Guid.Empty;

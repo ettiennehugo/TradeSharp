@@ -1,8 +1,8 @@
 {
   "General": {
     "TimeZone": "Local",
-    "DataStore": {
-      "Assembly": "TradeSharp.Data.SqliteDataStore,TradeSharp.Data.dll",
+    "Database": {
+      "Assembly": "TradeSharp.Data.SqliteDatabase,TradeSharp.Data.dll",
       "ConnectionString" : "TradeSharp.db"
     }
   },

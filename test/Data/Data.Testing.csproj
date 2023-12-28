@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <RootNamespace>TradeSharp.Data.Testing</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
@@ -18,6 +20,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(TradeSharpSrc)\Common\Common.csproj" />
+    <ProjectReference Include="$(TradeSharpSrc)\Data\Data.csproj" />
   </ItemGroup>
 </Project>

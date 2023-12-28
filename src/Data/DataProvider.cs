@@ -24,7 +24,7 @@ namespace TradeSharp.Data
 
     //attributes
     static protected Regex s_nameRegEx;
-    IDataStoreService m_dataStore;
+    IDatabase m_database;
 
     //constructors
     static DataProvider()
@@ -33,11 +33,11 @@ namespace TradeSharp.Data
       s_nameRegEx = new Regex(@"^[a-zA-Z][a-zA-Z0-9_\s,]*$");
     }
 
-    public DataProvider(IDataStoreService dataStore, string name) : base()
+    public DataProvider(IDatabase database, string name) : base()
     {
       if (!s_nameRegEx.IsMatch(name)) throw new ArgumentException(string.Format("DataProvider name \"{0}\" is invalid, must be only alphanumeric characters and start with alphabetical character.", name));
       Name = name;
-      m_dataStore = dataStore;
+      m_database = database;
     }
 
     //finalizers

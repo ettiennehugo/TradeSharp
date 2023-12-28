@@ -87,8 +87,8 @@ namespace TradeSharp.WinCoreUI.Views
     private void loadCountries()
     {
       //load defined countries
-      IDataStoreService dataStoreService = Ioc.Default.GetRequiredService<IDataStoreService>();
-      Countries = dataStoreService.GetCountries();
+      IDatabase database = Ioc.Default.GetRequiredService<IDatabase>();
+      Countries = database.GetCountries();
     }
 
     private void loadTimeZones()

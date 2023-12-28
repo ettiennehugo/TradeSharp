@@ -29,7 +29,7 @@ namespace TradeSharp.Common
     public struct GeneralConfiguration
     {
       public const string TimeZone = "TimeZone";  //all data is stored in UTC and then back converted into this timezone - see TimeZone enum
-      public const string DataStore = "DataStore";  //datastore to use for the application
+      public const string Database = "Database"; //database to use for the application
     }
 
     //attributes

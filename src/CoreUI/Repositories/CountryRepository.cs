@@ -21,12 +21,12 @@ namespace TradeSharp.CoreUI.Repositories
 
     //attributes
     private List<CountryInfo> s_countryList = new List<CountryInfo>();
-    protected IDataStoreService m_dataStore;
+    protected IDatabase m_database;
 
     //constructors
-    public CountryRepository(IDataStoreService dataStore)
+    public CountryRepository(IDatabase database)
     {
-      m_dataStore = dataStore;
+      m_database = database;
     }
 
     //finalizers
@@ -35,22 +35,22 @@ namespace TradeSharp.CoreUI.Repositories
     //interface implementations
     public Task<Country> AddAsync(Country item)
     {
-      return Task.Run(() => { m_dataStore.CreateCountry(item); return item; });
+      return Task.Run(() => { m_database.CreateCountry(item); return item; });
     }
 
     public Task<bool> DeleteAsync(Country item)
     {
-      return Task.FromResult(m_dataStore.DeleteCountry(item.Id) != 0);
+      return Task.FromResult(m_database.DeleteCountry(item.Id) != 0);
     }
 
     public Task<Country?> GetItemAsync(Guid id)
     {
-      return Task.FromResult<Country?>(m_dataStore.GetCountry(id));
+      return Task.FromResult<Country?>(m_database.GetCountry(id));
     }
 
     public Task<IEnumerable<Country>> GetItemsAsync()
     {
-      return Task.FromResult<IEnumerable<Country>>(m_dataStore.GetCountries());
+      return Task.FromResult<IEnumerable<Country>>(m_database.GetCountries());
     }
 
     public Task<Country> UpdateAsync(Country item)

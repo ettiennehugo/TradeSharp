@@ -37,21 +37,21 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private IDataStoreService m_dataStoreService;
+    private IDatabase m_database;
 
     //constructors
     public InstrumentView()
     {
-      m_dataStoreService = Ioc.Default.GetRequiredService<IDataStoreService>();
-      Exchanges = m_dataStoreService.GetExchanges();
+      m_database = Ioc.Default.GetRequiredService<IDatabase>();
+      Exchanges = m_database.GetExchanges();
       Instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "", InstrumentType.Stock, "", "", "", DateTime.Today, Exchange.InternationalId, new List<Guid>());
       this.InitializeComponent();
     }
 
     public InstrumentView(Instrument instrument)
     {
-      m_dataStoreService = Ioc.Default.GetRequiredService<IDataStoreService>();
-      Exchanges = m_dataStoreService.GetExchanges();
+      m_database = Ioc.Default.GetRequiredService<IDatabase>();
+      Exchanges = m_database.GetExchanges();
       Instrument = instrument;
       this.InitializeComponent();
     }

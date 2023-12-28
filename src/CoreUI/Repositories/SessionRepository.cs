@@ -22,13 +22,13 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //attributes
-    protected IDataStoreService m_dataStore;
+    protected IDatabase m_database;
 
     //constructors
-    public SessionRepository(IDataStoreService dataStore)
+    public SessionRepository(IDatabase database)
     {
       ParentId = Guid.Empty;
-      m_dataStore = dataStore;
+      m_database = database;
     }
 
     //finalizers
@@ -37,30 +37,30 @@ namespace TradeSharp.CoreUI.Repositories
     //interface implementations
     public Task<Session> AddAsync(Session item)
     {
-      return Task.Run(() => { m_dataStore.CreateSession(item); return item; });
+      return Task.Run(() => { m_database.CreateSession(item); return item; });
     }
 
     public Task<bool> DeleteAsync(Session item)
     {
-      return Task.FromResult(m_dataStore.DeleteSession(item.Id) != 0);
+      return Task.FromResult(m_database.DeleteSession(item.Id) != 0);
     }
 
     public Task<Session?> GetItemAsync(Guid id)
     {
-      return Task.FromResult<Session?>(m_dataStore.GetSession(id));
+      return Task.FromResult<Session?>(m_database.GetSession(id));
     }
 
     public Task<IEnumerable<Session>> GetItemsAsync()
     {
       //only select data if we have a valid parent otherwise return zero result
       if (ParentId != Guid.Empty)
-        return Task.FromResult<IEnumerable<Session>>(m_dataStore.GetSessions(ParentId));
+        return Task.FromResult<IEnumerable<Session>>(m_database.GetSessions(ParentId));
       return Task.FromResult<IEnumerable<Session>>(Array.Empty<Session>());
     }
 
     public Task<Session> UpdateAsync(Session item)
     {
-      return Task.Run(() => { m_dataStore.UpdateSession(item); return item; });
+      return Task.Run(() => { m_database.UpdateSession(item); return item; });
     }
 
     //properties

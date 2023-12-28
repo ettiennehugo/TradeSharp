@@ -53,13 +53,13 @@ namespace TradeSharp.CoreUI.Services
     private IInstrumentBarDataRepository m_repository;
     private IBarData? m_selectedItem;
     private ILoggerFactory m_loggerFactory;
-    private IDataStoreService m_dataStoreService;
+    private IDatabase m_database;
 
     //constructors
-    public InstrumentBarDataService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService)
+    public InstrumentBarDataService(ILoggerFactory loggerFactory, IDatabase database)
     {
       m_loggerFactory = loggerFactory;
-      m_dataStoreService = dataStoreService;
+      m_database = database;
       m_repository = Ioc.Default.GetRequiredService<IInstrumentBarDataRepository>();  //need to do this to get a unique transient repository instance associated with this specific service
       DataProvider = string.Empty;
       Instrument = null;
@@ -137,6 +137,11 @@ namespace TradeSharp.CoreUI.Services
 
     public Task RefreshAsync()
     {
+
+      
+      //TODO: Need to see how the paged repository would work with this refresh.
+
+
       return Task.Run(async () =>
       {
         var result = await m_repository.GetItemsAsync();
@@ -147,10 +152,10 @@ namespace TradeSharp.CoreUI.Services
       });
     }
 
-    public Task<IBarData> UpdateAsync(IBarData item)
+    public async Task<IBarData> UpdateAsync(IBarData item)
     {
-      return Task.Run(async () =>
-      {
+      //return Task.Run(async () =>
+      //{
         IBarData barData = await m_repository.UpdateAsync(item);
 
         //the bar editor does not allow modification of the DateTime and Synthetic settings
@@ -163,7 +168,7 @@ namespace TradeSharp.CoreUI.Services
           }
 
         return barData;
-      });
+      //});
     }
 
     //properties
@@ -202,7 +207,7 @@ namespace TradeSharp.CoreUI.Services
         Exchange? exchange = null;
         if (importSettings.DateTimeTimeZone == ImportDataDateTimeTimeZone.Exchange)
         {
-          exchange = m_dataStoreService.GetExchange(Instrument!.PrimaryExchangeId);
+          exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
           if (exchange == null)
           {
             logger.LogError($"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.");
@@ -384,7 +389,7 @@ namespace TradeSharp.CoreUI.Services
         Exchange? exchange = null;
         if (importSettings.DateTimeTimeZone == ImportDataDateTimeTimeZone.Exchange)
         {
-          exchange = m_dataStoreService.GetExchange(Instrument!.PrimaryExchangeId);
+          exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
           if (exchange == null)
           {
             result.Severity = IDialogService.StatusMessageSeverity.Error;
@@ -484,7 +489,7 @@ namespace TradeSharp.CoreUI.Services
         long exportCount = 0;
         ILogger logger = m_loggerFactory.CreateLogger($"Exporting instruments - \"{filename}\"");
 
-        Exchange? exchange = m_dataStoreService.GetExchange(Instrument!.PrimaryExchangeId);
+        Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
 
         if (exchange == null)
         {
@@ -541,7 +546,7 @@ namespace TradeSharp.CoreUI.Services
 
         ILogger logger = m_loggerFactory.CreateLogger($"Exporting instruments - \"{filename}\"");
 
-        Exchange? exchange = m_dataStoreService.GetExchange(Instrument!.PrimaryExchangeId);
+        Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
 
         if (exchange == null)
         {

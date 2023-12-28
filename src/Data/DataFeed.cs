@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TradeSharp.Data;
 using TradeSharp.Common;
-using static TradeSharp.Data.IDataStoreService;
+using static TradeSharp.Data.IDatabase;
 using System.Diagnostics.Metrics;
 using System.Reflection;
 using System.Transactions;
@@ -34,7 +34,7 @@ namespace TradeSharp.Data
     //attributes
     protected IConfigurationService m_configuration;
     protected IDataProvider m_dataProvider;
-    protected IDataStoreService m_dataStore;
+    protected IDatabase m_database;
     protected DataStream<DateTime> m_dateTime;
     protected DateTime[] m_dateTimeData;
     protected DataStream<double> m_open;
@@ -63,14 +63,14 @@ namespace TradeSharp.Data
     protected bool[] m_syntheticData;
 
     //constructors
-    public DataFeed(IConfigurationService configuration, IDataStoreService dataStore, IDataProvider dataProvider, Instrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode, PriceDataType priceDataType) : base()
+    public DataFeed(IConfigurationService configuration, IDatabase database, IDataProvider dataProvider, Instrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode, PriceDataType priceDataType) : base()
     {
       if (interval == 0) throw new ArgumentOutOfRangeException(nameof(interval), "Interval must be greater than zero.");
       if (from > to) throw new ArgumentOutOfRangeException(nameof(from), "From must be less than or equal to To.");
 
       //set general attributes
       m_configuration = configuration;
-      m_dataStore = dataStore;
+      m_database = database;
       m_dataProvider = dataProvider;
       Instrument = instrument;
       From = from;
@@ -208,7 +208,7 @@ namespace TradeSharp.Data
     //methods
     protected void refreshDataCache()
     {
-      DataCache dataCache = m_dataStore.GetDataCache(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
+      DataCache dataCache = m_database.GetDataCache(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
       IConfigurationService.TimeZone timeZone = (IConfigurationService.TimeZone)m_configuration.General[IConfigurationService.GeneralConfiguration.TimeZone];
 
 
@@ -244,7 +244,7 @@ namespace TradeSharp.Data
                   barDataDateTime = barDataDateTime.ToLocalTime();
                   break;
                 case IConfigurationService.TimeZone.Exchange:
-                  Exchange exchange = m_dataStore.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
+                  Exchange exchange = m_database.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
                   barDataDateTime = TimeZoneInfo.ConvertTimeFromUtc(barDataDateTime, exchange.TimeZone);
                   break;
               }
@@ -326,7 +326,7 @@ namespace TradeSharp.Data
                   level1Data.DateTime[i] = level1Data.DateTime[i].ToLocalTime();
                   break;
                 case IConfigurationService.TimeZone.Exchange:
-                  Exchange exchange = m_dataStore.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
+                  Exchange exchange = m_database.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
                   level1Data.DateTime[i] = TimeZoneInfo.ConvertTimeFromUtc(level1Data.DateTime[i], exchange.TimeZone);
                   break;
               }

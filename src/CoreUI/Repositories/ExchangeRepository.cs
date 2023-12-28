@@ -22,12 +22,12 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //attributes
-    protected IDataStoreService m_dataStore;
+    protected IDatabase m_database;
 
     //constructors
-    public ExchangeRepository(IDataStoreService dataStore)
+    public ExchangeRepository(IDatabase database)
     {
-      m_dataStore = dataStore;
+      m_database = database;
     }
 
     //finalizers
@@ -36,27 +36,27 @@ namespace TradeSharp.CoreUI.Repositories
     //interface implementations
     public Task<Exchange> AddAsync(Exchange item)
     {
-      return Task.Run(() => { m_dataStore.CreateExchange(item); return item; });
+      return Task.Run(() => { m_database.CreateExchange(item); return item; });
     }
 
     public Task<bool> DeleteAsync(Exchange item)
     {
-      return Task.FromResult(m_dataStore.DeleteExchange(item.Id) != 0);
+      return Task.FromResult(m_database.DeleteExchange(item.Id) != 0);
     }
 
     public Task<Exchange?> GetItemAsync(Guid id)
     {
-      return Task.FromResult<Exchange?>(m_dataStore.GetExchange(id));
+      return Task.FromResult<Exchange?>(m_database.GetExchange(id));
     }
 
     public Task<IEnumerable<Exchange>> GetItemsAsync()
     {
-      return Task.FromResult<IEnumerable<Exchange>>(m_dataStore.GetExchanges());
+      return Task.FromResult<IEnumerable<Exchange>>(m_database.GetExchanges());
     }
 
     public Task<Exchange> UpdateAsync(Exchange item)
     {
-      return Task.Run(() => { m_dataStore.UpdateExchange(item); return item; });
+      return Task.Run(() => { m_database.UpdateExchange(item); return item; });
     }
 
     //properties

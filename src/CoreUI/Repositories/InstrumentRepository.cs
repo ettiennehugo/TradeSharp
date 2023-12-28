@@ -17,12 +17,12 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //attributes
-    protected IDataStoreService m_dataStore;
+    protected IDatabase m_database;
 
     //constructors
-    public InstrumentRepository(IDataStoreService dataStore)
+    public InstrumentRepository(IDatabase database)
     {
-      m_dataStore = dataStore;
+      m_database = database;
     }
 
     //finalizers
@@ -31,27 +31,27 @@ namespace TradeSharp.CoreUI.Repositories
     //interface implementations
     public Task<Instrument> AddAsync(Instrument item)
     {
-      return Task.Run(() => { m_dataStore.CreateInstrument(item); return item; });
+      return Task.Run(() => { m_database.CreateInstrument(item); return item; });
     }
 
     public Task<bool> DeleteAsync(Instrument item)
     {
-      return Task.FromResult(m_dataStore.DeleteInstrument(item) != 0);
+      return Task.FromResult(m_database.DeleteInstrument(item) != 0);
     }
 
     public Task<Instrument?> GetItemAsync(Guid id)
     {
-      return Task.FromResult<Instrument?>(m_dataStore.GetInstrument(id));
+      return Task.FromResult<Instrument?>(m_database.GetInstrument(id));
     }
 
     public Task<IEnumerable<Instrument>> GetItemsAsync()
     {
-      return Task.FromResult<IEnumerable<Instrument>>(m_dataStore.GetInstruments());
+      return Task.FromResult<IEnumerable<Instrument>>(m_database.GetInstruments());
     }
 
     public Task<Instrument> UpdateAsync(Instrument item)
     {
-      return Task.Run(() => { m_dataStore.UpdateInstrument(item); return item; });
+      return Task.Run(() => { m_database.UpdateInstrument(item); return item; });
     }
 
     //properties

@@ -9,7 +9,7 @@ namespace TradeSharp.Data
   /// <summary>
   /// Data store for Sqlite database.
   /// </summary>
-  public class SqliteDataStoreService : IDataStoreService
+  public class SqliteDatabase : IDatabase
   {
     //constants
     public const string c_TableCountry = "Country";
@@ -60,7 +60,7 @@ namespace TradeSharp.Data
     private AssociationCache m_instrumentFundamentalAssociations;
 
     //constructors
-    public SqliteDataStoreService(IConfigurationService configurationService)
+    public SqliteDatabase(IConfigurationService configurationService)
     {
       m_configurationService = configurationService;
       m_databaseFile = "";
@@ -74,7 +74,7 @@ namespace TradeSharp.Data
       //Sqlite3 objects, functions - https://sqlite.org/c3ref/objlist.html, https://sqlite.org/c3ref/funclist.html
 
       //validate database type and setup the database connection
-      IDataStoreConfiguration dataStoreConfiguration = (IDataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.DataStore];
+      IDataStoreConfiguration dataStoreConfiguration = (IDataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.Database];
       Trace.Assert(dataStoreConfiguration.Assembly != this.GetType().Name, $"Incorrect data store \"{this.GetType().Name}\" instatiated against data store configuration \"{dataStoreConfiguration.Assembly}\"");
       string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
       m_databaseFile = string.Format("{0}\\{1}\\{2}", tradeSharpHome, Constants.DataDir, dataStoreConfiguration.ConnectionString);
@@ -1092,6 +1092,45 @@ namespace TradeSharp.Data
       }
     }
 
+    public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<ILevel1Data> bars)
+    {
+      //bar data can not be updated by his method
+      if (resolution != Resolution.Level1) throw new ArgumentException("Update for Level 1 data can not update bar data.");
+      if (bars.Count == 0) return;
+
+      //create database update
+      using (var transaction = m_connection.BeginTransaction())
+      {
+        var command = m_connection.CreateCommand();
+        command.Transaction = transaction;
+
+        string tableName;
+        string normalizedTicker = ticker.ToUpper();
+        string barTableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
+        string syntheticTableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution);
+
+        foreach (ILevel1Data bar in bars)
+        {
+          tableName = bar.Synthetic ? syntheticTableName : barTableName;
+          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
+            $"VALUES (" +
+              $"'{normalizedTicker}', " +
+              $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
+              $"{bar.Bid}, " +
+              $"{bar.BidSize}, " +
+              $"{bar.Ask}, " +
+              $"{bar.AskSize}, " +
+              $"{bar.Last}, " +
+              $"{bar.LastSize}" +
+            $")";
+
+          command.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+      }
+    }
+
     public int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime, bool? synthetic = null)
     {
       return deleteData(dataProviderName, ticker, resolution, dateTime, synthetic);
@@ -1508,6 +1547,101 @@ namespace TradeSharp.Data
               $"AND DateTime >= {fromUtc.ToBinary()} " +
               $"AND DateTime <= {toUtc.ToBinary()} " +
             $"ORDER BY DateTime ASC";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+        {
+          while (reader.Read())
+          {
+            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
+              result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
+          }
+        }
+
+        //sort in the synthetic bar data if not just synthetic data is returned
+        //PERFORMANCE: Since the list is already sorted the above result.Add could be optimized into a binary insert, List has a BinarySearch method but it requires an object instance. 
+        if (priceDataType != PriceDataType.Synthetic) result.Sort(compareBarData);
+      }
+
+      return result;
+    }
+
+    public int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, PriceDataType priceDataType)
+    {
+      if (priceDataType == PriceDataType.Merged) throw new ArgumentException("SQLite data store can not provide merged data count, that would require selecting actual data.");
+
+      //create database command
+      int result = 0;  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      string normalizedTicker = ticker.ToUpper();
+
+      //load actual data if required
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All)
+      {
+        SqliteCommand commandObj = m_connection.CreateCommand();
+        commandObj.CommandText =
+        $"SELECT COUNT(*) FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}'";              
+        result += Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      }
+
+      //load synthetic price data if required
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All)
+      {
+        SqliteCommand commandObj = m_connection.CreateCommand();
+        commandObj.CommandText =
+          $"SELECT COUNT(*) FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}'";
+        result += Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      }
+
+      return result;
+    }
+
+    /// <summary>
+    /// Supports paged loading of the data from the database. NOTE: The database layer does NOT support merging of the actual and syntehtic data and
+    /// an abstraction layer above the SQLite database is required to merge the data if required.
+    /// </summary>
+    public IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, int index, int count, PriceDataType priceDataType)
+    {
+      if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
+      if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged) throw new ArgumentException("SQLite data store can not provide all/merged paged data, use repository layer to perform this functionality.");
+
+      //create database command
+      List<IBarData> result = new List<IBarData>();
+      string command;
+      string normalizedTicker = ticker.ToUpper();
+
+      //load actual data if required
+      if (priceDataType == PriceDataType.Actual)
+      {
+        command =
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+            $"ORDER BY DateTime ASC " + 
+            $"LIMIT {count} OFFSET {index}";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+        {
+          while (reader.Read())
+          {
+            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
+          }
+        }
+      }
+
+      //load synthetic price data if required
+      if (priceDataType == PriceDataType.Synthetic)
+      {
+        command =
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+            $"ORDER BY DateTime ASC " +
+            $"LIMIT {count} OFFSET {index}";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
@@ -2112,24 +2246,24 @@ namespace TradeSharp.Data
     /// </summary>
     public int ClearDatabase()
     {
-      int result = ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableCountry}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableHoliday}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableExchange}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableSession}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableInstrumentGroup}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableInstrumentGroupInstrument}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableInstrument}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableInstrumentSecondaryExchange}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDataStoreService.c_TableFundamentals}");
+      int result = ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableCountry}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableHoliday}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableExchange}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableSession}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentGroup}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentGroupInstrument}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrument}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentSecondaryExchange}");
+      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableFundamentals}");
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
-        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableCountryFundamentalValues)}");
-        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentFundamentalValues)}");
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableCountryFundamentalValues)}");
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableInstrumentFundamentalValues)}");
 
         foreach (Resolution resolution in SupportedDataResolutions)
         {
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentData, resolution)}");
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDataStoreService.c_TableInstrumentDataSynthetic, resolution)}");
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableInstrumentData, resolution)}");
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableInstrumentDataSynthetic, resolution)}");
         }
       }
 

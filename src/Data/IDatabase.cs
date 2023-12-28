@@ -4,8 +4,6 @@ using System.ComponentModel;
 
 namespace TradeSharp.Data
 {
-  /// This file defines the basic interface to be maintained by data services used to store data for the trading system.
-
   /// <summary>
   /// Price data types to return for price queries.
   /// </summary>
@@ -752,7 +750,7 @@ namespace TradeSharp.Data
   /// The data store should also take into account specific configuration settings related to data, e.g. data related to timezones
   /// should be correctly stored in UTC time and then returned using the user's desired TimeZone from the IConfiguration interface.
   /// </summary>
-  public interface IDataStoreService : IDisposable
+  public interface IDatabase : IDisposable
   {
     //constants
 
@@ -868,17 +866,22 @@ namespace TradeSharp.Data
 
     /// <summary>
     /// Create/update price data from a given DataProvider for a given instrument. Synthetic data that was generated can be set for a given instrument as well in the event that the specific
-    /// DataProvider has missing intervals of data.
+    /// DataProvider has missing intervals of data. Paged functions are provied to allow incremental loading of large amounts of data.
     /// </summary>
     void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume, bool synthetic);
     void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize, bool synthetic);
     void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DataCacheBars bars);
     void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<IBarData> bars);
+    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<ILevel1Data> bars);
     void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DataCacheLevel1 bars);
+
     int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime, bool? synthetic = null);
     int DeleteData(string dataProviderName, string ticker, Resolution? resolution = null, DateTime? from = null, DateTime? to = null, bool? synthetic = null);
+
     IBarData? GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, PriceDataType priceDataType);
     IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);
+    int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, PriceDataType priceDataType);
+    IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, int index, int count, PriceDataType priceDataType);
     ILevel1Data? GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, PriceDataType priceDataType);
     IList<ILevel1Data> GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, PriceDataType priceDataType);
     DataCache GetDataCache(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);

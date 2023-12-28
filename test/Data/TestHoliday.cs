@@ -16,13 +16,11 @@ namespace TradeSharp.Data.Testing
 
 
     //attributes
-    private Mock<IDataStoreService> m_dataStore;
     private Country m_country;
 
     //constructors
     public TestHoliday()
     {
-      m_dataStore = new Mock<IDataStoreService>();
       m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "en-US");
     }
 

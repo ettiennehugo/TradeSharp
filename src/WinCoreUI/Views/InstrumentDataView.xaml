@@ -16,7 +16,7 @@
   <Page.Resources>
     <wcuicommon:TypeCastConverter x:Key="TypeCastConverter"/>
   </Page.Resources>
-  <Grid x:Name="m_main" RowDefinitions="Auto, Auto, *, Auto, 2*, Auto, 4*">
+  <Grid x:Name="m_main" RowDefinitions="Auto, Auto, 0.5*, Auto, 2*, Auto, 4*">
     <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
         <AppBarButton x:Name="m_refreshCommand" Icon="Refresh" Click="m_refreshCommand_Click" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
@@ -34,7 +34,13 @@
       </CommandBar>
     </StackPanel>
     <TextBlock x:Name="m_dataProvidersHeader" Text="Data Providers" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="1" Grid.Column="0"/>
-    <ListView x:Name="m_dataProviders" SelectionMode="Single" ItemsSource="{x:Bind DataProviders}" SelectionChanged="m_dataProviders_SelectionChanged" Grid.Row="2" Grid.Column="0"/>
+    <ListView x:Name="m_dataProviders" SelectionMode="Single" ItemsSource="{x:Bind DataProviders}" SelectionChanged="m_dataProviders_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="2" Grid.Column="0">
+      <ListView.ItemsPanel>
+        <ItemsPanelTemplate>
+          <controls:WrapPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+      </ListView.ItemsPanel>
+    </ListView>
     <TextBlock x:Name="m_instrumentsHeader" Text="Instruments" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="3" Grid.Column="0"/>
     <Grid x:Name="m_instruments" RowDefinitions="Auto, *" Grid.Row="4" Grid.Column="0">
       <StackPanel Orientation="Horizontal"  Grid.Row="0" Grid.Column="0">
@@ -73,7 +79,7 @@
         </TabViewItem.Header>
         <wcui:InstrumentBarsDataView x:Name="m_minuteBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Minute" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
       </TabViewItem>
-      <TabViewItem x:Name="m_hoursTab" IsClosable="False">
+      <!--<TabViewItem x:Name="m_hoursTab" IsClosable="False">
         <TabViewItem.Header>
           <StackPanel Orientation="Horizontal">
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC49;" />
@@ -108,7 +114,7 @@
           </StackPanel>
         </TabViewItem.Header>
         <wcui:InstrumentBarsDataView x:Name="m_monthsBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Month" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
-      </TabViewItem>
+      </TabViewItem>-->
     </TabView>
   </Grid>
 </Page>

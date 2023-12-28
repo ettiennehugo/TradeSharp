@@ -60,7 +60,7 @@ namespace TradeSharp.CoreUI.Services
     }
 
     //attributes
-    private IDataStoreService m_dataStoreService;
+    private IDatabase m_database;
     private ILoggerFactory m_loggerFactory;
     private IInstrumentGroupRepository m_instrumentGroupRepository;
     private IDialogService m_dialogService;
@@ -70,10 +70,10 @@ namespace TradeSharp.CoreUI.Services
     public ObservableCollection<InstrumentGroup> Items { get; internal set; }
 
     //constructors
-    public InstrumentGroupService(ILoggerFactory loggerFactory, IDataStoreService dataStoreService, IDialogService dialogService, IInstrumentGroupRepository instrumentGroupRepository)
+    public InstrumentGroupService(ILoggerFactory loggerFactory, IDatabase database, IDialogService dialogService, IInstrumentGroupRepository instrumentGroupRepository)
     {
       m_loggerFactory = loggerFactory;
-      m_dataStoreService = dataStoreService;
+      m_database = database;
       m_instrumentGroupRepository = instrumentGroupRepository;
       m_dialogService = dialogService;
       m_selectedNode = null;
@@ -423,13 +423,13 @@ namespace TradeSharp.CoreUI.Services
               }
 
               //create/update any instrument associations based on tickers given
-              IList<Instrument> instruments = m_dataStoreService.GetInstruments();
+              IList<Instrument> instruments = m_database.GetInstruments();
               foreach (KeyValuePair<string, InstrumentGroupRecord> fileInstrumentGroup in fileInstrumentGroups)
                 if (fileInstrumentGroup.Value.Ticker.Length != 0)
                 {
                   Instrument? instrument = instruments.FirstOrDefault(x => x.Ticker.ToLower() == fileInstrumentGroup.Value.Ticker.ToLower());
                   if (instrument != null)
-                    m_dataStoreService.CreateInstrumentGroupInstrument(fileInstrumentGroup.Value.Id, instrument.Id);
+                    m_database.CreateInstrumentGroupInstrument(fileInstrumentGroup.Value.Id, instrument.Id);
                   else
                   {
                     result.Severity = IDialogService.StatusMessageSeverity.Error;
@@ -504,7 +504,7 @@ namespace TradeSharp.CoreUI.Services
       using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         ILogger logger = m_loggerFactory.CreateLogger($"Exporting instrument groups to \"{filename}\"");
-        IList<Instrument> instrumentsList = m_dataStoreService.GetInstruments();
+        IList<Instrument> instrumentsList = m_database.GetInstruments();
 
         SortedDictionary<Guid, Instrument> instruments = new SortedDictionary<Guid, Instrument>();
         foreach (Instrument instrument in instrumentsList) instruments.Add(instrument.Id, instrument);
@@ -728,7 +728,7 @@ namespace TradeSharp.CoreUI.Services
             foreach (InstrumentGroup instrumentGroup in instrumentGroups) definedInstrumentGroups.Add(instrumentGroup.Id, instrumentGroup);
 
             Dictionary<string, Instrument> definedInstruments = new Dictionary<string, Instrument>();
-            IList<Instrument> instruments = m_dataStoreService.GetInstruments();
+            IList<Instrument> instruments = m_database.GetInstruments();
             foreach (Instrument instrument in instruments) definedInstruments.Add(instrument.Ticker, instrument);
 
             JsonArray rootNodes = documentNode.AsArray();

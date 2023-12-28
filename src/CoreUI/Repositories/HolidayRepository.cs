@@ -22,14 +22,14 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //attributes
-    protected IDataStoreService m_dataStore;
+    protected IDatabase m_database;
 
 
     //constructors
-    public HolidayRepository(IDataStoreService dataStore)
+    public HolidayRepository(IDatabase database)
     {
       ParentId = Guid.Empty;
-      m_dataStore = dataStore;
+      m_database = database;
     }
 
     //finalizers
@@ -38,30 +38,30 @@ namespace TradeSharp.CoreUI.Repositories
     //interface implementations
     public Task<Holiday> AddAsync(Holiday item)
     {
-      return Task.Run(() => { m_dataStore.CreateHoliday(item); return item; });
+      return Task.Run(() => { m_database.CreateHoliday(item); return item; });
     }
 
     public Task<bool> DeleteAsync(Holiday item)
     {
-      return Task.FromResult(m_dataStore.DeleteHoliday(item.Id) != 0);
+      return Task.FromResult(m_database.DeleteHoliday(item.Id) != 0);
     }
 
     public Task<Holiday?> GetItemAsync(Guid id)
     {
-      return Task.FromResult<Holiday?>(m_dataStore.GetHoliday(id));
+      return Task.FromResult<Holiday?>(m_database.GetHoliday(id));
     }
 
     public Task<IEnumerable<Holiday>> GetItemsAsync()
     {
       //only select data if we have a valid parent otherwise return zero result
       if (ParentId != Guid.Empty)
-        return Task.FromResult<IEnumerable<Holiday>>(m_dataStore.GetHolidays(ParentId));
+        return Task.FromResult<IEnumerable<Holiday>>(m_database.GetHolidays(ParentId));
       return Task.FromResult<IEnumerable<Holiday>>(Array.Empty<Holiday>());
     }
 
     public Task<Holiday> UpdateAsync(Holiday item)
     {
-      return Task.Run(() => { m_dataStore.UpdateHoliday(item); return item; });
+      return Task.Run(() => { m_database.UpdateHoliday(item); return item; });
     }
 
     //properties

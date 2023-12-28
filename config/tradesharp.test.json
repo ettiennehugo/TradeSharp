@@ -1,7 +1,7 @@
 {
   "General": {
     "TimeZone": "Local",
-    "DataStore": {
+    "Database": {
       "Assembly": "TestDataStore,TestDataStore.dll",
       "ConnectionString" : "TestDataStore.db"
     }
