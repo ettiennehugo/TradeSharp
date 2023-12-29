@@ -1,17 +1,18 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.ObjectModel;
+﻿using CommunityToolkit.Mvvm.Input;
 using System.Collections;
 using TradeSharp.CoreUI.Services;
+using System.Collections.ObjectModel;
+using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
   /// <summary>
   /// Base class for models that support the viewing of items in a list supplied by an items service, commands are exposed to crete/update/delete items from the list.
   /// The model optionally uses a parent Id when lists of items needs to be displayed that are dependent on a specific parent Id from the IDataSourceService.
+  /// IMPORTANT: The model assumes synchronous operation in the UI thread so it does not do anything fancy to support background worker threads, for services that require
+  ///            long running background processes the structure of the refresh, refresh async and Items properties.
   /// </summary>
-  public abstract partial class ListViewModel <TItem> : ViewModelBase
+  public abstract partial class ListViewModel<TItem> : ViewModelBase
     where TItem : class
   {
     //constants
@@ -24,15 +25,16 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    protected readonly IListItemsService<TItem> m_itemsService;
+    protected readonly IListService<TItem> m_itemsService;
 
     //constructors
-    public ListViewModel(IListItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
+    public ListViewModel(IListService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
     {
       m_itemsService = itemsService;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
-      CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => SelectedItem != null);
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null);
+      CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => SelectedItem != null);
     }
 
     //finalizers
@@ -42,8 +44,6 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-
-
     /// <summary>
     /// ParentId used when items displayed are dependent on a specific parent object.
     /// </summary>
@@ -78,64 +78,83 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     /// <summary>
-    /// List of items maintained by the view model, for large collections redefine this a.
+    /// List of items maintained by the view model, do note the following:
+    /// * for large collections this would need to be virtualized, e.g. minute bar data.
+    /// * if the m_itemsService is refreshed in a background worker thread you need to transfer the data in a synchronous manner to the view model which executes in the UI thread
+    ///   and the view model would most likely contain a deep copy of the data currently "in view" of the user with other data paged out (deleted) from the view model.
+    /// * the below definition assumes synchronous operation with the UI thread, needs to be redefined in large view models.
     /// </summary>
-    public virtual ObservableCollection<TItem> Items => m_itemsService.Items;
+    public virtual ObservableCollection<TItem> Items { get => m_itemsService.Items; set => m_itemsService.Items = value; }
 
     //methods
-    protected override Task OnRefreshAsync()
+    /// <summary>
+    /// Default list view model only supports synchronous refresh.
+    /// </summary>
+    public override void OnRefresh()
     {
-      return m_itemsService.RefreshAsync();
+      m_itemsService.Refresh();
     }
 
-    public async override void OnCopy(object? target)
+    /// <summary>
+    /// Default list view model only support synchronous refresh.
+    /// </summary>
+    /// <returns></returns>
+    public override Task OnRefreshAsync() => throw new NotImplementedException($"{GetType().ToString()} view model only supports synchronous refresh.");
+
+    public override Task OnCopyAsync(object? target)
     {
-      int count = 0;
-      if (target is TItem)
+      return Task.Run(() =>
       {
-        TItem item = (TItem)target;
-        Items.Remove(item);
-        await m_itemsService.CopyAsync(item);
-        SelectedItem = Items.FirstOrDefault();
-        count++;
-      }
-      else if (target is IList)
-      {
-        IList items = (IList)target;
-        foreach (TItem item in items)
+        int count = 0;
+        if (target is TItem)
         {
-          await m_itemsService.CopyAsync(item);
+          TItem item = (TItem)target;
+          Items.Remove(item);
+          m_itemsService.Copy(item);
+          SelectedItem = Items.FirstOrDefault();
           count++;
         }
+        else if (target is IList)
+        {
+          IList items = (IList)target;
+          foreach (TItem item in items)
+          {
+            m_itemsService.Copy(item);
+            count++;
+          }
 
-        await OnRefreshAsync();
-        SelectedItem = Items.FirstOrDefault();
-      }
+          OnRefresh();
+          SelectedItem = Items.FirstOrDefault();
+        }
+      });
     }
 
-    public async override void OnDelete(object? target)
+    public override Task OnDeleteAsync(object? target)
     {
-      int count = 0;
-      if (target is TItem)
+      return Task.Run(() =>
       {
-        TItem item = (TItem)target;
-        Items.Remove(item);
-        await m_itemsService.DeleteAsync(item);
-        SelectedItem = Items.FirstOrDefault();
-        count++;
-      }
-      else if (target is IList)
-      {
-        IList items = (IList)target;
-        foreach (TItem item in items)
+        int count = 0;
+        if (target is TItem)
         {
-          await m_itemsService.DeleteAsync(item);
+          TItem item = (TItem)target;
+          Items.Remove(item);
+          m_itemsService.Delete(item);
+          SelectedItem = Items.FirstOrDefault();
           count++;
         }
+        else if (target is IList)
+        {
+          IList items = (IList)target;
+          foreach (TItem item in items)
+          {
+            m_itemsService.Delete(item);
+            count++;
+          }
 
-        await OnRefreshAsync();
-        SelectedItem = Items.FirstOrDefault();
-      }
+          OnRefresh();
+          SelectedItem = Items.FirstOrDefault();
+        }
+      });
     }
 
     public override void OnClearSelection()
@@ -144,8 +163,7 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     //sub-classes can override these methods if they support import/export behavior
-    public override void OnImport() => throw new NotImplementedException();
-    public override void OnExport() => throw new NotImplementedException();
-    
+    public override Task OnImportAsync() => throw new NotImplementedException();
+    public override Task OnExportAsync() => throw new NotImplementedException();
   }
 }

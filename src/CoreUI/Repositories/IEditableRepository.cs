@@ -1,7 +1,7 @@
 ﻿namespace TradeSharp.Common
 {
   /// <summary>
-  /// Interface to allow editibility of the data store for a specific type using a specific key type. 
+  /// Functionl interface to allow editibility of the data store for a specific type using a specific key type. 
   /// </summary>
   public interface IEditableRepository<T, in TKey>
     where T : class
@@ -22,8 +22,8 @@
 
 
     //methods
-    Task<T> AddAsync(T item);
-    Task<T> UpdateAsync(T item);
-    Task<bool> DeleteAsync(T item);
+    bool Add(T item);
+    bool Update(T item);
+    bool Delete(T item);
   }
 }

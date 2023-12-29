@@ -52,6 +52,7 @@ namespace TradeSharp.WinCoreUI.Views
       {
         SetValue(s_parentIdProperty, value);
         ViewModel.ParentId = (System.Guid)value;
+        ViewModel.RefreshCommand.Execute(null);
       }
     }
 
@@ -68,7 +69,7 @@ namespace TradeSharp.WinCoreUI.Views
         MenuFlyoutItem menuItem = new MenuFlyoutItem
         {
           Text = dayOfWeek.ToString(),
-          Command = ViewModel.CopyCommand,
+          Command = ViewModel.CopyCommandAsync,
           CommandParameter = new KeyValuePair<DayOfWeek, IList>(dayOfWeek, m_sessions.SelectedItems)
         };
 
@@ -82,7 +83,7 @@ namespace TradeSharp.WinCoreUI.Views
         MenuFlyoutItem menuItem = new MenuFlyoutItem
         {
           Text = exchange.Name,
-          Command = ViewModel.CopyCommand,
+          Command = ViewModel.CopyCommandAsync,
           CommandParameter = new KeyValuePair<Guid, IList>(exchange.Id, m_sessions.SelectedItems)
         };
 

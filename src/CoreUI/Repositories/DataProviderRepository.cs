@@ -1,7 +1,6 @@
 ﻿using TradeSharp.Common;
 using CommunityToolkit.Mvvm.DependencyInjection;
 
-
 namespace TradeSharp.CoreUI.Repositories
 {
   /// <summary>
@@ -37,16 +36,16 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //methods
-    public Task<IPluginConfiguration?> GetItemAsync(string id)
+    public IPluginConfiguration? GetItem(string id)
     {
       IPluginConfiguration? dataProvider = null;
       m_configurationService.DataProviders.TryGetValue(id, out dataProvider);
-      return Task.FromResult(dataProvider);
+      return dataProvider;
     }
 
-    public Task<IEnumerable<IPluginConfiguration>> GetItemsAsync()
+    public IList<IPluginConfiguration> GetItems()
     {
-      return Task.Run(() => { return m_configurationService.DataProviders.Values.AsEnumerable(); } );
+      return m_configurationService.DataProviders.Values.ToList();
     }
   }
 }

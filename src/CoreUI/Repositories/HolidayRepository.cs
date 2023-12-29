@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Repositories
 {
@@ -36,32 +31,34 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
-    public Task<Holiday> AddAsync(Holiday item)
+    public bool Add(Holiday item)
     {
-      return Task.Run(() => { m_database.CreateHoliday(item); return item; });
+      m_database.CreateHoliday(item);
+      return true;
     }
 
-    public Task<bool> DeleteAsync(Holiday item)
+    public bool Delete(Holiday item)
     {
-      return Task.FromResult(m_database.DeleteHoliday(item.Id) != 0);
+      return m_database.DeleteHoliday(item.Id) != 0;
     }
 
-    public Task<Holiday?> GetItemAsync(Guid id)
+    public Holiday? GetItem(Guid id)
     {
-      return Task.FromResult<Holiday?>(m_database.GetHoliday(id));
+      return m_database.GetHoliday(id);
     }
 
-    public Task<IEnumerable<Holiday>> GetItemsAsync()
+    public IList<Holiday> GetItems()
     {
       //only select data if we have a valid parent otherwise return zero result
       if (ParentId != Guid.Empty)
-        return Task.FromResult<IEnumerable<Holiday>>(m_database.GetHolidays(ParentId));
-      return Task.FromResult<IEnumerable<Holiday>>(Array.Empty<Holiday>());
+        return m_database.GetHolidays(ParentId);
+      return Array.Empty<Holiday>();
     }
 
-    public Task<Holiday> UpdateAsync(Holiday item)
+    public bool Update(Holiday item)
     {
-      return Task.Run(() => { m_database.UpdateHoliday(item); return item; });
+      m_database.UpdateHoliday(item);
+      return true;
     }
 
     //properties

@@ -1,5 +1,5 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Repositories;
 using TradeSharp.Data;
 
@@ -49,7 +49,7 @@ namespace TradeSharp.CoreUI.Services
         {
           m_parent = value;
           OnPropertyChanged();
-          _ = RefreshAsync();
+          Refresh();
         }
       }
     }
@@ -64,32 +64,34 @@ namespace TradeSharp.CoreUI.Services
     public ObservableCollection<Exchange> Items { get; set; }
 
     //methods
-    public async Task<Exchange> AddAsync(Exchange item)
+    public bool Add(Exchange item)
     {
-      var result = await m_exchangeRepository.AddAsync(item);
+      var result = m_exchangeRepository.Add(item);
+      Items.Add(item);
+      SelectedItem = item;
+      SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
     }
 
-    public async Task<bool> DeleteAsync(Exchange item)
+    public bool Delete(Exchange item)
     {
-      bool result = await m_exchangeRepository.DeleteAsync(item);
-      return result;
+      return m_exchangeRepository.Delete(item); ;
     }
 
-    public async Task RefreshAsync()
+    public void Refresh()
     {
-      var result = await m_exchangeRepository.GetItemsAsync();
+      var result = m_exchangeRepository.GetItems();
       Items.Clear();
       foreach (var item in result) Items.Add(item);
     }
 
-    public Task<Exchange> UpdateAsync(Exchange item)
+    public bool Update(Exchange item)
     {
-      return m_exchangeRepository.UpdateAsync(item);
+      return m_exchangeRepository.Update(item);
     }
 
-    public Task<Exchange> CopyAsync(Exchange item) => throw new NotImplementedException();
-    public Task<ImportResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
-    public Task<ExportResult> ExportAsync(string filename) => throw new NotImplementedException();
+    public bool Copy(Exchange item) => throw new NotImplementedException();
+    public ImportResult Import(ImportSettings importSettings) => throw new NotImplementedException();
+    public ExportResult Export(string filename) => throw new NotImplementedException();
   }
 }

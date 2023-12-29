@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -33,6 +27,6 @@ namespace TradeSharp.CoreUI.Services
     ObservableCollection<ITreeNodeType<TKey, TItem>> Children { get; }
 
     //methods
-    Task RefreshAsync();
+    void Refresh();
   }
 }

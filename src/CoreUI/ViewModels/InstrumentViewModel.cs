@@ -1,11 +1,12 @@
 ﻿using CommunityToolkit.Common.Collections;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
   /// <summary>
-  /// View model for list of instruments.
+  /// View model for list of instruments, it supports incremental loading of the objects from the service.
   /// </summary>
   public class InstrumentViewModel : ListViewModel<Instrument>
   {
@@ -27,56 +28,60 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //interface implementations
-    public async override void OnAdd()
+    public override async void OnAdd()
     {
       Instrument? newInstrument = await m_dialogService.ShowCreateInstrumentAsync();
       if (newInstrument != null)
       {
-        await m_itemsService.AddAsync(newInstrument);
+        m_itemsService.Add(newInstrument);
         Items.Add(newInstrument);
         SelectedItem = newInstrument;
-        await OnRefreshAsync();
+        await OnRefreshAsync();   //TODO: This will not work for large collections.
       }
     }
 
-    public async override void OnUpdate()
+    public override async void OnUpdate()
     {
       if (SelectedItem != null)
       {
         var updatedSession = await m_dialogService.ShowUpdateInstrumentAsync(SelectedItem);
         if (updatedSession != null)
         {
-          await m_itemsService.UpdateAsync(updatedSession);
-          await OnRefreshAsync();
+          m_itemsService.Update(updatedSession);
+          await OnRefreshAsync(); //TODO: This will not work for large collections.
         }
       }
     }
 
-    public override async void OnImport()
+    public override Task OnImportAsync()
     {
-      ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentsAsync();
+      return Task.Run(async () => {
+        ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentsAsync();
 
-      if (importSettings != null)
-      {
-        ImportResult importResult = await m_itemsService.ImportAsync(importSettings);
-        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-        await OnRefreshAsync();
-      }
+        if (importSettings != null)
+        {
+          ImportResult importResult = m_itemsService.Import(importSettings);
+          await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
+          await OnRefreshAsync();
+        }
+      });
     }
 
-    public override async void OnExport()
+    public override Task OnExportAsync()
     {
-      string? filename = await m_dialogService.ShowExportInstrumentsAsync();
+      return Task.Run(async () => {
+        string? filename = await m_dialogService.ShowExportInstrumentsAsync();
 
-      if (filename != null)
-      {
-        ExportResult exportResult = await m_itemsService.ExportAsync(filename);
-        await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
-      }
+        if (filename != null)
+        {
+          ExportResult exportResult = m_itemsService.Export(filename);
+          await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
+        }
+      });
     }
 
     //properties
-
+    public override ObservableCollection<Instrument> Items { get => m_itemsService.Items; set => m_itemsService.Items = value; }
 
     //methods
 

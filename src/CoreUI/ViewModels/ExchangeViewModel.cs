@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 
@@ -26,6 +27,7 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
     }
 
     //finalizers
@@ -38,28 +40,25 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //methods
-    public async override void OnAdd()
+    public override async void OnAdd()
     {
       Exchange? exchange = await m_dialogService.ShowCreateExchangeAsync();
       if (exchange != null)
       {
-        await m_itemsService.AddAsync(exchange);
+        m_itemsService.Add(exchange);
         SelectedItem = exchange;
         Items.Add(exchange);
-        await OnRefreshAsync();
       }
     }
 
-    public async override void OnUpdate()
+    public override async void OnUpdate()
     {
       if (SelectedItem != null)
       {
         var updatedExchange = await m_dialogService.ShowUpdateExchangeAsync(SelectedItem);
         if (updatedExchange != null)
-        {
-          await m_itemsService.UpdateAsync(updatedExchange);
-          await OnRefreshAsync();
-        }
+          m_itemsService.Update(updatedExchange);
+        //TBD: Might have to update the item in the items list to make it reflect changes.
       }
     }
   }

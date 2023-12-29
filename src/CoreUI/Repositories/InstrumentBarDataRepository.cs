@@ -37,52 +37,55 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
-    public Task<IBarData?> GetItemAsync(DateTime id)
+    public IBarData? GetItem(DateTime id)
     {
       throwIfNotKeyed();
-      return Task.FromResult(m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id, PriceDataType.All)); //all data is always returned and filtered down in service/view model/UI
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id, PriceDataType.All); //all data is always returned and filtered down in service/view model/UI
     }
 
-    public Task<IEnumerable<IBarData>> GetItemsAsync()
+    public IList<IBarData> GetItems()
     {
       throwIfNotKeyed();
-      return Task.FromResult<IEnumerable<IBarData>>(m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue, PriceDataType.All)); //all data is always returned and filtered down in service/view model/UI
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue, PriceDataType.All); //all data is always returned and filtered down in service/view model/UI
     }
 
-    public Task<IEnumerable<IBarData>> GetItemsAsync(DateTime start, DateTime end)
+    public IList<IBarData> GetItems(DateTime start, DateTime end)
     {
       throwIfNotKeyed();
-      return Task.FromResult<IEnumerable<IBarData>>(m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end, PriceDataType.All)); //all data is always returned and filtered down in service/view model/UI
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end, PriceDataType.All); //all data is always returned and filtered down in service/view model/UI
     }
 
-    public Task<IEnumerable<IBarData>> GetItemsAsync(int index, int count)
+    public IList<IBarData> GetItems(int index, int count)
     {
       throwIfNotKeyed();
-      return Task.FromResult<IEnumerable<IBarData>>(m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, index, count, PriceDataType.All));
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, index, count, PriceDataType.All);
     }
 
-    public Task<IBarData> AddAsync(IBarData item)
+    public bool Add(IBarData item)
     {
       throwIfNotKeyed();
-      return Task.Run(() => { m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); return item; } ); //TODO: Update count.
+      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); //TODO: Update count.
+      return true; 
     }
 
-    public Task<IBarData> UpdateAsync(IBarData item)
+    public bool Update(IBarData item)
     {
       throwIfNotKeyed();
-      return Task.Run(() => { m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); return item; }); //TODO: Update count.
+      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); //TODO: Update count.return
+      return true;
     }
 
-    public Task<long> UpdateAsync(IList<IBarData> items)
+    public int Update(IList<IBarData> items)
     {
       throwIfNotKeyed();
-      return Task.Run(() => { m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, items); return (long)items.Count; }); //TODO: Update count.
+      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, items);
+      return items.Count; //TODO: Update count.
     }
 
-    public Task<bool> DeleteAsync(IBarData item)
+    public bool Delete(IBarData item)
     {
       throwIfNotKeyed();
-      return Task.FromResult(m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime, item.Synthetic) != 0); //TODO: Update count.
+      return m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime, item.Synthetic) != 0; //TODO: Update count.
     }
 
     //properties

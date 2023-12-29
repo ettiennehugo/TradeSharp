@@ -26,8 +26,8 @@ namespace TradeSharp.CoreUI.Repositories
     bool HasMoreItems { get; }
 
     //methods
-    Task<long> UpdateAsync(IList<T> items);   //more performant mass update of items
-    Task<IEnumerable<T>> GetItemsAsync(DateTime start, DateTime end);   //loads all the data within a given date/time range (can be slow with big windows!!!)
-    Task<IEnumerable<T>> GetItemsAsync(int index, int count);   //loads a spesific number of items from the database from a specific index (used for paged loading of large amounts of data)
+    int Update(IList<T> items);   //mass update of items
+    IList<T> GetItems(DateTime start, DateTime end);   //loads all the data within a given date/time range (can be slow with big windows!!!)
+    IList<T> GetItems(int index, int count);   //loads a spesific number of items from the database from a specific index (used for paged loading of large amounts of data)
   }
 }

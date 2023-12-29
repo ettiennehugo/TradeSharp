@@ -12,7 +12,7 @@
   <Grid x:Name="m_main" RowDefinitions="Auto, *">
     <StackPanel x:Name="m_toolbar" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
-        <AppBarButton x:Name="m_buttonRefresh" Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarButton x:Name="m_buttonRefresh" Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommand}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
         <AppBarSeparator/>
         <AppBarButton x:Name="m_buttonAdd" Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add session" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonEdit" Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update session" IsCompact="True"/>

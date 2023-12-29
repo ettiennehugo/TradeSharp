@@ -67,6 +67,12 @@ namespace TradeSharp.Data
   }
 
   /// <summary>
+  /// Filter used to query data from the database, filter is currently just a list of key/value pairs. If the value is a string type if can
+  /// contain wildcards to match multiple values.
+  /// </summary>
+  public class Filter : List<Tuple<string, object>> { }
+
+  /// <summary>
   /// Base class for data store service objects.
   /// </summary>
   public partial class DataObject : ObservableObject
@@ -431,7 +437,7 @@ namespace TradeSharp.Data
   /// <summary>
   /// Storage base class for instrument data.
   /// </summary>
-  public partial class Instrument : DataObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>
+  public partial class Instrument : DataObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>, IComparable
   {
     public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds): base(id, attributeSet, tag)
     {
@@ -473,6 +479,13 @@ namespace TradeSharp.Data
       InceptionDate = item.InceptionDate;
       PrimaryExchangeId = item.PrimaryExchangeId;
       SecondaryExchangeIds = item.SecondaryExchangeIds;
+    }
+
+    public int CompareTo(object? o)
+    {
+      if (o == null || !(o is Instrument)) return 1;
+      Instrument instrument = (Instrument)o;
+      return Ticker.CompareTo(instrument.Ticker);
     }
   }
 

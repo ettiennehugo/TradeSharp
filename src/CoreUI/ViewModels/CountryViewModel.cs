@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Common;
+﻿using TradeSharp.Common;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -32,13 +28,14 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
     }
 
     //finalizers
 
 
     //interface implementations
-    public async override void OnAdd()
+    public override async void OnAdd()
     {
       CountryInfo? country = await m_dialogService.ShowSelectCountryAsync();
       if (country != null)
@@ -48,10 +45,10 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_dialogService.ShowPopupMessageAsync("The country you are trying to add already exists in the database.");
         else
         {
-          await m_itemsService.AddAsync(newCountry);
+          m_itemsService.Add(newCountry);
           SelectedItem = newCountry;
           Items.Add(newCountry);
-          await OnRefreshAsync();
+          OnRefresh();
         }
       }
     }
@@ -62,6 +59,7 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     //properties
+
 
 
     //methods

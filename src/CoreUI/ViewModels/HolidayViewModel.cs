@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -27,11 +23,12 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //constructors
-    public HolidayViewModel(IHolidayService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) 
+    public HolidayViewModel(IHolidayService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       AddCommand = new RelayCommand(OnAdd, () => ParentId != Guid.Empty);
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
     }
 
     //finalizers
@@ -44,7 +41,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //methods
-    public async override void OnAdd()
+    public override async void OnAdd()
     {
       Holiday? newHoliday = await m_dialogService.ShowCreateHolidayAsync(m_itemsService.ParentId);
       if (newHoliday != null)
@@ -53,24 +50,21 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_dialogService.ShowPopupMessageAsync("The holiday you are trying to add already exists in the database.");
         else
         {
-          await m_itemsService.AddAsync(newHoliday);
+          m_itemsService.Add(newHoliday);
           Items.Add(newHoliday);
           SelectedItem = newHoliday;
-          await OnRefreshAsync();
         }
       }
     }
 
-    public async override void OnUpdate()
+    public override async void OnUpdate()
     {
       if (SelectedItem != null)
       {
         var updatedHoliday = await m_dialogService.ShowUpdateHolidayAsync(SelectedItem);
         if (updatedHoliday != null)
-        {
-          await m_itemsService.UpdateAsync(updatedHoliday);
-          await OnRefreshAsync();
-        }
+          m_itemsService.Update(updatedHoliday);
+        //TBD: Will need a refresh of the list item here to make sure the UI updates.
       }
     }
   }

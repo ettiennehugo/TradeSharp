@@ -107,13 +107,14 @@ namespace TradeSharp.WinDataManager.ViewModels
       }
     }
 
+    public override void OnRefresh() => throw new NotImplementedException();
     public override void OnAdd() => throw new NotImplementedException();
     public override void OnUpdate() => throw new NotImplementedException();
-    public override void OnDelete(object target) => throw new NotImplementedException();
-    protected override Task OnRefreshAsync() => throw new NotImplementedException();
+    public override Task OnDeleteAsync(object target) => throw new NotImplementedException();
+    public override Task OnRefreshAsync() => throw new NotImplementedException();
     public override void OnClearSelection() => throw new NotImplementedException();
-    public override void OnCopy(object target) => throw new NotImplementedException();
-    public override void OnImport() => throw new NotImplementedException();
-    public override void OnExport() => throw new NotImplementedException();
+    public override Task OnCopyAsync(object target) => throw new NotImplementedException();
+    public override Task OnImportAsync() => throw new NotImplementedException();
+    public override Task OnExportAsync() => throw new NotImplementedException();
   }
 }

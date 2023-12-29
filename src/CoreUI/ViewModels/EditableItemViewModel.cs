@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
-    /// <summary>
-    /// Extension of the read-only ItemViewModel that allows editing of the item, makes a deep copy of the item (into EditItem) when user selects to edit the item, allows modification and then
-    /// saves the item or cancels editing.
-    /// </summary>
-    public abstract class EditableItemViewModel<TItem> : ItemViewModel<TItem>, IEditableObject
+  /// <summary>
+  /// Extension of the read-only ItemViewModel that allows editing of the item, makes a deep copy of the item (into EditItem) when user selects to edit the item, allows modification and then
+  /// saves the item or cancels editing.
+  /// </summary>
+  public abstract class EditableItemViewModel<TItem> : ItemViewModel<TItem>, IEditableObject
       where TItem : class
   {
     //constants
@@ -27,12 +21,12 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    protected readonly IListItemsService<TItem> m_itemsService;
+    protected readonly IListService<TItem> m_itemsService;
     private bool m_isEditMode;
     private TItem? m_editItem;
 
     //constructors
-    public EditableItemViewModel(IListItemsService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService.SelectedItem, navigationService, dialogService)
+    public EditableItemViewModel(IListService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService.SelectedItem, navigationService, dialogService)
     {
       m_itemsService = itemsService;
 
@@ -57,7 +51,6 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-    public RelayCommand AddCommand { get; }
     public RelayCommand EditCommand { get; }
     public RelayCommand SaveCommand { get; }
     public RelayCommand CancelCommand { get; }
@@ -105,7 +98,7 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       IsEditMode = false;
       EditItem = default;
-      await m_itemsService.RefreshAsync();
+      m_itemsService.Refresh();
       await OnEndEditAsync();
     }
 
@@ -114,7 +107,7 @@ namespace TradeSharp.CoreUI.ViewModels
       await OnSaveAsync();
       EditItem = default;
       IsEditMode = false;
-      await m_itemsService.RefreshAsync();
+      m_itemsService.Refresh();
       await OnEndEditAsync();
     }
   }

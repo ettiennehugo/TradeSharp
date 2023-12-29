@@ -6,14 +6,7 @@ namespace TradeSharp.CoreUI.Services
   /// Interface to be implemented by services that allow the manipulation of items in a list fashion. Services are defined to support dependency injection in MVVM.
   /// The service overall supports viewing all the items and then viewing the details of a single item (SelectedItem)
   /// </summary>
-  
-
-
-  //TODO: See whether you can make a paged version of this list.
-
-
-
-  public interface IListItemsService<T>
+  public interface IListService<T>
   {
     //constants
 
@@ -30,18 +23,18 @@ namespace TradeSharp.CoreUI.Services
     //properties
     Guid ParentId { get; set; }
     T? SelectedItem { get; set; }
-    ObservableCollection<T> Items { get; }
+    ObservableCollection<T> Items { get; set; }
 
     //events
     event EventHandler<T?>? SelectedItemChanged;
 
     //methods
-    Task RefreshAsync();
-    Task<T> AddAsync(T item);
-    Task<T> UpdateAsync(T item);
-    Task<bool> DeleteAsync(T item);
-    Task<T> CopyAsync(T item);
-    Task<ImportResult> ImportAsync(ImportSettings importSettings);
-    Task<ExportResult> ExportAsync(string filename);
+    void Refresh();
+    bool Add(T item);
+    bool Update(T item);
+    bool Delete(T item);
+    bool Copy(T item);
+    ImportResult Import(ImportSettings importSettings);
+    ExportResult Export(string filename);
   }
 }

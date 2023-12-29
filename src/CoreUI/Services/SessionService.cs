@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.CoreUI.Repositories;
 using TradeSharp.Data;
+using TradeSharp.CoreUI.Common;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -54,7 +50,7 @@ namespace TradeSharp.CoreUI.Services
           m_parent = value;
           m_sessionRepository.ParentId = value;
           OnPropertyChanged();
-          _ = RefreshAsync();
+          Refresh();
         }
       }
     }
@@ -69,39 +65,36 @@ namespace TradeSharp.CoreUI.Services
     public ObservableCollection<Session> Items { get; set; }
 
     //methods
-    public async Task<Session> AddAsync(Session item)
-    {
-      var result = await m_sessionRepository.AddAsync(item);
-      return result;
+    public bool Add(Session item)
+    {     
+      return m_sessionRepository.Add(item);
     }
 
-    public async Task<bool> DeleteAsync(Session item)
+    public bool Delete(Session item)
     {
-      bool result = await m_sessionRepository.DeleteAsync(item);
-      return result;
+      return m_sessionRepository.Delete(item);
     }
 
-    public async Task RefreshAsync()
+    public void Refresh()
     {
-      var result = await m_sessionRepository.GetItemsAsync();
+      var result = m_sessionRepository.GetItems();
       Items.Clear();
       foreach (var item in result) Items.Add(item);
     }
 
-    public Task<Session> UpdateAsync(Session item)
+    public bool Update(Session item)
     {
-      return m_sessionRepository.UpdateAsync(item);
+      return m_sessionRepository.Update(item);
     }
 
-    public async Task<Session> CopyAsync(Session item)
+    public bool Copy(Session item)
     {
       Session clone = (Session)item.Clone();
       clone.Id = Guid.NewGuid();
-      var result = await m_sessionRepository.AddAsync(clone);
-      return result;
+      return m_sessionRepository.Add(clone);
     }
 
-    public Task<ImportResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
-    public Task<ExportResult> ExportAsync(string filename) => throw new NotImplementedException();
+    public ImportResult Import(ImportSettings importSettings) => throw new NotImplementedException();
+    public ExportResult Export(string filename) => throw new NotImplementedException();
   }
 }

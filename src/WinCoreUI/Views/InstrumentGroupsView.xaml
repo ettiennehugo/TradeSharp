@@ -12,19 +12,19 @@
   <Grid x:Name="m_main" RowDefinitions="Auto, *">
     <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
-        <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommandAsync}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
+        <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommand}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
         <AppBarButton Icon="Clear" Command="{x:Bind ViewModel.ClearSelectionCommand}" ToolTipService.ToolTip="Clear selection" IsCompact="True"/>
         <AppBarSeparator/>
         <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add instrument group" IsCompact="True"/>
         <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update instrument group" IsCompact="True"/>
-        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" ToolTipService.ToolTip="Delete instrument group" IsCompact="True"/>
+        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommandAsync}" ToolTipService.ToolTip="Delete instrument group" IsCompact="True"/>
         <AppBarSeparator/>
-        <AppBarButton Command="{x:Bind ViewModel.ImportCommand}" ToolTipService.ToolTip="Import instrument groups" IsCompact="True">
+        <AppBarButton Command="{x:Bind ViewModel.ImportCommandAsync}" ToolTipService.ToolTip="Import instrument groups" IsCompact="True">
           <AppBarButton.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE802;"/>
           </AppBarButton.Icon>
         </AppBarButton>
-        <AppBarButton Command="{x:Bind ViewModel.ExportCommand}" ToolTipService.ToolTip="Export instrument groups" IsCompact="True">
+        <AppBarButton Command="{x:Bind ViewModel.ExportCommandAsync}" ToolTipService.ToolTip="Export instrument groups" IsCompact="True">
           <AppBarButton.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE803;"/>
           </AppBarButton.Icon>

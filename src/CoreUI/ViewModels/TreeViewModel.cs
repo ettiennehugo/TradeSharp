@@ -1,13 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
@@ -36,6 +30,7 @@ namespace TradeSharp.CoreUI.ViewModels
       m_itemsService = itemService;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
       ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null | SelectedNodes.Count > 0);
     }
 
@@ -79,7 +74,7 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     /// <summary>
-    /// Returns the set of defined nodes.
+    /// Returns the set of defined nodes in the tree.
     /// </summary>
     public ObservableCollection<ITreeNodeType<TKey, TItem>> Nodes => m_itemsService.Nodes;
 
@@ -90,60 +85,77 @@ namespace TradeSharp.CoreUI.ViewModels
       SelectedNodes.Clear();
     }
 
-    protected override async Task OnRefreshAsync()
+    //methods
+    /// <summary>
+    /// Default tree view model only supports synchronous refresh.
+    /// </summary>
+    public override void OnRefresh()
     {
-      await m_itemsService.RefreshAsync();
+      m_itemsService.Refresh();
     }
 
-    public override async void OnDelete(object? target)
-    {
-      int count = 0;
+    /// <summary>
+    /// Default tree view model only support synchronous refresh.
+    /// </summary>
+    /// <returns></returns>
+    public override Task OnRefreshAsync() => throw new NotImplementedException($"{GetType().ToString()} view model only supports synchronous refresh.");
 
-      if (SelectedNodes.Count > 0)
-      {
-        foreach (ITreeNodeType<TKey, TItem> node in SelectedNodes)
+    public override Task OnDeleteAsync(object? target)
+    {
+      return Task.Run(async () => {
+        int count = 0;
+
+        if (SelectedNodes.Count > 0)
         {
-          await m_itemsService.DeleteAsync(node);
+          foreach (ITreeNodeType<TKey, TItem> node in SelectedNodes)
+          {
+            m_itemsService.Delete(node);
+            count++;
+          }
+        }
+        else if (SelectedNode != null)
+        {
+          m_itemsService.Delete(SelectedNode);
           count++;
         }
-      }
-      else if (SelectedNode != null)
-      {
-        await m_itemsService.DeleteAsync(SelectedNode);
-        count++;
-      }
 
-      await OnRefreshAsync();
-      SelectedNode = Nodes.FirstOrDefault();
+        OnRefresh();
+        SelectedNode = Nodes.FirstOrDefault();
 
-      IDialogService dialogService = Ioc.Default.GetRequiredService<IDialogService>();
-      if (count > 0)
-        await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} nodes with it's children");
-      else
-        await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "Failure", $"Deleted {count} nodes");
+        IDialogService dialogService = Ioc.Default.GetRequiredService<IDialogService>();
+        if (count > 0)
+          await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} nodes with it's children");
+        else
+          await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "Failure", $"Deleted {count} nodes");
+      });
     }
 
-    public override async void OnImport()
+    public override Task OnImportAsync()
     {
-      ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
+      return Task.Run(async () => {
+        ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
 
-      if (importSettings != null)
-      {
-        ImportResult importResult = await m_itemsService.ImportAsync(importSettings);
-        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-        await OnRefreshAsync();
-      }
+        if (importSettings != null)
+        {
+          ImportResult importResult = m_itemsService.Import(importSettings);
+          await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
+          OnRefresh();
+        }
+
+      });
     }
 
-    public override async void OnExport()
+    public override Task OnExportAsync()
     {
-      string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
+      return Task.Run(async () => {
+        string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
 
-      if (filename != null)
-      {
-        ExportResult exportResult = await m_itemsService.ExportAsync(filename);
-        await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
-      }
+        if (filename != null)
+        {
+          ExportResult exportResult = m_itemsService.Export(filename);
+          await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
+        }
+      });
     }
   }
 }

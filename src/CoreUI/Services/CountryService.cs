@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Repositories;
-using System.Security.Principal;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
 {
-    /// <summary>
-    /// Observable service class for country objects.
-    /// </summary>
-    public partial class CountryService : ObservableObject, ICountryService
+  /// <summary>
+  /// Observable service class for country objects.
+  /// </summary>
+  public partial class CountryService : ObservableObject, ICountryService
   {
     //constants
 
@@ -41,17 +35,18 @@ namespace TradeSharp.CoreUI.Services
 
 
     //interface implementations
-    public async Task<Country> AddAsync(Country item)
+    public bool Add(Country item)
     {
-      var result = await m_countryRepository.AddAsync(item);
-      SelectedItem = result;
+      var result = m_countryRepository.Add(item);
+      Items.Add(item);
+      SelectedItem = item;
       SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
     }
 
-    public async Task<bool> DeleteAsync(Country item)
+    public bool Delete(Country item)
     {
-      bool result = await m_countryRepository.DeleteAsync(item);
+      bool result = m_countryRepository.Delete(item);
       if (item == SelectedItem)
       {
         SelectedItemChanged?.Invoke(this, SelectedItem);
@@ -60,20 +55,25 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
-    public async Task RefreshAsync()
+    public void Refresh()
     {
-      var result = await m_countryRepository.GetItemsAsync();
+      var result = m_countryRepository.GetItems();
       Items.Clear();
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
-    public Task<Country> UpdateAsync(Country item) => m_countryRepository.UpdateAsync(item);
+    public bool Update(Country item)
+    {
+      var result = m_countryRepository.Update(item);
+      SelectedItem = item;
+      return result;
+    }
 
-    public Task<Country> CopyAsync(Country item) => throw new NotImplementedException();
-    public Task<ImportResult> ImportAsync(ImportSettings importSettings) => throw new NotImplementedException();
-    public Task<ExportResult> ExportAsync(string filename) => throw new NotImplementedException();
+    public bool Copy(Country item) => throw new NotImplementedException();
+    public ImportResult Import(ImportSettings importSettings) => throw new NotImplementedException();
+    public ExportResult Export(string filename) => throw new NotImplementedException();
 
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } } //countries to not have a parent

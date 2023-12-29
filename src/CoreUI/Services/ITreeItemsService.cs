@@ -32,14 +32,14 @@ namespace TradeSharp.CoreUI.Services
     event EventHandler<ITreeNodeType<TKey, TItem>?>? SelectedNodeChanged;
 
     //methods
-    Task RefreshAsync();
-    Task RefreshAsync(TKey parentKey);
-    Task RefreshAsync(ITreeNodeType<TKey, TItem> parentNode);
-    Task<ITreeNodeType<TKey, TItem>> AddAsync(ITreeNodeType<TKey, TItem> item);
-    Task<ITreeNodeType<TKey, TItem>> UpdateAsync(ITreeNodeType<TKey, TItem> item);
-    Task<bool> DeleteAsync(ITreeNodeType<TKey, TItem> item);
-    Task<ITreeNodeType<TKey, TItem>> CopyAsync(ITreeNodeType<TKey, TItem> item);
-    Task<ImportResult> ImportAsync(ImportSettings importSettings);
-    Task<ExportResult> ExportAsync(string filename);
+    void Refresh();
+    void Refresh(TKey parentKey);
+    void Refresh(ITreeNodeType<TKey, TItem> parentNode);
+    bool Add(ITreeNodeType<TKey, TItem> item);
+    bool Update(ITreeNodeType<TKey, TItem> item);
+    bool Delete(ITreeNodeType<TKey, TItem> item);
+    bool Copy(ITreeNodeType<TKey, TItem> item);
+    ImportResult Import(ImportSettings importSettings);
+    ExportResult Export(string filename);
   }
 }

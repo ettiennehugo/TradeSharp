@@ -1,13 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -39,19 +32,18 @@ namespace TradeSharp.CoreUI.Services
       Id = Item.Id;
       ParentId = Item.ParentId;
       Children = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
-      _ = RefreshAsync();
+      Refresh();
     }
 
     //finalizers
 
 
     //interface implementations
-    public Task RefreshAsync()
+    public void Refresh()
     {
       Children.Clear();
       foreach (InstrumentGroup instrumentGroup in m_instrumentGroupService.Items)
         if (instrumentGroup.ParentId == Id) Children.Add(new InstrumentGroupNodeType(m_instrumentGroupService, instrumentGroup));
-      return Task.CompletedTask;
     }
 
     //properties

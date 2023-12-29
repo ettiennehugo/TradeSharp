@@ -1,8 +1,8 @@
 namespace CoreUI.Test.ViewModels
 {
-    [TestClass]
-    public class CountryViewModel
-    {
+  [TestClass]
+  public class CountryViewModel
+  {
 
     //constants
 
@@ -17,10 +17,16 @@ namespace CoreUI.Test.ViewModels
 
 
     //constructors
+    public CountryViewModel()
+    {
 
+    }
 
     //finalizers
+    ~CountryViewModel()
+    {
 
+    }
 
     //interface implementations
 
@@ -29,13 +35,10 @@ namespace CoreUI.Test.ViewModels
 
 
     //methods
-
-
-
-
     [TestMethod]
-        public void TestMethod1()
-        {
-        }
+    public void TestMethod1()
+    {
+
     }
+  }
 }

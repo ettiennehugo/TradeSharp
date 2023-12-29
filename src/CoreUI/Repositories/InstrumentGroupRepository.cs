@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Repositories
 {
@@ -34,29 +29,31 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
-    public Task<InstrumentGroup> AddAsync(InstrumentGroup item)
+    public bool Add(InstrumentGroup item)
     {
-      return Task.Run(() => { m_database.CreateInstrumentGroup(item); return item; });
+      m_database.CreateInstrumentGroup(item);
+      return true;
     }
 
-    public Task<bool> DeleteAsync(InstrumentGroup item)
+    public bool Delete(InstrumentGroup item)
     {
-      return Task.FromResult(m_database.DeleteInstrumentGroup(item.Id) != 0);
+      return m_database.DeleteInstrumentGroup(item.Id) != 0;
     }
 
-    public Task<InstrumentGroup?> GetItemAsync(Guid id)
+    public InstrumentGroup? GetItem(Guid id)
     {
-      return Task.FromResult<InstrumentGroup?>(m_database.GetInstrumentGroup(id));
+      return m_database.GetInstrumentGroup(id);
     }
 
-    public Task<IEnumerable<InstrumentGroup>> GetItemsAsync()
+    public IList<InstrumentGroup> GetItems()
     {
-      return Task.FromResult<IEnumerable<InstrumentGroup>>(m_database.GetInstrumentGroups());
+      return m_database.GetInstrumentGroups();
     }
 
-    public Task<InstrumentGroup> UpdateAsync(InstrumentGroup item)
+    public bool Update(InstrumentGroup item)
     {
-      return Task.Run(() => { m_database.UpdateInstrumentGroup(item); return item; });
+      m_database.UpdateInstrumentGroup(item);
+      return true;
     }
 
 

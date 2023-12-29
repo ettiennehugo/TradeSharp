@@ -5,5 +5,5 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Concrete definition of session service interface.
   /// </summary>
-  public interface ISessionService : IListItemsService<Session> { }
+  public interface ISessionService : IListService<Session> { }
 }

@@ -55,7 +55,6 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       if (ViewModel.Items.Count == 0) ViewModel.RefreshCommandAsync.ExecuteAsync(null);
-      m_instruments.ItemsSource = ViewModel.Items;
     }
 
     public bool filter(Instrument instrument)

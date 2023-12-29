@@ -29,29 +29,31 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
-    public Task<Instrument> AddAsync(Instrument item)
+    public bool Add(Instrument item)
     {
-      return Task.Run(() => { m_database.CreateInstrument(item); return item; });
+      m_database.CreateInstrument(item);
+      return true;
     }
 
-    public Task<bool> DeleteAsync(Instrument item)
+    public bool Delete(Instrument item)
     {
-      return Task.FromResult(m_database.DeleteInstrument(item) != 0);
+      return m_database.DeleteInstrument(item) != 0;
     }
 
-    public Task<Instrument?> GetItemAsync(Guid id)
+    public Instrument? GetItem(Guid id)
     {
-      return Task.FromResult<Instrument?>(m_database.GetInstrument(id));
+      return m_database.GetInstrument(id);
     }
 
-    public Task<IEnumerable<Instrument>> GetItemsAsync()
+    public IList<Instrument> GetItems()
     {
-      return Task.FromResult<IEnumerable<Instrument>>(m_database.GetInstruments());
+      return m_database.GetInstruments();
     }
 
-    public Task<Instrument> UpdateAsync(Instrument item)
+    public bool Update(Instrument item)
     {
-      return Task.Run(() => { m_database.UpdateInstrument(item); return item; });
+      m_database.UpdateInstrument(item);
+      return true;
     }
 
     //properties

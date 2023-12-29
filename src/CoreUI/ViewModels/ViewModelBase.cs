@@ -5,8 +5,10 @@ using TradeSharp.CoreUI.Services;
 namespace TradeSharp.CoreUI.ViewModels
 {
   /// <summary>
-  /// Base class for all view models, sets up the general interface through which view models operate with the
-  /// UI components using bindings.
+  /// Base class for all view models, the view model exists in the UI Thread and is responsible to make sure that the
+  /// UI thread correctly represents the state of the model that can run in the UI thread or a background thread. Refresh
+  /// operations specifically need to run in the background if they are long running operations while quick refreshes of
+  /// only a few items can run in the UI thread to keep things simple.
   /// </summary>
   public abstract partial class ViewModelBase : ObservableObject
   {
@@ -20,7 +22,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    protected readonly INavigationService m_navigationService;
+    protected readonly INavigationService m_navigationService;    //TBD: Remove this service, it is not used.
     protected readonly IDialogService m_dialogService;
 
     //constructors
@@ -32,12 +34,13 @@ namespace TradeSharp.CoreUI.ViewModels
       AddCommand = new RelayCommand(OnAdd);
       UpdateCommand = new RelayCommand(OnUpdate);
       DeleteCommand = new RelayCommand<object?>(OnDelete);
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync);
       ClearSelectionCommand = new RelayCommand(OnClearSelection);
-      CopyCommand = new RelayCommand<object?>(OnCopy);
+      CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync);
       RefreshCommand = new RelayCommand(OnRefresh);
       RefreshCommandAsync = new AsyncRelayCommand(OnRefreshAsync);
-      ImportCommand = new RelayCommand(OnImport);
-      ExportCommand = new RelayCommand(OnExport);
+      ImportCommandAsync = new AsyncRelayCommand(OnImportAsync);
+      ExportCommandAsync = new AsyncRelayCommand(OnExportAsync);
     }
 
     //finalizers
@@ -53,28 +56,31 @@ namespace TradeSharp.CoreUI.ViewModels
     public RelayCommand AddCommand { get; internal set; }
     public RelayCommand UpdateCommand { get; internal set; }
     public RelayCommand<object?> DeleteCommand { get; internal set; }
+    public AsyncRelayCommand<object?> DeleteCommandAsync { get; internal set; } //use async delete to allow long running deletes to run in the background
     public RelayCommand ClearSelectionCommand { get; internal set; }
     public RelayCommand RefreshCommand { get; internal set; }
-    public AsyncRelayCommand RefreshCommandAsync { get; internal set; }
-    public RelayCommand<object?> CopyCommand { get; internal set; }
-    public RelayCommand ImportCommand { get; internal set; }
-    public RelayCommand ExportCommand { get; internal set; }
+    public AsyncRelayCommand RefreshCommandAsync { get; internal set; } //use async refresh to allow long running refreshes to run in the background
+    public AsyncRelayCommand<object?> CopyCommandAsync { get; internal set; }
+    public AsyncRelayCommand ImportCommandAsync { get; internal set; }
+    public AsyncRelayCommand ExportCommandAsync { get; internal set; }
 
     //methods
     public abstract void OnAdd();
     public abstract void OnUpdate();
-    public abstract void OnDelete(object? target);
     
-    public virtual async void OnRefresh()
+    public virtual async void OnDelete(object? target)
     {
-      await OnRefreshAsync();
+      await OnDeleteAsync(target);
     }
+    public abstract Task OnDeleteAsync(object? target);
+
+    public abstract void OnRefresh();
+    public abstract Task OnRefreshAsync();
     
-    protected abstract Task OnRefreshAsync();
     public abstract void OnClearSelection();
-    public abstract void OnCopy(object? target);
-    public abstract void OnImport();
-    public abstract void OnExport();
+    public abstract Task OnCopyAsync(object? target);
+    public abstract Task OnImportAsync();
+    public abstract Task OnExportAsync();
 
     /// <summary>
     /// Run refresh of the command states, call this method during any propery updates to ensure commands
@@ -88,9 +94,9 @@ namespace TradeSharp.CoreUI.ViewModels
       ClearSelectionCommand.NotifyCanExecuteChanged();
       RefreshCommand.NotifyCanExecuteChanged();
       RefreshCommandAsync.NotifyCanExecuteChanged();
-      CopyCommand.NotifyCanExecuteChanged();
-      ImportCommand.NotifyCanExecuteChanged();
-      ExportCommand.NotifyCanExecuteChanged();
+      CopyCommandAsync.NotifyCanExecuteChanged();
+      ImportCommandAsync.NotifyCanExecuteChanged();
+      ExportCommandAsync.NotifyCanExecuteChanged();
     }
   }
 }

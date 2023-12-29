@@ -1,14 +1,13 @@
-﻿using System.Globalization;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Repositories
 {
-    /// <summary>
-    /// Decorator for the database to facilitate operations on countries running parallel to the UI thread.
-    /// </summary>
-    public class CountryRepository : ObservableObject, ICountryRepository
+  /// <summary>
+  /// Decorator for the database to facilitate operations on countries running parallel to the UI thread.
+  /// </summary>
+  public class CountryRepository : ICountryRepository
   {
     //constants
 
@@ -33,27 +32,28 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
-    public Task<Country> AddAsync(Country item)
+    public bool Add(Country item)
     {
-      return Task.Run(() => { m_database.CreateCountry(item); return item; });
+      m_database.CreateCountry(item);
+      return true;
     }
 
-    public Task<bool> DeleteAsync(Country item)
+    public bool Delete(Country item)
     {
-      return Task.FromResult(m_database.DeleteCountry(item.Id) != 0);
+      return m_database.DeleteCountry(item.Id) != 0;
     }
 
-    public Task<Country?> GetItemAsync(Guid id)
+    public Country? GetItem(Guid id)
     {
-      return Task.FromResult<Country?>(m_database.GetCountry(id));
+      return m_database.GetCountry(id);
     }
 
-    public Task<IEnumerable<Country>> GetItemsAsync()
+    public IList<Country> GetItems()
     {
-      return Task.FromResult<IEnumerable<Country>>(m_database.GetCountries());
+      return m_database.GetCountries();
     }
 
-    public Task<Country> UpdateAsync(Country item)
+    public bool Update(Country item)
     {
       throw new NotImplementedException("Countries can only be added or removed but not updated since the data is static.");
     }

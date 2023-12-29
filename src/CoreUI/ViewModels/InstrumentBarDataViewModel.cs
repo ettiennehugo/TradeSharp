@@ -33,119 +33,125 @@ namespace TradeSharp.CoreUI.ViewModels
       AddCommand = new RelayCommand(OnAdd, () => DataProvider != string.Empty && Instrument != null); //view model must be keyed correctly before allowing the adding new items
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
-      ImportCommand = new RelayCommand(OnImport, () => DataProvider != string.Empty && Instrument != null);
-      ExportCommand = new RelayCommand(OnExport, () => DataProvider != string.Empty && Instrument != null && Items.Count > 0);
-      CopyCommand = new RelayCommand<object?>(OnCopy, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
-      CopyToSyntheticCommand = new RelayCommand<object?>(OnCopyToSynthetic, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
-      CopyToActualCommand = new RelayCommand<object?>(OnCopyToActual, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
-      CopyToHourCommand = new RelayCommand<object?>(OnCopyToHour, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution == Resolution.Minute);
-      CopyToDayCommand = new RelayCommand<object?>(OnCopyToDay, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
-      CopyToWeekCommand = new RelayCommand<object?>(OnCopyToWeek, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
-      CopyToMonthCommand = new RelayCommand<object?>(OnCopyToMonth, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day || Resolution == Resolution.Week));
-      CopyToAllCommand = new RelayCommand<object?>(OnCopyToAll, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution != Resolution.Month);
-  }
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null);
+      ImportCommandAsync = new AsyncRelayCommand(OnImportAsync, () => DataProvider != string.Empty && Instrument != null);
+      ExportCommandAsync = new AsyncRelayCommand(OnExportAsync, () => DataProvider != string.Empty && Instrument != null && Items.Count > 0);
+      CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
+      CopyToSyntheticCommandAsync = new AsyncRelayCommand<object?>(OnCopyToSyntheticAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
+      CopyToActualCommandAsync = new AsyncRelayCommand<object?>(OnCopyToActualAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
+      CopyToHourCommandAsync = new AsyncRelayCommand<object?>(OnCopyToHourAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution == Resolution.Minute);
+      CopyToDayCommandAsync = new AsyncRelayCommand<object?>(OnCopyToDayAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
+      CopyToWeekCommandAsync = new AsyncRelayCommand<object?>(OnCopyToWeekAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
+      CopyToMonthCommandAsync = new AsyncRelayCommand<object?>(OnCopyToMonthAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day || Resolution == Resolution.Week));
+      CopyToAllCommandAsync = new AsyncRelayCommand<object?>(OnCopyToAllAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution != Resolution.Month);
+    }
 
-  //finalizers
+    //finalizers
 
 
-  //interface implementations
-  public async override void OnAdd()
+    //interface implementations
+    public override async void OnAdd()
     {
       IBarData? newBar = await m_dialogService.ShowCreateBarDataAsync(Resolution, DateTime.Now, PriceDataType.Merged);
       if (newBar != null)
       {
         newBar.Resolution = Resolution;
-        await m_itemsService.AddAsync(newBar);
+        m_itemsService.Add(newBar);
         SelectedItem = newBar;
       }
     }
 
-    public async override void OnUpdate()
+    public override async void OnUpdate()
     {
       if (SelectedItem != null)
       {
         var updatedBar = await m_dialogService.ShowUpdateBarDataAsync(SelectedItem);
         if (updatedBar != null)
         {
-          await m_itemsService.UpdateAsync(updatedBar);
+          m_itemsService.Update(updatedBar);
           SelectedItem = updatedBar;
         }
       }
     }
 
-    public override async void OnImport()
+    public override Task OnImportAsync()
     {
-      ImportSettings? importSettings = await m_dialogService.ShowImportBarDataAsync();
-
-      if (importSettings != null)
+      return Task.Run(async () =>
       {
-        ImportResult importResult = await m_itemsService.ImportAsync(importSettings);
-        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-        //await OnRefreshAsync(); - TODO Need to be careful with this as it might cause a full reload of a huge amount of data.
-      }
+        ImportSettings? importSettings = await m_dialogService.ShowImportBarDataAsync();
+
+        if (importSettings != null)
+        {
+          ImportResult importResult = m_itemsService.Import(importSettings);
+          await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
+        }
+      });
     }
 
-    public override async void OnExport()
+    public override Task OnExportAsync()
     {
-      string? filename = await m_dialogService.ShowExportBarDataAsync();
-
-      if (filename != null)
+      return Task.Run(async () =>
       {
-        ExportResult exportResult = await m_itemsService.ExportAsync(filename);
-        await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
-      }
+        string? filename = await m_dialogService.ShowExportBarDataAsync();
+
+        if (filename != null)
+        {
+          ExportResult exportResult = m_itemsService.Export(filename);
+          await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
+        }
+      });
     }
 
-    public virtual void OnCopyToSynthetic(object? selection)
+    public virtual Task OnCopyToSyntheticAsync(object? selection)
     {
       //TODO: Copy selected bar data as synthetic bars
       throw new NotImplementedException();
     }
 
-    public virtual void OnCopyToActual(object? selection)
+    public virtual Task OnCopyToActualAsync(object? selection)
     {
       //TODO: Copy selected bar data as actual bars
       throw new NotImplementedException();
     }
 
-    public virtual void OnCopyToHour(object? selection)
+    public virtual Task OnCopyToHourAsync(object? selection)
     {
       //TODO
       throw new NotImplementedException();
     }
 
-    public virtual void OnCopyToDay(object? selection)
+    public virtual Task OnCopyToDayAsync(object? selection)
     {
       //TODO
       throw new NotImplementedException();
     }
 
-    public virtual void OnCopyToWeek(object? selection)
+    public virtual Task OnCopyToWeekAsync(object? selection)
     {
       //TODO
       throw new NotImplementedException();
     }
 
-    public virtual void OnCopyToMonth(object? selection)
+    public virtual Task OnCopyToMonthAsync(object? selection)
     {
       //TODO
       throw new NotImplementedException();
     }
 
-    public virtual void OnCopyToAll(object? selection)
+    public virtual Task OnCopyToAllAsync(object? selection)
     {
       //TODO
       throw new NotImplementedException();
     }
 
     //properties
-    public RelayCommand<object?> CopyToSyntheticCommand { get; internal set; }
-    public RelayCommand<object?> CopyToActualCommand { get; internal set; }
-    public RelayCommand<object?> CopyToHourCommand { get; internal set; }
-    public RelayCommand<object?> CopyToDayCommand { get; internal set; }
-    public RelayCommand<object?> CopyToWeekCommand { get; internal set; }
-    public RelayCommand<object?> CopyToMonthCommand { get; internal set; }
-    public RelayCommand<object?> CopyToAllCommand { get; internal set; }
+    public AsyncRelayCommand<object?> CopyToSyntheticCommandAsync { get; internal set; }
+    public AsyncRelayCommand<object?> CopyToActualCommandAsync { get; internal set; }
+    public AsyncRelayCommand<object?> CopyToHourCommandAsync { get; internal set; }
+    public AsyncRelayCommand<object?> CopyToDayCommandAsync { get; internal set; }
+    public AsyncRelayCommand<object?> CopyToWeekCommandAsync { get; internal set; }
+    public AsyncRelayCommand<object?> CopyToMonthCommandAsync { get; internal set; }
+    public AsyncRelayCommand<object?> CopyToAllCommandAsync { get; internal set; }
 
     public string DataProvider
     {

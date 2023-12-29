@@ -32,24 +32,25 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? target) => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Deletable));
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? target) => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Deletable));
     }
 
     //finalizers
 
 
     //interface implementations
-    public async override void OnAdd()
+    public override async void OnAdd()
     {
       Guid parentId = SelectedNode != null ? SelectedNode.Item.Id : InstrumentGroup.InstrumentGroupRoot;
       InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync(parentId);
       if (newInstrumentGroup != null)
       {
-        await m_itemsService.AddAsync(new InstrumentGroupNodeType((IInstrumentGroupService)m_itemsService, newInstrumentGroup));
-        await m_itemsService.RefreshAsync(parentId);
+        m_itemsService.Add(new InstrumentGroupNodeType((IInstrumentGroupService)m_itemsService, newInstrumentGroup));
+        m_itemsService.Refresh(parentId);
       }
     }
 
-    public async override void OnUpdate()
+    public override async void OnUpdate()
     {
       if (SelectedNode != null)
       {
@@ -57,24 +58,26 @@ namespace TradeSharp.CoreUI.ViewModels
         if (updatedInstrumentGroup != null)
         {
           SelectedNode.Item.Update(updatedInstrumentGroup);
-          SelectedNode = await m_itemsService.UpdateAsync(SelectedNode!);
+          m_itemsService.Update(SelectedNode!);
         }
       }
       else
         await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Please select a node to update");
     }
 
-    protected async Task OnRefreshAsync(Guid parentId)
+    protected Task OnRefreshAsync(Guid parentId)
     {
-      await m_itemsService.RefreshAsync(parentId);
+      return Task.Run(() => m_itemsService.Refresh(parentId));
     }
 
-    public async override void OnCopy(object? target)
+    public override Task OnCopyAsync(object? target)
     {
-      if (SelectedNode != null)
-        SelectedNode = await m_itemsService.CopyAsync(SelectedNode);
-      else
-        await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Please select a node to copy");
+      return Task.Run(async () => {
+        if (SelectedNode != null)
+          m_itemsService.Copy(SelectedNode);
+        else
+          await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Please select a node to copy");
+      });
     }
 
     //properties

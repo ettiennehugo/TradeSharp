@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TradeSharp.CoreUI.Services
+﻿namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
   /// Generic service interface to allow navigation between views on different platforms. Do use the provided constants in the implementing classes and raise and exception if some unknown
   /// page is passed into the NavigateToAsync method.
   /// </summary>
+
+
+  //TBD: Remove this interface if it is not used.
+
+
   public interface INavigationService
   {
     //constants

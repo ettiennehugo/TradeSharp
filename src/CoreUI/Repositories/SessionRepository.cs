@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Repositories
 {
@@ -35,32 +30,34 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
-    public Task<Session> AddAsync(Session item)
+    public bool Add(Session item)
     {
-      return Task.Run(() => { m_database.CreateSession(item); return item; });
+      m_database.CreateSession(item);
+      return true;
     }
 
-    public Task<bool> DeleteAsync(Session item)
+    public bool Delete(Session item)
     {
-      return Task.FromResult(m_database.DeleteSession(item.Id) != 0);
+      return m_database.DeleteSession(item.Id) != 0;
     }
 
-    public Task<Session?> GetItemAsync(Guid id)
+    public Session? GetItem(Guid id)
     {
-      return Task.FromResult<Session?>(m_database.GetSession(id));
+      return m_database.GetSession(id);
     }
 
-    public Task<IEnumerable<Session>> GetItemsAsync()
+    public IList<Session> GetItems()
     {
       //only select data if we have a valid parent otherwise return zero result
       if (ParentId != Guid.Empty)
-        return Task.FromResult<IEnumerable<Session>>(m_database.GetSessions(ParentId));
-      return Task.FromResult<IEnumerable<Session>>(Array.Empty<Session>());
+        return m_database.GetSessions(ParentId);
+      return Array.Empty<Session>();
     }
 
-    public Task<Session> UpdateAsync(Session item)
+    public bool Update(Session item)
     {
-      return Task.Run(() => { m_database.UpdateSession(item); return item; });
+      m_database.UpdateSession(item);
+      return true;
     }
 
     //properties

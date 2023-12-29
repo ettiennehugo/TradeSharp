@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Repositories
 {
@@ -34,29 +29,31 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
-    public Task<Exchange> AddAsync(Exchange item)
+    public bool Add(Exchange item)
     {
-      return Task.Run(() => { m_database.CreateExchange(item); return item; });
+      m_database.CreateExchange(item);
+      return true;
     }
 
-    public Task<bool> DeleteAsync(Exchange item)
+    public bool Delete(Exchange item)
     {
-      return Task.FromResult(m_database.DeleteExchange(item.Id) != 0);
+      return m_database.DeleteExchange(item.Id) != 0;
     }
 
-    public Task<Exchange?> GetItemAsync(Guid id)
+    public Exchange? GetItem(Guid id)
     {
-      return Task.FromResult<Exchange?>(m_database.GetExchange(id));
+      return m_database.GetExchange(id);
     }
 
-    public Task<IEnumerable<Exchange>> GetItemsAsync()
+    public IList<Exchange> GetItems()
     {
-      return Task.FromResult<IEnumerable<Exchange>>(m_database.GetExchanges());
+      return m_database.GetExchanges();
     }
 
-    public Task<Exchange> UpdateAsync(Exchange item)
+    public bool Update(Exchange item)
     {
-      return Task.Run(() => { m_database.UpdateExchange(item); return item; });
+      m_database.UpdateExchange(item);
+      return true;
     }
 
     //properties

@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
   /// Concrete interface for the country service.
   /// </summary>
-  public interface ICountryService : IListItemsService<Country> { }
+  public interface ICountryService : IListService<Country> { }
 }

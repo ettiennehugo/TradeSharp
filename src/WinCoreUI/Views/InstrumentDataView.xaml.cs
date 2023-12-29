@@ -60,10 +60,10 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentViewModel InstrumentViewModel { get; set; }
 
     //methods
-    private async void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
       m_instrumentFilter.Text = "";
-      if (m_instrumentService.Items.Count == 0) await m_instrumentService.RefreshAsync();
+      if (m_instrumentService.Items.Count == 0) m_instrumentService.Refresh();  //TODO: This should be a refresh on the ViewModel.
       DataProviders.Clear();
       foreach (var provider in m_configurationService.DataProviders) DataProviders.Add(provider.Key);
     }
@@ -102,10 +102,10 @@ namespace TradeSharp.WinCoreUI.Views
       Instruments.RefreshFilter();
     }
 
-    private async void m_refreshCommand_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private void m_refreshCommand_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
       InstrumentViewModel.RefreshCommandAsync.Execute(this);
-      await m_instrumentService.RefreshAsync();
+      m_instrumentService.Refresh();  //TODO: This should be a refresh on the ViewModel.
       Instruments.Filter = new Predicate<object>(filter);
     }
 

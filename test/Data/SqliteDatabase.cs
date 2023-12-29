@@ -22,8 +22,6 @@ namespace TradeSharp.Data.Testing
     private Mock<IDataProvider> m_dataProvider2;
     private IList<IDataProvider> m_dataProviders;
     private CultureInfo m_cultureEnglish;
-    private CultureInfo m_cultureFrench;
-    private CultureInfo m_cultureGerman;
     private RegionInfo m_regionInfo;
     private Data.SqliteDatabase m_database;
     private Country m_country;
@@ -36,8 +34,6 @@ namespace TradeSharp.Data.Testing
     {
       //create instance components
       m_cultureEnglish = CultureInfo.GetCultureInfo("en-US");
-      m_cultureFrench = CultureInfo.GetCultureInfo("fr-FR");
-      m_cultureGerman = CultureInfo.GetCultureInfo("de-DE");
       m_regionInfo = new RegionInfo(m_cultureEnglish.Name);
 
       m_configuration = new Mock<IConfigurationService>(MockBehavior.Strict);

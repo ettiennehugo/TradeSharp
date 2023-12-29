@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
   /// Concrete interface for holiday service.
   /// </summary>
-  public interface IHolidayService : IListItemsService<Holiday> { }
+  public interface IHolidayService : IListService<Holiday> { }
 }

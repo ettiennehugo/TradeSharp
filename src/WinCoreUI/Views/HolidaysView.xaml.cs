@@ -60,11 +60,11 @@ namespace TradeSharp.WinCoreUI.Views
       {
         SetValue(s_parentIdProperty, value);
         ViewModel.ParentId = (System.Guid)value;
+        ViewModel.RefreshCommand.Execute(null);
       }
     }
 
     public HolidayViewModel ViewModel { get; }
-    public bool Editable { get; set; }
 
     //methods
 
