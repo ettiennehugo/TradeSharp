@@ -107,7 +107,9 @@ namespace TradeSharp.CoreUI.Services
 
     public bool Update(Instrument item)
     {
-      return m_instrumentRepository.Update(item);
+      var result = m_instrumentRepository.Update(item);
+      Utilities.UpdateItem(item, Items);
+      return result;
     }
 
     public ImportResult Import(ImportSettings importSettings)

@@ -32,12 +32,7 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       Instrument? newInstrument = await m_dialogService.ShowCreateInstrumentAsync();
       if (newInstrument != null)
-      {
         m_itemsService.Add(newInstrument);
-        Items.Add(newInstrument);
-        SelectedItem = newInstrument;
-        await OnRefreshAsync();   //TODO: This will not work for large collections.
-      }
     }
 
     public override async void OnUpdate()
@@ -46,10 +41,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         var updatedSession = await m_dialogService.ShowUpdateInstrumentAsync(SelectedItem);
         if (updatedSession != null)
-        {
           m_itemsService.Update(updatedSession);
-          await OnRefreshAsync(); //TODO: This will not work for large collections.
-        }
       }
     }
 
@@ -62,7 +54,7 @@ namespace TradeSharp.CoreUI.ViewModels
         {
           ImportResult importResult = m_itemsService.Import(importSettings);
           await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-          await OnRefreshAsync();
+          m_itemsService.Refresh();
         }
       });
     }
@@ -78,6 +70,11 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
         }
       });
+    }
+
+    public override Task OnRefreshAsync()
+    {
+      return Task.Run(m_itemsService.Refresh);
     }
 
     //properties

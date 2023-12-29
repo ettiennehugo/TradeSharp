@@ -49,5 +49,15 @@ namespace TradeSharp.Data
         }
       collection.Add(item); //item larger than all others, add it to the end of collection
     }
+
+    public static void UpdateItem<T>(T item, ObservableCollection<T> collection) where T : IEquatable<T>, IUpdateable<T>
+    {
+      for (int i = 0; i < collection.Count(); i++)
+        if (item.Equals(collection[i]))
+        {
+          collection[i].Update(item);
+          return;
+        }
+    }
   }
 }
