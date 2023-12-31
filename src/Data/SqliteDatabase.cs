@@ -550,6 +550,78 @@ namespace TradeSharp.Data
       );
     }
 
+    /// <summary>
+    /// Determines the total number of instruments defined in the database.
+    /// </summary>
+    public int GetInstrumentCount()
+    {
+      object? result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument}");
+      return result != null ? (int)result! : 0; 
+    }
+    
+    /// <summary>
+    /// Determines the total number of instruments of the given type defined in the database.
+    /// </summary>
+    public int GetInstrumentCount(InstrumentType instrumentType)
+    {
+      if (instrumentType == InstrumentType.None) return GetInstrumentCount(); //boundary case where it count would simplify into no filter
+      object? result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType}");
+      return result != null ? (int)result! : 0;
+    }
+
+    /// <summary>
+    /// Determines the total number of instruments of the given type defined in the database that match the given ticker and description filters.
+    /// If the ticker or description filter is null or empty then it is not used in the query, the filter can also use wildcard '*' for generic match.
+    /// </summary>
+    public int GetInstrumentCount(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter)
+    {
+      if (instrumentType == InstrumentType.None || ((tickerFilter == string.Empty || tickerFilter == "*") && (descriptionFilter == string.Empty || descriptionFilter == "*"))) 
+        return GetInstrumentCount(); //boundary case where it count would simplify into no filter
+
+      string tickerSql = string.Empty;
+      if (tickerFilter != string.Empty) {
+        tickerSql = "Ticker ";
+        if (tickerFilter.Contains('*') || tickerFilter.Contains('?'))
+          tickerSql += $"LIKE '{tickerFilter}'";
+        else
+          tickerSql += $"= '{tickerFilter}'";
+      }
+
+      string nameSql = string.Empty;
+      if (nameFilter != string.Empty)
+      {
+        nameSql = "Name ";
+        if (nameFilter.Contains('*') || nameFilter.Contains('?'))
+          nameSql += $"LIKE '{nameFilter}'";
+        else
+          nameSql += $"= '{nameFilter}'";
+      }
+
+      string descriptionSql = string.Empty;
+      if (descriptionFilter != string.Empty)
+      {
+        descriptionSql = "Description ";
+        if (descriptionFilter.Contains('*') || descriptionFilter.Contains('?'))
+          descriptionSql += $"LIKE '{descriptionFilter}'";
+        else
+          descriptionSql += $"= '{descriptionFilter}'";
+      }
+
+      string filter = tickerSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+
+      object? result;
+      if (filter != string.Empty) 
+        result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter}");
+      else
+        result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType}");
+      return result != null ? (int)result! : 0;
+    }
+
+    /// <summary>
+    /// Supports loading of all instruments, this method could take a long time to run so do run it asynchronously in the view model.
+    /// </summary>
     public IList<Instrument> GetInstruments()
     {
       var result = new List<Instrument>();
@@ -574,6 +646,126 @@ namespace TradeSharp.Data
       var result = new List<Instrument>();
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC"))
+        while (reader.Read())
+        {
+          List<Guid> secondaryExchangeIds = new List<Guid>();
+          Guid instrumentId = reader.GetGuid(0);
+
+          using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
+            while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
+
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+        }
+
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the set of instruments of a given type that match the given ticker and description filters.
+    /// </summary>
+    public IList<Instrument> GetInstruments(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter)
+    {
+      var result = new List<Instrument>();
+
+      string tickerSql = string.Empty;
+      if (tickerFilter != string.Empty)
+      {
+        tickerSql = "Ticker ";
+        if (tickerFilter.Contains('*') || tickerFilter.Contains('?'))
+          tickerSql += $"LIKE '{tickerFilter}'";
+        else
+          tickerSql += $"= '{tickerFilter}'";
+      }
+
+      string nameSql = string.Empty;
+      if (nameFilter != string.Empty)
+      {
+        nameSql = "Name ";
+        if (nameFilter.Contains('*') || nameFilter.Contains('?'))
+          nameSql += $"LIKE '{nameFilter}'";
+        else
+          nameSql += $"= '{nameFilter}'";
+      }
+
+      string descriptionSql = string.Empty;
+      if (descriptionFilter != string.Empty)
+      {
+        descriptionSql = "Description ";
+        if (descriptionFilter.Contains('*') || descriptionFilter.Contains('?'))
+          descriptionSql += $"LIKE '{descriptionFilter}'";
+        else
+          descriptionSql += $"= '{descriptionFilter}'";
+      }
+
+      string filter = tickerSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+
+      string sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC";
+      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter} ORDER BY Ticker ASC, Name ASC, Description ASC";
+
+      using (var reader = ExecuteReader(sql))
+        while (reader.Read())
+        {
+          List<Guid> secondaryExchangeIds = new List<Guid>();
+          Guid instrumentId = reader.GetGuid(0);
+
+          using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
+            while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
+
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+        }
+
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the set of instruments of the given type that match the given ticker and description filters with .
+    /// </summary>
+    public IList<Instrument> GetInstruments(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize)
+    {
+      if (pageIndex < 0 || pageSize <= 0) return GetInstruments(instrumentType, tickerFilter, nameFilter, descriptionFilter);
+
+      var result = new List<Instrument>();
+
+      string tickerSql = string.Empty;
+      if (tickerFilter != string.Empty)
+      {
+        tickerSql = "Ticker ";
+        if (tickerFilter.Contains('*') || tickerFilter.Contains('?'))
+          tickerSql += $"LIKE '{tickerFilter}'";
+        else
+          tickerSql += $"= '{tickerFilter}'";
+      }
+
+      string nameSql = string.Empty;
+      if (nameFilter != string.Empty)
+      {
+        nameSql = "Name ";
+        if (nameFilter.Contains('*') || nameFilter.Contains('?'))
+          nameSql += $"LIKE '{nameFilter}'";
+        else
+          nameSql += $"= '{nameFilter}'";
+      }
+
+      string descriptionSql = string.Empty;
+      if (descriptionFilter != string.Empty)
+      {
+        descriptionSql = "Description ";
+        if (descriptionFilter.Contains('*') || descriptionFilter.Contains('?'))
+          descriptionSql += $"LIKE '{descriptionFilter}'";
+        else
+          descriptionSql += $"= '{descriptionFilter}'";
+      }
+
+      string filter = tickerSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+
+      string sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex}";
+      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex}";
+
+      using (var reader = ExecuteReader(sql))
         while (reader.Read())
         {
           List<Guid> secondaryExchangeIds = new List<Guid>();
@@ -1503,6 +1695,80 @@ namespace TradeSharp.Data
       return x.DateTime.CompareTo(y.DateTime);
     }
 
+    public int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, PriceDataType priceDataType)
+    {
+      if (priceDataType == PriceDataType.Merged) throw new ArgumentException("SQLite data store can not provide merged data count, that would require selecting actual data.");
+
+      //create database command
+      int result = 0;  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      string normalizedTicker = ticker.ToUpper();
+
+      //load actual data if required
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All)
+      {
+        SqliteCommand commandObj = m_connection.CreateCommand();
+        commandObj.CommandText =
+        $"SELECT COUNT(*) FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}'";
+        result += Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      }
+
+      //load synthetic price data if required
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All)
+      {
+        SqliteCommand commandObj = m_connection.CreateCommand();
+        commandObj.CommandText =
+          $"SELECT COUNT(*) FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}'";
+        result += Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      }
+
+      return result;
+    }
+
+    public int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType)
+    {
+      if (priceDataType == PriceDataType.Merged) throw new ArgumentException("SQLite data store can not provide merged data count, that would require selecting actual data.");
+
+      //create database command
+      int result = 0;  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      string normalizedTicker = ticker.ToUpper();
+
+      //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
+      DateTime fromUtc = from.ToUniversalTime();
+      DateTime toUtc = to.ToUniversalTime();
+
+      //load actual data if required
+      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All)
+      {
+        SqliteCommand commandObj = m_connection.CreateCommand();
+        commandObj.CommandText =
+        $"SELECT COUNT(*) FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {fromUtc.ToBinary()} " +
+              $"AND DateTime <= {toUtc.ToBinary()}";
+        result += Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      }
+
+      //load synthetic price data if required
+      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All)
+      {
+        SqliteCommand commandObj = m_connection.CreateCommand();
+        commandObj.CommandText =
+          $"SELECT COUNT(*) FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {fromUtc.ToBinary()} " +
+              $"AND DateTime <= {toUtc.ToBinary()}";
+        result += Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
+      }
+
+      return result;
+    }
+
     public IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType)
     {
       if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
@@ -1566,44 +1832,11 @@ namespace TradeSharp.Data
       return result;
     }
 
-    public int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, PriceDataType priceDataType)
-    {
-      if (priceDataType == PriceDataType.Merged) throw new ArgumentException("SQLite data store can not provide merged data count, that would require selecting actual data.");
-
-      //create database command
-      int result = 0;  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
-      string normalizedTicker = ticker.ToUpper();
-
-      //load actual data if required
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All)
-      {
-        SqliteCommand commandObj = m_connection.CreateCommand();
-        commandObj.CommandText =
-        $"SELECT COUNT(*) FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
-            $"WHERE " +
-              $"Ticker = '{normalizedTicker}'";              
-        result += Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
-      }
-
-      //load synthetic price data if required
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All)
-      {
-        SqliteCommand commandObj = m_connection.CreateCommand();
-        commandObj.CommandText =
-          $"SELECT COUNT(*) FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
-            $"WHERE " +
-              $"Ticker = '{normalizedTicker}'";
-        result += Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
-      }
-
-      return result;
-    }
-
     /// <summary>
-    /// Supports paged loading of the data from the database. NOTE: The database layer does NOT support merging of the actual and syntehtic data and
-    /// an abstraction layer above the SQLite database is required to merge the data if required.
+    /// Supports paged loading of the data from the database. NOTE: The database layer does NOT support all or merging of the actual and syntehtic price data type as it would require
+    /// storing of state information in order to support proper paging, for this reason an abstraction layer above the database is required to merge the data if required.
     /// </summary>
-    public IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, int index, int count, PriceDataType priceDataType)
+    public IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, int pageIndex, int pageSize, PriceDataType priceDataType)
     {
       if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
       if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged) throw new ArgumentException("SQLite data store can not provide all/merged paged data, use repository layer to perform this functionality.");
@@ -1621,7 +1854,7 @@ namespace TradeSharp.Data
             $"WHERE " +
               $"Ticker = '{normalizedTicker}' " +
             $"ORDER BY DateTime ASC " + 
-            $"LIMIT {count} OFFSET {index}";
+            $"LIMIT {pageSize} OFFSET {pageIndex}";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
@@ -1641,7 +1874,77 @@ namespace TradeSharp.Data
             $"WHERE " +
               $"Ticker = '{normalizedTicker}' " +
             $"ORDER BY DateTime ASC " +
-            $"LIMIT {count} OFFSET {index}";
+            $"LIMIT {pageSize} OFFSET {pageIndex}";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+        {
+          while (reader.Read())
+          {
+            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
+              result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
+          }
+        }
+
+        //sort in the synthetic bar data if not just synthetic data is returned
+        //PERFORMANCE: Since the list is already sorted the above result.Add could be optimized into a binary insert, List has a BinarySearch method but it requires an object instance. 
+        if (priceDataType != PriceDataType.Synthetic) result.Sort(compareBarData);
+      }
+
+      return result;
+    }
+
+    /// <summary>
+    /// Supports paged loading of the data from the database with date filtering. NOTE: The database layer does NOT support all or merging of the actual and syntehtic price data type as it would require
+    /// storing of state information in order to support proper paging, for this reason an abstraction layer above the database is required to merge the data if required.
+    /// </summary>
+    public IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, int pageIndex, int pageSize, PriceDataType priceDataType)
+    {
+      if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
+      if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged) throw new ArgumentException("SQLite data store can not provide all/merged paged data, use repository layer to perform this functionality.");
+
+      //create database command
+      List<IBarData> result = new List<IBarData>();
+      string command;
+      string normalizedTicker = ticker.ToUpper();
+
+      //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
+      DateTime fromUtc = from.ToUniversalTime();
+      DateTime toUtc = to.ToUniversalTime();
+
+      //load actual data if required
+      if (priceDataType == PriceDataType.Actual)
+      {
+        command =
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {fromUtc.ToBinary()} " +
+              $"AND DateTime <= {toUtc.ToBinary()} " +
+            $"ORDER BY DateTime ASC " +
+            $"LIMIT {pageSize} OFFSET {pageIndex}";
+
+        using (SqliteDataReader reader = ExecuteReader(command))
+        {
+          while (reader.Read())
+          {
+            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
+          }
+        }
+      }
+
+      //load synthetic price data if required
+      if (priceDataType == PriceDataType.Synthetic)
+      {
+        command =
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+            $"WHERE " +
+              $"Ticker = '{normalizedTicker}' " +
+              $"AND DateTime >= {fromUtc.ToBinary()} " +
+              $"AND DateTime <= {toUtc.ToBinary()} " +
+            $"ORDER BY DateTime ASC " +
+            $"LIMIT {pageSize} OFFSET {pageIndex}";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
@@ -2229,6 +2532,13 @@ namespace TradeSharp.Data
       var commandObj = m_connection.CreateCommand();
       commandObj.CommandText = command;
       return commandObj.ExecuteNonQuery();
+    }
+
+    public object? ExecuteScalar(string command)
+    {
+      var commandObj = m_connection.CreateCommand();
+      commandObj.CommandText = command;
+      return commandObj.ExecuteScalar();
     }
 
     /// <summary>

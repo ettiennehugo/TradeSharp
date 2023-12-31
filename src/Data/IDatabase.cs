@@ -67,12 +67,6 @@ namespace TradeSharp.Data
   }
 
   /// <summary>
-  /// Filter used to query data from the database, filter is currently just a list of key/value pairs. If the value is a string type if can
-  /// contain wildcards to match multiple values.
-  /// </summary>
-  public class Filter : List<Tuple<string, object>> { }
-
-  /// <summary>
   /// Base class for data store service objects.
   /// </summary>
   public partial class DataObject : ObservableObject
@@ -846,8 +840,13 @@ namespace TradeSharp.Data
     /// </summary>
     void CreateInstrument(Instrument instrument);
     void AddInstrumentToExchange(Guid instrument, Guid exchange);
+    int GetInstrumentCount();
+    int GetInstrumentCount(InstrumentType instrumentType);
+    int GetInstrumentCount(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter); //no filter if filters are blank, filters should support wildcards
     IList<Instrument> GetInstruments();
     IList<Instrument> GetInstruments(InstrumentType instrumentType);
+    IList<Instrument> GetInstruments(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter);
+    IList<Instrument> GetInstruments(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize);  //paged loading of instruments
     Instrument? GetInstrument(Guid id);
     void UpdateInstrument(Instrument instrument);
     int DeleteInstrument(Instrument instrument);
@@ -891,11 +890,15 @@ namespace TradeSharp.Data
     int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime, bool? synthetic = null);
     int DeleteData(string dataProviderName, string ticker, Resolution? resolution = null, DateTime? from = null, DateTime? to = null, bool? synthetic = null);
 
+    int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, PriceDataType priceDataType);
+    int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);
     IBarData? GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, PriceDataType priceDataType);
     IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);
-    int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, PriceDataType priceDataType);
-    IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, int index, int count, PriceDataType priceDataType);
+    IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, int pageIndex, int pageSize, PriceDataType priceDataType);
+    IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, int pageIndex, int pageSize, PriceDataType priceDataType);
+
     ILevel1Data? GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, PriceDataType priceDataType);
+    //TODO: Add Level1 paging functions similar to the GetBarData ones above.
     IList<ILevel1Data> GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, PriceDataType priceDataType);
     DataCache GetDataCache(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, PriceDataType priceDataType);
   }
