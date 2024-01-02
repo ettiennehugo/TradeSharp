@@ -47,7 +47,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "countryflags", "countryflag
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinCoreUI", "src\WinCoreUI\WinCoreUI.csproj", "{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreUI.Testing", "test\CoreUI\CoreUI.Testing.csproj", "{B7DB7E53-57A6-482C-A7F0-EDF83FEE71A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreUI.Testing", "test\CoreUI\CoreUI.Testing.csproj", "{B7DB7E53-57A6-482C-A7F0-EDF83FEE71A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -201,8 +201,8 @@ Global
 		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|Any CPU.Build.0 = Debug|x64
 		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|ARM64.ActiveCfg = Debug|Any CPU
 		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|x64.Build.0 = Debug|Any CPU
+		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|x64.ActiveCfg = Debug|x64
+		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|x64.Build.0 = Debug|x64
 		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Debug|x86.Build.0 = Debug|Any CPU
 		{6F521EB5-1B35-4D94-BDD6-AD7F7DE119D2}.Release|Any CPU.ActiveCfg = Release|Any CPU

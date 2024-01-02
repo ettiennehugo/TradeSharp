@@ -78,6 +78,7 @@ namespace TradeSharp.Data.Testing
     //finalizers
     ~SqliteDatabase()
     {
+      m_database.EndTransaction(true);  //end any open transactions
       m_database.DropSchema(); //erase test database
       m_database.Dispose();
     }
@@ -1910,39 +1911,62 @@ namespace TradeSharp.Data.Testing
       return "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";
     }
 
+    /// <summary>
+    /// Create test instruments with a specific format to ensure that the instruments retrieved by database select statements would order the instruments correctly. (Need to use the format 'STOCK001' instead of 'STOCK1' since the latter would order the instruments incorrectly in string sorts).
+    /// </summary>
     private void createTestInstrumentsForGetMethods()
     {
       for (int i = 0; i < 200; i++)
-        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"STOCK{i}", InstrumentType.Stock, $"STOCK{i}", $"Stock Name {i}", $"Stock Description {i}", DateTime.Now.ToUniversalTime(), m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+      {
+        string formattedNumber = i.ToString("D3");
+        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"STOCK{formattedNumber}", InstrumentType.Stock, $"STOCK{formattedNumber}", $"Stock Name {formattedNumber}", $"Stock Description {formattedNumber}", DateTime.Now.ToUniversalTime(), m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+      }
       for (int i = 0; i < 200; i++)
-        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"FOREX{i}", InstrumentType.Forex, $"FOREX{i}", $"Forex Name {i}", $"Forex Description {i}", DateTime.Now.ToUniversalTime(), m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+      {
+        string formattedNumber = i.ToString("D3");
+        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"FOREX{formattedNumber}", InstrumentType.Forex, $"FOREX{formattedNumber}", $"Forex Name {formattedNumber}", $"Forex Description {formattedNumber}", DateTime.Now.ToUniversalTime(), m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+      }
       for (int i = 0; i < 200; i++)
-        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"FUTURE{i}", InstrumentType.Future, $"FUTURE{i}", $"Future Name {i}", $"Future Description {i}", DateTime.Now.ToUniversalTime(), m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+      {
+        string formattedNumber = i.ToString("D3");
+        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"FUTURE{formattedNumber}", InstrumentType.Future, $"FUTURE{formattedNumber}", $"Future Name {formattedNumber}", $"Future Description {formattedNumber}", DateTime.Now.ToUniversalTime(), m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+      }
       for (int i = 0; i < 200; i++)
-        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"CRYPTO{i}", InstrumentType.Crypto, $"CRYPTO{i}", $"Crypto Name {i}", $"Crypto Description {i}", DateTime.Now.ToUniversalTime(), m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+      {
+        string formattedNumber = i.ToString("D3");
+        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"CRYPTO{formattedNumber}", InstrumentType.Crypto, $"CRYPTO{formattedNumber}", $"Crypto Name {formattedNumber}", $"Crypto Description {formattedNumber}", DateTime.Now.ToUniversalTime(), m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+      }
     }
 
     [TestMethod]
-    [DataRow(InstrumentType.None, "", "", "", 800)]
-    [DataRow(InstrumentType.None, "*100", "", "", 4)]
-    [DataRow(InstrumentType.None, "", "*100", "", 4)]
-    [DataRow(InstrumentType.None, "", "", "*100", 4)]
     [DataRow(InstrumentType.Stock, "", "", "", 200)]
     [DataRow(InstrumentType.Stock, "*100", "", "", 1)]
     [DataRow(InstrumentType.Stock, "", "*100", "", 1)]
     [DataRow(InstrumentType.Stock, "", "", "*100", 1)]
+    [DataRow(InstrumentType.Stock, "*?9?", "", "", 20)]
+    [DataRow(InstrumentType.Stock, "", "*?9?", "", 20)]
+    [DataRow(InstrumentType.Stock, "", "", "*?9?", 20)]
     [DataRow(InstrumentType.Forex, "", "", "", 200)]
     [DataRow(InstrumentType.Forex, "*100", "", "", 1)]
     [DataRow(InstrumentType.Forex, "", "*100", "", 1)]
     [DataRow(InstrumentType.Forex, "", "", "*100", 1)]
+    [DataRow(InstrumentType.Forex, "*?9?", "", "", 20)]
+    [DataRow(InstrumentType.Forex, "", "*?9?", "", 20)]
+    [DataRow(InstrumentType.Forex, "", "", "*?9?", 20)]
     [DataRow(InstrumentType.Future, "", "", "", 200)]
     [DataRow(InstrumentType.Future, "*100", "", "", 1)]
     [DataRow(InstrumentType.Future, "", "*100", "", 1)]
     [DataRow(InstrumentType.Future, "", "", "*100", 1)]
+    [DataRow(InstrumentType.Future, "*?9?", "", "", 20)]
+    [DataRow(InstrumentType.Future, "", "*?9?", "", 20)]
+    [DataRow(InstrumentType.Future, "", "", "*?9?", 20)]
     [DataRow(InstrumentType.Crypto, "", "", "", 200)]
     [DataRow(InstrumentType.Crypto, "*100", "", "", 1)]
     [DataRow(InstrumentType.Crypto, "", "*100", "", 1)]
     [DataRow(InstrumentType.Crypto, "", "", "*100", 1)]
+    [DataRow(InstrumentType.Crypto, "*?9?", "", "", 20)]
+    [DataRow(InstrumentType.Crypto, "", "*?9?", "", 20)]
+    [DataRow(InstrumentType.Crypto, "", "", "*?9?", 20)]
     public void GetInstruments_WithFilter_Success(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int expectedCount)
     {
       createTestInstrumentsForGetMethods();
@@ -1963,32 +1987,58 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(InstrumentType.None, "", "", "", 0, 10, 10)]
-    [DataRow(InstrumentType.None, "", "", "", 0, 50, 50)]
-    [DataRow(InstrumentType.None, "*100", "", "", 0, 10, 4)]
-    [DataRow(InstrumentType.None, "", "*100", "", 0, 10, 4)]
-    [DataRow(InstrumentType.None, "", "", "*100", 0, 10, 4)]
-    [DataRow(InstrumentType.Stock, "", "", "", 0, 10, 10)]
-    [DataRow(InstrumentType.Stock, "", "", "", 0, 50, 50)]
-    [DataRow(InstrumentType.Stock, "*100", "", "", 0, 10, 1)]
-    [DataRow(InstrumentType.Stock, "", "*100", "", 0, 10, 1)]
-    [DataRow(InstrumentType.Stock, "", "", "*100", 0, 10, 1)]
-    [DataRow(InstrumentType.Forex, "", "", "", 0, 10, 10)]
-    [DataRow(InstrumentType.Forex, "", "", "", 0, 50, 50)]
-    [DataRow(InstrumentType.Forex, "*100", "", "", 0, 10, 1)]
-    [DataRow(InstrumentType.Forex, "", "*100", "", 0, 10, 1)]
-    [DataRow(InstrumentType.Forex, "", "", "*100", 0, 10, 1)]
-    [DataRow(InstrumentType.Future, "", "", "", 0, 10, 10)]
-    [DataRow(InstrumentType.Future, "", "", "", 0, 50, 50)]
-    [DataRow(InstrumentType.Future, "*100", "", "", 0, 10, 1)]
-    [DataRow(InstrumentType.Future, "", "*100", "", 0, 10, 1)]
-    [DataRow(InstrumentType.Future, "", "", "*100", 0, 10, 1)]
-    [DataRow(InstrumentType.Crypto, "", "", "", 0, 10, 10)]
-    [DataRow(InstrumentType.Crypto, "", "", "", 0, 50, 50)]
-    [DataRow(InstrumentType.Crypto, "*100", "", "", 0, 10, 1)]
-    [DataRow(InstrumentType.Crypto, "", "*100", "", 0, 10, 1)]
-    [DataRow(InstrumentType.Crypto, "", "", "*100", 0, 10, 1)]
-    public void GetInstruments_WithFilterAndPage_Success(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize, int expectedCount)
+    [DataRow(InstrumentType.Stock, "", "", "", 0, 10, 10, "STOCK000")]
+    [DataRow(InstrumentType.Stock, "", "", "", 1, 10, 10, "STOCK010")]
+    [DataRow(InstrumentType.Stock, "", "", "", 2, 10, 10, "STOCK020")]
+    [DataRow(InstrumentType.Stock, "", "", "", 0, 50, 50, "STOCK000")]
+    [DataRow(InstrumentType.Stock, "", "", "", 1, 50, 50, "STOCK050")]
+    [DataRow(InstrumentType.Stock, "", "", "", 2, 50, 50, "STOCK100")]
+    [DataRow(InstrumentType.Stock, "*100", "", "", 0, 10, 1, "STOCK100")]
+    [DataRow(InstrumentType.Stock, "", "*100", "", 0, 10, 1, "STOCK100")]
+    [DataRow(InstrumentType.Stock, "", "", "*100", 0, 10, 1, "STOCK100")]
+    [DataRow(InstrumentType.Stock, "*?9?", "", "", 0, 10, 10, "STOCK090")]
+    [DataRow(InstrumentType.Stock, "", "*?9?", "", 0, 10, 10, "STOCK090")]
+    [DataRow(InstrumentType.Stock, "", "", "*?9?", 0, 10, 10, "STOCK090")]
+    [DataRow(InstrumentType.Forex, "", "", "", 0, 10, 10, "FOREX000")]
+    [DataRow(InstrumentType.Forex, "", "", "", 1, 10, 10, "FOREX010")]
+    [DataRow(InstrumentType.Forex, "", "", "", 2, 10, 10, "FOREX020")]
+    [DataRow(InstrumentType.Forex, "", "", "", 0, 50, 50, "FOREX000")]
+    [DataRow(InstrumentType.Forex, "", "", "", 1, 50, 50, "FOREX050")]
+    [DataRow(InstrumentType.Forex, "", "", "", 2, 50, 50, "FOREX100")]
+    [DataRow(InstrumentType.Forex, "*?9?", "", "", 0, 10, 10, "FOREX090")]
+    [DataRow(InstrumentType.Forex, "", "*?9?", "", 0, 10, 10, "FOREX090")]
+    [DataRow(InstrumentType.Forex, "", "", "*?9?", 0, 10, 10, "FOREX090")]
+    [DataRow(InstrumentType.Forex, "*100", "", "", 0, 10, 1, "FOREX100")]
+    [DataRow(InstrumentType.Forex, "", "*100", "", 0, 10, 1, "FOREX100")]
+    [DataRow(InstrumentType.Forex, "", "", "*100", 0, 10, 1, "FOREX100")]
+    [DataRow(InstrumentType.Forex, "*?9?", "", "", 0, 10, 10, "FOREX090")]
+    [DataRow(InstrumentType.Forex, "", "*?9?", "", 0, 10, 10, "FOREX090")]
+    [DataRow(InstrumentType.Forex, "", "", "*?9?", 0, 10, 10, "FOREX090")]
+    [DataRow(InstrumentType.Future, "", "", "", 0, 10, 10, "FUTURE000")]
+    [DataRow(InstrumentType.Future, "", "", "", 1, 10, 10, "FUTURE010")]
+    [DataRow(InstrumentType.Future, "", "", "", 2, 10, 10, "FUTURE020")]
+    [DataRow(InstrumentType.Future, "", "", "", 0, 50, 50, "FUTURE000")]
+    [DataRow(InstrumentType.Future, "", "", "", 1, 50, 50, "FUTURE050")]
+    [DataRow(InstrumentType.Future, "", "", "", 2, 50, 50, "FUTURE100")]
+    [DataRow(InstrumentType.Future, "*?9?", "", "", 0, 10, 10, "FUTURE090")]
+    [DataRow(InstrumentType.Future, "", "*?9?", "", 0, 10, 10, "FUTURE090")]
+    [DataRow(InstrumentType.Future, "", "", "*?9?", 0, 10, 10, "FUTURE090")]
+    [DataRow(InstrumentType.Future, "*100", "", "", 0, 10, 1, "FUTURE100")]
+    [DataRow(InstrumentType.Future, "", "*100", "", 0, 10, 1, "FUTURE100")]
+    [DataRow(InstrumentType.Future, "", "", "*100", 0, 10, 1, "FUTURE100")]
+    [DataRow(InstrumentType.Crypto, "", "", "", 0, 10, 10, "CRYPTO000")]
+    [DataRow(InstrumentType.Crypto, "", "", "", 1, 10, 10, "CRYPTO010")]
+    [DataRow(InstrumentType.Crypto, "", "", "", 2, 10, 10, "CRYPTO020")]
+    [DataRow(InstrumentType.Crypto, "", "", "", 0, 50, 50, "CRYPTO000")]
+    [DataRow(InstrumentType.Crypto, "", "", "", 1, 50, 50, "CRYPTO050")]
+    [DataRow(InstrumentType.Crypto, "", "", "", 2, 50, 50, "CRYPTO100")]
+    [DataRow(InstrumentType.Crypto, "*100", "", "", 0, 10, 1, "CRYPTO100")]
+    [DataRow(InstrumentType.Crypto, "", "*100", "", 0, 10, 1, "CRYPTO100")]
+    [DataRow(InstrumentType.Crypto, "", "", "*100", 0, 10, 1, "CRYPTO100")]
+    [DataRow(InstrumentType.Crypto, "*?9?", "", "", 0, 10, 10, "CRYPTO090")]
+    [DataRow(InstrumentType.Crypto, "", "*?9?", "", 0, 10, 10, "CRYPTO090")]
+    [DataRow(InstrumentType.Crypto, "", "", "*?9?", 0, 10, 10, "CRYPTO090")]
+    public void GetInstruments_WithFilterAndPage_Success(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize, int expectedCount, string expectedFirstTicker)
     {
       createTestInstrumentsForGetMethods();
       IList<Instrument> actualInstruments = m_database.GetInstruments(instrumentType, tickerFilter, nameFilter, descriptionFilter, pageIndex, pageSize);
@@ -1997,6 +2047,9 @@ namespace TradeSharp.Data.Testing
       string tickerRegex = wildCardToRegex(tickerFilter);
       string nameRegex = wildCardToRegex(nameFilter);
       string descriptionRegex = wildCardToRegex(descriptionFilter);
+
+      Instrument firstActualInstrument = actualInstruments[0];
+      Assert.AreEqual(expectedFirstTicker, firstActualInstrument.Ticker, "First expected ticker did not match.");
 
       foreach (Instrument instrument in actualInstruments)
       {
@@ -2028,26 +2081,34 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(InstrumentType.None, "", "", "", 800)]
-    [DataRow(InstrumentType.None, "*100", "", "", 4)]
-    [DataRow(InstrumentType.None, "", "*100", "", 4)]
-    [DataRow(InstrumentType.None, "", "", "*100", 4)]
     [DataRow(InstrumentType.Stock, "", "", "", 200)]
     [DataRow(InstrumentType.Stock, "*100", "", "", 1)]
     [DataRow(InstrumentType.Stock, "", "*100", "", 1)]
     [DataRow(InstrumentType.Stock, "", "", "*100", 1)]
+    [DataRow(InstrumentType.Stock, "*?9?", "", "", 20)]
+    [DataRow(InstrumentType.Stock, "", "*?9?", "", 20)]
+    [DataRow(InstrumentType.Stock, "", "", "*?9?", 20)]
     [DataRow(InstrumentType.Forex, "", "", "", 200)]
     [DataRow(InstrumentType.Forex, "*100", "", "", 1)]
     [DataRow(InstrumentType.Forex, "", "*100", "", 1)]
     [DataRow(InstrumentType.Forex, "", "", "*100", 1)]
+    [DataRow(InstrumentType.Forex, "*?9?", "", "", 20)]
+    [DataRow(InstrumentType.Forex, "", "*?9?", "", 20)]
+    [DataRow(InstrumentType.Forex, "", "", "*?9?", 20)]
     [DataRow(InstrumentType.Future, "", "", "", 200)]
     [DataRow(InstrumentType.Future, "*100", "", "", 1)]
     [DataRow(InstrumentType.Future, "", "*100", "", 1)]
     [DataRow(InstrumentType.Future, "", "", "*100", 1)]
+    [DataRow(InstrumentType.Future, "*?9?", "", "", 20)]
+    [DataRow(InstrumentType.Future, "", "*?9?", "", 20)]
+    [DataRow(InstrumentType.Future, "", "", "*?9?", 20)]
     [DataRow(InstrumentType.Crypto, "", "", "", 200)]
     [DataRow(InstrumentType.Crypto, "*100", "", "", 1)]
     [DataRow(InstrumentType.Crypto, "", "*100", "", 1)]
     [DataRow(InstrumentType.Crypto, "", "", "*100", 1)]
+    [DataRow(InstrumentType.Crypto, "*?9?", "", "", 20)]
+    [DataRow(InstrumentType.Crypto, "", "*?9?", "", 20)]
+    [DataRow(InstrumentType.Crypto, "", "", "*?9?", 20)]
     public void GetInstrumentCount_InstrumentTypeWithFilters_Success(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int expectedCount)
     {
       createTestInstrumentsForGetMethods();
@@ -2178,7 +2239,7 @@ namespace TradeSharp.Data.Testing
 
     private void generateDataBars(Resolution resolution, PriceDataType priceDataType, int count, string fromDateTime = "")
     {
-      DateTime dateTime = fromDateTime != string.Empty ? DateTime.Parse(fromDateTime) : DateTime.Now;
+      DateTime dateTime = fromDateTime != string.Empty ? DateTime.Parse(fromDateTime, null, DateTimeStyles.AssumeUniversal) : DateTime.Now;
       TimeSpan? dateTimeDelta = null;
 
       switch (resolution)
@@ -2211,7 +2272,7 @@ namespace TradeSharp.Data.Testing
         {
           double value = i;
           dateTime = dateTime.Add(dateTimeDelta!.Value);
-          data.Add(new BarData(resolution, dateTime, value, value * 2.0, value * 3.0, value * 4.0, i * 5, priceDataType == PriceDataType.Synthetic));
+          data.Add(new BarData(resolution, dateTime.ToUniversalTime(), value, value * 2.0, value * 3.0, value * 4.0, i * 5, priceDataType == PriceDataType.Synthetic));
         }
 
         m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, data);
@@ -2224,7 +2285,7 @@ namespace TradeSharp.Data.Testing
         {
           double value = i;
           dateTime = dateTime.Add(dateTimeDelta!.Value);
-          data.Add(new Level1Data(dateTime, value, i * 2, value * 3.0, i * 4, value * 5.0, i * 6, priceDataType == PriceDataType.Synthetic));
+          data.Add(new Level1Data(dateTime.ToUniversalTime(), value, i * 2, value * 3.0, i * 4, value * 5.0, i * 6, priceDataType == PriceDataType.Synthetic));
         }
 
         m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, data);
@@ -2282,16 +2343,16 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 03:30:00", PriceDataType.Actual, 150)]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 03:30:00", PriceDataType.Synthetic, 150)]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 03:30:00", PriceDataType.All, 300)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2023/06/01 00:00:00", "2023/09/31 00:00:00", PriceDataType.Actual, 122)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2023/06/01 00:00:00", "2023/09/31 00:00:00", PriceDataType.Synthetic, 122)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2023/06/01 00:00:00", "2023/09/31 00:00:00", PriceDataType.All, 244)]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 03:30:00Z", PriceDataType.Actual, 150)]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 03:30:00Z", PriceDataType.Synthetic, 150)]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 03:30:00Z", PriceDataType.All, 300)]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2023/06/01 00:00:00Z", "2023/09/31 00:00:00Z", PriceDataType.Actual, 122)]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2023/06/01 00:00:00Z", "2023/09/31 00:00:00Z", PriceDataType.Synthetic, 122)]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2023/06/01 00:00:00Z", "2023/09/31 00:00:00Z", PriceDataType.All, 244)]
     public void GetBarDataCount_WithDateFilter_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, PriceDataType priceDataType, int expectedCount)
     {
-      DateTime from = DateTime.Parse(fromDate);
-      DateTime to = DateTime.Parse(toDate);
+      DateTime from = DateTime.Parse(fromDate, null, DateTimeStyles.AssumeUniversal);
+      DateTime to = DateTime.Parse(toDate, null, DateTimeStyles.AssumeUniversal);
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, priceDataType));
@@ -2415,69 +2476,76 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 05:00:00", PriceDataType.Actual, 240)]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 02:30:00", PriceDataType.Synthetic, 90)]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 06:00:00", PriceDataType.All, 600)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", PriceDataType.Actual, 122)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", PriceDataType.Synthetic, 122)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", PriceDataType.All, 244)]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 05:00:00Z", PriceDataType.Actual, 241)]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 02:30:00Z", PriceDataType.Synthetic, 91)]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 06:00:00Z", PriceDataType.All, 601)]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", PriceDataType.Actual, 123)]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", PriceDataType.Synthetic, 123)]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", PriceDataType.All, 245)]
     public void GetBarData_FilterByDate_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, PriceDataType priceDataType, int expectedCount)
     {
-      DateTime from = DateTime.Parse(fromDate);
-      DateTime to = DateTime.Parse(toDate);
+
+      //TODO: Need to adjust DateTime based on configuration or modify the configuration.
+
+      DateTime from = DateTime.Parse(fromDate, null, DateTimeStyles.AssumeUniversal);
+      DateTime to = DateTime.Parse(toDate, null, DateTimeStyles.AssumeUniversal);
+
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, priceDataType);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
 
       for (int i = 0; i < expectedCount; i++)
-        Assert.IsTrue(barData[i].DateTime >= from && barData[i].DateTime <= to, "Bar data returned is outside of the requested date range.");
+        Assert.IsTrue(barData[i].DateTime >= from && barData[i].DateTime <= to, $"Bar {i} data returned is outside of the requested date range.");      
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 0, 10, PriceDataType.Actual, 10, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 1, 10, PriceDataType.Actual, 10, "2023/12/31 00:10:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 2, 10, PriceDataType.Actual, 10, "2023/12/31 00:20:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 0, 20, PriceDataType.Actual, 20, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 1, 20, PriceDataType.Actual, 20, "2023/12/31 00:20:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 2, 20, PriceDataType.Actual, 20, "2023/12/31 00:40:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 0, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 1, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:10:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 2, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:20:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 0, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 1, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:20:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 2, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:40:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 0, 10, PriceDataType.All, 10, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 1, 10, PriceDataType.All, 10, "2023/12/31 00:05:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 2, 10, PriceDataType.All, 10, "2023/12/31 00:10:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 0, 20, PriceDataType.All, 20, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 1, 20, PriceDataType.All, 20, "2023/12/31 00:10:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", 2, 20, PriceDataType.All, 20, "2023/12/31 00:20:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 0, 10, PriceDataType.Actual, 10, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 1, 10, PriceDataType.Actual, 10, "2024/01/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 2, 10, PriceDataType.Actual, 10, "2024/01/20 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 0, 20, PriceDataType.Actual, 20, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 1, 20, PriceDataType.Actual, 20, "2024/01/20 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 2, 20, PriceDataType.Actual, 20, "2024/02/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 0, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 1, 10, PriceDataType.Synthetic, 10, "2024/01/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 2, 10, PriceDataType.Synthetic, 10, "2024/01/20 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 0, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 1, 20, PriceDataType.Synthetic, 20, "2024/01/20 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 2, 20, PriceDataType.Synthetic, 20, "2024/02/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 0, 10, PriceDataType.All, 10, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 1, 10, PriceDataType.All, 10, "2024/01/05 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 2, 10, PriceDataType.All, 10, "2024/01/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 0, 20, PriceDataType.All, 20, "2023/12/31 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 1, 20, PriceDataType.All, 20, "2024/01/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", 2, 20, PriceDataType.All, 20, "2024/01/20 00:00:00")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2023/12/31 00:10:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2023/12/31 00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2023/12/31 00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2023/12/31 00:40:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:10:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:40:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.All, 10, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.All, 10, "2023/12/31 00:05:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.All, 10, "2023/12/31 00:10:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.All, 20, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.All, 20, "2023/12/31 00:10:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.All, 20, "2023/12/31 00:20:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2024/01/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2024/01/20 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2024/01/20 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2024/02/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2024/01/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2024/01/20 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2024/01/20 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2024/02/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.All, 10, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.All, 10, "2024/01/05 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.All, 10, "2024/01/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.All, 20, "2023/12/31 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.All, 20, "2024/01/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.All, 20, "2024/01/20 00:00:00Z")]
     public void GetBarData_FilterByPage_Success(Resolution resolution, string generatedFromDate, int pageIndex, int pageSize, PriceDataType priceDataType, int expectedCount, string expectedFromDate)
     {
+
+      //TODO: Need to adjust DateTime based on configuration or modify the configuration.
+
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, pageIndex, pageSize, priceDataType);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
-      Assert.AreEqual(DateTime.Parse(expectedFromDate), barData[0].DateTime, "Expected from date was not returned.");
+      Assert.AreEqual(DateTime.Parse(expectedFromDate, null, DateTimeStyles.AssumeUniversal), barData[0].DateTime, "Expected from date was not returned.");
     }
 
     [TestMethod]
@@ -2496,51 +2564,54 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 0, 10, PriceDataType.Actual, 0, "2023/12/31 01:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 1, 10, PriceDataType.Actual, 0, "2023/12/31 01:10:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 2, 10, PriceDataType.Actual, 0, "2023/12/31 01:20:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 0, 20, PriceDataType.Actual, 0, "2023/12/31 01:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 1, 20, PriceDataType.Actual, 0, "2023/12/31 01:20:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 2, 20, PriceDataType.Actual, 0, "2023/12/31 01:40:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 0, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 1, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:10:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 2, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:20:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 0, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 1, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:20:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 2, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:40:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 0, 10, PriceDataType.All, 0, "2023/12/31 01:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 1, 10, PriceDataType.All, 0, "2023/12/31 01:05:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 2, 10, PriceDataType.All, 0, "2023/12/31 01:10:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 0, 20, PriceDataType.All, 0, "2023/12/31 01:00:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 1, 20, PriceDataType.All, 0, "2023/12/31 01:10:00")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00", "2023/12/31 01:00:00", "2023/12/31 00:04:00", 2, 20, PriceDataType.All, 0, "2023/12/31 01:20:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 0, 10, PriceDataType.Actual, 0, "2024/06/01 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 1, 10, PriceDataType.Actual, 0, "2024/06/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 2, 10, PriceDataType.Actual, 0, "2024/06/20 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 0, 20, PriceDataType.Actual, 0, "2024/06/01 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 1, 20, PriceDataType.Actual, 0, "2024/06/20 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 2, 20, PriceDataType.Actual, 0, "2024/07/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 0, 10, PriceDataType.Synthetic, 0, "2024/06/01 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 1, 10, PriceDataType.Synthetic, 0, "2024/06/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 2, 10, PriceDataType.Synthetic, 0, "2024/06/20 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 0, 20, PriceDataType.Synthetic, 0, "2024/06/01 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 1, 20, PriceDataType.Synthetic, 0, "2024/06/20 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 2, 20, PriceDataType.Synthetic, 0, "2024/07/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 0, 10, PriceDataType.All, 0, "2024/06/01 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 1, 10, PriceDataType.All, 0, "2024/06/05 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 2, 10, PriceDataType.All, 0, "2024/06/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 0, 20, PriceDataType.All, 0, "2024/06/01 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 1, 20, PriceDataType.All, 0, "2024/06/10 00:00:00")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00", "2024/06/01 00:00:00", "2024/09/31 00:00:00", 2, 20, PriceDataType.All, 0, "2024/06/20 00:00:00")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 10, PriceDataType.Actual, 0, "2023/12/31 01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 10, PriceDataType.Actual, 0, "2023/12/31 01:10:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 10, PriceDataType.Actual, 0, "2023/12/31 01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 20, PriceDataType.Actual, 0, "2023/12/31 01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 20, PriceDataType.Actual, 0, "2023/12/31 01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 20, PriceDataType.Actual, 0, "2023/12/31 01:40:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:10:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:40:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 10, PriceDataType.All, 0, "2023/12/31 01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 10, PriceDataType.All, 0, "2023/12/31 01:05:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 10, PriceDataType.All, 0, "2023/12/31 01:10:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 20, PriceDataType.All, 0, "2023/12/31 01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 20, PriceDataType.All, 0, "2023/12/31 01:10:00Z")]
+    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 20, PriceDataType.All, 0, "2023/12/31 01:20:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 10, PriceDataType.Actual, 0, "2024/06/01 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 10, PriceDataType.Actual, 0, "2024/06/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 10, PriceDataType.Actual, 0, "2024/06/20 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 20, PriceDataType.Actual, 0, "2024/06/01 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 20, PriceDataType.Actual, 0, "2024/06/20 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 20, PriceDataType.Actual, 0, "2024/07/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 10, PriceDataType.Synthetic, 0, "2024/06/01 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 10, PriceDataType.Synthetic, 0, "2024/06/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 10, PriceDataType.Synthetic, 0, "2024/06/20 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 20, PriceDataType.Synthetic, 0, "2024/06/01 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 20, PriceDataType.Synthetic, 0, "2024/06/20 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 20, PriceDataType.Synthetic, 0, "2024/07/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 10, PriceDataType.All, 0, "2024/06/01 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 10, PriceDataType.All, 0, "2024/06/05 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 10, PriceDataType.All, 0, "2024/06/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 20, PriceDataType.All, 0, "2024/06/01 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 20, PriceDataType.All, 0, "2024/06/10 00:00:00Z")]
+    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 20, PriceDataType.All, 0, "2024/06/20 00:00:00Z")]
     public void GetBarData_FilterByDateAndPage_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int pageIndex, int pageSize, PriceDataType priceDataType, int expectedCount, string expectedFromDate)
     {
-      DateTime from = DateTime.Parse(fromDate);
-      DateTime to = DateTime.Parse(toDate);
+
+      //TODO: Need to adjust DateTime based on configuration or modify the configuration.
+
+      DateTime from = DateTime.Parse(fromDate, null, DateTimeStyles.AssumeUniversal);
+      DateTime to = DateTime.Parse(toDate, null, DateTimeStyles.AssumeUniversal);
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, pageIndex, pageSize, priceDataType);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
-      Assert.AreEqual(DateTime.Parse(expectedFromDate), barData[0].DateTime, "Expected from date was not returned.");
+      Assert.AreEqual(DateTime.Parse(expectedFromDate, null, DateTimeStyles.AssumeUniversal), barData[0].DateTime, "Expected from date was not returned.");
     }
 
     [TestMethod]

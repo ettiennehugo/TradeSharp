@@ -556,7 +556,7 @@ namespace TradeSharp.Data
     public int GetInstrumentCount()
     {
       object? result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument}");
-      return result != null ? (int)result! : 0; 
+      return result != null ? (int)(long)result! : 0;   //database returns long so we first need to unbox it to it's actual type before trying to cast to int 
     }
     
     /// <summary>
@@ -566,7 +566,7 @@ namespace TradeSharp.Data
     {
       if (instrumentType == InstrumentType.None) return GetInstrumentCount(); //boundary case where it count would simplify into no filter
       object? result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType}");
-      return result != null ? (int)result! : 0;
+      return result != null ? (int)(long)result! : 0;   //database returns long so we first need to unbox it to it's actual type before trying to cast to int
     }
 
     /// <summary>
@@ -575,14 +575,15 @@ namespace TradeSharp.Data
     /// </summary>
     public int GetInstrumentCount(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter)
     {
-      if (instrumentType == InstrumentType.None || ((tickerFilter == string.Empty || tickerFilter == "*") && (descriptionFilter == string.Empty || descriptionFilter == "*"))) 
-        return GetInstrumentCount(); //boundary case where it count would simplify into no filter
-
       string tickerSql = string.Empty;
       if (tickerFilter != string.Empty) {
         tickerSql = "Ticker ";
         if (tickerFilter.Contains('*') || tickerFilter.Contains('?'))
+        {
           tickerSql += $"LIKE '{tickerFilter}'";
+          tickerSql = tickerSql.Replace('?', '_');
+          tickerSql = tickerSql.Replace('*', '%');
+        }
         else
           tickerSql += $"= '{tickerFilter}'";
       }
@@ -592,7 +593,11 @@ namespace TradeSharp.Data
       {
         nameSql = "Name ";
         if (nameFilter.Contains('*') || nameFilter.Contains('?'))
+        {
           nameSql += $"LIKE '{nameFilter}'";
+          nameSql = nameSql.Replace('?', '_');
+          nameSql = nameSql.Replace('*', '%');
+        }
         else
           nameSql += $"= '{nameFilter}'";
       }
@@ -602,7 +607,11 @@ namespace TradeSharp.Data
       {
         descriptionSql = "Description ";
         if (descriptionFilter.Contains('*') || descriptionFilter.Contains('?'))
+        {
           descriptionSql += $"LIKE '{descriptionFilter}'";
+          descriptionSql = descriptionSql.Replace('?', '_');
+          descriptionSql = descriptionSql.Replace('*', '%');
+        }
         else
           descriptionSql += $"= '{descriptionFilter}'";
       }
@@ -616,7 +625,7 @@ namespace TradeSharp.Data
         result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter}");
       else
         result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType}");
-      return result != null ? (int)result! : 0;
+      return result != null ? (int)(long)result! : 0;   //database returns long so we first need to unbox it to it's actual type before trying to cast to int
     }
 
     /// <summary>
@@ -672,7 +681,11 @@ namespace TradeSharp.Data
       {
         tickerSql = "Ticker ";
         if (tickerFilter.Contains('*') || tickerFilter.Contains('?'))
+        {
           tickerSql += $"LIKE '{tickerFilter}'";
+          tickerSql = tickerSql.Replace('?', '_');
+          tickerSql = tickerSql.Replace('*', '%');
+        }
         else
           tickerSql += $"= '{tickerFilter}'";
       }
@@ -682,7 +695,11 @@ namespace TradeSharp.Data
       {
         nameSql = "Name ";
         if (nameFilter.Contains('*') || nameFilter.Contains('?'))
+        {
           nameSql += $"LIKE '{nameFilter}'";
+          nameSql = nameSql.Replace('?', '_');
+          nameSql = nameSql.Replace('*', '%');
+        }
         else
           nameSql += $"= '{nameFilter}'";
       }
@@ -692,7 +709,11 @@ namespace TradeSharp.Data
       {
         descriptionSql = "Description ";
         if (descriptionFilter.Contains('*') || descriptionFilter.Contains('?'))
+        {
           descriptionSql += $"LIKE '{descriptionFilter}'";
+          descriptionSql = descriptionSql.Replace('?','_');
+          descriptionSql = descriptionSql.Replace('*','%');
+        }
         else
           descriptionSql += $"= '{descriptionFilter}'";
       }
@@ -733,7 +754,11 @@ namespace TradeSharp.Data
       {
         tickerSql = "Ticker ";
         if (tickerFilter.Contains('*') || tickerFilter.Contains('?'))
+        {
           tickerSql += $"LIKE '{tickerFilter}'";
+          tickerSql = tickerSql.Replace('?', '_');
+          tickerSql = tickerSql.Replace('*', '%');
+        }
         else
           tickerSql += $"= '{tickerFilter}'";
       }
@@ -743,7 +768,11 @@ namespace TradeSharp.Data
       {
         nameSql = "Name ";
         if (nameFilter.Contains('*') || nameFilter.Contains('?'))
+        {
           nameSql += $"LIKE '{nameFilter}'";
+          nameSql = nameSql.Replace('?', '_');
+          nameSql = nameSql.Replace('*', '%');
+        }
         else
           nameSql += $"= '{nameFilter}'";
       }
@@ -753,7 +782,11 @@ namespace TradeSharp.Data
       {
         descriptionSql = "Description ";
         if (descriptionFilter.Contains('*') || descriptionFilter.Contains('?'))
+        {
           descriptionSql += $"LIKE '{descriptionFilter}'";
+          descriptionSql = descriptionSql.Replace('?', '_');
+          descriptionSql = descriptionSql.Replace('*', '%');
+        }
         else
           descriptionSql += $"= '{descriptionFilter}'";
       }
@@ -762,8 +795,8 @@ namespace TradeSharp.Data
       if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
       if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
 
-      string sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex}";
-      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex}";
+      string sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
+      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
 
       using (var reader = ExecuteReader(sql))
         while (reader.Read())
@@ -1448,6 +1481,22 @@ namespace TradeSharp.Data
       return x.Item1.CompareTo(y.Item1);
     }
 
+    private static DateTime convertDateTimeBasedOnConfiguration(DateTime utcDateTime, IConfigurationService.TimeZone timeZoneToUse, Exchange? exchange)
+    {
+      switch (timeZoneToUse)
+      {
+        case IConfigurationService.TimeZone.UTC:
+          return utcDateTime;
+        case IConfigurationService.TimeZone.Local:
+          return utcDateTime.ToLocalTime();
+        case IConfigurationService.TimeZone.Exchange:          
+          if (exchange == null) throw new ArgumentException("Exchange must be specified when using Exchange time zone.");
+          return utcDateTime.Add(exchange.TimeZone.BaseUtcOffset);
+      }
+
+      return utcDateTime; //default to UTC
+    }
+
     public DataCache GetBarData(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to, Resolution resolution, PriceDataType priceDataType)
     {
       //validate inputs
@@ -1456,6 +1505,16 @@ namespace TradeSharp.Data
       //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
       DateTime fromUtc = from.ToUniversalTime();
       DateTime toUtc = to.ToUniversalTime();
+
+      //get the time zone to use for the date time conversion
+      IConfigurationService.TimeZone timeZoneToUse = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+      Exchange? exchange = null;
+      if (timeZoneToUse == IConfigurationService.TimeZone.Exchange)
+      {
+        Instrument? instrument = GetInstrument(instrumentId);
+        if (instrument == null) throw new ArgumentException($"Instrument ({instrumentId}) not found.");
+        exchange = GetExchange(instrument.PrimaryExchangeId);
+      }
 
       //create database command
       List<Tuple<DateTime, double, double, double, double, long, bool>> list = new List<Tuple<DateTime, double, double, double, double, long, bool>>();
@@ -1478,7 +1537,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
             list.Add(new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -1499,8 +1558,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
-
+            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !list.Exists(x => x.Item1 == dateTime))) //either all/syntehtic data returned or merged with actual override synthetic data
               list.Add(new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -1659,6 +1717,16 @@ namespace TradeSharp.Data
       string command;
       string normalizedTicker = ticker.ToUpper();
 
+      //get the time zone to use for the date time conversion
+      IConfigurationService.TimeZone timeZoneToUse = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+      Exchange? exchange = null;
+      if (timeZoneToUse == IConfigurationService.TimeZone.Exchange)
+      {
+        Instrument? instrument = GetInstrument(instrumentId);
+        if (instrument == null) throw new ArgumentException($"Instrument ({instrumentId}) not found.");
+        exchange = GetExchange(instrument.PrimaryExchangeId);
+      }
+
       //load actual data if required
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
@@ -1670,7 +1738,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new BarData(resolution, DateTime.FromBinary(reader.GetInt64(1)), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false);
+            return new BarData(resolution, convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false);
       }
 
       //load synthetic price data if required
@@ -1684,7 +1752,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new BarData(resolution, DateTime.FromBinary(reader.GetInt64(1)), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true);
+            return new BarData(resolution, convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true);
       }
 
       return null;
@@ -1782,6 +1850,16 @@ namespace TradeSharp.Data
       string command;
       string normalizedTicker = ticker.ToUpper();
 
+      //get the time zone to use for the date time conversion
+      IConfigurationService.TimeZone timeZoneToUse = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+      Exchange? exchange = null;
+      if (timeZoneToUse == IConfigurationService.TimeZone.Exchange)
+      {
+        Instrument? instrument = GetInstrument(instrumentId);
+        if (instrument == null) throw new ArgumentException($"Instrument ({instrumentId}) not found.");
+        exchange = GetExchange(instrument.PrimaryExchangeId);
+      }
+
       //load actual data if required
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
@@ -1797,7 +1875,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
             result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -1818,7 +1896,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -1846,6 +1924,16 @@ namespace TradeSharp.Data
       string command;
       string normalizedTicker = ticker.ToUpper();
 
+      //get the time zone to use for the date time conversion
+      IConfigurationService.TimeZone timeZoneToUse = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+      Exchange? exchange = null;
+      if (timeZoneToUse == IConfigurationService.TimeZone.Exchange)
+      {
+        Instrument? instrument = GetInstrument(instrumentId);
+        if (instrument == null) throw new ArgumentException($"Instrument ({instrumentId}) not found.");
+        exchange = GetExchange(instrument.PrimaryExchangeId);
+      }
+
       //load actual data if required
       if (priceDataType == PriceDataType.Actual)
       {
@@ -1854,13 +1942,13 @@ namespace TradeSharp.Data
             $"WHERE " +
               $"Ticker = '{normalizedTicker}' " +
             $"ORDER BY DateTime ASC " + 
-            $"LIMIT {pageSize} OFFSET {pageIndex}";
+            $"LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
           while (reader.Read())
           {
-            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
             result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -1874,13 +1962,13 @@ namespace TradeSharp.Data
             $"WHERE " +
               $"Ticker = '{normalizedTicker}' " +
             $"ORDER BY DateTime ASC " +
-            $"LIMIT {pageSize} OFFSET {pageIndex}";
+            $"LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
           while (reader.Read())
           {
-            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -1903,14 +1991,24 @@ namespace TradeSharp.Data
       if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
       if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged) throw new ArgumentException("SQLite data store can not provide all/merged paged data, use repository layer to perform this functionality.");
 
+      //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
+      DateTime fromUtc = from.ToUniversalTime();
+      DateTime toUtc = to.ToUniversalTime();
+
       //create database command
       List<IBarData> result = new List<IBarData>();
       string command;
       string normalizedTicker = ticker.ToUpper();
 
-      //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
-      DateTime fromUtc = from.ToUniversalTime();
-      DateTime toUtc = to.ToUniversalTime();
+      //get the time zone to use for the date time conversion
+      IConfigurationService.TimeZone timeZoneToUse = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+      Exchange? exchange = null;
+      if (timeZoneToUse == IConfigurationService.TimeZone.Exchange)
+      {
+        Instrument? instrument = GetInstrument(instrumentId);
+        if (instrument == null) throw new ArgumentException($"Instrument ({instrumentId}) not found.");
+        exchange = GetExchange(instrument.PrimaryExchangeId);
+      }
 
       //load actual data if required
       if (priceDataType == PriceDataType.Actual)
@@ -1922,13 +2020,13 @@ namespace TradeSharp.Data
               $"AND DateTime >= {fromUtc.ToBinary()} " +
               $"AND DateTime <= {toUtc.ToBinary()} " +
             $"ORDER BY DateTime ASC " +
-            $"LIMIT {pageSize} OFFSET {pageIndex}";
+            $"LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
           while (reader.Read())
           {
-            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
             result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -1944,13 +2042,13 @@ namespace TradeSharp.Data
               $"AND DateTime >= {fromUtc.ToBinary()} " +
               $"AND DateTime <= {toUtc.ToBinary()} " +
             $"ORDER BY DateTime ASC " +
-            $"LIMIT {pageSize} OFFSET {pageIndex}";
+            $"LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
 
         using (SqliteDataReader reader = ExecuteReader(command))
         {
           while (reader.Read())
           {
-            var dateTime = DateTime.FromBinary(reader.GetInt64(1));
+            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -1973,6 +2071,16 @@ namespace TradeSharp.Data
       string command;
       string normalizedTicker = ticker.ToUpper();
 
+      //get the time zone to use for the date time conversion
+      IConfigurationService.TimeZone timeZoneToUse = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+      Exchange? exchange = null;
+      if (timeZoneToUse == IConfigurationService.TimeZone.Exchange)
+      {
+        Instrument? instrument = GetInstrument(instrumentId);
+        if (instrument == null) throw new ArgumentException($"Instrument ({instrumentId}) not found.");
+        exchange = GetExchange(instrument.PrimaryExchangeId);
+      }
+
       //get actual bar data
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All || priceDataType == PriceDataType.Merged)
       {
@@ -1984,7 +2092,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new Level1Data(DateTime.FromBinary(reader.GetInt64(0)), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false);
+            return new Level1Data(convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false);
       }
 
       //get synthetic bar data
@@ -1998,7 +2106,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new Level1Data(DateTime.FromBinary(reader.GetInt64(0)), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true);
+            return new Level1Data(convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true);
       }
 
       return null;
@@ -2015,9 +2123,20 @@ namespace TradeSharp.Data
       DateTime fromUtc = from.ToUniversalTime();
       DateTime toUtc = to.ToUniversalTime();
 
+      //get the time zone to use for the date time conversion
+      IConfigurationService.TimeZone timeZoneToUse = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+      Exchange? exchange = null;
+      if (timeZoneToUse == IConfigurationService.TimeZone.Exchange)
+      {
+        Instrument? instrument = GetInstrument(instrumentId);
+        if (instrument == null) throw new ArgumentException($"Instrument ({instrumentId}) not found.");
+        exchange = GetExchange(instrument.PrimaryExchangeId);
+      }
+
       //create database command
       List<ILevel1Data> result = new List<ILevel1Data>();
 
+      //create database command
       string command;
       string normalizedTicker = ticker.ToUpper();
 
@@ -2035,7 +2154,7 @@ namespace TradeSharp.Data
         using (SqliteDataReader reader = ExecuteReader(command))
           while (reader.Read())
           {
-            DateTime dateTime = DateTime.FromBinary(reader.GetInt64(0));
+            DateTime dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(0)), timeZoneToUse, exchange);
             result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
       }
@@ -2054,7 +2173,7 @@ namespace TradeSharp.Data
         using (SqliteDataReader reader = ExecuteReader(command))
           while (reader.Read())
           {
-            DateTime dateTime = DateTime.FromBinary(reader.GetInt64(0));
+            DateTime dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(0)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
