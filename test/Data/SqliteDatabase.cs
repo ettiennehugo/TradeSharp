@@ -517,6 +517,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Month, PriceDataType.Actual)]
     public void UpdateData_SingleBarDataPersist_Success(Resolution resolution, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double open = 1.0;
       double high = 2.0;
@@ -542,6 +543,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(PriceDataType.Synthetic)]
     public void UpdateData_SingleLevel1DataPersist_Success(PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double bid = 1.0;
       long bidSize = 2;
@@ -575,6 +577,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Month, PriceDataType.Actual)]
     public void UpdateData_SingleBarDataUpdate_Success(Resolution resolution, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double open = 1.0;
       double high = 2.0;
@@ -620,6 +623,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Month, PriceDataType.Actual)]
     public void UpdateData_RangeBarDataPersist_Success(Resolution resolution, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       DataCacheBars barData = new DataCacheBars(5);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5) };
@@ -657,6 +661,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Month, PriceDataType.Actual)]
     public void UpdateData_RangeBarDataUpdate_Success(Resolution resolution, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       DataCacheBars barData = new DataCacheBars(5);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5) };
@@ -2239,7 +2244,7 @@ namespace TradeSharp.Data.Testing
 
     private void generateDataBars(Resolution resolution, PriceDataType priceDataType, int count, string fromDateTime = "")
     {
-      DateTime dateTime = fromDateTime != string.Empty ? DateTime.Parse(fromDateTime, null, DateTimeStyles.AssumeUniversal) : DateTime.Now;
+      DateTime dateTime = fromDateTime != string.Empty ? DateTime.Parse(fromDateTime).ToUniversalTime() : DateTime.Now.ToUniversalTime();
       TimeSpan? dateTimeDelta = null;
 
       switch (resolution)
@@ -2271,8 +2276,8 @@ namespace TradeSharp.Data.Testing
         for (int i = 0; i < count; i++)
         {
           double value = i;
+          data.Add(new BarData(resolution, dateTime, value, value * 2.0, value * 3.0, value * 4.0, i * 5, priceDataType == PriceDataType.Synthetic));
           dateTime = dateTime.Add(dateTimeDelta!.Value);
-          data.Add(new BarData(resolution, dateTime.ToUniversalTime(), value, value * 2.0, value * 3.0, value * 4.0, i * 5, priceDataType == PriceDataType.Synthetic));
         }
 
         m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, data);
@@ -2284,8 +2289,8 @@ namespace TradeSharp.Data.Testing
         for (int i = 0; i < count; i++)
         {
           double value = i;
+          data.Add(new Level1Data(dateTime, value, i * 2, value * 3.0, i * 4, value * 5.0, i * 6, priceDataType == PriceDataType.Synthetic));
           dateTime = dateTime.Add(dateTimeDelta!.Value);
-          data.Add(new Level1Data(dateTime.ToUniversalTime(), value, i * 2, value * 3.0, i * 4, value * 5.0, i * 6, priceDataType == PriceDataType.Synthetic));
         }
 
         m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, data);
@@ -2343,16 +2348,17 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 03:30:00Z", PriceDataType.Actual, 150)]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 03:30:00Z", PriceDataType.Synthetic, 150)]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 03:30:00Z", PriceDataType.All, 300)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2023/06/01 00:00:00Z", "2023/09/31 00:00:00Z", PriceDataType.Actual, 122)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2023/06/01 00:00:00Z", "2023/09/31 00:00:00Z", PriceDataType.Synthetic, 122)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2023/06/01 00:00:00Z", "2023/09/31 00:00:00Z", PriceDataType.All, 244)]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", PriceDataType.Actual, 151)]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", PriceDataType.Synthetic, 151)]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", PriceDataType.All, 302)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.Actual, 122)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.Synthetic, 122)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.All, 244)]
     public void GetBarDataCount_WithDateFilter_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, PriceDataType priceDataType, int expectedCount)
     {
-      DateTime from = DateTime.Parse(fromDate, null, DateTimeStyles.AssumeUniversal);
-      DateTime to = DateTime.Parse(toDate, null, DateTimeStyles.AssumeUniversal);
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
+      DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
+      DateTime to = DateTime.Parse(toDate).ToUniversalTime();
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, priceDataType));
@@ -2365,6 +2371,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Day, PriceDataType.Synthetic)]
     public void GetBarData_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       DataCacheBars barData = new DataCacheBars(10);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
@@ -2392,6 +2399,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Day, PriceDataType.All)]
     public void GetBarData_ReturnsMergedVsAllBarData_Success(Resolution resolution, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       DataCacheBars barData = new DataCacheBars(15);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
@@ -2419,6 +2427,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Day)]
     public void GetBarData_ReturnsActualVsSyntheticSingleBarData_Success(Resolution resolution)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime startDateTime = DateTime.Now.ToUniversalTime();
       DataCacheBars barData = new DataCacheBars(10);
       DateTime actualBarDateTime = DateTime.Now.ToUniversalTime();
@@ -2476,20 +2485,17 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 05:00:00Z", PriceDataType.Actual, 241)]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 02:30:00Z", PriceDataType.Synthetic, 91)]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 06:00:00Z", PriceDataType.All, 601)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", PriceDataType.Actual, 123)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", PriceDataType.Synthetic, 123)]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", PriceDataType.All, 245)]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T05:00:00Z", PriceDataType.Actual, 241)]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:30:00Z", PriceDataType.Synthetic, 91)]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T06:00:00Z", PriceDataType.All, 602)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.Actual, 122)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.Synthetic, 122)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.All, 244)]
     public void GetBarData_FilterByDate_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, PriceDataType priceDataType, int expectedCount)
     {
-
-      //TODO: Need to adjust DateTime based on configuration or modify the configuration.
-
-      DateTime from = DateTime.Parse(fromDate, null, DateTimeStyles.AssumeUniversal);
-      DateTime to = DateTime.Parse(toDate, null, DateTimeStyles.AssumeUniversal);
-
+      DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
+      DateTime to = DateTime.Parse(toDate).ToUniversalTime();
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, priceDataType);
@@ -2500,118 +2506,92 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2023/12/31 00:10:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2023/12/31 00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2023/12/31 00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2023/12/31 00:40:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:10:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:40:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.All, 10, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.All, 10, "2023/12/31 00:05:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.All, 10, "2023/12/31 00:10:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.All, 20, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.All, 20, "2023/12/31 00:10:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.All, 20, "2023/12/31 00:20:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2024/01/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2024/01/20 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2024/01/20 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2024/02/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2024/01/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2024/01/20 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2024/01/20 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2024/02/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 10, PriceDataType.All, 10, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 10, PriceDataType.All, 10, "2024/01/05 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 10, PriceDataType.All, 10, "2024/01/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 0, 20, PriceDataType.All, 20, "2023/12/31 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 1, 20, PriceDataType.All, 20, "2024/01/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", 2, 20, PriceDataType.All, 20, "2024/01/20 00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2023-12-31T00:10:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2023-12-31T00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2023-12-31T00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2023-12-31T00:40:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2023-12-31T00:10:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2023-12-31T00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2023-12-31T00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2023-12-31T00:40:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2024-01-10T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2024-01-20T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2024-01-20T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2024-02-09T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2024-01-10T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2024-01-20T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2024-01-20T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2024-02-09T00:00:00Z")]
     public void GetBarData_FilterByPage_Success(Resolution resolution, string generatedFromDate, int pageIndex, int pageSize, PriceDataType priceDataType, int expectedCount, string expectedFromDate)
     {
-
-      //TODO: Need to adjust DateTime based on configuration or modify the configuration.
-
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, pageIndex, pageSize, priceDataType);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
-      Assert.AreEqual(DateTime.Parse(expectedFromDate, null, DateTimeStyles.AssumeUniversal), barData[0].DateTime, "Expected from date was not returned.");
+      Assert.AreEqual(DateTime.Parse(expectedFromDate).ToUniversalTime(), barData[0].DateTime, "Expected from date was not returned.");
     }
 
     [TestMethod]
-    [DataRow(Resolution.Level1, 0, 10, PriceDataType.All)]
-    [DataRow(Resolution.Level1, 0, 10, PriceDataType.Merged)]
-    [DataRow(Resolution.Minute, 0, 10, PriceDataType.All)]
-    [DataRow(Resolution.Minute, 0, 10, PriceDataType.Merged)]
-    [DataRow(Resolution.Day, 0, 10, PriceDataType.All)]
-    [DataRow(Resolution.Day, 0, 10, PriceDataType.Merged)]
+    [DataRow(Resolution.Level1, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.All)]
+    [DataRow(Resolution.Level1, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Merged)]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.All)]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Merged)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.All)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Merged)]
     [ExpectedException(typeof(ArgumentException))]
     public void GetBarData_FilterByPage_Exception(Resolution resolution, string generatedFromDate, int pageIndex, int pageSize, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, pageIndex, pageSize, priceDataType);
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 10, PriceDataType.Actual, 0, "2023/12/31 01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 10, PriceDataType.Actual, 0, "2023/12/31 01:10:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 10, PriceDataType.Actual, 0, "2023/12/31 01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 20, PriceDataType.Actual, 0, "2023/12/31 01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 20, PriceDataType.Actual, 0, "2023/12/31 01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 20, PriceDataType.Actual, 0, "2023/12/31 01:40:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:10:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 10, PriceDataType.Synthetic, 0, "2023/12/31 01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 20, PriceDataType.Synthetic, 0, "2023/12/31 01:40:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 10, PriceDataType.All, 0, "2023/12/31 01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 10, PriceDataType.All, 0, "2023/12/31 01:05:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 10, PriceDataType.All, 0, "2023/12/31 01:10:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 0, 20, PriceDataType.All, 0, "2023/12/31 01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 1, 20, PriceDataType.All, 0, "2023/12/31 01:10:00Z")]
-    [DataRow(Resolution.Minute, "2023/12/31 00:00:00Z", "2023/12/31 01:00:00Z", "2023/12/31 00:04:00Z", 2, 20, PriceDataType.All, 0, "2023/12/31 01:20:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 10, PriceDataType.Actual, 0, "2024/06/01 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 10, PriceDataType.Actual, 0, "2024/06/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 10, PriceDataType.Actual, 0, "2024/06/20 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 20, PriceDataType.Actual, 0, "2024/06/01 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 20, PriceDataType.Actual, 0, "2024/06/20 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 20, PriceDataType.Actual, 0, "2024/07/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 10, PriceDataType.Synthetic, 0, "2024/06/01 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 10, PriceDataType.Synthetic, 0, "2024/06/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 10, PriceDataType.Synthetic, 0, "2024/06/20 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 20, PriceDataType.Synthetic, 0, "2024/06/01 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 20, PriceDataType.Synthetic, 0, "2024/06/20 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 20, PriceDataType.Synthetic, 0, "2024/07/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 10, PriceDataType.All, 0, "2024/06/01 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 10, PriceDataType.All, 0, "2024/06/05 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 10, PriceDataType.All, 0, "2024/06/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 0, 20, PriceDataType.All, 0, "2024/06/01 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 1, 20, PriceDataType.All, 0, "2024/06/10 00:00:00Z")]
-    [DataRow(Resolution.Day, "2023/12/31 00:00:00Z", "2024/06/01 00:00:00Z", "2024/09/31 00:00:00Z", 2, 20, PriceDataType.All, 0, "2024/06/20 00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023-12-31T01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 1, 10, PriceDataType.Actual, 10, "2023-12-31T01:10:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 2, 10, PriceDataType.Actual, 10, "2023-12-31T01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023-12-31T01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 1, 20, PriceDataType.Actual, 20, "2023-12-31T01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 2, 20, PriceDataType.Actual, 20, "2023-12-31T01:40:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023-12-31T01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2023-12-31T01:10:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2023-12-31T01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023-12-31T01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2023-12-31T01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2023-12-31T01:40:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2024-06-01T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2024-06-11T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2024-06-21T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2024-06-01T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2024-06-21T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2024-07-11T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2024-06-01T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2024-06-11T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2024-06-21T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2024-06-01T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2024-06-21T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2024-07-11T00:00:00Z")]
     public void GetBarData_FilterByDateAndPage_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int pageIndex, int pageSize, PriceDataType priceDataType, int expectedCount, string expectedFromDate)
     {
 
-      //TODO: Need to adjust DateTime based on configuration or modify the configuration.
-
-      DateTime from = DateTime.Parse(fromDate, null, DateTimeStyles.AssumeUniversal);
-      DateTime to = DateTime.Parse(toDate, null, DateTimeStyles.AssumeUniversal);
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
+      DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
+      DateTime to = DateTime.Parse(toDate).ToUniversalTime();
       if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
       if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
       IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, pageIndex, pageSize, priceDataType);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
-      Assert.AreEqual(DateTime.Parse(expectedFromDate, null, DateTimeStyles.AssumeUniversal), barData[0].DateTime, "Expected from date was not returned.");
+      Assert.AreEqual(DateTime.Parse(expectedFromDate).ToUniversalTime(), barData[0].DateTime, "Expected from date was not returned.");
     }
 
     [TestMethod]
@@ -2619,6 +2599,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Level1, PriceDataType.Synthetic)]
     public void GetLevel1Data_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       DataCacheLevel1 level1Data = new DataCacheLevel1(10);
       level1Data.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
@@ -2667,6 +2648,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Day, PriceDataType.Synthetic)]
     public void GetDataCache_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       DataCacheBars barData = new DataCacheBars(10);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
@@ -2696,6 +2678,7 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Day)]
     public void GetDataCache_ReturnsActualAndSyntheticBarData_Success(Resolution resolution)
     {
+      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();  //bar data must always be stored in UTC datetime
       DataCacheBars barData = new DataCacheBars(10);
       barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),

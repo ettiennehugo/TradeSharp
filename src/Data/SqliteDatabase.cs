@@ -1537,7 +1537,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
+            var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
             list.Add(new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -1558,7 +1558,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
+            var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !list.Exists(x => x.Item1 == dateTime))) //either all/syntehtic data returned or merged with actual override synthetic data
               list.Add(new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -1738,7 +1738,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new BarData(resolution, convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false);
+            return new BarData(resolution, convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false);
       }
 
       //load synthetic price data if required
@@ -1752,7 +1752,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new BarData(resolution, convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true);
+            return new BarData(resolution, convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true);
       }
 
       return null;
@@ -1875,7 +1875,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
+            var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
             result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -1896,7 +1896,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
+            var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -1948,7 +1948,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
+            var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
             result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -1958,7 +1958,7 @@ namespace TradeSharp.Data
       if (priceDataType == PriceDataType.Synthetic)
       {
         command =
-          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
             $"WHERE " +
               $"Ticker = '{normalizedTicker}' " +
             $"ORDER BY DateTime ASC " +
@@ -1968,7 +1968,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
+            var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -2026,7 +2026,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
+            var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
             result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
         }
@@ -2036,7 +2036,7 @@ namespace TradeSharp.Data
       if (priceDataType == PriceDataType.Synthetic)
       {
         command =
-          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution)} " +
+          $"SELECT * FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentDataSynthetic, resolution)} " +
             $"WHERE " +
               $"Ticker = '{normalizedTicker}' " +
               $"AND DateTime >= {fromUtc.ToBinary()} " +
@@ -2048,7 +2048,7 @@ namespace TradeSharp.Data
         {
           while (reader.Read())
           {
-            var dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(1)), timeZoneToUse, exchange);
+            var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
@@ -2092,7 +2092,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new Level1Data(convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false);
+            return new Level1Data(convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false);
       }
 
       //get synthetic bar data
@@ -2106,7 +2106,7 @@ namespace TradeSharp.Data
 
         using (SqliteDataReader reader = ExecuteReader(command))
           if (reader.Read())
-            return new Level1Data(convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true);
+            return new Level1Data(convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true);
       }
 
       return null;
@@ -2154,7 +2154,7 @@ namespace TradeSharp.Data
         using (SqliteDataReader reader = ExecuteReader(command))
           while (reader.Read())
           {
-            DateTime dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(0)), timeZoneToUse, exchange);
+            DateTime dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange);
             result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), false));
           }
       }
@@ -2173,7 +2173,7 @@ namespace TradeSharp.Data
         using (SqliteDataReader reader = ExecuteReader(command))
           while (reader.Read())
           {
-            DateTime dateTime = convertDateTimeBasedOnConfiguration(new DateTime(reader.GetInt64(0)), timeZoneToUse, exchange);
+            DateTime dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange);
             if (priceDataType == PriceDataType.All || priceDataType == PriceDataType.Synthetic || (priceDataType == PriceDataType.Merged && !result.Exists(x => x.DateTime == dateTime))) //either all/synthetic data returned or merged with actual override synthetic data
               result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6), true));
           }
