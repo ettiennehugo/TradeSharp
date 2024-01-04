@@ -211,6 +211,9 @@ namespace TradeSharp.Data
       DataCache dataCache = m_database.GetDataCache(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
       IConfigurationService.TimeZone timeZone = (IConfigurationService.TimeZone)m_configuration.General[IConfigurationService.GeneralConfiguration.TimeZone];
 
+      Exchange? exchange = null;
+      if (timeZone == IConfigurationService.TimeZone.Exchange)
+        exchange = m_database.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
 
       switch (Resolution)
       {
@@ -236,24 +239,11 @@ namespace TradeSharp.Data
 
             for (int barDataIndex = 0; barDataIndex < barData.Count; barDataIndex++)
             {
-              //convert the bar data date time to the correct time zone based on the configuration
-              DateTime barDataDateTime = barData.DateTime[barDataIndex];
-              switch (timeZone)
-              {
-                case IConfigurationService.TimeZone.Local:
-                  barDataDateTime = barDataDateTime.ToLocalTime();
-                  break;
-                case IConfigurationService.TimeZone.Exchange:
-                  Exchange exchange = m_database.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
-                  barDataDateTime = TimeZoneInfo.ConvertTimeFromUtc(barDataDateTime, exchange.TimeZone);
-                  break;
-              }
-
               //always setup the first bar from the data store, the first and last bars of the returned data may not be aligned with the interval for minutes/hours since
               //they can contain partial values based on the requested from/to dates
               if (subBarIndex == 0)
               {
-                m_dateTimeData[index] = barDataDateTime;
+                m_dateTimeData[index] = barData.DateTime[barDataIndex];
                 m_openData[index] = barData.Open[barDataIndex];
                 m_highData[index] = barData.High[barDataIndex];
                 m_lowData[index] = barData.Low[barDataIndex];
@@ -326,8 +316,7 @@ namespace TradeSharp.Data
                   level1Data.DateTime[i] = level1Data.DateTime[i].ToLocalTime();
                   break;
                 case IConfigurationService.TimeZone.Exchange:
-                  Exchange exchange = m_database.GetExchange(Instrument.PrimaryExchangeId) ?? throw new ArgumentException($"Failed to find primary exchange for instrument {Instrument.Ticker} ({Instrument.Name})");
-                  level1Data.DateTime[i] = TimeZoneInfo.ConvertTimeFromUtc(level1Data.DateTime[i], exchange.TimeZone);
+                  level1Data.DateTime[i] = level1Data.DateTime[i].Add(exchange!.TimeZone.BaseUtcOffset);
                   break;
               }
 

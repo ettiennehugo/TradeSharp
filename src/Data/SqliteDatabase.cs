@@ -1315,7 +1315,7 @@ namespace TradeSharp.Data
 
         transaction.Commit();
       }
-    }
+     }
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<ILevel1Data> bars)
     {

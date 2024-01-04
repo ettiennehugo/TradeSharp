@@ -492,7 +492,7 @@ namespace TradeSharp.Data.Testing
                 Assert.AreEqual(m_level1TestDataReversed.DateTime[i].ToLocalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
                 break;
               case IConfigurationService.TimeZone.Exchange:
-                Assert.AreEqual(TimeZoneInfo.ConvertTime(m_level1TestDataReversed.DateTime[i], m_exchange.TimeZone), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
+                Assert.AreEqual(m_level1TestDataReversed.DateTime[i].Add(m_exchange.TimeZone.BaseUtcOffset), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
                 break;
               case IConfigurationService.TimeZone.UTC:
                 Assert.AreEqual(m_level1TestDataReversed.DateTime[i].ToUniversalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone  {timeZone.ToString()}  is not correct");
@@ -513,7 +513,7 @@ namespace TradeSharp.Data.Testing
                 Assert.AreEqual(barData.DateTime[i].ToLocalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
                 break;
               case IConfigurationService.TimeZone.Exchange:
-                Assert.AreEqual(TimeZoneInfo.ConvertTime(barData.DateTime[i], m_exchange.TimeZone), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
+                Assert.AreEqual(barData.DateTime[i].Add(m_exchange.TimeZone.BaseUtcOffset), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
                 break;
               case IConfigurationService.TimeZone.UTC:
                 Assert.AreEqual(barData.DateTime[i].ToUniversalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
