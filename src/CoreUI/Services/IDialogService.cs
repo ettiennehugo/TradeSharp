@@ -25,12 +25,6 @@ namespace TradeSharp.CoreUI.Services
     Local,    //local machine timezone
   }
 
-  public enum ImportDefaultPriceDataType
-  {
-    Actual = PriceDataType.Actual,
-    Synthetic = PriceDataType.Synthetic,
-  }
-
   /// <summary>
   /// Results from import operation with the specific outcome. Success state is set per default and other states must be explicitly set.
   /// </summary>
@@ -71,13 +65,11 @@ namespace TradeSharp.CoreUI.Services
     {
       ReplaceBehavior = ImportReplaceBehavior.Skip;
       DateTimeTimeZone = ImportDataDateTimeTimeZone.Exchange;
-      DefaultPriceDataType = ImportDefaultPriceDataType.Actual;
       Filename = "";
     }
 
     [ObservableProperty] ImportReplaceBehavior m_replaceBehavior;
     [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
-    [ObservableProperty] ImportDefaultPriceDataType m_defaultPriceDataType;
     [ObservableProperty] string m_filename;
   }
 
@@ -144,7 +136,7 @@ namespace TradeSharp.CoreUI.Services
     Task<ImportSettings?> ShowImportInstrumentGroupsAsync();
     Task<string?> ShowExportInstrumentGroupsAsync();
 
-    Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution, DateTime dateTime, PriceDataType priceDataType);
+    Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution, DateTime dateTime);
     Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData);
     Task<ImportSettings?> ShowImportBarDataAsync();
     Task<string?> ShowExportBarDataAsync();

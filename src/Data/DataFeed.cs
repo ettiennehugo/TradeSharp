@@ -59,11 +59,9 @@ namespace TradeSharp.Data
     protected double[] m_lastPriceData;
     protected DataStream<long> m_lastVolume;
     protected long[] m_lastVolumeData;
-    protected DataStream<bool> m_synthetic;
-    protected bool[] m_syntheticData;
 
     //constructors
-    public DataFeed(IConfigurationService configuration, IDatabase database, IDataProvider dataProvider, Instrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode, PriceDataType priceDataType) : base()
+    public DataFeed(IConfigurationService configuration, IDatabase database, IDataProvider dataProvider, Instrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode) : base()
     {
       if (interval == 0) throw new ArgumentOutOfRangeException(nameof(interval), "Interval must be greater than zero.");
       if (from > to) throw new ArgumentOutOfRangeException(nameof(from), "From must be less than or equal to To.");
@@ -79,7 +77,6 @@ namespace TradeSharp.Data
       Resolution = resolution;
       CurrentBar = 0;
       Interval = interval;
-      PriceDataType = priceDataType;
 
       //create/initialize the data streams and associated data buffers
       m_dateTime = new DataStream<DateTime>();
@@ -94,8 +91,6 @@ namespace TradeSharp.Data
       m_closeData = Array.Empty<double>();
       m_volume = new DataStream<long>();
       m_volumeData = Array.Empty<long>();
-      m_synthetic = new DataStream<bool>();
-      m_syntheticData = Array.Empty<bool>();
       m_bidPrice = new DataStream<double>();
       m_bidPriceData = Array.Empty<double>();
       m_bidVolume = new DataStream<long>();
@@ -122,7 +117,6 @@ namespace TradeSharp.Data
       m_low.Dispose();
       m_close.Dispose();
       m_volume.Dispose();
-      m_synthetic.Dispose();
       m_bidPrice.Dispose();
       m_bidVolume.Dispose();
       m_askPrice.Dispose();
@@ -190,7 +184,6 @@ namespace TradeSharp.Data
     public bool IsLastBar { get { return Count == 0 || CurrentBar == Count - 1; } }
     public int Interval { get; }
     public int Count { get; internal set; }
-    public PriceDataType PriceDataType { get; }
     public IDataStream<DateTime> DateTime => m_dateTime;
     public IDataStream<double> Open => m_open;
     public IDataStream<double> High => m_high;
@@ -203,12 +196,11 @@ namespace TradeSharp.Data
     public IDataStream<long> AskVolume => m_askVolume;
     public IDataStream<double> LastPrice => m_lastPrice;
     public IDataStream<long> LastVolume => m_lastVolume;
-    public IDataStream<bool> Synthetic => m_synthetic;
 
     //methods
     protected void refreshDataCache()
     {
-      DataCache dataCache = m_database.GetDataCache(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To, PriceDataType);
+      DataCache dataCache = m_database.GetDataCache(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To);
       IConfigurationService.TimeZone timeZone = (IConfigurationService.TimeZone)m_configuration.General[IConfigurationService.GeneralConfiguration.TimeZone];
 
       Exchange? exchange = null;
@@ -232,7 +224,6 @@ namespace TradeSharp.Data
             m_lowData = new double[Count];
             m_closeData = new double[Count];
             m_volumeData = new long[Count];
-            m_syntheticData = new bool[Count];
 
             int index = 0;
             int subBarIndex = 0;  //if interval is larger than 1 this would be the sub-bar index in the original bar data that needs to be merged into the current bar of the output data
@@ -248,7 +239,6 @@ namespace TradeSharp.Data
                 m_highData[index] = barData.High[barDataIndex];
                 m_lowData[index] = barData.Low[barDataIndex];
                 m_volumeData[index] = barData.Volume[barDataIndex];
-                m_syntheticData[index] = barData.Synthetic[barDataIndex];
 
                 //handle edge case where bar resolution is minute and interval is larger than 1, we need to align the first bar to the interval date/time even if we do not have FULL data for it in the range
                 // e.g. 9:38 as the first bar at interval 5 need to be aligned to 9:35 for the first bar
@@ -263,7 +253,6 @@ namespace TradeSharp.Data
                 m_highData[index] = Math.Max(barData.High[barDataIndex], m_highData[index]);
                 m_lowData[index] = Math.Min(barData.Low[barDataIndex], m_lowData[index]);
                 m_volumeData[index] += barData.Volume[barDataIndex];
-                m_syntheticData[index] |= barData.Synthetic[barDataIndex];
               }
 
               m_closeData[index] = barData.Close[barDataIndex];
@@ -283,7 +272,6 @@ namespace TradeSharp.Data
             m_lowData = m_lowData.Reverse().ToArray();
             m_closeData = m_closeData.Reverse().ToArray();
             m_volumeData = m_volumeData.Reverse().ToArray();
-            m_syntheticData = m_syntheticData.Reverse().ToArray();
 
             m_dateTime.Data = m_dateTimeData;
             m_open.Data = m_openData;
@@ -293,7 +281,6 @@ namespace TradeSharp.Data
             m_volume.Data = m_volumeData;
             m_lastPrice.Data = m_lastPriceData = m_closeData;
             m_lastVolume.Data = m_lastVolumeData = m_volumeData;
-            m_synthetic.Data = m_syntheticData;
 
             m_bidPriceData = Array.Empty<double>();
             m_bidPrice.Data = m_bidPriceData;
@@ -331,8 +318,6 @@ namespace TradeSharp.Data
               m_closeData = new double[Count];
               m_volumeData = new long[Count];
 
-              m_syntheticData = new bool[Count];
-
               int index = 0;
               int subBarIndex = 0;
 
@@ -345,14 +330,12 @@ namespace TradeSharp.Data
                   m_highData[index] = level1Data.Last[level1DataIndex];
                   m_lowData[index] = level1Data.Last[level1DataIndex];
                   m_volumeData[index] = level1Data.LastSize[level1DataIndex];
-                  m_syntheticData[index] = level1Data.Synthetic[level1DataIndex];
                 }
                 else
                 {
                   m_highData[index] = Math.Max(level1Data.Last[level1DataIndex], m_highData[index]);
                   m_lowData[index] = Math.Min(level1Data.Last[level1DataIndex], m_lowData[index]);
                   m_volumeData[index] += level1Data.LastSize[level1DataIndex];
-                  m_syntheticData[index] |= level1Data.Synthetic[level1DataIndex];
                 }
 
                 m_closeData[index] = level1Data.Last[level1DataIndex];
@@ -372,7 +355,6 @@ namespace TradeSharp.Data
               m_lowData = m_lowData.Reverse().ToArray();
               m_closeData = m_closeData.Reverse().ToArray();
               m_volumeData = m_volumeData.Reverse().ToArray();
-              m_syntheticData = m_syntheticData.Reverse().ToArray();
 
               m_dateTime.Data = m_dateTimeData;
               m_open.Data = m_openData;
@@ -382,7 +364,6 @@ namespace TradeSharp.Data
               m_volume.Data = m_volumeData;
               m_lastPrice.Data = m_lastPriceData = m_closeData;
               m_lastVolume.Data = m_lastVolumeData = m_volumeData;
-              m_synthetic.Data = m_syntheticData;
             }
             else
             {
@@ -394,7 +375,6 @@ namespace TradeSharp.Data
               m_volumeData = level1Data.LastSize.Reverse().ToArray();
               m_lastPriceData = level1Data.Last.Reverse().ToArray();
               m_lastVolumeData = level1Data.LastSize.Reverse().ToArray();
-              m_syntheticData = level1Data.Synthetic.Reverse().ToArray();
 
               m_dateTime.Data = m_dateTimeData;
               m_open.Data = m_openData;
@@ -402,7 +382,6 @@ namespace TradeSharp.Data
               m_low.Data = m_lowData;
               m_close.Data = m_closeData;
               m_volume.Data = m_volumeData;
-              m_synthetic.Data = m_syntheticData;
               m_lastPrice.Data = m_lastPriceData;
               m_lastVolume.Data = m_lastVolumeData;
             }
@@ -440,7 +419,6 @@ namespace TradeSharp.Data
       m_low.CurrentBar = CurrentBar;
       m_close.CurrentBar = CurrentBar;
       m_volume.CurrentBar = CurrentBar;
-      m_synthetic.CurrentBar = CurrentBar;
       m_bidPrice.CurrentBar = CurrentBar;
       m_bidVolume.CurrentBar = CurrentBar;
       m_askPrice.CurrentBar = CurrentBar;
@@ -469,7 +447,6 @@ namespace TradeSharp.Data
         m_low.CurrentBar = CurrentBar;
         m_close.CurrentBar = CurrentBar;
         m_volume.CurrentBar = CurrentBar;
-        m_synthetic.CurrentBar = CurrentBar;
         m_bidPrice.CurrentBar = CurrentBar;
         m_bidVolume.CurrentBar = CurrentBar;
         m_askPrice.CurrentBar = CurrentBar;

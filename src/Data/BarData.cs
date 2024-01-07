@@ -29,10 +29,9 @@ namespace TradeSharp.Data
       Low = double.MinValue;
       Close = double.MinValue;
       Volume = long.MinValue;
-      Synthetic = true;   //above data is made up so flag it as synthetic
     }
 
-    public BarData(Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume, bool synthetic)
+    public BarData(Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume)
     {
       Resolution = resolution; 
       DateTime = dateTime;
@@ -41,7 +40,6 @@ namespace TradeSharp.Data
       Low = low;
       Close = close;
       Volume = volume;
-      Synthetic = synthetic;
     }
 
     //finalizers
@@ -58,12 +56,11 @@ namespace TradeSharp.Data
     [ObservableProperty] private double m_low;
     [ObservableProperty] private double m_close;
     [ObservableProperty] private long m_volume;
-    [ObservableProperty] private bool m_synthetic;
 
     //methods
     public IBarData Clone()
     {
-      return new BarData(Resolution, DateTime, Open, High, Low, Close, Volume, Synthetic); 
+      return new BarData(Resolution, DateTime, Open, High, Low, Close, Volume); 
     }
 
     //NOTE: The equals is used for searching collections to find bar data.
@@ -71,12 +68,12 @@ namespace TradeSharp.Data
     {
       if (other == null || !(other is BarData)) return false;
       IBarData barData = (IBarData)other;
-      return barData.DateTime == DateTime && barData.Synthetic == Synthetic;
+      return barData.DateTime == DateTime;
     }
 
     public override int GetHashCode()
     {
-      return DateTime.GetHashCode() + Synthetic.GetHashCode();
+      return DateTime.GetHashCode();
     }
 
     public int CompareTo(object? o)

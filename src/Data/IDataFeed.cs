@@ -37,7 +37,6 @@
     bool IsLastBar { get; }
     int Interval { get; }
     int Count { get; }
-    PriceDataType PriceDataType { get; }
     IDataStream<DateTime> DateTime { get; }
     IDataStream<double> Open{ get; }
     IDataStream<double> High { get; }
@@ -50,7 +49,6 @@
     IDataStream<long> AskVolume { get; }
     IDataStream<double> LastPrice { get; }
     IDataStream<long> LastVolume { get; }
-    IDataStream<bool> Synthetic { get; }
 
     //methods
 

@@ -31,7 +31,7 @@ namespace TradeSharp.Data
       LastSize = long.MinValue;
     }
 
-    public Level1Data(DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize, bool synthetic)
+    public Level1Data(DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize)
     {
       DateTime = dateTime;
       Bid = bid;
@@ -40,7 +40,6 @@ namespace TradeSharp.Data
       AskSize = askSize;
       Last = last;
       LastSize = lastSize;
-      Synthetic = synthetic;
     }
 
     //finalizers
@@ -57,7 +56,6 @@ namespace TradeSharp.Data
     [ObservableProperty] long m_askSize;
     [ObservableProperty] double m_last;
     [ObservableProperty] long m_lastSize;
-    [ObservableProperty] bool m_synthetic;
 
     //methods
 

@@ -61,7 +61,7 @@ namespace TradeSharp.CoreUI.Services
       set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
     }
 
-    public ObservableCollection<Exchange> Items { get; set; }
+    public IList<Exchange> Items { get; set; }
 
     //methods
     public bool Add(Exchange item)

@@ -9,14 +9,13 @@
     mc:Ignorable="d"
     Loaded="Page_Loaded"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-  <Grid x:Name="m_main" ColumnDefinitions="75, 300" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
+  <Grid x:Name="m_main" ColumnDefinitions="75, 300" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto">
     <TextBlock x:Name="m_dateTimeLbl" Text="Date/Time" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"/>
     <TextBlock x:Name="m_openLbl" Text="Open" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2"/>
     <TextBlock x:Name="m_highLbl" Text="High" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3"/>
     <TextBlock x:Name="m_lowLbl" Text="Low" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4"/>
     <TextBlock x:Name="m_closeLbl" Text="Close" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5"/>
     <TextBlock x:Name="m_volumeLbl" Text="Volume" VerticalAlignment="Center" Grid.Column="0" Grid.Row="6"/>
-    <TextBlock x:Name="m_syntheticLbl" Text="Synthetic" VerticalAlignment="Center" Grid.Column="0" Grid.Row="7"/>
     <DatePicker x:Name="m_date" Date="{x:Bind Date, Mode=TwoWay}" Grid.Column="1" Grid.Row="0" DateChanged="m_date_DateChanged"/>
     <TimePicker x:Name="m_time" ClockIdentifier="24HourClock" Time="{x:Bind Time, Mode=TwoWay}" Grid.Column="1"  Grid.Row="1" TimeChanged="m_time_TimeChanged"/>
     <TextBox x:Name="m_open" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))(\.[0-9]*)?$" Text="{x:Bind BarData.Open, Mode=TwoWay}" Grid.Column="1" Grid.Row="2"/>
@@ -24,9 +23,5 @@
     <TextBox x:Name="m_low" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))(\.[0-9]*)?$" Text="{x:Bind BarData.Low, Mode=TwoWay}" Grid.Column="1" Grid.Row="4"/>
     <TextBox x:Name="m_close" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))(\.[0-9]*)?$" Text="{x:Bind BarData.Close, Mode=TwoWay}" Grid.Column="1" Grid.Row="5"/>
     <TextBox x:Name="m_volume" Width="150" HorizontalAlignment="Left" eui:TextBoxExtensions.ValidationMode="Dynamic" eui:TextBoxExtensions.Regex="^(0|([1-9][0-9]*))$" Text="{x:Bind BarData.Volume, Mode=TwoWay}" Grid.Column="1" Grid.Row="6"/>
-    <ComboBox x:Name="m_synthetic" Width="150" HorizontalAlignment="Left" SelectedIndex="{x:Bind SyntheticSelectionIndex, Mode=TwoWay}" Grid.Column="1" Grid.Row="7" SelectionChanged="m_synthetic_SelectionChanged">
-      <ComboBoxItem>Actual</ComboBoxItem>
-      <ComboBoxItem>Synthetic</ComboBoxItem>
-    </ComboBox>
   </Grid>
 </Page>

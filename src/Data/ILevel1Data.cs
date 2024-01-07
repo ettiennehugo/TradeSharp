@@ -31,7 +31,6 @@ namespace TradeSharp.Data
     public long AskSize { get; set; }
     public double Last { get; set; }
     public long LastSize { get; set; }
-    public bool Synthetic { get; set; }
 
     //methods
 

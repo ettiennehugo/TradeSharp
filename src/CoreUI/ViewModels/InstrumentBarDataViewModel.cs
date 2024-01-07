@@ -23,10 +23,12 @@ namespace TradeSharp.CoreUI.ViewModels
     private string m_dataProvider;
     private Resolution m_resolution;
     private Instrument? m_instrument;
+    private IInstrumentBarDataService m_barDataService;
 
     //constructors
     public InstrumentBarDataViewModel(INavigationService navigationService, IDialogService dialogService) : base(Ioc.Default.GetRequiredService<IInstrumentBarDataService>(), navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
     {
+      m_barDataService = (IInstrumentBarDataService)m_itemsService;
       Resolution = Resolution.Day;
       DataProvider = string.Empty;
       Instrument = null;
@@ -37,8 +39,6 @@ namespace TradeSharp.CoreUI.ViewModels
       ImportCommandAsync = new AsyncRelayCommand(OnImportAsync, () => DataProvider != string.Empty && Instrument != null);
       ExportCommandAsync = new AsyncRelayCommand(OnExportAsync, () => DataProvider != string.Empty && Instrument != null && Items.Count > 0);
       CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
-      CopyToSyntheticCommandAsync = new AsyncRelayCommand<object?>(OnCopyToSyntheticAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
-      CopyToActualCommandAsync = new AsyncRelayCommand<object?>(OnCopyToActualAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
       CopyToHourCommandAsync = new AsyncRelayCommand<object?>(OnCopyToHourAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution == Resolution.Minute);
       CopyToDayCommandAsync = new AsyncRelayCommand<object?>(OnCopyToDayAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
       CopyToWeekCommandAsync = new AsyncRelayCommand<object?>(OnCopyToWeekAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
@@ -52,7 +52,7 @@ namespace TradeSharp.CoreUI.ViewModels
     //interface implementations
     public override async void OnAdd()
     {
-      IBarData? newBar = await m_dialogService.ShowCreateBarDataAsync(Resolution, DateTime.Now, PriceDataType.Merged);
+      IBarData? newBar = await m_dialogService.ShowCreateBarDataAsync(Resolution, DateTime.Now);
       if (newBar != null)
       {
         newBar.Resolution = Resolution;
@@ -102,16 +102,19 @@ namespace TradeSharp.CoreUI.ViewModels
       });
     }
 
-    public virtual Task OnCopyToSyntheticAsync(object? selection)
+    public Task<IList<IBarData>> GetItems(DateTime from, DateTime to)
     {
-      //TODO: Copy selected bar data as synthetic bars
-      throw new NotImplementedException();
+      return Task.Run(() => { return m_barDataService.GetItems(from, to); });
     }
 
-    public virtual Task OnCopyToActualAsync(object? selection)
+    public Task<IList<IBarData>> GetItems(int index, int count)
     {
-      //TODO: Copy selected bar data as actual bars
-      throw new NotImplementedException();
+      return Task.Run(() => { return m_barDataService.GetItems(index, count); });
+    }
+
+    public Task<IList<IBarData>> GetItems(DateTime from, DateTime to, int index, int count)
+    {
+      return Task.Run(() => { return m_barDataService.GetItems(from, to, index, count); });
     }
 
     public virtual Task OnCopyToHourAsync(object? selection)
@@ -145,8 +148,6 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     //properties
-    public AsyncRelayCommand<object?> CopyToSyntheticCommandAsync { get; internal set; }
-    public AsyncRelayCommand<object?> CopyToActualCommandAsync { get; internal set; }
     public AsyncRelayCommand<object?> CopyToHourCommandAsync { get; internal set; }
     public AsyncRelayCommand<object?> CopyToDayCommandAsync { get; internal set; }
     public AsyncRelayCommand<object?> CopyToWeekCommandAsync { get; internal set; }

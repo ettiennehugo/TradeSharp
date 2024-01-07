@@ -5,17 +5,86 @@ using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Data;
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Linq;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using Microsoft.UI.Xaml.Data;
+using Windows.Foundation;
 
 namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
+  /// Implements the IAsyncOperation<LoadMoreItemsResult> interface to support incremental loading of instruments.
+  /// </summary>
+  class IncrementalInstrumentLoadResult : IAsyncOperation<LoadMoreItemsResult>
+  {
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+    private Task<Instrument> m_task;
+
+    //constructors
+    public IncrementalInstrumentLoadResult(Task<Instrument> task)
+    {
+      m_task = task;
+    }
+
+    //finalizers
+
+
+    //interface implementations
+
+
+
+    //Example of how to implement the IAsyncOperation 
+    //https://learn.microsoft.com/en-us/uwp/api/windows.ui.xaml.data.isupportincrementalloading?view=winrt-22621
+
+
+
+    public AsyncOperationCompletedHandler<LoadMoreItemsResult> Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+
+    public void Cancel()
+    {
+      //m_task.Cancel = true;
+      throw new NotImplementedException();
+    }
+
+    public void Close()
+    {
+      //m_task.Close();
+      throw new NotImplementedException();
+    }
+
+    public LoadMoreItemsResult GetResults()
+    {
+      throw new NotImplementedException();
+    }
+
+
+    //properties
+    public Exception ErrorCode => m_task.Exception;
+    public uint Id => (uint)m_task.Id;
+    public AsyncStatus Status => throw new NotImplementedException();
+
+
+    //methods
+
+
+
+
+  }
+
+  /// <summary>
   /// Displays the list of instruments defined for trading.
   /// </summary>
-  public sealed partial class InstrumentsView : Page
+  public sealed partial class InstrumentsView : Page, ISupportIncrementalLoading
   {
     //constants
 
@@ -46,10 +115,20 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //interface implementations
+    public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
+    {
+      throw new NotImplementedException();
 
+
+
+      //TODO: implement paged loading
+
+
+    }
 
     //properties
     public InstrumentViewModel ViewModel { get; }
+    public bool HasMoreItems { get { return ViewModel.HasMoreItems; } }
 
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -99,7 +178,5 @@ namespace TradeSharp.WinCoreUI.Views
     {
       refreshFilter();
     }
-
-
   }
 }

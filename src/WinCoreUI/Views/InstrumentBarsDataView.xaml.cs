@@ -8,13 +8,68 @@ using TradeSharp.CoreUI.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
+using Microsoft.UI.Xaml.Data;
+using Windows.Foundation;
+using System.Threading.Tasks;
 
 namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
+  /// Result of an incremental load of bar data.
+  /// </summary>
+  class IncrementalBarDataLoadResult : IAsyncOperation<LoadMoreItemsResult>
+  {
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+    private Task<IList<IBarData>> m_task;
+
+    //constructors
+    public IncrementalBarDataLoadResult(Task<IList<IBarData>> task)
+    {
+      m_task = task;
+    }
+
+    //finalizers
+
+
+    //interface implementations
+
+
+    //properties
+    Exception IAsyncInfo.ErrorCode => m_task.Exception;
+    uint IAsyncInfo.Id => (uint)m_task.Id;
+    AsyncOperationCompletedHandler<LoadMoreItemsResult> IAsyncOperation<LoadMoreItemsResult>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException("Can not set the task completed state."); }
+    AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+    //methods
+    void IAsyncInfo.Cancel()
+    {
+      throw new NotImplementedException();
+    }
+
+    void IAsyncInfo.Close()
+    {
+      throw new NotImplementedException();
+    }
+
+    LoadMoreItemsResult IAsyncOperation<LoadMoreItemsResult>.GetResults()
+    {
+      throw new NotImplementedException();
+    }
+  }
+
+  /// <summary>
   /// Control to display bar data for a given instrument.
   /// </summary>
-  public sealed partial class InstrumentBarsDataView : UserControl
+  public sealed partial class InstrumentBarsDataView : UserControl, ISupportIncrementalLoading
   {
     //constants
 
@@ -35,12 +90,14 @@ namespace TradeSharp.WinCoreUI.Views
     public static TimeSpan s_defaultStartTime = new TimeSpan(0, 0, 0);
     public static TimeSpan s_defaultEndTime = new TimeSpan(23, 59, 59);
 
+    private int m_index;
+
     //constructors
     public InstrumentBarsDataView()
     {
       ViewModel = Ioc.Default.GetRequiredService<InstrumentBarDataViewModel>();
       this.InitializeComponent();
-      ViewModel.Items.CollectionChanged += new NotifyCollectionChangedEventHandler(viewModelItemsChanged);
+      m_index = 0;
     }
 
     //finalizers
@@ -92,14 +149,28 @@ namespace TradeSharp.WinCoreUI.Views
     public string FilterStartTooltip { get => (string)GetValue(FilterStartTooltipProperty); internal set { SetValue(FilterStartTooltipProperty, value); } }
     public string FilterEndTooltip { get => (string)GetValue(FilterEndTooltipProperty); internal set { SetValue(FilterEndTooltipProperty, value); } }
     public InstrumentBarDataViewModel ViewModel { get; internal set; }
+    public bool HasMoreItems => throw new NotImplementedException();
 
     //methods
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-      if (ViewModel.Items.Count == 0) ViewModel.RefreshCommandAsync.ExecuteAsync(null);
-      m_dataTable.ItemsSource = ViewModel.Items;  //filter will be default so display all items
+      
+
+      //Replaced by incremental loading.
+      //if (ViewModel.Items.Count == 0) ViewModel.RefreshCommandAsync.ExecuteAsync(null);
+      //m_dataTable.ItemsSource = ViewModel.Items;  //filter will be default so display all items
+    
+      
       //NOTE: resetFilter/refreshFilter runs a lot with the control initialization so no reason to call it here.
-      Common.Utilities.populateComboBoxFromEnum(ref m_priceDataType, typeof(Data.PriceDataType));
+      //Common.Utilities.populateComboBoxFromEnum(ref m_priceDataType, typeof(Data.PriceDataType));
+    }
+
+    public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
+    {
+      int index = m_index;
+      m_index += (int)count;
+      //if (m_index > ViewModel.Count) m_index = ViewModel.Count;  TODO - reset to count of bars if it exceeds the count number of bars.
+      return new IncrementalBarDataLoadResult(ViewModel.GetItems(index, (int)count));
     }
 
     private void refreshCopyMenu()
@@ -113,8 +184,6 @@ namespace TradeSharp.WinCoreUI.Views
           throw new ArgumentException("Level1 resolution not supported by bar data view, use view for level1 data.");
         case Resolution.Minute:
           m_buttonCopy.Visibility = Visibility.Visible;
-          m_copyToSynthetic.Visibility = Visibility.Visible;
-          m_copyToActual.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Visible;
           m_copyToDay.Visibility = Visibility.Visible;
           m_copyToWeek.Visibility = Visibility.Visible;
@@ -122,8 +191,6 @@ namespace TradeSharp.WinCoreUI.Views
           break;
         case Resolution.Hour:
           m_buttonCopy.Visibility = Visibility.Visible;
-          m_copyToSynthetic.Visibility = Visibility.Visible;
-          m_copyToActual.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Visible;
           m_copyToWeek.Visibility = Visibility.Visible;
@@ -131,8 +198,6 @@ namespace TradeSharp.WinCoreUI.Views
           break;
         case Resolution.Day:
           m_buttonCopy.Visibility = Visibility.Visible;
-          m_copyToSynthetic.Visibility = Visibility.Visible;
-          m_copyToActual.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Collapsed;
           m_copyToWeek.Visibility = Visibility.Visible;
@@ -140,8 +205,6 @@ namespace TradeSharp.WinCoreUI.Views
           break;
         case Resolution.Week:
           m_buttonCopy.Visibility = Visibility.Visible;
-          m_copyToSynthetic.Visibility = Visibility.Visible;
-          m_copyToActual.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Collapsed;
           m_copyToWeek.Visibility = Visibility.Collapsed;
@@ -149,8 +212,6 @@ namespace TradeSharp.WinCoreUI.Views
           break;
         case Resolution.Month:
           m_buttonCopy.Visibility = Visibility.Visible;
-          m_copyToSynthetic.Visibility = Visibility.Visible;
-          m_copyToActual.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Collapsed;
           m_copyToWeek.Visibility = Visibility.Collapsed;
@@ -207,7 +268,6 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void resetFilter()
     {
-      m_priceDataType.SelectedIndex = 0;
       m_startDate.Date = s_defaultStartDate;
       m_endDate.Date = s_defaultEndDate;
       m_startTime.Time = s_defaultStartTime;
@@ -227,37 +287,16 @@ namespace TradeSharp.WinCoreUI.Views
       DateTime startDateTime = new DateTime(m_startDate.Date.Year, m_startDate.Date.Month, m_startDate.Date.Day, m_startTime.Time.Hours, m_startTime.Time.Minutes, 0);
       DateTime endDateTime = new DateTime(m_endDate.Date.Year, m_endDate.Date.Month, m_endDate.Date.Day, m_endTime.Time.Hours, m_endTime.Time.Minutes, 0);
 
-      //show all items vs show filtered items
-      PriceDataType selectedPriceDataType = m_priceDataType.SelectedIndex != -1 ? (PriceDataType)m_priceDataType.SelectedIndex : 0; //on initialization the selected index will be -1 as the default
-      if (startDateTime.Equals(s_defaultStartDateTime) && endDateTime.Equals(s_defaultEndDateTime) && selectedPriceDataType == PriceDataType.All)
+      //filter items down to the selected from/to dates
+      if (startDateTime.Equals(s_defaultStartDateTime) && endDateTime.Equals(s_defaultEndDateTime))
       {
         m_dataTable.ItemsSource = ViewModel.Items;
-      }
-      else if (selectedPriceDataType == PriceDataType.Merged)
-      {
-        //this code assumes that the ViewModel returns ALL the data bars - merge will firstly use actual bars and only use synthetic bars if no actual bar exists
-        List<IBarData> items = new List<IBarData>();
-        DateTime? lastDateProcessed = null;
-        foreach (IBarData bar in ViewModel.Items)
-        {
-          if (!(bar.DateTime >= startDateTime && bar.DateTime <= endDateTime)) {
-            lastDateProcessed = bar.DateTime;
-            continue;  //skip bars outside of date/time filter
-          }
-
-          if (bar.Synthetic && lastDateProcessed != null && bar.DateTime == lastDateProcessed) continue; //skip synthetic bars if actual bar was already added
-
-          lastDateProcessed = bar.DateTime;
-          items.Add(bar);
-        }
-        m_dataTable.ItemsSource = new ObservableCollection<IBarData>(items);
       }
       else
       {
         m_dataTable.ItemsSource = new ObservableCollection<IBarData>(
           from bar in ViewModel.Items
-          where bar.DateTime >= startDateTime && bar.DateTime <= endDateTime &&   //filter according to DateTime
-                (selectedPriceDataType == PriceDataType.All || (selectedPriceDataType == PriceDataType.Actual && !bar.Synthetic) || (selectedPriceDataType == PriceDataType.Synthetic && bar.Synthetic))    //filter according to PriceDataType selection
+          where bar.DateTime >= startDateTime && bar.DateTime <= endDateTime
           select bar
         );
       }
@@ -279,16 +318,6 @@ namespace TradeSharp.WinCoreUI.Views
     }
 
     private void m_endTime_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
-    {
-      refreshFilter();
-    }
-
-    private void m_priceDataType_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-      refreshFilter();
-    }
-
-    private void viewModelItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
       refreshFilter();
     }

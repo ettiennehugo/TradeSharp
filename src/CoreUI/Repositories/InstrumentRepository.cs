@@ -3,7 +3,8 @@
 namespace TradeSharp.CoreUI.Repositories
 {
   /// <summary>
-  /// Decorator for the database to facilitate operations on instrument running parallel to the UI thread.
+  /// Decorator for the database to facilitate operations on instrument running parallel to the UI thread. Incremental loading is supported for both paging and offset loading - this is due to the fact the different UI technologies support different
+  /// API's to incrementally load data.
   /// </summary>
   public class InstrumentRepository : IInstrumentRepository
   {
@@ -54,6 +55,46 @@ namespace TradeSharp.CoreUI.Repositories
     {
       m_database.UpdateInstrument(item);
       return true;
+    }
+
+    public int GetCount()
+    {
+      return m_database.GetInstrumentCount();
+    }
+
+    public int GetCount(InstrumentType instrumentType)
+    {
+      return m_database.GetInstrumentCount(instrumentType);
+    }
+
+    public int GetCount(string tickerFilter, string nameFilter, string descriptionFilter)
+    {
+      return m_database.GetInstrumentCount(tickerFilter, nameFilter, descriptionFilter);
+    }
+
+    public int GetCount(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter)
+    {
+      return m_database.GetInstrumentCount(instrumentType, tickerFilter, nameFilter, descriptionFilter);
+    }
+
+    public IList<Instrument> GetOffset(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
+    {
+      return m_database.GetInstrumentsOffset(tickerFilter, nameFilter, descriptionFilter, offset, count);
+    }
+
+    public IList<Instrument> GetOffset(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
+    {
+      return m_database.GetInstrumentsOffset(instrumentType, tickerFilter, nameFilter, descriptionFilter, offset, count);
+    }
+
+    public IList<Instrument> GetPage(string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize)
+    {
+      return m_database.GetInstrumentsPage(tickerFilter, nameFilter, descriptionFilter, pageIndex, pageSize);
+    }
+
+    public IList<Instrument> GetPage(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize)
+    {
+      return m_database.GetInstrumentsPage(instrumentType, tickerFilter, nameFilter, descriptionFilter, pageIndex, pageSize);
     }
 
     //properties

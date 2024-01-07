@@ -84,7 +84,7 @@ namespace TradeSharp.CoreUI.ViewModels
     ///   and the view model would most likely contain a deep copy of the data currently "in view" of the user with other data paged out (deleted) from the view model.
     /// * the below definition assumes synchronous operation with the UI thread, needs to be redefined in large view models.
     /// </summary>
-    public virtual ObservableCollection<TItem> Items { get => m_itemsService.Items; set => m_itemsService.Items = value; }
+    public virtual IList<TItem> Items { get => m_itemsService.Items; set => m_itemsService.Items = value; }
 
     //methods
     /// <summary>

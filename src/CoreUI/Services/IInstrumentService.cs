@@ -5,5 +5,5 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Concrete interface for the instrument service.
   /// </summary>
-  public interface IInstrumentService : IListService<Instrument> { }
+  public interface IInstrumentService : IIncrementalListService<Instrument> { }
 }

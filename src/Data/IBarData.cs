@@ -26,7 +26,6 @@
     double Low { get; set; }
     double Close { get; set; }
     long Volume { get; set; }
-    bool Synthetic { get; set; }
 
     //methods
     IBarData Clone();

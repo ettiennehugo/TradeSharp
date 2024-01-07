@@ -23,7 +23,7 @@ namespace TradeSharp.CoreUI.Services
     //properties
     Guid ParentId { get; set; }
     T? SelectedItem { get; set; }
-    ObservableCollection<T> Items { get; set; }
+    IList<T> Items { get; set; }
 
     //events
     event EventHandler<T?>? SelectedItemChanged;

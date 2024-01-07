@@ -29,7 +29,6 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenCsvLow = "low";
     private const string tokenCsvClose = "close";
     private const string tokenCsvVolume = "volume";
-    private const string tokenCsvSynthetic = "synthetic";
     private const string tokenJsonDateTime = "datetime";
     private const string tokenJsonDate = "date";
     private const string tokenJsonTime = "time";
@@ -38,7 +37,6 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenJsonLow = "low";
     private const string tokenJsonClose = "close";
     private const string tokenJsonVolume = "volume";
-    private const string tokenJsonSynthetic = "synthetic";
 
     //enums
 
@@ -135,11 +133,26 @@ namespace TradeSharp.CoreUI.Services
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
+    public IList<IBarData> GetItems(DateTime from, DateTime to)
+    {
+      return m_repository.GetItems(from, to);
+    }
+
+    public IList<IBarData> GetItems(int index, int count)
+    {
+      return m_repository.GetItems(index, count);
+    }
+
+    public IList<IBarData> GetItems(DateTime from, DateTime to, int index, int count)
+    {
+      return m_repository.GetItems(from, to, index, count);
+    }
+
     public bool Update(IBarData item)
     {
       var result = m_repository.Update(item);
 
-      //the bar editor does not allow modification of the DateTime and Synthetic settings
+      //the bar editor does not allow modification of the DateTime
       for (int i = 0; i < Items.Count(); i++)
         if (item.Equals(Items[i]))
         {
@@ -164,15 +177,14 @@ namespace TradeSharp.CoreUI.Services
       set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
     }
 
-    public ObservableCollection<IBarData> Items { get; set; }
+    public IList<IBarData> Items { get; set; }
 
     //methods
     /// <summary>
     /// Import the bar data from a csv file that has the following formats:
-    ///   datetime, open, high, low, close, volume[, id, synthetic]
+    ///   datetime, open, high, low, close, volume[, id]
     /// OR
-    ///   date, time, open, high, low, close, volume[, id, synthetic]
-    /// If synthetic field is not present the default synthetic setting is used from the ImportSettings structure.
+    ///   date, time, open, high, low, close, volume[, id]
     /// Fields can be in any order but the above values are required.
     /// </summary>
     private ImportResult importCSV(ImportSettings importSettings)
@@ -213,7 +225,7 @@ namespace TradeSharp.CoreUI.Services
           bool lowFound = false;
           bool closeFound = false;
           bool volumeFound = false;
-          //synthetic field not required, will default it if not found
+
           for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
           {
             if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDateTime)
@@ -260,7 +272,6 @@ namespace TradeSharp.CoreUI.Services
             double low = 0.0;
             double close = 0.0;
             long volume = 0;
-            bool synthetic = importSettings.DefaultPriceDataType == ImportDefaultPriceDataType.Synthetic; //default synthetic bar settings
 
             lineNo++;
             try
@@ -303,8 +314,6 @@ namespace TradeSharp.CoreUI.Services
                     close = double.Parse(columnValue!);
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvVolume)
                     volume = long.Parse(columnValue!);
-                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvSynthetic)
-                    synthetic = bool.Parse(columnValue!);
                 }
               }
 
@@ -327,7 +336,7 @@ namespace TradeSharp.CoreUI.Services
                     break;
                 }
 
-              bars.Add(new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume, synthetic));
+              bars.Add(new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume));
               barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
             }
             catch (Exception e)
@@ -441,8 +450,7 @@ namespace TradeSharp.CoreUI.Services
             double low = barDataJson![tokenJsonLow]!.AsValue().Deserialize<double>();
             double close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
             long volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<long>();
-            bool synthetic = barDataJson.ContainsKey(tokenJsonSynthetic) ? barDataJson![tokenJsonSynthetic]!.AsValue().Deserialize<bool>() : importSettings.DefaultPriceDataType == ImportDefaultPriceDataType.Synthetic;
-            bars.Add(new BarData(Resolution, dateTime, open, high, low, close, volume, synthetic));
+            bars.Add(new BarData(Resolution, dateTime, open, high, low, close, volume));
             barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
           }
 
@@ -472,7 +480,7 @@ namespace TradeSharp.CoreUI.Services
 
       using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
       {
-        file.WriteLine($"{tokenCsvDateTime},{tokenCsvOpen},{tokenCsvHigh},{tokenCsvLow},{tokenCsvClose},{tokenCsvVolume},{tokenCsvSynthetic}");
+        file.WriteLine($"{tokenCsvDateTime},{tokenCsvOpen},{tokenCsvHigh},{tokenCsvLow},{tokenCsvClose},{tokenCsvVolume}");
 
         foreach (IBarData barData in Items)
         {
@@ -496,8 +504,6 @@ namespace TradeSharp.CoreUI.Services
           barDataStr += barData.Close.ToString();
           barDataStr += ", ";
           barDataStr += barData.Volume.ToString();
-          barDataStr += ", ";
-          barDataStr += barData.Synthetic.ToString();
           file.WriteLine(barDataStr);
           exportCount++;
         }
@@ -551,7 +557,6 @@ namespace TradeSharp.CoreUI.Services
               [tokenJsonLow] = barData.Low,
               [tokenJsonClose] = barData.Close,
               [tokenJsonVolume] = barData.Volume,
-              [tokenJsonSynthetic] = barData.Synthetic,
             };
 
             file.Write(barDataJson.ToJsonString(options));

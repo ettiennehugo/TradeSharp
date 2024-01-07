@@ -417,14 +417,13 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public async Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution, DateTime dateTime, PriceDataType priceDataType)
+    public async Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution, DateTime dateTime)
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.InstrumentBarDataView view = new WinCoreUI.Views.InstrumentBarDataView();
       view.Resolution = resolution;
       view.Date = dateTime.Date;
       view.Time = dateTime.TimeOfDay;
-      view.PriceDataType = priceDataType;
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,

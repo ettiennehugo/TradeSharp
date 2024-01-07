@@ -9,9 +9,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
-  <UserControl.Resources>
-    <wincoreuicommon:BoolToStringConverter x:Key="BoolToSyntheticConverter" FalseValue="Actual" TrueValue="Synthetic"/>
-  </UserControl.Resources>
     <Grid x:Name="m_main" RowDefinitions="Auto, *">
     <StackPanel x:Name="m_toolbar" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
@@ -23,9 +20,6 @@
         <AppBarButton x:Name="m_buttonCopy"  Icon="Copy" Command="{x:Bind ViewModel.CopyCommandAsync}" Label="Copy bar(s)" IsCompact="True">
           <AppBarButton.Flyout>
             <MenuFlyout x:Name="m_copyFlyout">
-              <MenuFlyoutItem x:Name="m_copyToSynthetic" Text="Synthetic" ToolTipService.ToolTip="Copy actual data to synthetic data" Command="{x:Bind ViewModel.CopyToSyntheticCommandAsync}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
-              <MenuFlyoutItem x:Name="m_copyToActual" Text="Actual" ToolTipService.ToolTip="Copy synthetic data to actual data" Command="{x:Bind ViewModel.CopyToActualCommandAsync}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
-              <MenuFlyoutSeparator/>
               <MenuFlyoutItem x:Name="m_copyToHour" Text="Hour" ToolTipService.ToolTip="Copy data to hourly resolution scaling it appropriately" Command="{x:Bind ViewModel.CopyToHourCommandAsync}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
               <MenuFlyoutItem x:Name="m_copyToDay" Text="Day" ToolTipService.ToolTip="Copy data to daily resolution scaling it appropriately"  Command="{x:Bind ViewModel.CopyToDayCommandAsync}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
               <MenuFlyoutItem x:Name="m_copyToWeek" Text="Week" ToolTipService.ToolTip="Copy data to weekly resolution scaling it appropriately" Command="{x:Bind ViewModel.CopyToWeekCommandAsync}" CommandParameter="{x:Bind m_dataTable.SelectedItems}"/>
@@ -50,7 +44,6 @@
         <AppBarElementContainer x:Name="m_filterContainer">
           <StackPanel Orientation="Horizontal">
             <TextBlock x:Name="m_filterLbl" Margin="8" VerticalAlignment="Center" Text="Filter by"/>
-            <ComboBox x:Name="m_priceDataType" Margin="8,8,0,8" ToolTipService.ToolTip="Filter price data type" SelectionChanged="m_priceDataType_SelectionChanged"/>
             <DatePicker x:Name="m_startDate" Margin="8,8,0,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}" DateChanged="m_startDate_DateChanged"/>
             <TimePicker x:Name="m_startTime" ClockIdentifier="24HourClock" Margin="0,8,8,8" ToolTipService.ToolTip="{x:Bind FilterStartTooltip, Mode=OneWay}" TimeChanged="m_startTime_TimeChanged"/>
             <TextBlock Text="-" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -61,7 +54,7 @@
         <AppBarButton x:Name="m_resetFilter" Icon="Clear" ToolTipService.ToolTip="Reset filter" Click="m_resetFilter_Click" IsCompact="True"/>
       </CommandBar>
     </StackPanel>
-    <winui:DataGrid x:Name="m_dataTable" DataFetchSize="3" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"  Grid.Row="1" Grid.Column="0">
+    <winui:DataGrid x:Name="m_dataTable" DataFetchSize="3" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.Items, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"  Grid.Row="1" Grid.Column="0">
       <winui:DataGrid.Columns>
         <winui:DataGridTextColumn x:Name="m_columnDateTime" Width="Auto" Header="Date/Time" Binding="{Binding DateTime}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnOpen" Width="Auto" Header="Open" Binding="{Binding Open}" IsReadOnly="True" />
@@ -69,7 +62,6 @@
         <winui:DataGridTextColumn x:Name="m_columnLow" Width="Auto" Header="Low" Binding="{Binding Low}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnClose" Width="Auto" Header="Close" Binding="{Binding Close}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnVolume" Width="Auto" Header="Volume" Binding="{Binding Volume}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnSynthetic" Width="Auto" Header="Synthetic" Binding="{Binding Synthetic, Converter={StaticResource BoolToSyntheticConverter}}" IsReadOnly="True"/>
       </winui:DataGrid.Columns>
     </winui:DataGrid>
   </Grid>

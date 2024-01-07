@@ -22,7 +22,6 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
-      <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
     <TextBlock x:Name="m_filenameLabel" Width="150" Text="Filename" TextAlignment="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
     <TextBox x:Name="m_filename" Width="316" Text="{x:Bind ImportSettings.Filename, Mode=TwoWay}" HorizontalAlignment="Left" PlaceholderText="Enter filename" Grid.Column="1" Grid.Row="0"/>
@@ -31,9 +30,7 @@
     </Button>
     <TextBlock x:Name="m_dateTimeTimeZoneLabel" Width="150" Text="Date/Time Time-zone" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1"/>
     <ComboBox x:Name="m_dateTimeTimeZone" SelectedIndex="{x:Bind ImportSettings.DateTimeTimeZone, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="1"/>
-    <TextBlock x:Name="m_defaultPriceDataTypeLabel" Width="150" Text="Default Price Data Type" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2"/>
-    <ComboBox x:Name="m_defaultPriceDataType" SelectedIndex="{x:Bind ImportSettings.DefaultPriceDataType, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="2"/>
-    <TextBlock x:Name="m_replaceBehaviorLabel" Width="150" Text="Replace Behavior" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3"/>
-    <ComboBox x:Name="m_replaceBehavior" SelectedIndex="{x:Bind ImportSettings.ReplaceBehavior, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="3"/>
+    <TextBlock x:Name="m_replaceBehaviorLabel" Width="150" Text="Replace Behavior" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2"/>
+    <ComboBox x:Name="m_replaceBehavior" SelectedIndex="{x:Bind ImportSettings.ReplaceBehavior, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="2"/>
   </Grid>
 </Page>

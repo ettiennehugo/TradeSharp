@@ -507,15 +507,11 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Day, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Week, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Month, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Minute, PriceDataType.Actual)]
-    [DataRow(Resolution.Day, PriceDataType.Actual)]
-    [DataRow(Resolution.Week, PriceDataType.Actual)]
-    [DataRow(Resolution.Month, PriceDataType.Actual)]
-    public void UpdateData_SingleBarDataPersist_Success(Resolution resolution, PriceDataType priceDataType)
+    [DataRow(Resolution.Minute)]
+    [DataRow(Resolution.Day)]
+    [DataRow(Resolution.Week)]
+    [DataRow(Resolution.Month)]
+    public void UpdateData_SingleBarDataPersist_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
@@ -525,9 +521,9 @@ namespace TradeSharp.Data.Testing
       double close = 4.0;
       long volume = 5;
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume, priceDataType == PriceDataType.Synthetic);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDatabase.c_TableInstrumentDataSynthetic : Data.SqliteDatabase.c_TableInstrumentData, resolution),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Open = {open.ToString()} " +
@@ -539,9 +535,7 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(PriceDataType.Actual)]
-    [DataRow(PriceDataType.Synthetic)]
-    public void UpdateData_SingleLevel1DataPersist_Success(PriceDataType priceDataType)
+    public void UpdateData_SingleLevel1DataPersist_Success()
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
@@ -552,9 +546,9 @@ namespace TradeSharp.Data.Testing
       double last = 5.0;
       long lastSize = 6;
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime, bid, bidSize, ask, askSize, last, lastSize, priceDataType == PriceDataType.Synthetic);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime, bid, bidSize, ask, askSize, last, lastSize);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDatabase.c_TableInstrumentDataSynthetic : Data.SqliteDatabase.c_TableInstrumentData, Resolution.Level1),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Level1),
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Bid = {bid.ToString()} " +
@@ -567,15 +561,11 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Day, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Week, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Month, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Minute, PriceDataType.Actual)]
-    [DataRow(Resolution.Day, PriceDataType.Actual)]
-    [DataRow(Resolution.Week, PriceDataType.Actual)]
-    [DataRow(Resolution.Month, PriceDataType.Actual)]
-    public void UpdateData_SingleBarDataUpdate_Success(Resolution resolution, PriceDataType priceDataType)
+    [DataRow(Resolution.Minute)]
+    [DataRow(Resolution.Day)]
+    [DataRow(Resolution.Week)]
+    [DataRow(Resolution.Month)]
+    public void UpdateData_SingleBarDataUpdate_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
@@ -585,9 +575,9 @@ namespace TradeSharp.Data.Testing
       double close = 4.0;
       long volume = 5;
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume, priceDataType == PriceDataType.Synthetic);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDatabase.c_TableInstrumentDataSynthetic : Data.SqliteDatabase.c_TableInstrumentData, resolution),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Open = {open.ToString()} " +
@@ -599,9 +589,9 @@ namespace TradeSharp.Data.Testing
 
       //update same bar again with different values
       close = 9.0;
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume, priceDataType == PriceDataType.Synthetic);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDatabase.c_TableInstrumentDataSynthetic : Data.SqliteDatabase.c_TableInstrumentData, resolution),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Open = {open.ToString()} " +
@@ -613,15 +603,11 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Day, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Week, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Month, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Minute, PriceDataType.Actual)]
-    [DataRow(Resolution.Day, PriceDataType.Actual)]
-    [DataRow(Resolution.Week, PriceDataType.Actual)]
-    [DataRow(Resolution.Month, PriceDataType.Actual)]
-    public void UpdateData_RangeBarDataPersist_Success(Resolution resolution, PriceDataType priceDataType)
+    [DataRow(Resolution.Minute)]
+    [DataRow(Resolution.Day)]
+    [DataRow(Resolution.Week)]
+    [DataRow(Resolution.Month)]
+    public void UpdateData_RangeBarDataPersist_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
@@ -632,13 +618,12 @@ namespace TradeSharp.Data.Testing
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155 };
-      barData.Synthetic = new List<bool> { priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
       for (int index = 0; index < barData.Count; index++)
       {
-        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDatabase.c_TableInstrumentDataSynthetic : Data.SqliteDatabase.c_TableInstrumentData, resolution),
+        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
           $"Ticker = '{m_instrument.Ticker}' " +
           $"AND DateTime = {barData.DateTime[index].ToBinary()} " +
           $"AND Open = {barData.Open[index].ToString()} " +
@@ -651,15 +636,11 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Day, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Week, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Month, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Minute, PriceDataType.Actual)]
-    [DataRow(Resolution.Day, PriceDataType.Actual)]
-    [DataRow(Resolution.Week, PriceDataType.Actual)]
-    [DataRow(Resolution.Month, PriceDataType.Actual)]
-    public void UpdateData_RangeBarDataUpdate_Success(Resolution resolution, PriceDataType priceDataType)
+    [DataRow(Resolution.Minute)]
+    [DataRow(Resolution.Day)]
+    [DataRow(Resolution.Week)]
+    [DataRow(Resolution.Month)]
+    public void UpdateData_RangeBarDataUpdate_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
@@ -670,13 +651,12 @@ namespace TradeSharp.Data.Testing
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155 };
-      barData.Synthetic = new List<bool> { priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
       for (int index = 0; index < barData.Count; index++)
       {
-        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDatabase.c_TableInstrumentDataSynthetic : Data.SqliteDatabase.c_TableInstrumentData, resolution),
+        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
           $"Ticker = '{m_instrument.Ticker}' " +
           $"AND DateTime = {barData.DateTime[index].ToBinary()} " +
           $"AND Open = {barData.Open[index].ToString()} " +
@@ -694,13 +674,12 @@ namespace TradeSharp.Data.Testing
       barData.Low = new List<double> { 113.0, 123.0, 233.0, 143.0, 153.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 244.0, 154.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 555 };
-      barData.Synthetic = new List<bool> { priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic, priceDataType == PriceDataType.Synthetic };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
       for (int index = 0; index < barData.Count; index++)
       {
-        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, priceDataType == PriceDataType.Synthetic ? Data.SqliteDatabase.c_TableInstrumentDataSynthetic : Data.SqliteDatabase.c_TableInstrumentData, resolution),
+        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
           $"Ticker = '{m_instrument.Ticker}' " +
           $"AND DateTime = {barData.DateTime[index].ToBinary()} " +
           $"AND Open = {barData.Open[index].ToString()} " +
@@ -1508,7 +1487,6 @@ namespace TradeSharp.Data.Testing
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
-      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
 
       InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", "TestInstrumentGroupDescription", new List<Guid> { m_instrument.Id });
 
@@ -1536,9 +1514,6 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(5, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Day),
         $"Ticker = '{m_instrument.Ticker}'")
       , "Actual bar values from list not persisted to database.");
-      Assert.AreEqual(5, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentDataSynthetic, Resolution.Day),
-        $"Ticker = '{m_instrument.Ticker}'")
-      , "Synthetic bar values from list not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
         $"AND InstrumentId = '{m_instrument.Id.ToString()}'")
@@ -1565,9 +1540,6 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Day),
         $"Ticker = '{m_instrument.Ticker}'")
       , "Actual bar values from list not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentDataSynthetic, Resolution.Day),
-        $"Ticker = '{m_instrument.Ticker}'")
-      , "Synthetic bar values from list not deleted from database.");
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
         $"AND InstrumentId = '{m_instrument.Id.ToString()}'")
@@ -2046,7 +2018,7 @@ namespace TradeSharp.Data.Testing
     public void GetInstruments_WithFilterAndPage_Success(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize, int expectedCount, string expectedFirstTicker)
     {
       createTestInstrumentsForGetMethods();
-      IList<Instrument> actualInstruments = m_database.GetInstruments(instrumentType, tickerFilter, nameFilter, descriptionFilter, pageIndex, pageSize);
+      IList<Instrument> actualInstruments = m_database.GetInstrumentsPage(instrumentType, tickerFilter, nameFilter, descriptionFilter, pageIndex, pageSize);
       Assert.AreEqual(expectedCount, actualInstruments.Count, "Expected and actual returned count differs.");
 
       string tickerRegex = wildCardToRegex(tickerFilter);
@@ -2242,7 +2214,7 @@ namespace TradeSharp.Data.Testing
 
     }
 
-    private void generateDataBars(Resolution resolution, PriceDataType priceDataType, int count, string fromDateTime = "")
+    private void generateDataBars(Resolution resolution, int count, string fromDateTime = "")
     {
       DateTime dateTime = fromDateTime != string.Empty ? DateTime.Parse(fromDateTime).ToUniversalTime() : DateTime.Now.ToUniversalTime();
       TimeSpan? dateTimeDelta = null;
@@ -2276,7 +2248,7 @@ namespace TradeSharp.Data.Testing
         for (int i = 0; i < count; i++)
         {
           double value = i;
-          data.Add(new BarData(resolution, dateTime, value, value * 2.0, value * 3.0, value * 4.0, i * 5, priceDataType == PriceDataType.Synthetic));
+          data.Add(new BarData(resolution, dateTime, value, value * 2.0, value * 3.0, value * 4.0, i * 5));
           dateTime = dateTime.Add(dateTimeDelta!.Value);
         }
 
@@ -2289,7 +2261,7 @@ namespace TradeSharp.Data.Testing
         for (int i = 0; i < count; i++)
         {
           double value = i;
-          data.Add(new Level1Data(dateTime, value, i * 2, value * 3.0, i * 4, value * 5.0, i * 6, priceDataType == PriceDataType.Synthetic));
+          data.Add(new Level1Data(dateTime, value, i * 2, value * 3.0, i * 4, value * 5.0, i * 6));
           dateTime = dateTime.Add(dateTimeDelta!.Value);
         }
 
@@ -2298,78 +2270,43 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Level1, PriceDataType.Actual, 500)]
-    [DataRow(Resolution.Level1, PriceDataType.Synthetic, 500)]
-    [DataRow(Resolution.Level1, PriceDataType.All, 1000)]
-    [DataRow(Resolution.Minute, PriceDataType.Actual, 500)]
-    [DataRow(Resolution.Minute, PriceDataType.Synthetic, 500)]
-    [DataRow(Resolution.Minute, PriceDataType.All, 1000)]
-    [DataRow(Resolution.Hour, PriceDataType.Actual, 500)]
-    [DataRow(Resolution.Hour, PriceDataType.Synthetic, 500)]
-    [DataRow(Resolution.Hour, PriceDataType.All, 1000)]
-    [DataRow(Resolution.Day, PriceDataType.Actual, 500)]
-    [DataRow(Resolution.Day, PriceDataType.Synthetic, 500)]
-    [DataRow(Resolution.Day, PriceDataType.All, 1000)]
-    [DataRow(Resolution.Week, PriceDataType.Actual, 500)]
-    [DataRow(Resolution.Week, PriceDataType.Synthetic, 500)]
-    [DataRow(Resolution.Week, PriceDataType.All, 1000)]
-    [DataRow(Resolution.Month, PriceDataType.Actual, 500)]
-    [DataRow(Resolution.Month, PriceDataType.Synthetic, 500)]
-    [DataRow(Resolution.Month, PriceDataType.All, 1000)]
-    public void GetDataCount_AnyResolution_Success(Resolution resolution, PriceDataType priceDataType, int expectedCount)
+    [DataRow(Resolution.Level1, 500)]
+    [DataRow(Resolution.Minute, 500)]
+    [DataRow(Resolution.Hour, 500)]
+    [DataRow(Resolution.Day, 500)]
+    [DataRow(Resolution.Week, 500)]
+    [DataRow(Resolution.Month, 500)]
+    public void GetDataCount_AnyResolution_Success(Resolution resolution, int expectedCount)
     {
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500);
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500);
-      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, priceDataType));
+      generateDataBars(resolution, 500);
+      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution));
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Actual, 500)]
-    [DataRow(Resolution.Minute, PriceDataType.Synthetic, 500)]
-    [DataRow(Resolution.Minute, PriceDataType.All, 1000)]
-    [DataRow(Resolution.Day, PriceDataType.Actual, 500)]
-    [DataRow(Resolution.Day, PriceDataType.Synthetic, 500)]
-    [DataRow(Resolution.Day, PriceDataType.All, 1000)]
-    public void GetBarDataCount_NoDateFilter_Success(Resolution resolution, PriceDataType priceDataType, int expectedCount)
+    [DataRow(Resolution.Minute, 500)]
+    [DataRow(Resolution.Day, 500)]
+    public void GetBarDataCount_NoDateFilter_Success(Resolution resolution, int expectedCount)
     {
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500);
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500);
-      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, priceDataType));
+      generateDataBars(resolution, 500);
+      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution));
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Merged)]
-    [ExpectedException(typeof(ArgumentException))]
-    public void GetBarDataCount_NoDateFilter_Exception(Resolution resolution, PriceDataType priceDataType)
-    {
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500);
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500);
-      Assert.AreEqual(0, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, priceDataType));
-    }
-
-    [TestMethod]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", PriceDataType.Actual, 151)]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", PriceDataType.Synthetic, 151)]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", PriceDataType.All, 302)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.Actual, 122)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.Synthetic, 122)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.All, 244)]
-    public void GetBarDataCount_WithDateFilter_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, PriceDataType priceDataType, int expectedCount)
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", 151)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 122)]
+    public void GetBarDataCount_WithDateFilter_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int expectedCount)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
       DateTime to = DateTime.Parse(toDate).ToUniversalTime();
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
-      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, priceDataType));
+      generateDataBars(resolution, 500, generatedFromDate);
+      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to));
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Actual)]
-    [DataRow(Resolution.Day, PriceDataType.Actual)]
-    [DataRow(Resolution.Minute, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Day, PriceDataType.Synthetic)]
-    public void GetBarData_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
+    [DataRow(Resolution.Minute)]
+    [DataRow(Resolution.Day)]
+    public void GetBarData_ReturnsBarData_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
@@ -2381,124 +2318,26 @@ namespace TradeSharp.Data.Testing
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
-      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
-      IList<IBarData> dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), priceDataType);
-      Assert.AreEqual(barData.Count / 2, dataResult.Count, "GetBarData did not return the correct number of bars.");
+      IList<IBarData> dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10));
+      Assert.AreEqual(barData.Count, dataResult.Count, "GetBarData did not return the correct number of bars.");
 
       for (int index = 0; index < dataResult.Count; index++)
         Assert.IsTrue(barData.DateTime.Contains(dataResult[index].DateTime), string.Format("Bar data {0} not found.", dataResult[index].DateTime));
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Merged)]
-    [DataRow(Resolution.Day, PriceDataType.Merged)]
-    [DataRow(Resolution.Minute, PriceDataType.All)]
-    [DataRow(Resolution.Day, PriceDataType.All)]
-    public void GetBarData_ReturnsMergedVsAllBarData_Success(Resolution resolution, PriceDataType priceDataType)
-    {
-      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
-      DateTime dateTime = DateTime.Now.ToUniversalTime();
-      DataCacheBars barData = new DataCacheBars(15);
-      barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
-                                              dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10),
-                                              dateTime.AddMinutes(10), dateTime.AddMinutes(11), dateTime.AddMinutes(11), dateTime.AddMinutes(12), dateTime.AddMinutes(12) };  //duplicates of previous bars
-      barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0, 311.0, 321.0, 331.0, 341.0, 351.0 };
-      barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0, 312.0, 322.0, 332.0, 342.0, 352.0 };
-      barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0, 313.0, 323.0, 333.0, 343.0, 353.0 };
-      barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0, 314.0, 324.0, 334.0, 344.0, 354.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255, 315, 325, 335, 345, 355 };
-      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false, true, false, true, false, true };
-
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
-
-      IList<IBarData> dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(12), priceDataType);
-      int expectedCount = priceDataType == PriceDataType.All ? barData.Count : barData.Count - 3; //-3 since there are 3 duplicate bars that would be discarded under the Merge operation
-      Assert.AreEqual(expectedCount, dataResult.Count, "GetBarData did not return the correct number of bars.");
-
-      for (int index = 0; index < dataResult.Count; index++)
-        Assert.IsTrue(barData.DateTime.Contains(dataResult[index].DateTime), string.Format("Bar data {0} not found.", dataResult[index].DateTime));
-    }
-
-    [TestMethod]
-    [DataRow(Resolution.Minute)]
-    [DataRow(Resolution.Day)]
-    public void GetBarData_ReturnsActualVsSyntheticSingleBarData_Success(Resolution resolution)
-    {
-      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
-      DateTime startDateTime = DateTime.Now.ToUniversalTime();
-      DataCacheBars barData = new DataCacheBars(10);
-      DateTime actualBarDateTime = DateTime.Now.ToUniversalTime();
-      DateTime syntheticBarDateTime = DateTime.Now.ToUniversalTime();
-
-      if (resolution == Resolution.Minute)
-      {
-        barData.DateTime = new List<DateTime> { startDateTime.AddMinutes(1), startDateTime.AddMinutes(2), startDateTime.AddMinutes(3), startDateTime.AddMinutes(4), startDateTime.AddMinutes(5),
-                                                startDateTime.AddMinutes(6), startDateTime.AddMinutes(7), startDateTime.AddMinutes(8), startDateTime.AddMinutes(9), startDateTime.AddMinutes(10) };
-        syntheticBarDateTime = startDateTime.AddMinutes(5);
-        actualBarDateTime = startDateTime.AddMinutes(6);
-      }
-      else
-      {
-        barData.DateTime = new List<DateTime> { startDateTime.AddDays(1), startDateTime.AddDays(2), startDateTime.AddDays(3), startDateTime.AddDays(4), startDateTime.AddDays(5),
-                                                startDateTime.AddDays(6), startDateTime.AddDays(7), startDateTime.AddDays(8), startDateTime.AddDays(9), startDateTime.AddDays(10) };
-        syntheticBarDateTime = startDateTime.AddDays(5);
-        actualBarDateTime = startDateTime.AddDays(6);
-      }
-
-      barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
-      barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
-      barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
-      barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
-      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
-
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
-
-      IBarData? dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, syntheticBarDateTime, PriceDataType.Synthetic);
-      Assert.IsNotNull(dataResult, "Synthetic: Create synthetic data were not found.");
-      Assert.AreEqual(barData.DateTime[4] , dataResult.DateTime, "DateTime was not returned correctly.");
-      Assert.AreEqual(barData.Open[4] , dataResult.Open, "Open was not returned correctly.");
-      Assert.AreEqual(barData.High[4] , dataResult.High, "High was not returned correctly.");
-      Assert.AreEqual(barData.Low[4] , dataResult.Low, "Low was not returned correctly.");
-      Assert.AreEqual(barData.Close[4] , dataResult.Close, "Close was not returned correctly.");
-      Assert.AreEqual(barData.Volume[4] , dataResult.Volume, "Volume was not returned correctly.");
-      Assert.AreEqual(barData.Synthetic[4] , dataResult.Synthetic, "Synthetic was not returned correctly.");
-
-      dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, syntheticBarDateTime, PriceDataType.Actual);
-      Assert.IsNull(dataResult, "Synthetic: Uncreated synthetic data were found.");
-
-      dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, actualBarDateTime, PriceDataType.Synthetic);
-      Assert.IsNull(dataResult, "Actual: Created synthetic data were found.");
-
-      dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, actualBarDateTime, PriceDataType.Actual);
-      Assert.IsNotNull(dataResult, "Actual: Create actual data were not found.");
-      Assert.AreEqual(barData.DateTime[5], dataResult.DateTime, "Synthetic: DateTime was not returned correctly.");
-      Assert.AreEqual(barData.Open[5], dataResult.Open, "Synthetic: Open was not returned correctly.");
-      Assert.AreEqual(barData.High[5], dataResult.High, "Synthetic: High was not returned correctly.");
-      Assert.AreEqual(barData.Low[5], dataResult.Low, "Synthetic: Low was not returned correctly.");
-      Assert.AreEqual(barData.Close[5], dataResult.Close, "Synthetic: Close was not returned correctly.");
-      Assert.AreEqual(barData.Volume[5], dataResult.Volume, "Synthetic: Volume was not returned correctly.");
-      Assert.AreEqual(barData.Synthetic[5], dataResult.Synthetic, "Synthetic: Synthetic was not returned correctly.");
-    }
-
-    [TestMethod]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T05:00:00Z", PriceDataType.Actual, 241)]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:30:00Z", PriceDataType.Synthetic, 91)]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T06:00:00Z", PriceDataType.All, 602)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.Actual, 122)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.Synthetic, 122)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", PriceDataType.All, 244)]
-    public void GetBarData_FilterByDate_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, PriceDataType priceDataType, int expectedCount)
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T05:00:00Z", 241)]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 122)]
+    public void GetBarData_FilterByDate_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int expectedCount)
     {
       DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
       DateTime to = DateTime.Parse(toDate).ToUniversalTime();
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, priceDataType);
+      generateDataBars(resolution, 500, generatedFromDate);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
 
       for (int i = 0; i < expectedCount; i++)
@@ -2506,177 +2345,55 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2023-12-31T00:10:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2023-12-31T00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2023-12-31T00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2023-12-31T00:40:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2023-12-31T00:10:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2023-12-31T00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2023-12-31T00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2023-12-31T00:40:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2024-01-10T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2024-01-20T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2024-01-20T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2024-02-09T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2024-01-10T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2024-01-20T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2024-01-20T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2024-02-09T00:00:00Z")]
-    public void GetBarData_FilterByPage_Success(Resolution resolution, string generatedFromDate, int pageIndex, int pageSize, PriceDataType priceDataType, int expectedCount, string expectedFromDate)
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, 10, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 10, 10, 10, "2023-12-31T00:10:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 20, 10, 10, "2023-12-31T00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 20, 20, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 20, 20, 20, "2023-12-31T00:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 40, 20, 20, "2023-12-31T00:40:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, 10, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 10, 10, 10, "2024-01-10T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 20, 10, 10, "2024-01-20T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 20, 20, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 20, 20, 20, "2024-01-20T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 40, 20, 20, "2024-02-09T00:00:00Z")]
+    public void GetBarData_FilterByPage_Success(Resolution resolution, string generatedFromDate, int index, int count, int expectedCount, string expectedFromDate)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, pageIndex, pageSize, priceDataType);
+      generateDataBars(resolution, 500, generatedFromDate);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, index, count);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
       Assert.AreEqual(DateTime.Parse(expectedFromDate).ToUniversalTime(), barData[0].DateTime, "Expected from date was not returned.");
     }
 
     [TestMethod]
-    [DataRow(Resolution.Level1, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.All)]
-    [DataRow(Resolution.Level1, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Merged)]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.All)]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Merged)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.All)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, PriceDataType.Merged)]
-    [ExpectedException(typeof(ArgumentException))]
-    public void GetBarData_FilterByPage_Exception(Resolution resolution, string generatedFromDate, int pageIndex, int pageSize, PriceDataType priceDataType)
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 10, 10, "2023-12-31T01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 10, 10, 10, "2023-12-31T01:10:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 20, 10, 10, "2023-12-31T01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 20, 20, "2023-12-31T01:00:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 20, 20, 20, "2023-12-31T01:20:00Z")]
+    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 40, 20, 20, "2023-12-31T01:40:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 10, 10, "2024-06-01T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 10, 10, 10, "2024-06-11T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 20, 10, 10, "2024-06-21T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 20, 20, "2024-06-01T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 20, 20, 20, "2024-06-21T00:00:00Z")]
+    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 40, 20, 20, "2024-07-11T00:00:00Z")]
+    public void GetBarData_FilterByDateAndPage_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int index, int count, int expectedCount, string expectedFromDate)
     {
-      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
-      m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, pageIndex, pageSize, priceDataType);
-    }
-
-    [TestMethod]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 10, PriceDataType.Actual, 10, "2023-12-31T01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 1, 10, PriceDataType.Actual, 10, "2023-12-31T01:10:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 2, 10, PriceDataType.Actual, 10, "2023-12-31T01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 20, PriceDataType.Actual, 20, "2023-12-31T01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 1, 20, PriceDataType.Actual, 20, "2023-12-31T01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 2, 20, PriceDataType.Actual, 20, "2023-12-31T01:40:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2023-12-31T01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2023-12-31T01:10:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2023-12-31T01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2023-12-31T01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2023-12-31T01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2023-12-31T01:40:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 10, PriceDataType.Actual, 10, "2024-06-01T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 1, 10, PriceDataType.Actual, 10, "2024-06-11T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 2, 10, PriceDataType.Actual, 10, "2024-06-21T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 20, PriceDataType.Actual, 20, "2024-06-01T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 1, 20, PriceDataType.Actual, 20, "2024-06-21T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 2, 20, PriceDataType.Actual, 20, "2024-07-11T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 10, PriceDataType.Synthetic, 10, "2024-06-01T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 1, 10, PriceDataType.Synthetic, 10, "2024-06-11T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 2, 10, PriceDataType.Synthetic, 10, "2024-06-21T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 20, PriceDataType.Synthetic, 20, "2024-06-01T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 1, 20, PriceDataType.Synthetic, 20, "2024-06-21T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 2, 20, PriceDataType.Synthetic, 20, "2024-07-11T00:00:00Z")]
-    public void GetBarData_FilterByDateAndPage_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int pageIndex, int pageSize, PriceDataType priceDataType, int expectedCount, string expectedFromDate)
-    {
-
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
       DateTime to = DateTime.Parse(toDate).ToUniversalTime();
-      if (priceDataType == PriceDataType.Actual || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Actual, 500, generatedFromDate);
-      if (priceDataType == PriceDataType.Synthetic || priceDataType == PriceDataType.All) generateDataBars(resolution, PriceDataType.Synthetic, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, pageIndex, pageSize, priceDataType);
+      generateDataBars(resolution, 500, generatedFromDate);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, index, count);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
       Assert.AreEqual(DateTime.Parse(expectedFromDate).ToUniversalTime(), barData[0].DateTime, "Expected from date was not returned.");
-    }
-
-    [TestMethod]
-    [DataRow(Resolution.Level1, PriceDataType.Actual)]
-    [DataRow(Resolution.Level1, PriceDataType.Synthetic)]
-    public void GetLevel1Data_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
-    {
-      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
-      DateTime dateTime = DateTime.Now.ToUniversalTime();
-      DataCacheLevel1 level1Data = new DataCacheLevel1(10);
-      level1Data.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
-                                              dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10) };
-      level1Data.Bid = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
-      level1Data.BidSize = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
-      level1Data.Ask = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
-      level1Data.AskSize = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
-      level1Data.Last = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
-      level1Data.LastSize = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
-      level1Data.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
-
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, level1Data);
-
-      ILevel1Data? dataResult = m_database.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(4), PriceDataType.Actual);
-      Assert.IsNotNull(dataResult, "Actual: Create actual data were not found.");
-      Assert.AreEqual(level1Data.DateTime[3], dataResult.DateTime, "DateTime was not returned correctly.");
-      Assert.AreEqual(level1Data.Bid[3], dataResult.Bid, "Bid was not returned correctly.");
-      Assert.AreEqual(level1Data.BidSize[3], dataResult.BidSize, "BidSize was not returned correctly.");
-      Assert.AreEqual(level1Data.Ask[3], dataResult.Ask, "Ask was not returned correctly.");
-      Assert.AreEqual(level1Data.AskSize[3], dataResult.AskSize, "AskSize was not returned correctly.");
-      Assert.AreEqual(level1Data.Last[3], dataResult.Last, "Last was not returned correctly.");
-      Assert.AreEqual(level1Data.LastSize[3], dataResult.LastSize, "LastSize was not returned correctly.");
-
-      dataResult = m_database.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(4), PriceDataType.Synthetic);
-      Assert.IsNull(dataResult, "Synthetic: Uncreated synthetic data were found.");
-
-      dataResult = m_database.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(5), PriceDataType.Actual);
-      Assert.IsNull(dataResult, "Actual: Created synthetic data were found.");
-
-      dataResult = m_database.GetLevel1Data(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime.AddMinutes(5), PriceDataType.Synthetic);
-      Assert.IsNotNull(dataResult, "Synthetic: Create actual data were not found.");
-      Assert.AreEqual(level1Data.DateTime[4], dataResult.DateTime, "Synthetic: DateTime was not returned correctly.");
-      Assert.AreEqual(level1Data.Bid[4], dataResult.Bid, "Synthetic: Bid was not returned correctly.");
-      Assert.AreEqual(level1Data.BidSize[4], dataResult.BidSize, "Synthetic: BidSize was not returned correctly.");
-      Assert.AreEqual(level1Data.Ask[4], dataResult.Ask, "Synthetic: Ask was not returned correctly.");
-      Assert.AreEqual(level1Data.AskSize[4], dataResult.AskSize, "Synthetic: AskSize was not returned correctly.");
-      Assert.AreEqual(level1Data.Last[4], dataResult.Last, "Synthetic: Last was not returned correctly.");
-      Assert.AreEqual(level1Data.LastSize[4], dataResult.LastSize, "Synthetic: LastSize was not returned correctly.");
-    }
-
-    [TestMethod]
-    [DataRow(Resolution.Minute, PriceDataType.Actual)]
-    [DataRow(Resolution.Day, PriceDataType.Actual)]
-    [DataRow(Resolution.Minute, PriceDataType.Synthetic)]
-    [DataRow(Resolution.Day, PriceDataType.Synthetic)]
-    public void GetDataCache_ReturnsActualVsSyntheticBarData_Success(Resolution resolution, PriceDataType priceDataType)
-    {
-      m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
-      DateTime dateTime = DateTime.Now.ToUniversalTime();
-      DataCacheBars barData = new DataCacheBars(10);
-      barData.DateTime = new List<DateTime> { dateTime.AddMinutes(1), dateTime.AddMinutes(2), dateTime.AddMinutes(3), dateTime.AddMinutes(4), dateTime.AddMinutes(5),
-                                              dateTime.AddMinutes(6), dateTime.AddMinutes(7), dateTime.AddMinutes(8), dateTime.AddMinutes(9), dateTime.AddMinutes(10) };
-      barData.Open = new List<double> { 111.0, 121.0, 131.0, 141.0, 151.0, 211.0, 221.0, 231.0, 241.0, 251.0 };
-      barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
-      barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
-      barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
-      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
-
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
-
-      DataCache dataResult = m_database.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), priceDataType);
-      Assert.AreEqual(barData.Count / 2, dataResult.Count, "GetDataCache did not return the correct number of bars.");
-
-      DataCacheBars dataResultDetails = (DataCacheBars)dataResult.Data;
-      for (int index = 0; index < barData.Count; index++)
-      {
-        if ((priceDataType == PriceDataType.Synthetic && !barData.Synthetic[index]) || (priceDataType == PriceDataType.Actual && barData.Synthetic[index])) continue;
-        Assert.IsTrue(dataResultDetails.DateTime.Contains(barData.DateTime[index]), string.Format("Bar data {0} not found.", barData.DateTime[index]));
-      }
     }
 
     [TestMethod]
     [DataRow(Resolution.Minute)]
     [DataRow(Resolution.Day)]
-    public void GetDataCache_ReturnsActualAndSyntheticBarData_Success(Resolution resolution)
+    public void GetDataCache_ReturnsBarData_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();  //bar data must always be stored in UTC datetime
@@ -2688,11 +2405,10 @@ namespace TradeSharp.Data.Testing
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
-      barData.Synthetic = new List<bool> { true, false, true, false, true, false, true, false, true, false };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
 
-      DataCache dataResult = m_database.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), PriceDataType.Merged);
+      DataCache dataResult = m_database.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10));
       Assert.AreEqual(barData.Count, dataResult.Count, "GetDataCache did not return the correct number of bars.");
 
       DataCacheBars dataResultDetails = (DataCacheBars)dataResult.Data;

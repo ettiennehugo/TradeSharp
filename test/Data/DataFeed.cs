@@ -113,7 +113,6 @@ namespace TradeSharp.Data.Testing
       //create level 1 test data
       double price = 0.0;
       long size = 0;
-      bool synthetic = false;
       m_level1TestData = new DataCacheLevel1(0);
       m_level1TestData.Count = count;
       m_level1TestData.DateTime = new List<DateTime>(m_level1TestData.Count); for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.DateTime.Add(m_fromDateTime.AddSeconds(i)); }
@@ -123,7 +122,6 @@ namespace TradeSharp.Data.Testing
       m_level1TestData.AskSize = new List<long>(m_level1TestData.Count); size = 400; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.AskSize.Add(size); size += 1; }
       m_level1TestData.Last = new List<double>(m_level1TestData.Count); price = 500.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Last.Add(price); price += 1.0; }
       m_level1TestData.LastSize = new List<long>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
-      m_level1TestData.Synthetic = new List<bool>(m_level1TestData.Count); synthetic = false; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Synthetic.Add(synthetic); synthetic = !synthetic; }
 
       m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, m_level1TestData);
 
@@ -137,7 +135,6 @@ namespace TradeSharp.Data.Testing
       m_level1TestDataReversed.AskSize = m_level1TestData.AskSize.Reverse().ToArray();
       m_level1TestDataReversed.Last = m_level1TestData.Last.Reverse().ToArray();
       m_level1TestDataReversed.LastSize = m_level1TestData.LastSize.Reverse().ToArray();
-      m_level1TestDataReversed.Synthetic = m_level1TestData.Synthetic.Reverse().ToArray();
 
       //create bar resolution test data
       foreach (Resolution resolution in m_database.SupportedDataResolutions)
@@ -171,7 +168,6 @@ namespace TradeSharp.Data.Testing
         barData.Low = new List<double>(barData.Count); price = 100.0; for (int i = 0; i < barData.Count; i++) { barData.Low.Add(price); price += 1.0; }
         barData.Close = new List<double>(barData.Count); price = 300.0; for (int i = 0; i < barData.Count; i++) { barData.Close.Add(price); price += 1.0; }
         barData.Volume = new List<long>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1; }
-        barData.Synthetic = new List<bool>(barData.Count); synthetic = false; for (int i = 0; i < barData.Count; i++) { barData.Synthetic.Add(synthetic); synthetic = !synthetic; }
 
         m_toDateTime = m_fromDateTime.AddMonths(count); //just use the longest resolution for the to-date time
         m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
@@ -186,7 +182,6 @@ namespace TradeSharp.Data.Testing
         reversedBarData.Low = barData.Low.Reverse().ToArray();
         reversedBarData.Close = barData.Close.Reverse().ToArray();
         reversedBarData.Volume = barData.Volume.Reverse().ToArray();
-        reversedBarData.Synthetic = barData.Synthetic.Reverse().ToArray();
 
         m_testBarDataReversed.Add(resolution, reversedBarData);
       }
@@ -202,7 +197,6 @@ namespace TradeSharp.Data.Testing
       //create level 1 test data
       double price = 0.0;
       long size = 0;
-      bool synthetic = false;
       m_level1TestData = new DataCacheLevel1(0);
       m_level1TestData.Count = count;
       m_level1TestData.DateTime = new List<DateTime>(m_level1TestData.Count); for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.DateTime.Add(m_fromDateTime.AddSeconds(i)); }
@@ -212,7 +206,6 @@ namespace TradeSharp.Data.Testing
       m_level1TestData.AskSize = new List<long>(m_level1TestData.Count); size = 400; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.AskSize.Add(size); size += 1; }
       m_level1TestData.Last = new List<double>(m_level1TestData.Count); price = 500.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Last.Add(price); price += 1.0; }
       m_level1TestData.LastSize = new List<long>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
-      m_level1TestData.Synthetic = new List<bool>(m_level1TestData.Count); synthetic = false; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Synthetic.Add(synthetic); synthetic = !synthetic; }
 
       //data feed would reverse the data according to date/time so we need to reverse it here to match
       m_level1TestDataReversed = new DataCacheLevel1(0);
@@ -224,7 +217,6 @@ namespace TradeSharp.Data.Testing
       m_level1TestDataReversed.AskSize = m_level1TestData.AskSize.Reverse().ToArray();
       m_level1TestDataReversed.Last = m_level1TestData.Last.Reverse().ToArray();
       m_level1TestDataReversed.LastSize = m_level1TestData.LastSize.Reverse().ToArray();
-      m_level1TestDataReversed.Synthetic = m_level1TestData.Synthetic.Reverse().ToArray();
 
       //create bar resolution test data
       foreach (Resolution resolution in m_database.SupportedDataResolutions)
@@ -258,7 +250,6 @@ namespace TradeSharp.Data.Testing
         barData.Low = new List<double>(barData.Count); price = 100.0; for (int i = 0; i < barData.Count; i++) { barData.Low.Add(price); price += 1.0; }
         barData.Close = new List<double>(barData.Count); price = 300.0; for (int i = 0; i < barData.Count; i++) { barData.Close.Add(price); price += 1.0; }
         barData.Volume = new List<long>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1; }
-        barData.Synthetic = new List<bool>(barData.Count); synthetic = false; for (int i = 0; i < barData.Count; i++) { barData.Synthetic.Add(synthetic); synthetic = !synthetic; }
 
         m_toDateTime = m_fromDateTime.AddMonths(count); //just use the longest resolution for the to-date time
         m_testBarData.Add(resolution, barData);
@@ -272,7 +263,6 @@ namespace TradeSharp.Data.Testing
         reversedBarData.Low = barData.Low.Reverse().ToArray();
         reversedBarData.Close = barData.Close.Reverse().ToArray();
         reversedBarData.Volume = barData.Volume.Reverse().ToArray();
-        reversedBarData.Synthetic = barData.Synthetic.Reverse().ToArray();
 
         m_testBarDataReversed.Add(resolution, reversedBarData);
       }
@@ -445,7 +435,7 @@ namespace TradeSharp.Data.Testing
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned);
       
       Data.DataCacheBars barData = m_testBarDataReversed[resolution];
 
@@ -479,7 +469,7 @@ namespace TradeSharp.Data.Testing
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned);
 
       switch (resolution)
       {
@@ -646,7 +636,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval <= 30 ? 30 : interval;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 0, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;
@@ -789,7 +779,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval <= 30 ? 30 : interval;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 3, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;
@@ -843,7 +833,7 @@ namespace TradeSharp.Data.Testing
       int generatedBarCount = interval * 10;
       DateTime fromDateTime = new DateTime(2023, 1, 1, 1, 0, 0);
       createTestDataWithPersist(fromDateTime, generatedBarCount);
-      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, Resolution.Level1, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned, PriceDataType.Merged);
+      Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, Resolution.Level1, interval, m_fromDateTime, m_toDateTime, ToDateMode.Pinned);
 
       int expectedBarCount;
       DateTime[] expectedDateTime;
@@ -1012,7 +1002,7 @@ namespace TradeSharp.Data.Testing
     //  DateTime toDateTime = m_testBarData[resolution].DateTime.Last();
 
     //  for (int i = 0; i < div2Count; i++)
-    //    m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i], m_testBarData[resolution].Open[i], m_testBarData[resolution].High[i], m_testBarData[resolution].Low[i], m_testBarData[resolution].Close[i], m_testBarData[resolution].Volume[i], m_testBarData[resolution].Synthetic[i]);
+    //    m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i], m_testBarData[resolution].Open[i], m_testBarData[resolution].High[i], m_testBarData[resolution].Low[i], m_testBarData[resolution].Close[i], m_testBarData[resolution].Volume[i]);
 
     //  //get data feed - it should update automatically as new data are added to the DataManager since ToDateMode.Open
     //  Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, m_toDateTime, ToDateMode.Open, PriceDataType.Both);
@@ -1040,7 +1030,7 @@ namespace TradeSharp.Data.Testing
     //  {
     //    //add the number of bars required for the interval to update the data feed with the next expected bar
     //    for (int subIndex = 0; subIndex < interval; subIndex++)
-    //      m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i + subIndex], m_testBarData[resolution].Open[i + subIndex], m_testBarData[resolution].High[i + subIndex], m_testBarData[resolution].Low[i + subIndex], m_testBarData[resolution].Close[i + subIndex], m_testBarData[resolution].Volume[i + subIndex], m_testBarData[resolution].Synthetic[i + subIndex]);
+    //      m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i + subIndex], m_testBarData[resolution].Open[i + subIndex], m_testBarData[resolution].High[i + subIndex], m_testBarData[resolution].Low[i + subIndex], m_testBarData[resolution].Close[i + subIndex], m_testBarData[resolution].Volume[i + subIndex]);
 
     //    //since data feed has an open To-date new bars on the feed should become available and align with the expected bar data
     //    int expectedBarIndex = (m_testBarData[resolution].Count - i - 1) / interval;
@@ -1191,7 +1181,7 @@ namespace TradeSharp.Data.Testing
     //  int div2Count = m_testBarData[resolution].Count / 2;
 
     //  for (int i = 0; i < div2Count; i++)
-    //    m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i], m_testBarData[resolution].Open[i], m_testBarData[resolution].High[i], m_testBarData[resolution].Low[i], m_testBarData[resolution].Close[i], m_testBarData[resolution].Volume[i], m_testBarData[resolution].Synthetic[i]);
+    //    m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i], m_testBarData[resolution].Open[i], m_testBarData[resolution].High[i], m_testBarData[resolution].Low[i], m_testBarData[resolution].Close[i], m_testBarData[resolution].Volume[i]);
 
     //  //get data feed - it should update automatically as new data are added to the DataManager since ToDateMode.Open
     //  int div3over4Count = (m_testBarData[resolution].Count * 3) / 4;
@@ -1223,7 +1213,7 @@ namespace TradeSharp.Data.Testing
     //  {
     //    //add the number of bars required for the interval to update the data feed with the next expected bar
     //    for (int subIndex = 0; subIndex < interval; subIndex++)
-    //      m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i + subIndex], m_testBarData[resolution].Open[i + subIndex], m_testBarData[resolution].High[i + subIndex], m_testBarData[resolution].Low[i + subIndex], m_testBarData[resolution].Close[i + subIndex], m_testBarData[resolution].Volume[i + subIndex], m_testBarData[resolution].Synthetic[i + subIndex]);
+    //      m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i + subIndex], m_testBarData[resolution].Open[i + subIndex], m_testBarData[resolution].High[i + subIndex], m_testBarData[resolution].Low[i + subIndex], m_testBarData[resolution].Close[i + subIndex], m_testBarData[resolution].Volume[i + subIndex]);
 
     //    //check that data feed adds new data up to the pinned date
     //    if (i < div3over4Count)
@@ -1379,7 +1369,7 @@ namespace TradeSharp.Data.Testing
     //  DateTime toDateTime = m_testBarData[resolution].DateTime[div2Count - 1];
 
     //  for (int i = 0; i < div2Count; i++)
-    //    m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i], m_testBarData[resolution].Open[i], m_testBarData[resolution].High[i], m_testBarData[resolution].Low[i], m_testBarData[resolution].Close[i], m_testBarData[resolution].Volume[i], m_testBarData[resolution].Synthetic[i]);
+    //    m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i], m_testBarData[resolution].Open[i], m_testBarData[resolution].High[i], m_testBarData[resolution].Low[i], m_testBarData[resolution].Close[i], m_testBarData[resolution].Volume[i]);
 
     //  //get data feed - it should update automatically as new data are added to the DataManager since ToDateMode.Open
     //  Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_dataStore, m_dataProvider.Object, m_instrument, resolution, interval, m_fromDateTime, toDateTime, ToDateMode.Open, PriceDataType.Both);
@@ -1407,7 +1397,7 @@ namespace TradeSharp.Data.Testing
     //  {
     //    //add the number of bars required for the interval to update the data feed with the next expected bar
     //    for (int subIndex = 0; subIndex < interval; subIndex++)
-    //      m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i + subIndex], m_testBarData[resolution].Open[i + subIndex], m_testBarData[resolution].High[i + subIndex], m_testBarData[resolution].Low[i + subIndex], m_testBarData[resolution].Close[i + subIndex], m_testBarData[resolution].Volume[i + subIndex], m_testBarData[resolution].Synthetic[i + subIndex]);
+    //      m_dataStore.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, m_testBarData[resolution].DateTime[i + subIndex], m_testBarData[resolution].Open[i + subIndex], m_testBarData[resolution].High[i + subIndex], m_testBarData[resolution].Low[i + subIndex], m_testBarData[resolution].Close[i + subIndex], m_testBarData[resolution].Volume[i + subIndex]);
 
     //    //since data feed has an open To-date new bars on the feed should become available and align with the expected bar data
     //    int expectedBarIndex = (m_testBarData[resolution].Count - i - 1) / interval;

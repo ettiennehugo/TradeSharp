@@ -89,7 +89,6 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportDataDateTimeTimeZone));
-      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_defaultPriceDataType, typeof(ImportDefaultPriceDataType));
       WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_replaceBehavior, typeof(ImportReplaceBehavior));
     }
 

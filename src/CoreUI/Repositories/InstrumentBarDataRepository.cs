@@ -40,38 +40,44 @@ namespace TradeSharp.CoreUI.Repositories
     public IBarData? GetItem(DateTime id)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id, PriceDataType.All); //all data is always returned and filtered down in service/view model/UI
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id);
     }
 
     public IList<IBarData> GetItems()
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue, PriceDataType.All); //all data is always returned and filtered down in service/view model/UI
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue);
     }
 
     public IList<IBarData> GetItems(DateTime start, DateTime end)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end, PriceDataType.All); //all data is always returned and filtered down in service/view model/UI
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end);
     }
 
     public IList<IBarData> GetItems(int index, int count)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, index, count, PriceDataType.All);
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, index, count);
+    }
+
+    public IList<IBarData> GetItems(DateTime start, DateTime end, int index, int count)
+    {
+      throwIfNotKeyed();
+      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end, index, count);
     }
 
     public bool Add(IBarData item)
     {
       throwIfNotKeyed();
-      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); //TODO: Update count.
+      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume); //TODO: Update count.
       return true; 
     }
 
     public bool Update(IBarData item)
     {
       throwIfNotKeyed();
-      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume, item.Synthetic); //TODO: Update count.return
+      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume); //TODO: Update count.return
       return true;
     }
 
@@ -85,7 +91,7 @@ namespace TradeSharp.CoreUI.Repositories
     public bool Delete(IBarData item)
     {
       throwIfNotKeyed();
-      return m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime, item.Synthetic) != 0; //TODO: Update count.
+      return m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime) != 0; //TODO: Update count.
     }
 
     //properties

@@ -32,14 +32,19 @@ namespace TradeSharp.Data
 
 
     //methods
-    public static void Sort<T>(ObservableCollection<T> collection) where T : IComparable
+    public static void Sort<T>(IList<T> collection) where T : IComparable
     {
       List<T> sorted = collection.OrderBy(x => x).ToList();
       for (int i = 0; i < sorted.Count(); i++)
-        collection.Move(collection.IndexOf(sorted[i]), i);
+      {
+        int oldIndex = collection.IndexOf(sorted[i]);
+        T item = collection[oldIndex];
+        collection.RemoveAt(oldIndex);
+        collection.Insert(i, item);
+      }
     }
 
-    public static void SortedInsert<T>(T item, ObservableCollection<T> collection) where T : IComparable
+    public static void SortedInsert<T>(T item, IList<T> collection) where T : IComparable
     {
       for (int i = 0; i < collection.Count(); i++)
         if (item.CompareTo(collection[i]) <= 0)
@@ -50,7 +55,7 @@ namespace TradeSharp.Data
       collection.Add(item); //item larger than all others, add it to the end of collection
     }
 
-    public static void UpdateItem<T>(T item, ObservableCollection<T> collection) where T : IEquatable<T>, IUpdateable<T>
+    public static void UpdateItem<T>(T item, IList<T> collection) where T : IEquatable<T>, IUpdateable<T>
     {
       for (int i = 0; i < collection.Count(); i++)
         if (item.Equals(collection[i]))

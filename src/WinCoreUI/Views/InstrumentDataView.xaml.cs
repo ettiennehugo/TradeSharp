@@ -44,7 +44,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_configurationService = Ioc.Default.GetRequiredService<IConfigurationService>();
       m_instrumentService = Ioc.Default.GetRequiredService<IInstrumentService>();
       DataProviders = new ObservableCollection<string>();
-      Instruments = new AdvancedCollectionView(m_instrumentService.Items, false);
+      Instruments = new AdvancedCollectionView((System.Collections.IList)m_instrumentService.Items, false);   //TBD: Not needed if we use the ISupportIncrementalLoading interface on Items
       this.InitializeComponent();
     }
 
