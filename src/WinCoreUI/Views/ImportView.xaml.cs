@@ -48,9 +48,9 @@ namespace TradeSharp.WinCoreUI.Views
     {
       ImportSettings = new ImportSettings();
       this.InitializeComponent();
-      if (!showDateTimeTimeZone) m_layoutGrid.RowDefinitions[1].Height = new GridLength(0); //hide date/time timezone selector
-      if (!showDefaultPriceDataType) m_layoutGrid.RowDefinitions[2].Height = new GridLength(0); //hide default price data type selector
-      if (!showReplaceBehavior) m_layoutGrid.RowDefinitions[3].Height = new GridLength(0); //hide replace behavior selector
+      if (!showDateTimeTimeZone) m_layoutGrid.RowDefinitions[0].Height = new GridLength(0); //hide date/time timezone selector
+      if (!showDefaultPriceDataType) m_layoutGrid.RowDefinitions[1].Height = new GridLength(0); //hide default price data type selector
+      if (!showReplaceBehavior) m_layoutGrid.RowDefinitions[2].Height = new GridLength(0); //hide replace behavior selector
     }
 
     //finalizers

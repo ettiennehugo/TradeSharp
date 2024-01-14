@@ -25,6 +25,8 @@ namespace TradeSharp.CoreUI.Services
     Resolution Resolution { get; set; }
 
     //methods
+    int GetCount();
+    int GetCount(DateTime from, DateTime to);
     IList<IBarData> GetItems(DateTime from, DateTime to);
     IList<IBarData> GetItems(int index, int count);
     IList<IBarData> GetItems(DateTime from, DateTime to, int index, int count);

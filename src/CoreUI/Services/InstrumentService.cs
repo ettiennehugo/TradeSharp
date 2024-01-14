@@ -22,7 +22,7 @@ namespace TradeSharp.CoreUI.Services
     public const string FilterName = "Name";
     public const string FilterDescription = "Description";
 
-    public int DefaultPageSize = 100;
+    public int DefaultPageSize = 1000;
 
     // Tokens used by the import/export functionality.
     private const string extensionCSV = ".csv";
@@ -58,30 +58,15 @@ namespace TradeSharp.CoreUI.Services
     private IInstrumentRepository m_instrumentRepository;
     private IDatabase m_database;
     private Instrument? m_selectedItem;
-    private string m_tickerFilter;
-    private string m_nameFilter;
-    private string m_descriptionFilter;
-    private Dictionary<string, object> m_filter;
-    private int m_pageIndex;
-    private int m_pageSize;
-    private int m_offsetIndex;
-    private int m_offsetCount;
-    private int m_lastRetrievedIndex;
 
     //constructors
-    public InstrumentService(ILoggerFactory loggerFactory, IDatabase database, IDialogService dialogService, IInstrumentRepository instrumentRepository)
+    public InstrumentService(ILoggerFactory loggerFactory, IDatabase database, IInstrumentRepository instrumentRepository)
     {
       m_loggerFactory = loggerFactory;
       m_instrumentRepository = instrumentRepository;
       m_database = database;
       m_selectedItem = null;
       Items = new ObservableCollection<Instrument>();
-      m_filter = new Dictionary<string, object>();
-      m_pageIndex = 0;
-      m_pageSize = DefaultPageSize;
-      m_offsetIndex = 0;
-      m_offsetCount = DefaultPageSize; 
-      m_lastRetrievedIndex = -1;
     }
 
     //finalizers
@@ -174,20 +159,34 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
-    public IList<Instrument> Next()
+    public int GetCount()
     {
-      updateFilters();
-      int index = m_offsetIndex;
-      int count = Count;
-      m_offsetIndex += m_offsetCount;
-      if (m_offsetIndex > Count) m_offsetIndex = count; //clip offset index to the number of items in the database
-      return m_instrumentRepository.GetOffset(m_tickerFilter, m_nameFilter, m_descriptionFilter, index, m_offsetCount);
+      return m_instrumentRepository.GetCount();
     }
 
-    public IList<Instrument> Peek()
+    public int GetCount(InstrumentType instrumentType)
     {
-      updateFilters();
-      return m_instrumentRepository.GetOffset(m_tickerFilter, m_nameFilter, m_descriptionFilter, m_offsetIndex, m_offsetCount);
+      return m_instrumentRepository.GetCount(instrumentType);
+    }
+
+    public int GetCount(string tickerFilter, string nameFilter, string descriptionFilter)
+    {
+      return m_instrumentRepository.GetCount(tickerFilter, nameFilter, descriptionFilter);
+    }
+
+    public int GetCount(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter)
+    {
+      return m_instrumentRepository.GetCount(instrumentType, tickerFilter, nameFilter, descriptionFilter);
+    }
+
+    public IList<Instrument> GetItems(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
+    {
+      return m_instrumentRepository.GetItems(tickerFilter, nameFilter, descriptionFilter, offset, count);
+    }
+
+    public IList<Instrument> GetItems(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
+    {
+      return m_instrumentRepository.GetItems(instrumentType, tickerFilter, nameFilter, descriptionFilter, offset, count);
     }
 
     //properties
@@ -202,22 +201,7 @@ namespace TradeSharp.CoreUI.Services
 
     public IList<Instrument> Items { get; set; }
 
-    public int Count { get { updateFilters(); return m_instrumentRepository.GetCount(m_tickerFilter, m_nameFilter, m_descriptionFilter); } }
-    public int PageIndex { get => m_pageIndex; set { if (value < 0) throw new ArgumentException("Page index must be positive or zero."); m_pageIndex = value; } }
-    public int PageSize { get => m_pageSize; set { if (value <= 0) throw new ArgumentException("Page size must be positive."); m_pageSize = value; } }
-    public int OffsetIndex { get => m_offsetIndex; set { if (value < 0) throw new ArgumentException("Offset index must be positive or zero."); m_offsetIndex = value; } }
-    public int OffsetCount { get => m_offsetCount; set { if (value <= 0) throw new ArgumentException("Offset count must be positive."); m_offsetCount = value; } }
-    public bool HasMoreItems { get { int count = Count; return count != 0 && m_lastRetrievedIndex < count; } }
-    public IDictionary<string, object> Filter { get => m_filter; set { if (value == null) throw new ArgumentException("Filter can not be null."); m_filter = (Dictionary<string, object>)value; } }
-
     //methods
-    private void updateFilters()
-    {
-      m_tickerFilter = m_filter.ContainsKey(FilterTicker) ? (string)m_filter[FilterTicker] : string.Empty;
-      m_nameFilter = m_filter.ContainsKey(FilterName) ? (string)m_filter[FilterName] : string.Empty;
-      m_descriptionFilter = m_filter.ContainsKey(FilterDescription) ? (string)m_filter[FilterDescription] : string.Empty;
-    }
-
     private ImportResult importJSON(ImportSettings importSettings)
     {
       ImportResult result = new ImportResult();

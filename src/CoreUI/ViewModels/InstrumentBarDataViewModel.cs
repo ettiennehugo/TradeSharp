@@ -8,10 +8,15 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for instrument bar data.
   /// </summary>
-  public partial class InstrumentBarDataViewModel : ListViewModel<IBarData>
+  public partial class InstrumentBarDataViewModel : ListViewModel<IBarData>, Common.IIncrementalSource<IBarData>
   {
     //constants
-
+    /// <summary>
+    /// Supported filter fields for the instrument bar data service.
+    /// </summary>
+    public const string FilterFromDateTime = "FromDateTime";
+    public const string FilterToDateTime = "ToDateTime";
+    public const int DefaultPageSize = 100;
 
     //enums
 
@@ -24,11 +29,23 @@ namespace TradeSharp.CoreUI.ViewModels
     private Resolution m_resolution;
     private Instrument? m_instrument;
     private IInstrumentBarDataService m_barDataService;
+    private DateTime m_oldFromDateTime;
+    private DateTime m_oldToDateTime;
+    private DateTime m_fromDateTime;
+    private DateTime m_toDateTime;
+    private Dictionary<string, object> m_filter;
+    private int m_offsetIndex;
+    private int m_offsetCount;
 
     //constructors
     public InstrumentBarDataViewModel(INavigationService navigationService, IDialogService dialogService) : base(Ioc.Default.GetRequiredService<IInstrumentBarDataService>(), navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
     {
       m_barDataService = (IInstrumentBarDataService)m_itemsService;
+      m_oldFromDateTime = m_fromDateTime = DateTime.MinValue;
+      m_oldToDateTime = m_toDateTime = DateTime.MaxValue;
+      m_filter = new Dictionary<string, object>();
+      m_offsetIndex = 0;
+      m_offsetCount = DefaultPageSize;
       Resolution = Resolution.Day;
       DataProvider = string.Empty;
       Instrument = null;
@@ -38,12 +55,12 @@ namespace TradeSharp.CoreUI.ViewModels
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null);
       ImportCommandAsync = new AsyncRelayCommand(OnImportAsync, () => DataProvider != string.Empty && Instrument != null);
       ExportCommandAsync = new AsyncRelayCommand(OnExportAsync, () => DataProvider != string.Empty && Instrument != null && Items.Count > 0);
-      CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null);
-      CopyToHourCommandAsync = new AsyncRelayCommand<object?>(OnCopyToHourAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution == Resolution.Minute);
-      CopyToDayCommandAsync = new AsyncRelayCommand<object?>(OnCopyToDayAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
-      CopyToWeekCommandAsync = new AsyncRelayCommand<object?>(OnCopyToWeekAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
-      CopyToMonthCommandAsync = new AsyncRelayCommand<object?>(OnCopyToMonthAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day || Resolution == Resolution.Week));
-      CopyToAllCommandAsync = new AsyncRelayCommand<object?>(OnCopyToAllAsync, (object? x) => DataProvider != string.Empty && Instrument != null && SelectedItem != null && Resolution != Resolution.Month);
+      CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0);
+      CopyToHourCommandAsync = new AsyncRelayCommand<object?>(OnCopyToHourAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution == Resolution.Minute);
+      CopyToDayCommandAsync = new AsyncRelayCommand<object?>(OnCopyToDayAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
+      CopyToWeekCommandAsync = new AsyncRelayCommand<object?>(OnCopyToWeekAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
+      CopyToMonthCommandAsync = new AsyncRelayCommand<object?>(OnCopyToMonthAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day || Resolution == Resolution.Week));
+      CopyToAllCommandAsync = new AsyncRelayCommand<object?>(OnCopyToAllAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution != Resolution.Month);
     }
 
     //finalizers
@@ -74,47 +91,48 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public override Task OnImportAsync()
+    public override Task OnRefreshAsync()
     {
-      return Task.Run(async () =>
-      {
+      return LoadMoreItemsAsync(DefaultPageSize); //view model only supports incremental loading, so we just load the first page
+    }
+
+    public override async Task OnImportAsync()
+    {
         ImportSettings? importSettings = await m_dialogService.ShowImportBarDataAsync();
 
         if (importSettings != null)
         {
+          await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", "Importing bar data...");
           ImportResult importResult = m_itemsService.Import(importSettings);
           await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
         }
-      });
     }
 
-    public override Task OnExportAsync()
+    public override async Task OnExportAsync()
     {
-      return Task.Run(async () =>
-      {
         string? filename = await m_dialogService.ShowExportBarDataAsync();
 
         if (filename != null)
         {
+          await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", "Exporting bar data");
           ExportResult exportResult = m_itemsService.Export(filename);
           await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
         }
-      });
     }
 
     public Task<IList<IBarData>> GetItems(DateTime from, DateTime to)
     {
-      return Task.Run(() => { return m_barDataService.GetItems(from, to); });
+      return Task.FromResult(m_barDataService.GetItems(from, to));
     }
 
     public Task<IList<IBarData>> GetItems(int index, int count)
     {
-      return Task.Run(() => { return m_barDataService.GetItems(index, count); });
+      return Task.FromResult(m_barDataService.GetItems(index, count));
     }
 
     public Task<IList<IBarData>> GetItems(DateTime from, DateTime to, int index, int count)
     {
-      return Task.Run(() => { return m_barDataService.GetItems(from, to, index, count); });
+      return Task.FromResult(m_barDataService.GetItems(from, to, index, count));
     }
 
     public virtual Task OnCopyToHourAsync(object? selection)
@@ -145,6 +163,17 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       //TODO
       throw new NotImplementedException();
+    }
+
+    public Task<IList<IBarData>> LoadMoreItemsAsync(int count)
+    {
+      updateFilters();
+      OffsetCount = count;
+      int index = m_offsetIndex;
+      int totalCount = Count;
+      m_offsetIndex += m_offsetCount;
+      if (m_offsetIndex > totalCount) m_offsetIndex = totalCount; //clip offset index to the number of items in the database
+      return Task.Run(() => m_barDataService.GetItems(m_fromDateTime, m_toDateTime, index, m_offsetCount));
     }
 
     //properties
@@ -190,7 +219,26 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
+    public int Count { get { updateFilters(); return isKeyed() ? m_barDataService.GetCount(m_fromDateTime, m_toDateTime) : 0; } }
+    public int OffsetIndex { get => m_offsetIndex; set { if (value < 0) throw new ArgumentException("Offset index must be positive or zero."); m_offsetIndex = value; } }
+    public int OffsetCount { get => m_offsetCount; set { if (value <= 0) throw new ArgumentException("Offset count must be positive."); m_offsetCount = value; } }
+    public bool HasMoreItems { get => m_offsetIndex < Count; }
+    public IDictionary<string, object> Filter { get => m_filter; set => m_filter = (Dictionary<string, object>)value; }
+
     //methods
+    private bool isKeyed()
+    {
+      return DataProvider != string.Empty && Instrument != null;
+    }
+
+    private void updateFilters()
+    {
+      m_fromDateTime = m_filter.ContainsKey(FilterFromDateTime) ? (DateTime)m_filter[FilterFromDateTime] : DateTime.MinValue;
+      m_toDateTime = m_filter.ContainsKey(FilterToDateTime) ? (DateTime)m_filter[FilterToDateTime] : DateTime.MinValue;
+      if (!m_oldFromDateTime.Equals(m_fromDateTime) || !m_oldToDateTime.Equals(m_toDateTime)) m_offsetIndex = 0; //reset the offset index if the filter has changed
+      m_oldFromDateTime = m_fromDateTime;
+      m_oldToDateTime = m_toDateTime;
+    }
 
 
   }

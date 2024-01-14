@@ -99,8 +99,8 @@ namespace TradeSharp.WinDataManager
     /// </summary>
     private void initServiceCaches() 
     {
-      var instrumentViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
-      instrumentViewModel.RefreshCommandAsync.ExecuteAsync(null);
+      //var instrumentViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
+      //instrumentViewModel.RefreshCommandAsync.ExecuteAsync(null);
     }
   }
 }

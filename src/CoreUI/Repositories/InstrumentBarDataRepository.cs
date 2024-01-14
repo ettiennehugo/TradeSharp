@@ -37,6 +37,18 @@ namespace TradeSharp.CoreUI.Repositories
 
 
     //interface implementations
+    public int GetCount()
+    {
+      throwIfNotKeyed();
+      return m_database.GetDataCount(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution);
+    }
+
+    public int GetCount(DateTime from, DateTime to)
+    {
+      throwIfNotKeyed();
+      return m_database.GetDataCount(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, from, to);
+    }
+
     public IBarData? GetItem(DateTime id)
     {
       throwIfNotKeyed();

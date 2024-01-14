@@ -1,90 +1,15 @@
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Data;
-using System;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using System.Linq;
-using Microsoft.UI.Xaml.Data;
-using Windows.Foundation;
+using TradeSharp.WinCoreUI.Common;
 
 namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
-  /// Implements the IAsyncOperation<LoadMoreItemsResult> interface to support incremental loading of instruments.
-  /// </summary>
-  class IncrementalInstrumentLoadResult : IAsyncOperation<LoadMoreItemsResult>
-  {
-    //constants
-
-
-    //enums
-
-
-    //types
-
-
-    //attributes
-    private Task<Instrument> m_task;
-
-    //constructors
-    public IncrementalInstrumentLoadResult(Task<Instrument> task)
-    {
-      m_task = task;
-    }
-
-    //finalizers
-
-
-    //interface implementations
-
-
-
-    //Example of how to implement the IAsyncOperation 
-    //https://learn.microsoft.com/en-us/uwp/api/windows.ui.xaml.data.isupportincrementalloading?view=winrt-22621
-
-
-
-    public AsyncOperationCompletedHandler<LoadMoreItemsResult> Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-
-    public void Cancel()
-    {
-      //m_task.Cancel = true;
-      throw new NotImplementedException();
-    }
-
-    public void Close()
-    {
-      //m_task.Close();
-      throw new NotImplementedException();
-    }
-
-    public LoadMoreItemsResult GetResults()
-    {
-      throw new NotImplementedException();
-    }
-
-
-    //properties
-    public Exception ErrorCode => m_task.Exception;
-    public uint Id => (uint)m_task.Id;
-    public AsyncStatus Status => throw new NotImplementedException();
-
-
-    //methods
-
-
-
-
-  }
-
-  /// <summary>
   /// Displays the list of instruments defined for trading.
   /// </summary>
-  public sealed partial class InstrumentsView : Page, ISupportIncrementalLoading
+  public sealed partial class InstrumentsView : Page
   {
     //constants
 
@@ -108,6 +33,7 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentsView()
     {
       ViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
+      IncrementalItems = new IncrementalObservableCollection<Instrument>(ViewModel);
       this.InitializeComponent();
     }
 
@@ -115,58 +41,54 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //interface implementations
-    public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
-    {
-      throw new NotImplementedException();
 
-
-
-      //TODO: implement paged loading
-
-
-    }
 
     //properties
     public InstrumentViewModel ViewModel { get; }
-    public bool HasMoreItems { get { return ViewModel.HasMoreItems; } }
+    public IncrementalObservableCollection<Instrument> IncrementalItems;
 
     //methods
-    private void Page_Loaded(object sender, RoutedEventArgs e)
+    private void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      if (ViewModel.Items.Count == 0) ViewModel.RefreshCommandAsync.ExecuteAsync(null);
-    }
-
-    public bool filter(Instrument instrument)
-    {
-      if (m_instrumentFilter == null || m_instrumentFilter.Text.Length == 0) return true; //no filter specified - m_instrumentFilter is null on screen init
-
-      switch ((FilterField)m_filterMatchFields.SelectedIndex)
-      {
-        case FilterField.Ticker:
-          return instrument.Ticker.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase);
-        case FilterField.Name:
-          return instrument.Name.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase);
-        case FilterField.Description:
-          return instrument.Description.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase);
-        case FilterField.Any:
-          return instrument.Ticker.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase) || instrument.Name.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase) || instrument.Description.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase);
-      }
-
-      return false;   //in general should not happen if match field is mandatory selection
+      //instrument view model is instantiated once and shared between screens, so we need to reset the filters when new screens are loaded
+      ViewModel.Filters.Clear();
+      refreshFilter();
     }
 
     private void refreshFilter()
     {
       if (m_instrumentFilter == null) return;
 
-      //show all items on clear filter text
-      if (m_instrumentFilter.Text.Length == 0)
+      //restart load of the items using the new filter conditions
+      IncrementalItems.Clear();
+      ViewModel.OffsetIndex = 0;
+
+      //setup filters for view model
+      ViewModel.Filters.Clear();
+
+      if (m_instrumentFilter.Text.Length > 0)
       {
-        if (m_instruments.ItemsSource != ViewModel.Items) m_instruments.ItemsSource = ViewModel.Items;
-        return;
+        switch ((FilterField)m_filterMatchFields.SelectedIndex)
+        {
+          case FilterField.Ticker:
+            ViewModel.Filters[InstrumentViewModel.FilterTicker] = m_instrumentFilter.Text;
+            break;
+          case FilterField.Name:
+            ViewModel.Filters[InstrumentViewModel.FilterName] = m_instrumentFilter.Text;
+            break;
+          case FilterField.Description:
+            ViewModel.Filters[InstrumentViewModel.FilterDescription] = m_instrumentFilter.Text;
+            break;
+          case FilterField.Any:
+            ViewModel.Filters[InstrumentViewModel.FilterTicker] = m_instrumentFilter.Text;
+            ViewModel.Filters[InstrumentViewModel.FilterName] = m_instrumentFilter.Text;
+            ViewModel.Filters[InstrumentViewModel.FilterDescription] = m_instrumentFilter.Text;
+            break;
+        }
       }
 
-      m_instruments.ItemsSource = new ObservableCollection<Instrument>(from instrument in ViewModel.Items where filter(instrument) select instrument);
+      //load the first page of the filtered items asynchronously
+      _ = IncrementalItems.LoadMoreItemsAsync(InstrumentViewModel.DefaultPageSize);
     }
 
     private void m_instrumentFilter_TextChanged(object sender, TextChangedEventArgs e)

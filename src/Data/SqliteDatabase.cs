@@ -570,7 +570,7 @@ namespace TradeSharp.Data
     }
 
     /// <summary>
-    /// Returns the instruments matching the given filters.
+    /// Returns the instruments matching the given filters (OR-relation).
     /// </summary>
     public int GetInstrumentCount(string tickerFilter, string nameFilter, string descriptionFilter)
     {
@@ -617,8 +617,8 @@ namespace TradeSharp.Data
       }
 
       string filter = tickerSql;
-      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
-      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" OR {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" OR {descriptionSql}" : descriptionSql;
 
       object? result;
       if (filter != string.Empty)
@@ -629,7 +629,7 @@ namespace TradeSharp.Data
     }
 
     /// <summary>
-    /// Determines the total number of instruments of the given type defined in the database that match the given ticker and description filters.
+    /// Determines the total number of instruments of the given type defined in the database that match the given ticker, name OR description filters.
     /// If the ticker or description filter is null or empty then it is not used in the query, the filter can also use wildcard '*' for generic match.
     /// </summary>
     public int GetInstrumentCount(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter)
@@ -677,12 +677,12 @@ namespace TradeSharp.Data
       }
 
       string filter = tickerSql;
-      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
-      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" OR {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" OR {descriptionSql}" : descriptionSql;
 
       object? result;
       if (filter != string.Empty)
-        result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter}");
+        result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND ({filter})");
       else
         result = ExecuteScalar($"SELECT COUNT(*) FROM {c_TableInstrument} WHERE Type = {(int)instrumentType}");
       return result != null ? (int)(long)result! : 0;   //database returns long so we first need to unbox it to it's actual type before trying to cast to int
@@ -850,11 +850,11 @@ namespace TradeSharp.Data
       }
 
       string filter = tickerSql;
-      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
-      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" OR {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" OR {descriptionSql}" : descriptionSql;
 
       string sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC";
-      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter} ORDER BY Ticker ASC, Name ASC, Description ASC";
+      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND ({filter}) ORDER BY Ticker ASC, Name ASC, Description ASC";
 
       using (var reader = ExecuteReader(sql))
         while (reader.Read())
@@ -920,8 +920,8 @@ namespace TradeSharp.Data
       }
 
       string filter = tickerSql;
-      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
-      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" OR {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" OR {descriptionSql}" : descriptionSql;
 
       string sql = $"SELECT * FROM {c_TableInstrument} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {count} OFFSET {offset}";
       if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE {filter} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {count} OFFSET {offset}";
@@ -990,11 +990,11 @@ namespace TradeSharp.Data
       }
 
       string filter = tickerSql;
-      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
-      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" OR {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" OR {descriptionSql}" : descriptionSql;
 
       string sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {count} OFFSET {offset}";
-      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {count} OFFSET {offset}";
+      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND ({filter}) ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {count} OFFSET {offset}";
 
       using (var reader = ExecuteReader(sql))
         while (reader.Read())
@@ -1063,8 +1063,8 @@ namespace TradeSharp.Data
       }
 
       string filter = tickerSql;
-      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
-      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" OR {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" OR {descriptionSql}" : descriptionSql;
 
       string sql = $"SELECT * FROM {c_TableInstrument} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
       if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE {filter} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
@@ -1136,11 +1136,11 @@ namespace TradeSharp.Data
       }
 
       string filter = tickerSql;
-      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" AND {nameSql}" : nameSql;
-      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" AND {descriptionSql}" : descriptionSql;
+      if (nameSql != string.Empty) filter += filter.Length != 0 ? $" OR {nameSql}" : nameSql;
+      if (descriptionSql != string.Empty) filter += filter.Length != 0 ? $" OR {descriptionSql}" : descriptionSql;
 
       string sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
-      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND {filter} ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
+      if (filter != string.Empty) sql = $"SELECT * FROM {c_TableInstrument} WHERE Type = {(int)instrumentType} AND ({filter}) ORDER BY Ticker ASC, Name ASC, Description ASC LIMIT {pageSize} OFFSET {pageIndex * pageSize}";
 
       using (var reader = ExecuteReader(sql))
         while (reader.Read())

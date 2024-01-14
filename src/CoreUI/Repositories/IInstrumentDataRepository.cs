@@ -27,8 +27,10 @@ namespace TradeSharp.CoreUI.Repositories
 
     //methods
     int Update(IList<T> items);   //mass update of items
-    IList<T> GetItems(DateTime start, DateTime end);   //loads all the data within a given date/time range (can be slow with big windows!!!)
+    int GetCount();   //gets the total number of items in the database
+    int GetCount(DateTime from, DateTime to);   //gets the total number of items in the database within a given date/time range
+    IList<T> GetItems(DateTime from, DateTime to);   //loads all the data within a given date/time range (can be slow with big windows!!!)
     IList<T> GetItems(int index, int count);   //loads a spesific number of items from the database from a specific index (used for paged loading of large amounts of data)
-    IList<T> GetItems(DateTime start, DateTime end, int index, int count);   //loads a spesific number of items from the database from a specific index (used for paged loading of large amounts of data)
+    IList<T> GetItems(DateTime from, DateTime to, int index, int count);   //loads a spesific number of items from the database from a specific index (used for paged loading of large amounts of data)
   }
 }

@@ -28,7 +28,7 @@ namespace TradeSharp.CoreUI.Repositories
     int GetCount(InstrumentType instrumentType);
     int GetCount(string tickerFilter, string nameFilter, string descriptionFilter); //no filter if filters are blank, filters support wildcards * and ?
     int GetCount(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter); //no filter if filters are blank, filters support wildcards * and ?
-    IList<Instrument> GetOffset(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count);  //paged loading of instruments
-    IList<Instrument> GetOffset(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count);  //paged loading of instruments
+    IList<Instrument> GetItems(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count);  //paged loading of instruments
+    IList<Instrument> GetItems(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count);  //paged loading of instruments
   }
 }

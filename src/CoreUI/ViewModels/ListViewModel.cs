@@ -69,11 +69,12 @@ namespace TradeSharp.CoreUI.ViewModels
       get => m_itemsService.SelectedItem;
       set
       {
-        //NOTE: You can not just change this item when it differs from value since the UI calls this method sometimes
-        //      before the toolbar is ready to use and thus you end up with stale command button states.
-        m_itemsService.SelectedItem = value;
-        OnPropertyChanged();
-        NotifyCanExecuteChanged();
+        if (m_itemsService.SelectedItem != value)
+        {
+          m_itemsService.SelectedItem = value;
+          OnPropertyChanged();
+          NotifyCanExecuteChanged();
+        }
       }
     }
 

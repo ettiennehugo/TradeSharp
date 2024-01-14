@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.UI;
 using TradeSharp.Data;
-using TradeSharp.CoreUI.Services;
+using TradeSharp.WinCoreUI.Common;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -36,15 +36,14 @@ namespace TradeSharp.WinCoreUI.Views
 
     //attributes
     private IConfigurationService m_configurationService;
-    private IInstrumentService m_instrumentService;
 
     //constructors
     public InstrumentDataView()
     {
       m_configurationService = Ioc.Default.GetRequiredService<IConfigurationService>();
-      m_instrumentService = Ioc.Default.GetRequiredService<IInstrumentService>();
+      InstrumentViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
       DataProviders = new ObservableCollection<string>();
-      Instruments = new AdvancedCollectionView((System.Collections.IList)m_instrumentService.Items, false);   //TBD: Not needed if we use the ISupportIncrementalLoading interface on Items
+      IncrementalInstruments = new IncrementalObservableCollection<Instrument>(InstrumentViewModel);
       this.InitializeComponent();
     }
 
@@ -56,57 +55,70 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public ObservableCollection<string> DataProviders { get; set; }
-    public AdvancedCollectionView Instruments { get; }
+    public IncrementalObservableCollection<Instrument> IncrementalInstruments { get; }
     public InstrumentViewModel InstrumentViewModel { get; set; }
 
     //methods
     private void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      m_instrumentFilter.Text = "";
-      if (m_instrumentService.Items.Count == 0) m_instrumentService.Refresh();  //TODO: This should be a refresh on the ViewModel.
+      //refresh the list of data providers
       DataProviders.Clear();
       foreach (var provider in m_configurationService.DataProviders) DataProviders.Add(provider.Key);
+
+      //instrument view model is instantiated once and shared between screens, so we need to reset the filters when new screens are loaded
+      InstrumentViewModel.Filters.Clear();
+      refreshFilter();
     }
 
-    public bool filter(object o)
+    private void refreshFilter()
     {
-      if (m_instrumentFilter == null || m_instrumentFilter.Text.Length == 0) return true; //no filter specified - m_instrumentFilter is null on screen init
+      if (m_instrumentFilter == null) return;
 
-      if (o == null || o is not Instrument) return false;
-      Instrument instrument = (Instrument)o;
+      //restart load of the items using the new filter conditions
+      IncrementalInstruments.Clear();
+      InstrumentViewModel.OffsetIndex = 0;
 
-      switch ((FilterField)m_filterMatchFields.SelectedIndex)
+      //setup filters for view model
+      InstrumentViewModel.Filters.Clear();
+
+      if (m_instrumentFilter.Text.Length > 0)
       {
-        case FilterField.Ticker:
-          return instrument.Ticker.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase);
-        case FilterField.Name:
-          return instrument.Name.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase);
-        case FilterField.Description:
-          return instrument.Description.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase);
-        case FilterField.Any:
-          return instrument.Ticker.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase) || instrument.Name.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase) || instrument.Description.Contains(m_instrumentFilter.Text, StringComparison.InvariantCultureIgnoreCase);
+        switch ((FilterField)m_filterMatchFields.SelectedIndex)
+        {
+          case FilterField.Ticker:
+            InstrumentViewModel.Filters[InstrumentViewModel.FilterTicker] = m_instrumentFilter.Text;
+            break;
+          case FilterField.Name:
+            InstrumentViewModel.Filters[InstrumentViewModel.FilterName] = m_instrumentFilter.Text;
+            break;
+          case FilterField.Description:
+            InstrumentViewModel.Filters[InstrumentViewModel.FilterDescription] = m_instrumentFilter.Text;
+            break;
+          case FilterField.Any:
+            InstrumentViewModel.Filters[InstrumentViewModel.FilterTicker] = m_instrumentFilter.Text;
+            InstrumentViewModel.Filters[InstrumentViewModel.FilterName] = m_instrumentFilter.Text;
+            InstrumentViewModel.Filters[InstrumentViewModel.FilterDescription] = m_instrumentFilter.Text;
+            break;
+        }
       }
 
-      return false;   //in general should not happen if match field is mandatory selection
+      //load the first page of the filtered items asynchronously
+      _ = IncrementalInstruments.LoadMoreItemsAsync(InstrumentViewModel.DefaultPageSize);
     }
 
     private void m_instrumentFilter_TextChanged(object sender, TextChangedEventArgs e)
     {
-      Instruments.Filter = new Predicate<object>(filter);
-      Instruments.RefreshFilter();
+      refreshFilter();
     }
 
     private void m_filterMatchFields_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-      Instruments.Filter = new Predicate<object>(filter);
-      Instruments.RefreshFilter();
+      refreshFilter();
     }
 
     private void m_refreshCommand_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
       InstrumentViewModel.RefreshCommandAsync.Execute(this);
-      m_instrumentService.Refresh();  //TODO: This should be a refresh on the ViewModel.
-      Instruments.Filter = new Predicate<object>(filter);
     }
 
     private void m_dataProviders_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -114,29 +126,29 @@ namespace TradeSharp.WinCoreUI.Views
       m_massImport.IsEnabled = true;
       m_massExport.IsEnabled = true;
       m_minuteBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
-      //m_hoursBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
-      //m_daysBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
-      //m_weeksBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
-      //m_monthsBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_hoursBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_daysBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_weeksBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_monthsBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
     }
 
     private void m_instrumentsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
       m_minuteBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
-      //m_hoursBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
-      //m_daysBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
-      //m_weeksBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
-      //m_monthsBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+      m_hoursBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+      m_daysBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+      m_weeksBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
+      m_monthsBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
     }
 
     private void m_massImport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      throw new NotImplementedException();
+      throw new NotImplementedException();    //TODO
     }
 
     private void m_massExport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      throw new NotImplementedException();
+      throw new NotImplementedException();    //TODO
     }
   }
 }

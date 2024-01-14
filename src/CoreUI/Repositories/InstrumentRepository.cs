@@ -77,12 +77,12 @@ namespace TradeSharp.CoreUI.Repositories
       return m_database.GetInstrumentCount(instrumentType, tickerFilter, nameFilter, descriptionFilter);
     }
 
-    public IList<Instrument> GetOffset(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
+    public IList<Instrument> GetItems(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
     {
       return m_database.GetInstrumentsOffset(tickerFilter, nameFilter, descriptionFilter, offset, count);
     }
 
-    public IList<Instrument> GetOffset(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
+    public IList<Instrument> GetItems(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
     {
       return m_database.GetInstrumentsOffset(instrumentType, tickerFilter, nameFilter, descriptionFilter, offset, count);
     }

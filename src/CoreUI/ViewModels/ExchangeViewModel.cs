@@ -47,7 +47,6 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         m_itemsService.Add(exchange);
         SelectedItem = exchange;
-        Items.Add(exchange);
       }
     }
 

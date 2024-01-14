@@ -1,17 +1,21 @@
-﻿using CommunityToolkit.Common.Collections;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
-using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
   /// <summary>
   /// View model for list of instruments, it supports incremental loading of the objects from the service.
   /// </summary>
-  public class InstrumentViewModel : ListViewModel<Instrument>
+  public class InstrumentViewModel : ListViewModel<Instrument>, Common.IIncrementalSource<Instrument>
   {
     //constants
-
+    /// <summary>
+    /// Supported filter fields for the instrument service.
+    /// </summary>
+    public const string FilterTicker = "Ticker";
+    public const string FilterName = "Name";
+    public const string FilterDescription = "Description";
+    public const int DefaultPageSize = 100;
 
     //enums
 
@@ -21,11 +25,20 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //attributes
     private IInstrumentService m_instrumentService;
+    private string m_tickerFilter;
+    private string m_nameFilter;
+    private string m_descriptionFilter;
+    private Dictionary<string, object> m_filters;
+    private int m_offsetIndex;
+    private int m_offsetCount;
 
     //constructors
     public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService): base(itemsService, navigationService, dialogService) 
     {
       m_instrumentService = itemsService;
+      m_offsetIndex = 0;
+      m_offsetCount = 0;
+      m_filters = new Dictionary<string, object>();
     }
 
     //finalizers
@@ -49,23 +62,20 @@ namespace TradeSharp.CoreUI.ViewModels
       }
     }
 
-    public override Task OnImportAsync()
+    public override async Task OnImportAsync()
     {
-      return Task.Run(async () => {
-        ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentsAsync();
+      ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentsAsync();
 
-        if (importSettings != null)
-        {
-          ImportResult importResult = m_itemsService.Import(importSettings);
-          await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-          m_itemsService.Refresh();
-        }
-      });
+      if (importSettings != null)
+      {
+        ImportResult importResult = m_itemsService.Import(importSettings);
+        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
+        m_itemsService.Refresh();
+      }
     }
 
-    public override Task OnExportAsync()
+    public override async Task OnExportAsync()
     {
-      return Task.Run(async () => {
         string? filename = await m_dialogService.ShowExportInstrumentsAsync();
 
         if (filename != null)
@@ -73,34 +83,43 @@ namespace TradeSharp.CoreUI.ViewModels
           ExportResult exportResult = m_itemsService.Export(filename);
           await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
         }
-      });
     }
 
     public override Task OnRefreshAsync()
-    {
-      return Task.Run(m_itemsService.Refresh);
+    {      
+      return LoadMoreItemsAsync(DefaultPageSize); //view model only supports incremental loading, so we just load the first page
     }
 
-    public Task<IList<Instrument>> NextPage()
+    public Task<IList<Instrument>> LoadMoreItemsAsync(int count)
     {
-      return Task.FromResult(m_instrumentService.Next());
-    }
-
-    public Task<IList<Instrument>> PeekPage()
-    {
-      return Task.FromResult(m_instrumentService.Peek());
+      updateFilters();  //ensure we sync any changes to the filters
+      int index = m_offsetIndex;
+      int totalCount = Count;
+      m_offsetIndex+= m_offsetCount;
+      OffsetCount = count;
+      if (m_offsetIndex > totalCount) m_offsetIndex = totalCount; //clip offset index to the number of items in the database
+      return Task.Run(() => m_instrumentService.GetItems(m_tickerFilter, m_nameFilter, m_descriptionFilter, index, m_offsetCount));
     }
 
     //properties
-    public override IList<Instrument> Items { get => m_itemsService.Items; set => m_itemsService.Items = value; }
-    public int Count  { get => m_instrumentService.Count; }
-    public int OffsetIndex { get => m_instrumentService.OffsetIndex; set => m_instrumentService.OffsetIndex = value; }
-    public int OffsetCount { get => m_instrumentService.OffsetCount; set => m_instrumentService.OffsetCount = value; }
-    public bool HasMoreItems { get => m_instrumentService.HasMoreItems; }
-    public IDictionary<string, object> Filter { get => m_instrumentService.Filter; set => m_instrumentService.Filter = value; }
+    public int Count { get { updateFilters(); return m_instrumentService.GetCount(m_tickerFilter, m_nameFilter, m_descriptionFilter); } }
+    public int OffsetIndex { get => m_offsetIndex; set { if (value < 0) throw new ArgumentException("Offset index must be positive or zero."); m_offsetIndex = value; } }
+    public int OffsetCount { get => m_offsetCount; set { if (value <= 0) throw new ArgumentException("Offset count must be positive."); m_offsetCount = value; } }
+    public bool HasMoreItems { get => m_offsetIndex < Count; }
+    public IDictionary<string, object> Filters { get => m_filters; set => m_filters = (Dictionary<string, object>)value; }
 
     //methods
+    private void updateFilters()
+    {
+      //get user entered filters
+      m_tickerFilter = m_filters.ContainsKey(FilterTicker) ? (string)m_filters[FilterTicker] : string.Empty;
+      m_nameFilter = m_filters.ContainsKey(FilterName) ? (string)m_filters[FilterName] : string.Empty;
+      m_descriptionFilter = m_filters.ContainsKey(FilterDescription) ? (string)m_filters[FilterDescription] : string.Empty;
 
-
+      //always match using wildcards
+      if (m_tickerFilter.Length > 0 && !m_tickerFilter.Contains("*") && !m_tickerFilter.Contains("?")) m_tickerFilter = $"*{m_tickerFilter}*";
+      if (m_nameFilter.Length > 0 && !m_nameFilter.Contains("*") && !m_nameFilter.Contains("?")) m_nameFilter = $"*{m_nameFilter}*";
+      if (m_descriptionFilter.Length > 0 && !m_descriptionFilter.Contains("*") && !m_descriptionFilter.Contains("?")) m_descriptionFilter = $"*{m_descriptionFilter}*";
+    }
   }
 }

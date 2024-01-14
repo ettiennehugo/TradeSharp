@@ -133,6 +133,16 @@ namespace TradeSharp.CoreUI.Services
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
+    public int GetCount()
+    {
+      return m_repository.GetCount();
+    }
+
+    public int GetCount(DateTime from, DateTime to)
+    {
+      return m_repository.GetCount(from, to);
+    }
+
     public IList<IBarData> GetItems(DateTime from, DateTime to)
     {
       return m_repository.GetItems(from, to);
