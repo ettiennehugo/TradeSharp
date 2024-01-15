@@ -4,6 +4,7 @@ using TradeSharp.Data;
 using TradeSharp.CoreUI.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.WinCoreUI.Common;
 
 namespace TradeSharp.WinCoreUI.Views
@@ -36,6 +37,7 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentBarsDataView()
     {
       ViewModel = Ioc.Default.GetRequiredService<InstrumentBarDataViewModel>();
+      ViewModel.RefreshEvent += onViewModelRefresh;
       IncrementalItems = new IncrementalObservableCollection<IBarData>(ViewModel);
       this.InitializeComponent();
     }
@@ -231,5 +233,13 @@ namespace TradeSharp.WinCoreUI.Views
     {
       refreshFilter();
     }
+
+    private void onViewModelRefresh(object? sender, RefreshEventArgs e)
+    {
+      IncrementalItems.Clear();
+      ViewModel.OffsetIndex = 0;
+      if (DataProvider != string.Empty && Instrument != null) _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
+    }
+
   }
 }

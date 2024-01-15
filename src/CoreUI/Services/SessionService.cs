@@ -9,7 +9,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for session objects.
   /// </summary>
-  public partial class SessionService : ObservableObject, ISessionService
+  public partial class SessionService : ServiceBase, ISessionService
   {
     //constants
 

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
@@ -10,7 +11,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// operations specifically need to run in the background if they are long running operations while quick refreshes of
   /// only a few items can run in the UI thread to keep things simple.
   /// </summary>
-  public abstract partial class ViewModelBase : ObservableObject
+  public abstract partial class ViewModelBase : ObservableObject, IRefreshable
   {
     //constants
 
@@ -64,6 +65,9 @@ namespace TradeSharp.CoreUI.ViewModels
     public AsyncRelayCommand ImportCommandAsync { get; internal set; }
     public AsyncRelayCommand ExportCommandAsync { get; internal set; }
 
+    //events
+    public event IRefreshable.RefreshEventHandler? RefreshEvent;
+
     //methods
     public abstract void OnAdd();
     public abstract void OnUpdate();
@@ -97,6 +101,16 @@ namespace TradeSharp.CoreUI.ViewModels
       CopyCommandAsync.NotifyCanExecuteChanged();
       ImportCommandAsync.NotifyCanExecuteChanged();
       ExportCommandAsync.NotifyCanExecuteChanged();
+    }
+
+    protected virtual void RaiseRefreshEvent()
+    {
+      RefreshEvent?.Invoke(this, RefreshEventArgs.Empty);
+    }
+
+    protected virtual void RaiseRefreshEvent(RefreshEventArgs e)
+    {
+      RefreshEvent?.Invoke(this, e);
     }
   }
 }

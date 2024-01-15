@@ -8,7 +8,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for exchange objects.
   /// </summary>
-  public partial class ExchangeService : ObservableObject, IExchangeService
+  public partial class ExchangeService : ServiceBase, IExchangeService
   {
     //constants
 

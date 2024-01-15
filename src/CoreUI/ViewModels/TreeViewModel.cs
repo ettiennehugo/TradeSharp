@@ -28,6 +28,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public TreeViewModel(ITreeItemsService<TKey, TItem> itemService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
     {
       m_itemsService = itemService;
+      m_itemsService.RefreshEvent += onServiceRefresh;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
@@ -156,6 +157,12 @@ namespace TradeSharp.CoreUI.ViewModels
           await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
         }
       });
+    }
+
+    ///Generic handler to re-raise the service refresh event as a view model refresh event.
+    protected virtual void onServiceRefresh(object? sender, Common.RefreshEventArgs e)
+    {
+      RaiseRefreshEvent(e);
     }
   }
 }

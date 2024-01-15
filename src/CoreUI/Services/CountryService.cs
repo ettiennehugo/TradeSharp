@@ -8,7 +8,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for country objects.
   /// </summary>
-  public partial class CountryService : ObservableObject, ICountryService
+  public partial class CountryService : ServiceBase, ICountryService
   {
     //constants
 

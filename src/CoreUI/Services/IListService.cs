@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+﻿using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -6,7 +6,7 @@ namespace TradeSharp.CoreUI.Services
   /// Interface to be implemented by services that allow the manipulation of items in a list fashion. Services are defined to support dependency injection in MVVM.
   /// The service overall supports viewing all the items and then viewing the details of a single item (SelectedItem)
   /// </summary>
-  public interface IListService<T>
+  public interface IListService<T> : IRefreshable
   {
     //constants
 
@@ -27,6 +27,7 @@ namespace TradeSharp.CoreUI.Services
 
     //events
     event EventHandler<T?>? SelectedItemChanged;
+
 
     //methods
     void Refresh();

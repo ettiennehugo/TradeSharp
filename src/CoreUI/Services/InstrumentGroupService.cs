@@ -15,7 +15,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for instrument group objects.
   /// </summary>
-  public partial class InstrumentGroupService : ObservableObject, IInstrumentGroupService
+  public partial class InstrumentGroupService : ServiceBase, IInstrumentGroupService
   {
     //constants
     private const string extensionCSV = ".csv";
@@ -439,6 +439,7 @@ namespace TradeSharp.CoreUI.Services
         //when some warning/error occurs add the counts
         result.StatusMessage += $" Import counts: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\".";
 
+      RaiseRefreshEvent();
       return result;
     }
 
@@ -737,6 +738,7 @@ namespace TradeSharp.CoreUI.Services
         result.StatusMessage = "Import with warning/error: " + result.StatusMessage;
       result.StatusMessage += $" Skipped({counts.Skipped}), Replaced({counts.Replaced}), Updated({counts.Updated}), Created({counts.Created}) - from \"{importSettings.Filename}\".";
 
+      RaiseRefreshEvent();
       return result;
     }
 

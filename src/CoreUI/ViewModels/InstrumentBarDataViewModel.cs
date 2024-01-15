@@ -16,7 +16,7 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     public const string FilterFromDateTime = "FromDateTime";
     public const string FilterToDateTime = "ToDateTime";
-    public const int DefaultPageSize = 100;
+    public const int DefaultPageSize = 1000;
 
     //enums
 
@@ -122,17 +122,17 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public Task<IList<IBarData>> GetItems(DateTime from, DateTime to)
     {
-      return Task.FromResult(m_barDataService.GetItems(from, to));
+      return Task.Run(() => m_barDataService.GetItems(from, to));
     }
 
     public Task<IList<IBarData>> GetItems(int index, int count)
     {
-      return Task.FromResult(m_barDataService.GetItems(index, count));
+      return Task.Run(() => m_barDataService.GetItems(index, count));
     }
 
     public Task<IList<IBarData>> GetItems(DateTime from, DateTime to, int index, int count)
     {
-      return Task.FromResult(m_barDataService.GetItems(from, to, index, count));
+      return Task.Run(() => m_barDataService.GetItems(from, to, index, count));
     }
 
     public virtual Task OnCopyToHourAsync(object? selection)
@@ -239,7 +239,5 @@ namespace TradeSharp.CoreUI.ViewModels
       m_oldFromDateTime = m_fromDateTime;
       m_oldToDateTime = m_toDateTime;
     }
-
-
   }
 }

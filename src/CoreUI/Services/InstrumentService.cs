@@ -8,11 +8,10 @@ using CsvHelper;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.Services
 {
-  public partial class InstrumentService : ObservableObject, IInstrumentService
+  public partial class InstrumentService : ServiceBase, IInstrumentService
   {
     //constants
     /// <summary>
@@ -307,6 +306,8 @@ namespace TradeSharp.CoreUI.Services
       }
 
       if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Import success: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\"";
+
+      RaiseRefreshEvent();
       return result;
     }
 
@@ -466,6 +467,7 @@ namespace TradeSharp.CoreUI.Services
         result.StatusMessage = "Import with warning/error: " + result.StatusMessage;
       result.StatusMessage += $"Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\".";
 
+      RaiseRefreshEvent();
       return result;
     }
 

@@ -36,6 +36,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService): base(itemsService, navigationService, dialogService) 
     {
       m_instrumentService = itemsService;
+      m_instrumentService.RefreshEvent += onServiceRefresh;
       m_offsetIndex = 0;
       m_offsetCount = 0;
       m_filters = new Dictionary<string, object>();

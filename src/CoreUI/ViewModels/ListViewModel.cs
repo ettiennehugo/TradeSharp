@@ -31,6 +31,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public ListViewModel(IListService<TItem> itemsService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
     {
       m_itemsService = itemsService;
+      m_itemsService.RefreshEvent += onServiceRefresh;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null);
@@ -166,5 +167,11 @@ namespace TradeSharp.CoreUI.ViewModels
     //sub-classes can override these methods if they support import/export behavior
     public override Task OnImportAsync() => throw new NotImplementedException();
     public override Task OnExportAsync() => throw new NotImplementedException();
+
+    ///Generic handler to re-raise the service refresh event as a view model refresh event.
+    protected virtual void onServiceRefresh(object? sender, Common.RefreshEventArgs e)
+    {
+      RaiseRefreshEvent(e);
+    }
   }
 }

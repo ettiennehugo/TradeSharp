@@ -16,7 +16,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Observable service class for instrument bar data objects.
   /// </summary>
-  public partial class InstrumentBarDataService : ObservableObject, IInstrumentBarDataService
+  public partial class InstrumentBarDataService : ServiceBase, IInstrumentBarDataService
   {
     //constants
     private const string extensionCSV = ".csv";
@@ -188,6 +188,9 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public IList<IBarData> Items { get; set; }
+
+    //events
+
 
     //methods
     /// <summary>
@@ -369,6 +372,7 @@ namespace TradeSharp.CoreUI.Services
       }
 
       if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Created/updated {barsUpdated} bars from \"{importSettings.Filename}\".";
+      RaiseRefreshEvent();
       return result;
     }
 
@@ -469,6 +473,7 @@ namespace TradeSharp.CoreUI.Services
       }
 
       if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Created/updated {barsUpdated} bars from \"{importSettings.Filename}\".";
+      RaiseRefreshEvent();
       return result;
     }
 

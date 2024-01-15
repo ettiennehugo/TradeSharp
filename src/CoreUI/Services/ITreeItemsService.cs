@@ -1,11 +1,12 @@
 ﻿using System.Collections.ObjectModel;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
   /// Interface to be implemented by services that allow manipulation of items in a tree fashion. 
   /// </summary>
-  public interface ITreeItemsService<TKey, TItem>
+  public interface ITreeItemsService<TKey, TItem> : IRefreshable
     where TItem : class
   {
     //constants
@@ -30,6 +31,7 @@ namespace TradeSharp.CoreUI.Services
 
     //events
     event EventHandler<ITreeNodeType<TKey, TItem>?>? SelectedNodeChanged;
+
 
     //methods
     void Refresh();
