@@ -290,8 +290,7 @@ namespace TradeSharp.CoreUI.Services
       }
 
       if (noErrors) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Import success: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\"");
-
-      RaiseRefreshEvent();
+      RaiseRefreshEvent();  //notify view model of changes
     }
 
     //methods
@@ -439,7 +438,7 @@ namespace TradeSharp.CoreUI.Services
       }
 
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Import from \"{importSettings.Filename}\" complete - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
-      RaiseRefreshEvent();
+      RaiseRefreshEvent();  //notify view model of changes
     }
 
     private void exportJSON(string filename)

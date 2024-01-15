@@ -32,11 +32,14 @@ namespace TradeSharp.WinCoreUI.Views
     public static DateTimeOffset s_defaultEndDate = new DateTimeOffset(2075, 12, 31, 0, 0, 0, new TimeSpan(0, 0, 0));
     public static TimeSpan s_defaultStartTime = new TimeSpan(0, 0, 0);
     public static TimeSpan s_defaultEndTime = new TimeSpan(23, 59, 59);
+    private object m_refreshLock;
 
     //constructors
     public InstrumentBarsDataView()
     {
+      m_refreshLock = new object();
       ViewModel = Ioc.Default.GetRequiredService<InstrumentBarDataViewModel>();
+      ViewModel.Resolution = Resolution;
       ViewModel.RefreshEvent += onViewModelRefresh;
       IncrementalItems = new IncrementalObservableCollection<IBarData>(ViewModel);
       this.InitializeComponent();
@@ -186,11 +189,24 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void resetFilter()
     {
-      m_startDate.Date = s_defaultStartDate;
-      m_endDate.Date = s_defaultEndDate;
-      m_startTime.Time = s_defaultStartTime;
-      m_endTime.Time = s_defaultEndTime;
-      refreshFilter();
+      lock(m_refreshLock)
+      {
+        m_startDate.Date = s_defaultStartDate;
+        m_endDate.Date = s_defaultEndDate;
+        m_startTime.Time = s_defaultStartTime;
+        m_endTime.Time = s_defaultEndTime;
+
+        //update the view model filter
+        ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = new DateTime(m_startDate.Date.Year, m_startDate.Date.Month, m_startDate.Date.Day, m_startTime.Time.Hours, m_startTime.Time.Minutes, 0);
+        ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = new DateTime(m_endDate.Date.Year, m_endDate.Date.Month, m_endDate.Date.Day, m_endTime.Time.Hours, m_endTime.Time.Minutes, 0);
+
+        //restart load of the items using the new filter conditions
+        IncrementalItems.Clear();
+        ViewModel.OffsetIndex = 0;
+
+        //load the first page of the bar data asynchronously
+        if (DataProvider != string.Empty && Instrument != null) _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
+      }
     }
 
     private void m_resetFilter_Click(object sender, RoutedEventArgs e)
@@ -200,18 +216,19 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void refreshFilter()
     {
-      if (m_dataTable == null) return;
+      lock (m_refreshLock)
+      {
+        //set the view model filter
+        ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = new DateTime(m_startDate.Date.Year, m_startDate.Date.Month, m_startDate.Date.Day, m_startTime.Time.Hours, m_startTime.Time.Minutes, 0);
+        ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = new DateTime(m_endDate.Date.Year, m_endDate.Date.Month, m_endDate.Date.Day, m_endTime.Time.Hours, m_endTime.Time.Minutes, 0);
 
-      //set the view model filter
-      ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = new DateTime(m_startDate.Date.Year, m_startDate.Date.Month, m_startDate.Date.Day, m_startTime.Time.Hours, m_startTime.Time.Minutes, 0);
-      ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = new DateTime(m_endDate.Date.Year, m_endDate.Date.Month, m_endDate.Date.Day, m_endTime.Time.Hours, m_endTime.Time.Minutes, 0);
-      
-      //restart load of the items using the new filter conditions
-      IncrementalItems.Clear();
-      ViewModel.OffsetIndex = 0;
+        //restart load of the items using the new filter conditions
+        IncrementalItems.Clear();
+        ViewModel.OffsetIndex = 0;
 
-      //load the first page of the bar data asynchronously
-      if (DataProvider != string.Empty && Instrument != null) _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
+        //load the first page of the bar data asynchronously
+        if (DataProvider != string.Empty && Instrument != null) _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
+      }
     }
 
     private void m_startDate_DateChanged(object sender, DatePickerValueChangedEventArgs e)
@@ -236,9 +253,8 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void onViewModelRefresh(object? sender, RefreshEventArgs e)
     {
-      IncrementalItems.Clear();
-      ViewModel.OffsetIndex = 0;
-      if (DataProvider != string.Empty && Instrument != null) _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
+      //NOTE: Event to refresh will most likely come from a background thread, so we need to marshal the call to the UI thread.
+      m_dataTable.DispatcherQueue.TryEnqueue(new Microsoft.UI.Dispatching.DispatcherQueueHandler(() => resetFilter()));
     }
   }
 }

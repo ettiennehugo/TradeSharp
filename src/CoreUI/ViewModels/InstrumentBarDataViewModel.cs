@@ -41,6 +41,8 @@ namespace TradeSharp.CoreUI.ViewModels
     public InstrumentBarDataViewModel(INavigationService navigationService, IDialogService dialogService) : base(Ioc.Default.GetRequiredService<IInstrumentBarDataService>(), navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
     {
       m_barDataService = (IInstrumentBarDataService)m_itemsService;
+      m_barDataService.Resolution = Resolution; //need to always keep the service resolution the same as the view model resolution
+      m_barDataService.RefreshEvent += onServiceRefresh;
       m_oldFromDateTime = m_fromDateTime = DateTime.MinValue;
       m_oldToDateTime = m_toDateTime = DateTime.MaxValue;
       m_filter = new Dictionary<string, object>();
