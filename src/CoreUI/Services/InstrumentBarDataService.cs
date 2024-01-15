@@ -1,5 +1,4 @@
 ﻿using TradeSharp.Data;
-using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Repositories;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using CsvHelper;
 using System.Globalization;
 using System.Diagnostics;
-using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -51,7 +49,7 @@ namespace TradeSharp.CoreUI.Services
     private IDatabase m_database;
 
     //constructors
-    public InstrumentBarDataService(ILoggerFactory loggerFactory, IDatabase database)
+    public InstrumentBarDataService(ILoggerFactory loggerFactory, IDatabase database, IDialogService dialogService): base(dialogService)
     {
       m_loggerFactory = loggerFactory;
       m_database = database;
@@ -92,36 +90,22 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
-    public ExportResult Export(string filename)
+    public void Export(string filename)
     {
       string extension = Path.GetExtension(filename).ToLower();
       if (extension == extensionCSV)
-        return exportCSV(filename);
+        exportCSV(filename);
       else if (extension == extensionJSON)
-        return exportJSON(filename);
-
-      //should never be reached if all supported file types are handled
-      ExportResult result = new();
-      StackFrame? stackFrame = new StackTrace(true).GetFrame(0);
-      result.Severity = IDialogService.StatusMessageSeverity.Error;
-      result.StatusMessage = $"Invalid program state: Unable to handle file type \"{filename}\" for export. ({stackFrame!.GetFileName()}:{stackFrame!.GetFileLineNumber()})";
-      return result;
+        exportJSON(filename);
     }
 
-    public ImportResult Import(ImportSettings importSettings)
+    public void Import(ImportSettings importSettings)
     {
       string extension = Path.GetExtension(importSettings.Filename).ToLower();
       if (extension == extensionCSV)
-        return importCSV(importSettings);
+        importCSV(importSettings);
       else if (extension == extensionJSON)
-        return importJSON(importSettings);
-
-      //should never be reached if all supported file types are handled
-      ImportResult result = new();
-      StackFrame? stackFrame = new StackTrace(true).GetFrame(0);
-      result.Severity = IDialogService.StatusMessageSeverity.Error;
-      result.StatusMessage = $"Invalid program state: Unable to handle file type \"{importSettings.Filename}\" for import. ({stackFrame!.GetFileName()}:{stackFrame!.GetFileLineNumber()})";
-      return result;
+        importJSON(importSettings);
     }
 
     public void Refresh()
@@ -200,11 +184,14 @@ namespace TradeSharp.CoreUI.Services
     ///   date, time, open, high, low, close, volume[, id]
     /// Fields can be in any order but the above values are required.
     /// </summary>
-    private ImportResult importCSV(ImportSettings importSettings)
+    private void importCSV(ImportSettings importSettings)
     {
-      ImportResult result = new ImportResult();
-      ILogger logger = m_loggerFactory.CreateLogger($"Importing instruments - \"{importSettings.Filename}\"");
+      string statusMessage = $"Importing bar data from \"{importSettings.Filename}\"";
+      ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
+
       long barsUpdated = 0;
+      bool noErrors = true;
 
       //make sure we can retrieve the primary exhange for the instrument if we are importing date/time in the Exchange timezone
       Exchange? exchange = null;
@@ -213,9 +200,10 @@ namespace TradeSharp.CoreUI.Services
         exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
         if (exchange == null)
         {
-          logger.LogError($"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.");
-          result.Severity = IDialogService.StatusMessageSeverity.Error;
-          return result;
+          statusMessage = $"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.";
+          logger.LogError(statusMessage);
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+          return;
         }
       }
 
@@ -224,7 +212,6 @@ namespace TradeSharp.CoreUI.Services
       using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
       {
         //read the header record
-        result.Severity = IDialogService.StatusMessageSeverity.Success;
         if (csv.Read() && csv.ReadHeader() && csv.HeaderRecord != null)
         {
           int lineNo = 1; //header row is on line 0
@@ -261,21 +248,21 @@ namespace TradeSharp.CoreUI.Services
 
           if (!dateTimeFound && !(dateFound && timeFound))
           {
-            result.StatusMessage = "DateTime or (Date and Time) fields are required to import bar data.";
-            result.Severity = IDialogService.StatusMessageSeverity.Error;
-            logger.LogError(result.StatusMessage);
+            statusMessage = "DateTime or (Date and Time) fields are required to import bar data.";
+            logger.LogError(statusMessage);
+            m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
           }
 
           if (!openFound || !highFound || !lowFound || !closeFound || !volumeFound)
           {
-            result.StatusMessage = "Open, high, low, close and volume fields are required to import bar data.";
-            result.Severity = IDialogService.StatusMessageSeverity.Error;
-            logger.LogError(result.StatusMessage);
+            statusMessage = "Open, high, low, close and volume fields are required to import bar data.";
+            logger.LogError(statusMessage);
+            m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
           }
 
           //parse the file data, first load the bars into a cache and then mass update the database (mass update is faster)
           List<IBarData> bars = new List<IBarData>();
-          while (csv.Read() && result.Severity != IDialogService.StatusMessageSeverity.Error)
+          while (csv.Read() && noErrors)
           {
             DateTime? dateTime = null;
             DateOnly? date = null;
@@ -354,10 +341,11 @@ namespace TradeSharp.CoreUI.Services
             }
             catch (Exception e)
             {
-              result.Severity = IDialogService.StatusMessageSeverity.Error;
-              result.StatusMessage = $"Failed to parse bar on line {lineNo} with exception \"{e.Message}\".";
-              logger.LogError(result.StatusMessage);
+              statusMessage = $"Failed to parse bar on line {lineNo} with exception \"{e.Message}\".";
+              logger.LogError(statusMessage);
+              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
               bars.Clear();
+              noErrors = false;
             }
           }
 
@@ -365,23 +353,30 @@ namespace TradeSharp.CoreUI.Services
         }
         else
         {
-          result.Severity = IDialogService.StatusMessageSeverity.Error;
-          result.StatusMessage = $"Unable to parse header.";
-          logger.LogError(result.StatusMessage);
+          statusMessage = $"Unable to parse header.";
+          logger.LogError(statusMessage);
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+          noErrors = false;
         }
       }
 
-      if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Created/updated {barsUpdated} bars from \"{importSettings.Filename}\".";
-      RaiseRefreshEvent();
-      return result;
+      if (noErrors)
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+      else
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+
+      RaiseRefreshEvent();  //notify view model of changes
     }
 
-    private ImportResult importJSON(ImportSettings importSettings)
+    private void importJSON(ImportSettings importSettings)
     {
-      ImportResult result = new ImportResult();
       long barIndex = 0;
       long barsUpdated = 0;
-      ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
+      string statusMessage = $"Importing bar data from \"{importSettings.Filename}\"";
+      ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
+
+      bool noErrors = true;
 
       //make sure we can retrieve the primary exhange for the instrument if we are importing date/time in the Exchange timezone
       Exchange? exchange = null;
@@ -390,10 +385,10 @@ namespace TradeSharp.CoreUI.Services
         exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
         if (exchange == null)
         {
-          result.Severity = IDialogService.StatusMessageSeverity.Error;
-          result.StatusMessage = $"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.";
-          logger.LogError(result.StatusMessage);
-          return result;
+          statusMessage = $"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.";
+          logger.LogError(statusMessage);
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+          return;
         }
       }
 
@@ -453,9 +448,9 @@ namespace TradeSharp.CoreUI.Services
             }
             else
             {
-              result.Severity = IDialogService.StatusMessageSeverity.Error;
-              result.StatusMessage = $"Bar at index {barIndex} does not contain a valid date/time specification.";  //JSON library contains zero information on where it found this data so the best we can do is use an index.
-              logger.LogError(result.StatusMessage);
+              statusMessage = $"Bar at index {barIndex} does not contain a valid date/time specification.";  //JSON library contains zero information on where it found this data so the best we can do is use an index.
+              logger.LogError(statusMessage);
+              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "", statusMessage);
               continue; //skip to next bar definition
             }
 
@@ -472,25 +467,30 @@ namespace TradeSharp.CoreUI.Services
         }
       }
 
-      if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Created/updated {barsUpdated} bars from \"{importSettings.Filename}\".";
-      RaiseRefreshEvent();
-      return result;
+      if (noErrors)
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+      else
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+
+      RaiseRefreshEvent();  //notify view model of changes
     }
 
     //NOTE: Export always writes out the data in the Exchange time-zone, so the import settings structure defaults to Exchange time-zone.
-    private ExportResult exportCSV(string filename)
+    private void exportCSV(string filename)
     {
-      ExportResult result = new();
       long exportCount = 0;
-      ILogger logger = m_loggerFactory.CreateLogger($"Exporting instruments - \"{filename}\"");
+      string statusMessage = $"Exporting bar data to \"{filename}\"";
+      ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
 
       if (exchange == null)
       {
-        result.Severity = IDialogService.StatusMessageSeverity.Error;
-        result.StatusMessage = $"Date/time exported without UTC conversion, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\".";
-        logger.LogWarning(result.StatusMessage);
+        statusMessage = $"Date/time exported without UTC conversion, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\".";
+        logger.LogWarning(statusMessage);
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+        return;
       }
 
       using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
@@ -524,67 +524,63 @@ namespace TradeSharp.CoreUI.Services
         }
       }
 
-      if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} bars to \"{filename}\".";
-      return result;
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{filename}\".");
     }
 
     //NOTE: Export always writes out the data in the Exchange time-zone, so the import defaults to Exchange time-zone.
-    private ExportResult exportJSON(string filename)
+    private void exportJSON(string filename)
     {
-      ExportResult result = new();
       long exportCount = 0;
-
-      ILogger logger = m_loggerFactory.CreateLogger($"Exporting instruments - \"{filename}\"");
-
+      string statusMessage = $"Exporting bar data to \"{filename}\"";
+      ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
       Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
 
       if (exchange == null)
       {
-        result.Severity = IDialogService.StatusMessageSeverity.Error;
-        result.StatusMessage = $"Date/time exported without UTC conversion, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\".";
-        logger.LogWarning(result.StatusMessage);
+        statusMessage = $"Date/time exported without UTC conversion, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\".";
+        logger.LogWarning(statusMessage);
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+        return;
       }
-      else
+
+      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
       {
-        using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+        int barDataIndex = 0;
+        int barDataCount = Items.Count;
+        JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
+
+        file.WriteLine("[");
+        foreach (IBarData barData in Items)
         {
-          int barDataIndex = 0;
-          int barDataCount = Items.Count;
-          JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
-
-          file.WriteLine("[");
-          foreach (IBarData barData in Items)
+          string dateTimeStr = string.Empty;
+          if (exchange != null)
           {
-            string dateTimeStr = string.Empty;
-            if (exchange != null)
-            {
-              DateTimeOffset dateTimeOffset = new DateTimeOffset(barData.DateTime.Ticks, exchange.TimeZone.BaseUtcOffset);
-              dateTimeStr = dateTimeOffset.UtcDateTime.ToString();
-            }
-            else
-              dateTimeStr = barData.DateTime.ToString();
-
-            JsonObject barDataJson = new JsonObject
-            {
-              [tokenJsonDateTime] = dateTimeStr,
-              [tokenJsonOpen] = barData.Open,
-              [tokenJsonHigh] = barData.High,
-              [tokenJsonLow] = barData.Low,
-              [tokenJsonClose] = barData.Close,
-              [tokenJsonVolume] = barData.Volume,
-            };
-
-            file.Write(barDataJson.ToJsonString(options));
-            exportCount++;
-            if (barDataIndex < barDataCount - 1) file.WriteLine(",");
+            DateTimeOffset dateTimeOffset = new DateTimeOffset(barData.DateTime.Ticks, exchange.TimeZone.BaseUtcOffset);
+            dateTimeStr = dateTimeOffset.UtcDateTime.ToString();
           }
-          file.WriteLine("");
-          file.WriteLine("]");
+          else
+            dateTimeStr = barData.DateTime.ToString();
+
+          JsonObject barDataJson = new JsonObject
+          {
+            [tokenJsonDateTime] = dateTimeStr,
+            [tokenJsonOpen] = barData.Open,
+            [tokenJsonHigh] = barData.High,
+            [tokenJsonLow] = barData.Low,
+            [tokenJsonClose] = barData.Close,
+            [tokenJsonVolume] = barData.Volume,
+          };
+
+          file.Write(barDataJson.ToJsonString(options));
+          exportCount++;
+          if (barDataIndex < barDataCount - 1) file.WriteLine(",");
         }
+        file.WriteLine("");
+        file.WriteLine("]");
       }
 
-      if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} bars to \"{filename}\".";
-      return result;
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{filename}\".");
     }
   }
 }

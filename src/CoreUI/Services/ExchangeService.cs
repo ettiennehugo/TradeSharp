@@ -25,7 +25,7 @@ namespace TradeSharp.CoreUI.Services
     private Exchange? m_selectedItem;
 
     //constructors
-    public ExchangeService(IExchangeRepository exchangeRepository)
+    public ExchangeService(IExchangeRepository exchangeRepository, IDialogService dialogService): base(dialogService)
     {
       m_parent = Guid.Empty;
       m_exchangeRepository = exchangeRepository;
@@ -91,7 +91,7 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public bool Copy(Exchange item) => throw new NotImplementedException();
-    public ImportResult Import(ImportSettings importSettings) => throw new NotImplementedException();
-    public ExportResult Export(string filename) => throw new NotImplementedException();
+    public void Import(ImportSettings importSettings) => throw new NotImplementedException();
+    public void Export(string filename) => throw new NotImplementedException();
   }
 }

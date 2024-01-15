@@ -24,7 +24,7 @@ namespace TradeSharp.CoreUI.Services
     private Country? m_selectedItem;
 
     //constructors
-    public CountryService(ICountryRepository countryRepository)
+    public CountryService(ICountryRepository countryRepository, IDialogService dialogService): base(dialogService)
     {
       m_countryRepository = countryRepository;
       m_selectedItem = null;
@@ -72,8 +72,8 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public bool Copy(Country item) => throw new NotImplementedException();
-    public ImportResult Import(ImportSettings importSettings) => throw new NotImplementedException();
-    public ExportResult Export(string filename) => throw new NotImplementedException();
+    public void Import(ImportSettings importSettings) => throw new NotImplementedException();
+    public void Export(string filename) => throw new NotImplementedException();
 
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } } //countries to not have a parent

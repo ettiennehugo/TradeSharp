@@ -26,37 +26,6 @@ namespace TradeSharp.CoreUI.Services
   }
 
   /// <summary>
-  /// Results from import operation with the specific outcome. Success state is set per default and other states must be explicitly set.
-  /// </summary>
-  public class ImportResult
-  {
-    public ImportResult()
-    {
-      Severity = IDialogService.StatusMessageSeverity.Success;
-      StatusMessage = string.Empty;
-    }
-
-    public IDialogService.StatusMessageSeverity Severity;
-    public string StatusMessage;
-  }
-
-  /// <summary>
-  /// Results from export operation with specific outcome. Success state is set per default and other states must be explicitly set.
-  /// </summary>
-  public class ExportResult
-  {
-    public ExportResult()
-    {
-      Severity = IDialogService.StatusMessageSeverity.Success;
-      StatusMessage = string.Empty;
-    }
-
-    public IDialogService.StatusMessageSeverity Severity;
-    public string StatusMessage;
-  }
-
-
-  /// <summary>
   /// Settings to use for importing instrument groups, instruments and instrument data.
   /// </summary>
   public partial class ImportSettings: ObservableObject

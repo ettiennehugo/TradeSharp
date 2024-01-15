@@ -26,7 +26,7 @@ namespace TradeSharp.CoreUI.Services
     private Session? m_selectedItem;
 
     //constructors
-    public SessionService(ISessionRepository sessionRepository)
+    public SessionService(ISessionRepository sessionRepository, IDialogService dialogService): base(dialogService)
     {
       m_parent = Guid.Empty;
       m_sessionRepository = sessionRepository;
@@ -94,7 +94,7 @@ namespace TradeSharp.CoreUI.Services
       return m_sessionRepository.Add(clone);
     }
 
-    public ImportResult Import(ImportSettings importSettings) => throw new NotImplementedException();
-    public ExportResult Export(string filename) => throw new NotImplementedException();
+    public void Import(ImportSettings importSettings) => throw new NotImplementedException();
+    public void Export(string filename) => throw new NotImplementedException();
   }
 }

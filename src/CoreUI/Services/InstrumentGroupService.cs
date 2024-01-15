@@ -70,7 +70,7 @@ namespace TradeSharp.CoreUI.Services
     public ObservableCollection<InstrumentGroup> Items { get; internal set; }
 
     //constructors
-    public InstrumentGroupService(ILoggerFactory loggerFactory, IDatabase database, IInstrumentGroupRepository instrumentGroupRepository)
+    public InstrumentGroupService(ILoggerFactory loggerFactory, IDatabase database, IInstrumentGroupRepository instrumentGroupRepository, IDialogService dialogService): base(dialogService)
     {
       m_loggerFactory = loggerFactory;
       m_database = database;
@@ -189,37 +189,23 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentGroupRepository.Update(node.Item);
     }
 
-    public ImportResult Import(ImportSettings importSettings)
+    public void Import(ImportSettings importSettings)
     {
       string extension = Path.GetExtension(importSettings.Filename).ToLower();
       if (extension == extensionCSV)
-        return importCSV(importSettings);
+        importCSV(importSettings);
       else if (extension == extensionJSON)
-        return importJSON(importSettings);
-
-      //should never be reached if all supported file types are handled
-      ImportResult result = new();
-      StackFrame? stackFrame = new StackTrace(true).GetFrame(0);
-      result.Severity = IDialogService.StatusMessageSeverity.Error;
-      result.StatusMessage = $"Invalid program state: Unable to handle file type \"{importSettings.Filename}\" for import. ({stackFrame!.GetFileName()}:{stackFrame!.GetFileLineNumber()})";
-      return result;
+        importJSON(importSettings);
     }
 
-    public ExportResult Export(string filename)
+    public void Export(string filename)
     {
       IDictionary<Guid, Tuple<InstrumentGroup, bool>> leafNodes = getLeafInstrumentGroups();
       string extension = Path.GetExtension(filename).ToLower();
       if (extension == extensionCSV)
-        return exportCSV(filename, leafNodes);
+        exportCSV(filename, leafNodes);
       else if (extension == extensionJSON)
-        return exportJSON(filename, leafNodes);
-
-      //should never be reached if all supported file types are handled
-      ExportResult result = new();
-      StackFrame? stackFrame = new StackTrace(true).GetFrame(0);
-      result.Severity = IDialogService.StatusMessageSeverity.Error;
-      result.StatusMessage = $"Invalid program state: Unable to handle file type \"{filename}\" for export. ({stackFrame!.GetFileName()}:{stackFrame!.GetFileLineNumber()})";
-      return result;
+        exportJSON(filename, leafNodes);
     }
 
     /// <summary>
@@ -266,14 +252,16 @@ namespace TradeSharp.CoreUI.Services
     /// Uses - https://joshclose.github.io/CsvHelper/examples/reading/get-dynamic-records/
     ///   - Only instrument group names are imported and is used for the description as well.
     /// </summary>
-    private ImportResult importCSV(ImportSettings importSettings)
+    private void importCSV(ImportSettings importSettings)
     {
-      ImportResult result = new();
       long skippedCount = 0;
       long updatedCount = 0;
       long replacedCount = 0;
       long createdCount = 0;
-      ILogger logger = m_loggerFactory.CreateLogger($"Importing instrument groups - \"{importSettings.Filename}\"");
+
+      string statusMessage = $"Importing instrument groups - \"{importSettings.Filename}\"";
+      ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       Dictionary<string, InstrumentGroup> definedInstrumentGroups = new Dictionary<string, InstrumentGroup>();
       Dictionary<string, InstrumentGroupRecord> fileInstrumentGroups = new Dictionary<string, InstrumentGroupRecord>();
@@ -357,9 +345,6 @@ namespace TradeSharp.CoreUI.Services
 
           if (!parseError)
           {
-            //assume success at this point
-            result.Severity = IDialogService.StatusMessageSeverity.Success;
-
             //get the set of instrument groups already defined and update the parentId and Id keys for groups loaded from the file
             IList<InstrumentGroup> persistedInstrumentGroups = m_instrumentGroupRepository.GetItems();
             foreach (InstrumentGroup instrumentGroup in persistedInstrumentGroups)
@@ -389,7 +374,6 @@ namespace TradeSharp.CoreUI.Services
                 {
                   case ImportReplaceBehavior.Skip:
                     logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag}");
-                    result.Severity = IDialogService.StatusMessageSeverity.Warning;   //warn user of skipped items
                     skippedCount++;
                     break;
                   case ImportReplaceBehavior.Replace:
@@ -424,23 +408,16 @@ namespace TradeSharp.CoreUI.Services
                   m_database.CreateInstrumentGroupInstrument(fileInstrumentGroup.Value.Id, instrument.Id);
                 else
                 {
-                  result.Severity = IDialogService.StatusMessageSeverity.Error;
-                  result.StatusMessage = $"Instrument with ticker \"{fileInstrumentGroup.Value.Ticker}\" not defined, association with instrument group \"{fileInstrumentGroup.Value.Name}\" not created - define instruments first before importing instrument groups.";
-                  logger.LogError(result.StatusMessage);
+                  statusMessage = $"Instrument with ticker \"{fileInstrumentGroup.Value.Ticker}\" not defined, association with instrument group \"{fileInstrumentGroup.Value.Name}\" not created - define instruments first before importing instrument groups.";
+                  logger.LogError(statusMessage);
                 }
               }
           }
         }
       }
 
-      if (result.Severity == IDialogService.StatusMessageSeverity.Success)
-        result.StatusMessage = $"";
-      else
-        //when some warning/error occurs add the counts
-        result.StatusMessage += $" Import counts: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\".";
-
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Completed import from \"{importSettings.Filename}\" - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
       RaiseRefreshEvent();
-      return result;
     }
 
     /// <summary>
@@ -487,14 +464,15 @@ namespace TradeSharp.CoreUI.Services
     /// 
     ///     Parent Name, Parent Description, Parent Tag, Child Name, Child Description, Child Tag, Child Name, Child Description, Child Tag, TickerN
     /// </summary>
-    private ExportResult exportCSV(string filename, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
+    private void exportCSV(string filename, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
     {
-      ExportResult result = new();
       long exportCount = 0;
 
       using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
       {
-        ILogger logger = m_loggerFactory.CreateLogger($"Exporting instrument groups to \"{filename}\"");
+        string statusMessage = $"Exporting instrument groups to \"{filename}\"";
+        ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
         IList<Instrument> instrumentsList = m_database.GetInstruments();
 
         SortedDictionary<Guid, Instrument> instruments = new SortedDictionary<Guid, Instrument>();
@@ -572,9 +550,7 @@ namespace TradeSharp.CoreUI.Services
               includeTicker = true;
               if (instrumentGroupPerLine.Count < longestBranch)
               {
-                result.Severity = IDialogService.StatusMessageSeverity.Error;
-                result.StatusMessage = $"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.";
-                logger.LogError(result.StatusMessage);
+                logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
                 includeTicker = false;
                 break;
               }
@@ -595,9 +571,7 @@ namespace TradeSharp.CoreUI.Services
               includeTicker = true;
               if (branchNodeCount < longestBranch)
               {
-                result.Severity = IDialogService.StatusMessageSeverity.Error;
-                result.StatusMessage = $"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.";
-                logger.LogError(result.StatusMessage);
+                logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
                 includeTicker = false;
                 break;
               }
@@ -647,26 +621,14 @@ namespace TradeSharp.CoreUI.Services
             InstrumentGroup lastInstrumentGroup = instrumentGroupPerLine[instrumentGroupPerLine.Count - 1];
             foreach (Guid instrumentId in lastInstrumentGroup.Instruments)
               if (instruments.TryGetValue(instrumentId, out Instrument? instrument))
-              {
                 file.WriteLine("{0}, {1}", instrumentGroupDefinitions, instrument.Ticker);
-              }
               else
-              {
-                result.Severity = IDialogService.StatusMessageSeverity.Error;
-                result.StatusMessage = $"Failed to find instrument \"{instrumentId.ToString()}\" associated with instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\".";
-                logger.LogError(result.StatusMessage);
-              }
+                logger.LogError($"Failed to find instrument \"{instrumentId.ToString()}\" associated with instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\".");
           }
         }
       }
 
-      if (result.Severity == IDialogService.StatusMessageSeverity.Success)
-        result.StatusMessage = "Export success: ";
-      else
-        result.StatusMessage = "Export with warning/error: " + result.StatusMessage;
-      result.StatusMessage += $" Exported {exportCount} groups to \"{filename}\"";
-
-      return result;
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} groups to \"{filename}\"");
     }
 
     private struct ImportCounts
@@ -700,15 +662,17 @@ namespace TradeSharp.CoreUI.Services
     ///     "instruments" : [ ticker1, ... , tickerN ]
     ///   }
     /// </summary>
-    private ImportResult importJSON(ImportSettings importSettings)
+    private void importJSON(ImportSettings importSettings)
     {
-      ImportResult result = new();
       ImportCounts counts = new();
+      bool noErrors = true;
 
       using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       {
         JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
-        ILogger logger = m_loggerFactory.CreateLogger($"Importing \"{importSettings.Filename}\"");
+        string statusMessage = $"Importing instrument groups from \"{importSettings.Filename}\"";
+        ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
         if (documentNode != null)
         {
@@ -721,28 +685,22 @@ namespace TradeSharp.CoreUI.Services
           foreach (Instrument instrument in instruments) definedInstruments.Add(instrument.Ticker, instrument);
 
           JsonArray rootNodes = documentNode.AsArray();
-          result.Severity = IDialogService.StatusMessageSeverity.Success;
-          foreach (JsonObject? node in rootNodes) if (node != null) result = importJsonNode(node!, importSettings.ReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, result, counts);
+          foreach (JsonObject? node in rootNodes) if (node != null) importJsonNode(node!, importSettings.ReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, counts);
         }
         else
         {
-          result.Severity = IDialogService.StatusMessageSeverity.Error;
-          result.StatusMessage = $"Failed to parse file \"{importSettings.Filename}\" as a JSON file.";
-          logger.LogError(result.StatusMessage);
+          statusMessage = $"Failed to parse file \"{importSettings.Filename}\" as a JSON file.";
+          logger.LogError(statusMessage);
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
+          noErrors = false;
         }
       }
 
-      if (result.Severity == IDialogService.StatusMessageSeverity.Success)
-        result.StatusMessage = "Import success: ";
-      else
-        result.StatusMessage = "Import with warning/error: " + result.StatusMessage;
-      result.StatusMessage += $" Skipped({counts.Skipped}), Replaced({counts.Replaced}), Updated({counts.Updated}), Created({counts.Created}) - from \"{importSettings.Filename}\".";
-
+      if (noErrors) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed instument group import from \"{importSettings.Filename}\" - Skipped({counts.Skipped}), Replaced({counts.Replaced}), Updated({counts.Updated}), Created({counts.Created}).");
       RaiseRefreshEvent();
-      return result;
     }
 
-    private ImportResult importJsonNode(JsonObject node, ImportReplaceBehavior importReplaceBehavior, Dictionary<Guid, InstrumentGroup> definedInstrumentGroups, Dictionary<string, Instrument> definedInstruments, ILogger logger, ImportResult result, ImportCounts counts)
+    private void importJsonNode(JsonObject node, ImportReplaceBehavior importReplaceBehavior, Dictionary<Guid, InstrumentGroup> definedInstrumentGroups, Dictionary<string, Instrument> definedInstruments, ILogger logger, ImportCounts counts)
     {
       Guid id = (Guid)(node[tokenJsonId]!.AsValue().Deserialize(typeof(Guid)))!;
       Guid parentId = (Guid)(node[tokenJsonParentId]!.AsValue().Deserialize(typeof(Guid)))!;
@@ -773,7 +731,6 @@ namespace TradeSharp.CoreUI.Services
         {
           case ImportReplaceBehavior.Skip:
             logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag}");
-            result.Severity = IDialogService.StatusMessageSeverity.Warning;   //warn user of skipped items
             counts.Skipped++;
             break;
           case ImportReplaceBehavior.Replace:
@@ -803,16 +760,13 @@ namespace TradeSharp.CoreUI.Services
       JsonArray? children = node.ContainsKey(tokenJsonChildren) ? node[tokenJsonChildren]!.AsArray() : null;
       if (children != null)
         foreach (JsonObject? childNode in children!)
-          if (childNode != null)
-            result = importJsonNode(childNode, importReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, result, counts);
-
-      return result;
+          if (childNode != null) importJsonNode(childNode, importReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, counts);
     }
 
-    private ExportResult exportJSON(string filename, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
+    private void exportJSON(string filename, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
     {
-      ExportResult result = new();
       int exportCount = 0;
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exporting instrument groups to \"{filename}\"");
 
       //determine the root node(s) based on whether we have a selected node or not
       //NOTE: For exporting the nodes we adjust the parent Id's to the root node Id which again would be adjusted to the import to the selected node Id or it would be kept the root node Id if
@@ -851,8 +805,7 @@ namespace TradeSharp.CoreUI.Services
         file.WriteLine("]");
       }
 
-      if (result.Severity == IDialogService.StatusMessageSeverity.Success) result.StatusMessage = $"Exported {exportCount} groups to \"{filename}\"";
-      return result;
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} groups to \"{filename}\"");
     }
 
     private JsonObject writeJsonNode(Guid adjustedParentNodeId, InstrumentGroup instrumentGroup, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups, ref int resultCount)

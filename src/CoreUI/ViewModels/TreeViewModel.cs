@@ -61,9 +61,9 @@ namespace TradeSharp.CoreUI.ViewModels
     /// <summary>
     /// Get/set selected set of nodes for the view model and associated items service. 
     /// </summary>
-    public ObservableCollection<ITreeNodeType<TKey, TItem>> SelectedNodes 
-    { 
-      get => m_itemsService.SelectedNodes; 
+    public ObservableCollection<ITreeNodeType<TKey, TItem>> SelectedNodes
+    {
+      get => m_itemsService.SelectedNodes;
       set
       {
         //NOTE: You can not just change this item when it differs from value since the UI calls this method sometimes
@@ -103,7 +103,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override Task OnDeleteAsync(object? target)
     {
-      return Task.Run(async () => {
+      return Task.Run(async () =>
+      {
         int count = 0;
 
         if (SelectedNodes.Count > 0)
@@ -131,32 +132,16 @@ namespace TradeSharp.CoreUI.ViewModels
       });
     }
 
-    public override Task OnImportAsync()
+    public override async Task OnImportAsync()
     {
-      return Task.Run(async () => {
-        ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
-
-        if (importSettings != null)
-        {
-          ImportResult importResult = m_itemsService.Import(importSettings);
-          await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-          OnRefresh();
-        }
-
-      });
+      ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentGroupsAsync();
+      if (importSettings != null) _ = Task.Run(() => m_itemsService.Import(importSettings));
     }
 
-    public override Task OnExportAsync()
+    public override async Task OnExportAsync()
     {
-      return Task.Run(async () => {
         string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
-
-        if (filename != null)
-        {
-          ExportResult exportResult = m_itemsService.Export(filename);
-          await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
-        }
-      });
+        if (filename != null) _ = Task.Run(() => m_itemsService.Export(filename));
     }
 
     ///Generic handler to re-raise the service refresh event as a view model refresh event.

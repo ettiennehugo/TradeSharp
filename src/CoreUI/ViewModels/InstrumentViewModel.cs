@@ -15,7 +15,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public const string FilterTicker = "Ticker";
     public const string FilterName = "Name";
     public const string FilterDescription = "Description";
-    public const int DefaultPageSize = 100;
+    public const int DefaultPageSize = 500;
 
     //enums
 
@@ -33,7 +33,7 @@ namespace TradeSharp.CoreUI.ViewModels
     private int m_offsetCount;
 
     //constructors
-    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService): base(itemsService, navigationService, dialogService) 
+    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       m_instrumentService = itemsService;
       m_instrumentService.RefreshEvent += onServiceRefresh;
@@ -66,28 +66,17 @@ namespace TradeSharp.CoreUI.ViewModels
     public override async Task OnImportAsync()
     {
       ImportSettings? importSettings = await m_dialogService.ShowImportInstrumentsAsync();
-
-      if (importSettings != null)
-      {
-        ImportResult importResult = m_itemsService.Import(importSettings);
-        await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-        m_itemsService.Refresh();
-      }
+      if (importSettings != null) _ = Task.Run(() => m_itemsService.Import(importSettings));
     }
 
     public override async Task OnExportAsync()
     {
-        string? filename = await m_dialogService.ShowExportInstrumentsAsync();
-
-        if (filename != null)
-        {
-          ExportResult exportResult = m_itemsService.Export(filename);
-          await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
-        }
+      string? filename = await m_dialogService.ShowExportInstrumentsAsync();
+      if (filename != null) _ = Task.Run(() => m_itemsService.Export(filename));
     }
 
     public override Task OnRefreshAsync()
-    {      
+    {
       return LoadMoreItemsAsync(DefaultPageSize); //view model only supports incremental loading, so we just load the first page
     }
 
@@ -96,7 +85,7 @@ namespace TradeSharp.CoreUI.ViewModels
       updateFilters();  //ensure we sync any changes to the filters
       int index = m_offsetIndex;
       int totalCount = Count;
-      m_offsetIndex+= m_offsetCount;
+      m_offsetIndex += m_offsetCount;
       OffsetCount = count;
       if (m_offsetIndex > totalCount) m_offsetIndex = totalCount; //clip offset index to the number of items in the database
       return Task.Run(() => m_instrumentService.GetItems(m_tickerFilter, m_nameFilter, m_descriptionFilter, index, m_offsetCount));

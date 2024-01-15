@@ -18,10 +18,13 @@ namespace TradeSharp.CoreUI.Services
 
 
     //attributes
-
+    protected IDialogService m_dialogService;
 
     //constructors
-
+    public ServiceBase(IDialogService dialogService)
+    {
+      m_dialogService = dialogService;
+    }
 
     //finalizers
 

@@ -41,7 +41,7 @@ namespace TradeSharp.CoreUI.Services
     bool Update(ITreeNodeType<TKey, TItem> item);
     bool Delete(ITreeNodeType<TKey, TItem> item);
     bool Copy(ITreeNodeType<TKey, TItem> item);
-    ImportResult Import(ImportSettings importSettings);
-    ExportResult Export(string filename);
+    void Import(ImportSettings importSettings);
+    void Export(string filename);
   }
 }

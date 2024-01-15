@@ -240,6 +240,5 @@ namespace TradeSharp.WinCoreUI.Views
       ViewModel.OffsetIndex = 0;
       if (DataProvider != string.Empty && Instrument != null) _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
     }
-
   }
 }

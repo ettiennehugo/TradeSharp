@@ -98,26 +98,14 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override async Task OnImportAsync()
     {
-        ImportSettings? importSettings = await m_dialogService.ShowImportBarDataAsync();
-
-        if (importSettings != null)
-        {
-          await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", "Importing bar data...");
-          ImportResult importResult = m_itemsService.Import(importSettings);
-          await m_dialogService.ShowStatusMessageAsync(importResult.Severity, "", importResult.StatusMessage);
-        }
+      ImportSettings? importSettings = await m_dialogService.ShowImportBarDataAsync();
+      if (importSettings != null) _ = Task.Run(() => m_itemsService.Import(importSettings));
     }
 
     public override async Task OnExportAsync()
     {
-        string? filename = await m_dialogService.ShowExportBarDataAsync();
-
-        if (filename != null)
-        {
-          await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", "Exporting bar data");
-          ExportResult exportResult = m_itemsService.Export(filename);
-          await m_dialogService.ShowStatusMessageAsync(exportResult.Severity, "", exportResult.StatusMessage);
-        }
+      string? filename = await m_dialogService.ShowExportBarDataAsync();
+      if (filename != null) _ = Task.Run(() => m_itemsService.Export(filename));
     }
 
     public Task<IList<IBarData>> GetItems(DateTime from, DateTime to)

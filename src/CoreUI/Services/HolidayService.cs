@@ -25,7 +25,7 @@ namespace TradeSharp.CoreUI.Services
     private Holiday? m_selectedItem;
 
     //constructors
-    public HolidayService(IHolidayRepository holidayRepository)
+    public HolidayService(IHolidayRepository holidayRepository, IDialogService dialogService): base(dialogService)
     {
       m_parent = Guid.Empty;
       m_holidayRepository = holidayRepository;
@@ -88,7 +88,7 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public bool Copy(Holiday item) => throw new NotImplementedException();
-    public ImportResult Import(ImportSettings importSettings) => throw new NotImplementedException();
-    public ExportResult Export(string filename) => throw new NotImplementedException();
+    public void Import(ImportSettings importSettings) => throw new NotImplementedException();
+    public void Export(string filename) => throw new NotImplementedException();
   }
 }
