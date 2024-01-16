@@ -1,12 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
 using Microsoft.UI.Xaml.Data;
 
 namespace TradeSharp.WinCoreUI.Common
 {
   /// <summary>
-  /// Value converter for enums to integer and back.
+  /// Value converter that applies a format mask to an output value.
   /// </summary>
-  public class EnumValueConverter : IValueConverter
+  public class FormatMaskConverter : IValueConverter
   {
     //constants
 
@@ -35,21 +41,14 @@ namespace TradeSharp.WinCoreUI.Common
     //methods
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-      if (value.GetType().IsEnum)
-        return (int)value;
-      return value;
+      string valueString = value.ToString();
+      string formatMask = parameter.ToString();
+      return string.Format(formatMask, valueString);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
     {
-      if (value is int && targetType.IsEnum)
-      {
-          int intValue = (int)value;
-          Array enumValues = targetType.GetEnumValues();
-          return enumValues.GetValue(intValue);
-      }
-      else
-        return value;
+      throw new NotImplementedException();
     }
   }
 }

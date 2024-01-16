@@ -297,7 +297,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportInstrumentsAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, false, true);
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, true);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -378,7 +378,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportInstrumentGroupsAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, false, true);
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, true);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,
@@ -465,7 +465,7 @@ namespace TradeSharp.WinDataManager.Services
     public async Task<ImportSettings?> ShowImportBarDataAsync()
     {
       InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
-      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(true, true, false);
+      WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(true, false);
       ContentDialog dialog = new ContentDialog()
       {
         XamlRoot = initNavigationService.Frame.XamlRoot,

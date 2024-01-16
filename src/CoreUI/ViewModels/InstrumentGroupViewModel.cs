@@ -25,11 +25,13 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-
+    private IInstrumentGroupService m_instrumentGroupService;
 
     //constructors
     public InstrumentGroupViewModel(IInstrumentGroupService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
+      m_instrumentGroupService = (IInstrumentGroupService)m_itemsService;
+      m_instrumentGroupService.RefreshEvent += onServiceRefresh;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? target) => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Deletable));
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? target) => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Deletable));

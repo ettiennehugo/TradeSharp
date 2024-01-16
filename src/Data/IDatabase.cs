@@ -339,11 +339,14 @@ namespace TradeSharp.Data
       File.Copy(newLogoImagePath, exchange.LogoPath);
     }
 
-    public Exchange(Guid id, Attributes attributeSet, string tag, Guid countryId, string name, TimeZoneInfo timeZone, Guid logoId): base(id, attributeSet, tag)
+    public Exchange(Guid id, Attributes attributeSet, string tag, Guid countryId, string name, TimeZoneInfo timeZone, int defaultPriceDecimals, int defaultMinimumMovement, int defaultBigPointValue, Guid logoId): base(id, attributeSet, tag)
     {
       CountryId = countryId;
       Name = name;
       TimeZone = timeZone;
+      DefaultPriceDecimals = defaultPriceDecimals;
+      DefaultMinimumMovement = defaultMinimumMovement;
+      DefaultBigPointValue = defaultBigPointValue;
       LogoId = logoId;
       LogoPath = GetLogoPath(logoId);
     }
@@ -351,6 +354,10 @@ namespace TradeSharp.Data
     [ObservableProperty] private Guid m_countryId;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private TimeZoneInfo m_timeZone;
+    [ObservableProperty] private int m_defaultPriceDecimals;
+    public double DefaultPriceScale { get => 1 / Math.Pow(10, DefaultPriceDecimals); }
+    [ObservableProperty] private int m_defaultMinimumMovement;
+    [ObservableProperty] private int m_defaultBigPointValue;
     [ObservableProperty] private Guid m_logoId; //logo Id is used for filename under assets\exchangeLogos
     [ObservableProperty] private string m_logoPath;
 
@@ -361,7 +368,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Exchange(Id, AttributeSet, Tag, CountryId, Name, TimeZone, LogoId);
+      return new Exchange(Id, AttributeSet, Tag, CountryId, Name, TimeZone, DefaultPriceDecimals, DefaultMinimumMovement, DefaultBigPointValue, LogoId);
     }
 
     public void Update(Exchange item)
@@ -371,6 +378,9 @@ namespace TradeSharp.Data
       CountryId = item.CountryId;
       Name = item.Name;
       TimeZone = item.TimeZone;
+      DefaultPriceDecimals = item.DefaultPriceDecimals;
+      DefaultMinimumMovement = item.DefaultMinimumMovement;
+      DefaultBigPointValue = item.DefaultBigPointValue;
       LogoId = item.LogoId;
     }
   }
@@ -422,25 +432,52 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class Instrument : DataObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>, IComparable
   {
-    public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds): base(id, attributeSet, tag)
+    //constants
+    public const int DefaultPriceDecimals = 2;
+    public const int DefaultMinimumMovement = 1;
+    public const int DefaultBigPointValue = 1;
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+
+
+    //constructors
+    public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds) : base(id, attributeSet, tag)
     {
       Type = type;
       Ticker = ticker;
       Name = name;
       Description = description;
       InceptionDate = inceptionDate;
+      PriceDecimals = priceDecimals;
+      MinimumMovement = minimumMovement;
+      BigPointValue = bigPointValue;
       PrimaryExchangeId = primaryExhangeId;
       SecondaryExchangeIds = secondaryExchangeIds;
     }
 
+    //finalizers
+
+
+    //properties
     [ObservableProperty] private InstrumentType m_type;
     [ObservableProperty] private string m_ticker;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private DateTime m_inceptionDate;
+    [ObservableProperty] private int m_priceDecimals;
+    public double PriceScale { get => 1 / Math.Pow(10, PriceDecimals); }
+    [ObservableProperty] private int m_minimumMovement;
+    [ObservableProperty] private int m_bigPointValue;
     [ObservableProperty] private Guid m_primaryExchangeId;
     [ObservableProperty] private IList<Guid> m_secondaryExchangeIds;
 
+    //methods
     public bool Equals(Instrument? other)
     {
       return other != null && other.Id == Id;
@@ -448,7 +485,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Instrument(Id, AttributeSet, Tag, Type, Ticker, Name, Description, InceptionDate, PrimaryExchangeId, SecondaryExchangeIds);
+      return new Instrument(Id, AttributeSet, Tag, Type, Ticker, Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, SecondaryExchangeIds);
     }
 
     public void Update(Instrument item)
@@ -460,6 +497,9 @@ namespace TradeSharp.Data
       Name = item.Name;
       Description = item.Description;
       InceptionDate = item.InceptionDate;
+      PriceDecimals = item.PriceDecimals;
+      MinimumMovement = item.MinimumMovement;
+      BigPointValue = item.BigPointValue;
       PrimaryExchangeId = item.PrimaryExchangeId;
       SecondaryExchangeIds = item.SecondaryExchangeIds;
     }

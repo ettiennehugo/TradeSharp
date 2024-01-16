@@ -228,21 +228,22 @@ namespace TradeSharp.CoreUI.Services
 
           for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
           {
-            if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDateTime)
+            string columnName = csv.HeaderRecord[columnIndex].ToLower();
+            if (columnName == tokenCsvDateTime)
               dateTimeFound = true;
-            else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDate)
+            else if (columnName == tokenCsvDate)
               dateFound = true;
-            else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTime)
+            else if (columnName == tokenCsvTime)
               timeFound = true;
-            else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvOpen)
+            else if (columnName == tokenCsvOpen)
               openFound = true;
-            else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvHigh)
+            else if (columnName == tokenCsvHigh)
               highFound = true;
-            else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvLow)
+            else if (columnName == tokenCsvLow)
               lowFound = true;
-            else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvClose)
+            else if (columnName == tokenCsvClose)
               closeFound = true;
-            else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvVolume)
+            else if (columnName == tokenCsvVolume)
               volumeFound = true;
           }
 

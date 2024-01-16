@@ -16,7 +16,8 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     public const string FilterFromDateTime = "FromDateTime";
     public const string FilterToDateTime = "ToDateTime";
-    public const int DefaultPageSize = 1000;
+    public const int DefaultPageSize = 500;
+    public const string DefaultPriceValueFormatMask = "0:0.00";
 
     //enums
 
@@ -36,6 +37,7 @@ namespace TradeSharp.CoreUI.ViewModels
     private Dictionary<string, object> m_filter;
     private int m_offsetIndex;
     private int m_offsetCount;
+    private string m_priceValueFormatMask;
 
     //constructors
     public InstrumentBarDataViewModel(INavigationService navigationService, IDialogService dialogService) : base(Ioc.Default.GetRequiredService<IInstrumentBarDataService>(), navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
@@ -48,6 +50,7 @@ namespace TradeSharp.CoreUI.ViewModels
       m_filter = new Dictionary<string, object>();
       m_offsetIndex = 0;
       m_offsetCount = DefaultPageSize;
+      m_priceValueFormatMask = DefaultPriceValueFormatMask;
       Resolution = Resolution.Day;
       DataProvider = string.Empty;
       Instrument = null;
@@ -179,7 +182,7 @@ namespace TradeSharp.CoreUI.ViewModels
       set
       {
         SetProperty(ref m_dataProvider, value);
-        ((IInstrumentBarDataService)m_itemsService).DataProvider = value;
+        m_barDataService.DataProvider = value;
         if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
@@ -191,7 +194,7 @@ namespace TradeSharp.CoreUI.ViewModels
       set
       {
         SetProperty(ref m_resolution, value);
-        ((IInstrumentBarDataService)m_itemsService).Resolution = value;
+        m_barDataService.Resolution = value;
         if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
@@ -203,7 +206,8 @@ namespace TradeSharp.CoreUI.ViewModels
       set
       {
         SetProperty(ref m_instrument, value);
-        ((IInstrumentBarDataService)m_itemsService).Instrument = value;
+        m_barDataService.Instrument = value;
+        updatePriceValueFormatMask();
         if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
@@ -214,6 +218,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public int OffsetCount { get => m_offsetCount; set { if (value <= 0) throw new ArgumentException("Offset count must be positive."); m_offsetCount = value; } }
     public bool HasMoreItems { get => m_offsetIndex < Count; }
     public IDictionary<string, object> Filter { get => m_filter; set => m_filter = (Dictionary<string, object>)value; }
+    public string PriceValueFormatMask { get => m_priceValueFormatMask; } //string.Format value format mask for the price values based on Instrument
 
     //methods
     private bool isKeyed()
@@ -228,6 +233,21 @@ namespace TradeSharp.CoreUI.ViewModels
       if (!m_oldFromDateTime.Equals(m_fromDateTime) || !m_oldToDateTime.Equals(m_toDateTime)) m_offsetIndex = 0; //reset the offset index if the filter has changed
       m_oldFromDateTime = m_fromDateTime;
       m_oldToDateTime = m_toDateTime;
+    }
+
+    private void updatePriceValueFormatMask()
+    {
+      m_priceValueFormatMask = DefaultPriceValueFormatMask;
+      if (Instrument != null)
+      {
+        m_priceValueFormatMask = "0:0"; //need to at least have a value with zero decimals
+        
+        if (Instrument.PriceDecimals > 0)
+        {
+          m_priceValueFormatMask += ".";
+          for (int i = 0; i < Instrument.PriceDecimals; i++) m_priceValueFormatMask += "0";
+        }
+      }
     }
   }
 }

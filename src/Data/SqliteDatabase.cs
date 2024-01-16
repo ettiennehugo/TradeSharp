@@ -181,7 +181,7 @@ namespace TradeSharp.Data
     public void CreateExchange(Exchange exchange)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableExchange} (Id, AttributeSet, Tag, CountryId, Name, TimeZone, LogoId) " +
+        $"INSERT OR REPLACE INTO {c_TableExchange} (Id, AttributeSet, Tag, CountryId, Name, TimeZone, LogoId, DefaultPriceDecimals, DefaultMinimumMovement, DefaultBigPointValue) " +
           $"VALUES (" +
             $"'{exchange.Id.ToString()}', " +
             $"{(long)exchange.AttributeSet}, " +
@@ -189,7 +189,10 @@ namespace TradeSharp.Data
             $"'{exchange.CountryId.ToString()}', " +
             $"'{SqlSafeString(exchange.Name)}', " +
             $"'{exchange.TimeZone.ToSerializedString()}', " +
-            $"'{exchange.LogoId.ToString()}'" +
+            $"'{exchange.LogoId.ToString()}', " +
+            $"{exchange.DefaultPriceDecimals}, " +
+            $"{exchange.DefaultMinimumMovement}, " +
+            $"{exchange.DefaultBigPointValue}" +
           $")"
       );
     }
@@ -200,7 +203,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange} WHERE Id = '{id.ToString()}'"))
         if (reader.Read())
-          result = new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), TimeZoneInfo.FromSerializedString(reader.GetString(5)), reader.GetGuid(6));
+          result = new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), TimeZoneInfo.FromSerializedString(reader.GetString(5)), reader.GetInt32(7), reader.GetInt32(8), reader.GetInt32(9), reader.GetGuid(6));
 
       return result;
     }
@@ -211,7 +214,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableExchange} ORDER BY Name ASC"))
         while (reader.Read())
-          result.Add(new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), TimeZoneInfo.FromSerializedString(reader.GetString(5)), reader.GetGuid(6)));
+          result.Add(new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), TimeZoneInfo.FromSerializedString(reader.GetString(5)), reader.GetInt32(7), reader.GetInt32(8), reader.GetInt32(9), reader.GetGuid(6)));
 
       return result;
     }
@@ -225,7 +228,10 @@ namespace TradeSharp.Data
               $"AttributeSet = {(long)exchange.AttributeSet}, " +
               $"Tag = '{SqlSafeString(exchange.Tag)}', " +
               $"TimeZone = '{exchange.TimeZone.ToSerializedString()}', " +
-              $"LogoId = '{exchange.LogoId}' " +
+              $"LogoId = '{exchange.LogoId}', " +
+              $"DefaultPriceDecimals = {exchange.DefaultPriceDecimals}, " +
+              $"DefaultMinimumMovement = {exchange.DefaultMinimumMovement}, " +
+              $"DefaultBigPointValue = {exchange.DefaultBigPointValue} " +
           $"WHERE Id = '{exchange.Id.ToString()}'"
       );
     }
@@ -513,7 +519,7 @@ namespace TradeSharp.Data
     public void CreateInstrument(Instrument instrument)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableInstrument} (Id, AttributeSet, Tag, Type, Ticker, Name, Description, PrimaryExchangeId, InceptionDate) " +
+        $"INSERT OR REPLACE INTO {c_TableInstrument} (Id, AttributeSet, Tag, Type, Ticker, Name, Description, PrimaryExchangeId, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue) " +
           $"VALUES (" +
             $"'{instrument.Id.ToString()}', " +
             $"{(long)instrument.AttributeSet}, " +
@@ -523,7 +529,10 @@ namespace TradeSharp.Data
             $"'{SqlSafeString(instrument.Name)}', " +
             $"'{SqlSafeString(instrument.Description)}', " +
             $"'{instrument.PrimaryExchangeId.ToString()}', " +
-            $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}" +
+            $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}, " +
+            $"{instrument.PriceDecimals}, " +
+            $"{instrument.MinimumMovement}, " +
+            $"{instrument.BigPointValue}" +
           $")"
       );
 
@@ -704,7 +713,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -723,7 +732,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -794,7 +803,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -865,7 +874,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -935,7 +944,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -1005,7 +1014,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -1078,7 +1087,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -1151,7 +1160,7 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds));
+          result.Add(new Instrument(instrumentId, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds));
         }
 
       return result;
@@ -1165,7 +1174,7 @@ namespace TradeSharp.Data
           List<Guid> secondaryExchangeIds = new List<Guid>();
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{id.ToString()}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
-          return new Instrument(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetGuid(7), secondaryExchangeIds);
+          return new Instrument(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds);
         }
 
       return null;
@@ -1181,7 +1190,10 @@ namespace TradeSharp.Data
               $"Name = '{SqlSafeString(instrument.Name)}', " +
               $"Description = '{SqlSafeString(instrument.Description)}', " +
               $"PrimaryExchangeId = '{instrument.PrimaryExchangeId.ToString()}', " +
-              $"InceptionDate = {instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
+              $"InceptionDate = {instrument.InceptionDate.ToUniversalTime().ToBinary()}, " +
+              $"PriceDecimals = {instrument.PriceDecimals}, " +
+              $"MinimumMovement = {instrument.MinimumMovement}, " +
+              $"BigPointValue = {instrument.BigPointValue} " +
           $"WHERE Id = '{instrument.Id.ToString()}'"
       );
 
@@ -2284,7 +2296,7 @@ namespace TradeSharp.Data
         StartTransaction();
 
         if (GetRowCount(c_TableCountry, $"Id == '{Country.InternationalId.ToString()}'") == 0) CreateCountry(new Country(Country.InternationalId, Attributes.None, "", Country.InternationalIsoCode));
-        if (GetRowCount(c_TableExchange, $"Id == '{Exchange.InternationalId.ToString()}'") == 0) CreateExchange(new Exchange(Exchange.InternationalId, Attributes.None, "", Country.InternationalId, "Global Exchange", TimeZoneInfo.Utc, Exchange.InternationalId));
+        if (GetRowCount(c_TableExchange, $"Id == '{Exchange.InternationalId.ToString()}'") == 0) CreateExchange(new Exchange(Exchange.InternationalId, Attributes.None, "", Country.InternationalId, "Global Exchange", TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId));
         if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Monday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Monday", Exchange.InternationalId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
         if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Tuesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Tuesday", Exchange.InternationalId, DayOfWeek.Tuesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
         if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Wednesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Wednesday", Exchange.InternationalId, DayOfWeek.Wednesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
@@ -2387,7 +2399,10 @@ namespace TradeSharp.Data
         CountryId TEXT,
         Name TEXT,
         TimeZone TEXT,
-        LogoId TEXT
+        LogoId TEXT,
+        DefaultPriceDecimals INTEGER,
+        DefaultMinimumMovement INTEGER,
+        DefaultBigPointValue INTERGER
       ");
     }
 
@@ -2445,7 +2460,10 @@ namespace TradeSharp.Data
         Name TEXT,
         Description TEXT,
         PrimaryExchangeId TEXT,
-        InceptionDate TYPE INTEGER
+        InceptionDate TYPE INTEGER,
+        PriceDecimals INTEGER,
+        MinimumMovement INTEGER,
+        BigPointValue INTERGER
       ");
     }
 

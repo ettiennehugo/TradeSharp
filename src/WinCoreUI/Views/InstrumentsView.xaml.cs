@@ -4,7 +4,6 @@ using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.WinCoreUI.Common;
-using System.Data;
 
 namespace TradeSharp.WinCoreUI.Views
 {
@@ -55,8 +54,7 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
       //instrument view model is instantiated once and shared between screens, so we need to reset the filters when new screens are loaded
-      ViewModel.Filters.Clear();
-      refreshFilter();
+      resetFilter();
     }
 
     private void refreshFilter()

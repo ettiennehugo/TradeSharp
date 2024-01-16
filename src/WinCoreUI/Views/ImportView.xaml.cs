@@ -44,12 +44,11 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //constructors
-    public ImportView(bool showDateTimeTimeZone, bool showDefaultPriceDataType, bool showReplaceBehavior)
+    public ImportView(bool showDateTimeTimeZone, bool showReplaceBehavior)
     {
       ImportSettings = new ImportSettings();
       this.InitializeComponent();
-      if (!showDateTimeTimeZone) m_layoutGrid.RowDefinitions[0].Height = new GridLength(0); //hide date/time timezone selector
-      if (!showDefaultPriceDataType) m_layoutGrid.RowDefinitions[1].Height = new GridLength(0); //hide default price data type selector
+      if (!showDateTimeTimeZone) m_layoutGrid.RowDefinitions[1].Height = new GridLength(0); //hide date/time timezone selector
       if (!showReplaceBehavior) m_layoutGrid.RowDefinitions[2].Height = new GridLength(0); //hide replace behavior selector
     }
 

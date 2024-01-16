@@ -44,7 +44,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_database = Ioc.Default.GetRequiredService<IDatabase>();
       Exchanges = m_database.GetExchanges();
-      Instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "", InstrumentType.Stock, "", "", "", DateTime.Today, Exchange.InternationalId, new List<Guid>());
+      Instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "", InstrumentType.Stock, "", "", "", DateTime.Today, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, new List<Guid>());
       this.InitializeComponent();
     }
 
