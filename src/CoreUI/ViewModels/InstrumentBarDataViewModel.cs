@@ -35,6 +35,7 @@ namespace TradeSharp.CoreUI.ViewModels
     private DateTime m_fromDateTime;
     private DateTime m_toDateTime;
     private Dictionary<string, object> m_filter;
+    private readonly object m_offsetIndexLock = new object();   //incremental loading is not thread safe, so we need to lock the offset index
     private int m_offsetIndex;
     private int m_offsetCount;
     private string m_priceValueFormatMask;
@@ -98,6 +99,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override Task OnRefreshAsync()
     {
+      OffsetIndex = 0;
       return LoadMoreItemsAsync(DefaultPageSize); //view model only supports incremental loading, so we just load the first page
     }
 
@@ -162,10 +164,10 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       updateFilters();
       OffsetCount = count;
-      int index = m_offsetIndex;
+      int index = OffsetIndex;
       int totalCount = Count;
-      m_offsetIndex += m_offsetCount;
-      if (m_offsetIndex > totalCount) m_offsetIndex = totalCount; //clip offset index to the number of items in the database
+      OffsetIndex += m_offsetCount;
+      if (m_offsetIndex > totalCount) OffsetIndex = totalCount; //clip offset index to the number of items in the database
       return Task.Run(() => m_barDataService.GetItems(m_fromDateTime, m_toDateTime, index, m_offsetCount));
     }
 
@@ -214,7 +216,18 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     public int Count { get { updateFilters(); return isKeyed() ? m_barDataService.GetCount(m_fromDateTime, m_toDateTime) : 0; } }
-    public int OffsetIndex { get => m_offsetIndex; set { if (value < 0) throw new ArgumentException("Offset index must be positive or zero."); m_offsetIndex = value; } }
+    public int OffsetIndex
+    {
+      get => m_offsetIndex;
+      set
+      {
+        if (value < 0) throw new ArgumentException("Offset index must be positive or zero.");
+        lock (m_offsetIndexLock)
+        {
+          m_offsetIndex = value;
+        }
+      }
+    }
     public int OffsetCount { get => m_offsetCount; set { if (value <= 0) throw new ArgumentException("Offset count must be positive."); m_offsetCount = value; } }
     public bool HasMoreItems { get => m_offsetIndex < Count; }
     public IDictionary<string, object> Filter { get => m_filter; set => m_filter = (Dictionary<string, object>)value; }

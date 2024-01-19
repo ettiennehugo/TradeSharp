@@ -30,6 +30,9 @@ namespace TradeSharp.CoreUI.ViewModels
     private string m_descriptionFilter;
     private Dictionary<string, object> m_filters;
     private int m_offsetIndex;
+    private readonly object m_offsetIndexLock = new object();
+    private readonly object m_asyncBusyLock = new object();
+    private bool m_asyncBusy;
     private int m_offsetCount;
 
     //constructors
@@ -39,6 +42,7 @@ namespace TradeSharp.CoreUI.ViewModels
       m_instrumentService.RefreshEvent += onServiceRefresh;
       m_offsetIndex = 0;
       m_offsetCount = 0;
+      m_asyncBusy = false;
       m_filters = new Dictionary<string, object>();
     }
 
@@ -77,23 +81,47 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override Task OnRefreshAsync()
     {
+      OffsetIndex = 0;
       return LoadMoreItemsAsync(DefaultPageSize); //view model only supports incremental loading, so we just load the first page
     }
 
     public Task<IList<Instrument>> LoadMoreItemsAsync(int count)
     {
-      updateFilters();  //ensure we sync any changes to the filters
-      int index = m_offsetIndex;
-      int totalCount = Count;
-      m_offsetIndex += m_offsetCount;
-      OffsetCount = count;
-      if (m_offsetIndex > totalCount) m_offsetIndex = totalCount; //clip offset index to the number of items in the database
-      return Task.Run(() => m_instrumentService.GetItems(m_tickerFilter, m_nameFilter, m_descriptionFilter, index, m_offsetCount));
+      if (m_asyncBusy) throw new Exception("Already busy");
+
+      lock (m_asyncBusyLock) m_asyncBusy = true; //set the busy flag to prevent re-entrancy
+
+      return Task.Run(() => {
+        try
+        {
+          updateFilters();  //ensure we sync any changes to the filters
+          int index = OffsetIndex;
+          int totalCount = Count;
+          OffsetCount = count;
+          var items = m_instrumentService.GetItems(m_tickerFilter, m_nameFilter, m_descriptionFilter, m_offsetIndex, count);
+          OffsetIndex += items.Count;
+          return items;
+        }
+        finally
+        {
+          lock (m_asyncBusyLock) m_asyncBusy = false; //clear the busy flag
+        }
+      });
     }
 
     //properties
     public int Count { get { updateFilters(); return m_instrumentService.GetCount(m_tickerFilter, m_nameFilter, m_descriptionFilter); } }
-    public int OffsetIndex { get => m_offsetIndex; set { if (value < 0) throw new ArgumentException("Offset index must be positive or zero."); m_offsetIndex = value; } }
+    public int OffsetIndex 
+    { 
+      get => m_offsetIndex; 
+      set { 
+        if (value < 0) throw new ArgumentException("Offset index must be positive or zero.");
+        lock (m_offsetIndexLock) 
+        {
+          m_offsetIndex = value;
+        }
+      } 
+    }
     public int OffsetCount { get => m_offsetCount; set { if (value <= 0) throw new ArgumentException("Offset count must be positive."); m_offsetCount = value; } }
     public bool HasMoreItems { get => m_offsetIndex < Count; }
     public IDictionary<string, object> Filters { get => m_filters; set => m_filters = (Dictionary<string, object>)value; }

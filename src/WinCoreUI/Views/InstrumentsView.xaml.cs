@@ -9,7 +9,7 @@ namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
   /// Displays the list of instruments defined for trading.
-  /// </summary>
+  /// </summary>  
   public sealed partial class InstrumentsView : Page
   {
     //constants

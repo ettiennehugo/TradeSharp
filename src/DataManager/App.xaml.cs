@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.CoreUI.Repositories;
-using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -46,8 +45,7 @@ namespace TradeSharp.WinDataManager
     //interface implementations
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
-      registerServices();
-      initServiceCaches();
+      registerServices(args);
       m_window = new MainWindow();
       m_window.Activate();
     }
@@ -56,7 +54,7 @@ namespace TradeSharp.WinDataManager
 
 
     //methods
-    private void registerServices()
+    private void registerServices(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
       Ioc.Default.ConfigureServices(
         new ServiceCollection()  
@@ -91,16 +89,6 @@ namespace TradeSharp.WinDataManager
           .AddTransient<InstrumentBarDataViewModel>()
           .BuildServiceProvider()
       );
-    }
-
-    /// <summary>
-    /// Fires off loading of services that support large data sets to cache data where possible.
-    /// NOTE: All methods called here should be async to avoid hanging up the UI thread.
-    /// </summary>
-    private void initServiceCaches() 
-    {
-      //var instrumentViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
-      //instrumentViewModel.RefreshCommandAsync.ExecuteAsync(null);
     }
   }
 }
