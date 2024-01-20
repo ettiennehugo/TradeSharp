@@ -1,5 +1,5 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
@@ -34,7 +34,7 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentsView()
     {
       m_refreshLock = new object();
-      ViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
+      ViewModel = (InstrumentViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentViewModel));
       ViewModel.RefreshEvent += onViewModelRefresh;
       IncrementalItems = new IncrementalObservableCollection<Instrument>(ViewModel);
       this.InitializeComponent();

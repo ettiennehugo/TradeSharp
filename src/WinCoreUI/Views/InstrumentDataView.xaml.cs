@@ -1,13 +1,13 @@
 using System;
-using System.Linq;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.ViewModels;
 using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.WinUI.UI;
 using TradeSharp.Data;
 using TradeSharp.WinCoreUI.Common;
+using TradeSharp.CoreUI.Common;
+using Microsoft.Extensions.DependencyInjection;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -40,8 +40,8 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public InstrumentDataView()
     {
-      m_configurationService = Ioc.Default.GetRequiredService<IConfigurationService>();
-      InstrumentViewModel = Ioc.Default.GetRequiredService<InstrumentViewModel>();
+      m_configurationService = (IConfigurationService)((IApplication)Application.Current).Services.GetService(typeof(IConfigurationService));
+      InstrumentViewModel = (InstrumentViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentViewModel));
       DataProviders = new ObservableCollection<string>();
       IncrementalInstruments = new IncrementalObservableCollection<Instrument>(InstrumentViewModel);
       this.InitializeComponent();

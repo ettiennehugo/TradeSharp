@@ -1,10 +1,8 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using TradeSharp.Common;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.WinCoreUI.Common
@@ -29,7 +27,7 @@ namespace TradeSharp.WinCoreUI.Common
     //constructors
     public ExchangeToIdConverter()
     {
-      m_database = Ioc.Default.GetRequiredService<IDatabase>();
+      m_database = (IDatabase)((IApplication)Application.Current).Services.GetService(typeof(IDatabase));
     }
 
     //finalizers

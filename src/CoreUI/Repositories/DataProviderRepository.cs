@@ -1,5 +1,4 @@
 ﻿using TradeSharp.Common;
-using CommunityToolkit.Mvvm.DependencyInjection;
 
 namespace TradeSharp.CoreUI.Repositories
 {
@@ -21,9 +20,9 @@ namespace TradeSharp.CoreUI.Repositories
     private IConfigurationService m_configurationService;
 
     //constructors
-    public DataProviderRepository() 
+    public DataProviderRepository(IConfigurationService configurationService) 
     {
-      m_configurationService = (IConfigurationService)Ioc.Default.GetRequiredService<IConfigurationService>();
+      m_configurationService = configurationService;
     }
 
     //finalizers

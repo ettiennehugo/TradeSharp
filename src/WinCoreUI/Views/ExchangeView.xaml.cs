@@ -4,12 +4,12 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using Windows.Storage.Pickers;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 using Windows.Storage;
 using System.ComponentModel;
+using TradeSharp.CoreUI.Common;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -87,7 +87,7 @@ namespace TradeSharp.WinCoreUI.Views
     private void loadCountries()
     {
       //load defined countries
-      IDatabase database = Ioc.Default.GetRequiredService<IDatabase>();
+      IDatabase database = (IDatabase)((IApplication)Application.Current).Services.GetService(typeof(IDatabase));
       Countries = database.GetCountries();
     }
 

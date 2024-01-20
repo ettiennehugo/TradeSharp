@@ -1,9 +1,8 @@
 ﻿using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections;
-using System.Collections.Generic;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -114,8 +113,7 @@ namespace TradeSharp.CoreUI.ViewModels
           }
         }
 
-        IDialogService dialogService = Ioc.Default.GetRequiredService<IDialogService>();
-        await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Copied {copiedCount} items");
+        await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Copied {copiedCount} items");
       });
     }
   }

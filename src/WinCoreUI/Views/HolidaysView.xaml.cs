@@ -1,19 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using TradeSharp.Data;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using CommunityToolkit.Mvvm.DependencyInjection;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -41,7 +29,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public HolidaysView()
     {
-      ViewModel = Ioc.Default.GetRequiredService<HolidayViewModel>();
+      ViewModel = (HolidayViewModel)((IApplication)Application.Current).Services.GetService(typeof(HolidayViewModel));
       this.InitializeComponent();
     }
 

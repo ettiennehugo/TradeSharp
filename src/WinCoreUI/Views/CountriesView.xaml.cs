@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using CommunityToolkit.Mvvm.DependencyInjection;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
 
 namespace TradeSharp.WinCoreUI.Views
@@ -25,7 +25,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public CountriesView()
     {
-      ViewModel = Ioc.Default.GetRequiredService<CountryViewModel>();
+      ViewModel = (CountryViewModel)((IApplication)Application.Current).Services.GetService(typeof(CountryViewModel));
       this.InitializeComponent();
     }
 

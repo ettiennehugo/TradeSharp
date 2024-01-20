@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.CoreUI.ViewModels;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.CoreUI.Common;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -29,7 +28,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public InstrumentGroupsView()
     {
-      ViewModel = Ioc.Default.GetRequiredService<InstrumentGroupViewModel>();
+      ViewModel = (InstrumentGroupViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentGroupViewModel));
       this.InitializeComponent();
     }
 

@@ -3,9 +3,8 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
-using TradeSharp.Data;
-using CommunityToolkit.Mvvm.DependencyInjection;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -32,9 +31,9 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public SessionsView()
     {
+      ViewModel = (SessionViewModel)((IApplication)Application.Current).Services.GetService(typeof(SessionViewModel));
+      ExchangeViewModel = (ExchangeViewModel)((IApplication)Application.Current).Services.GetService(typeof(ExchangeViewModel));
       this.InitializeComponent();
-      ViewModel = Ioc.Default.GetRequiredService<SessionViewModel>();
-      ExchangeViewModel = Ioc.Default.GetRequiredService<ExchangeViewModel>();
     }
 
     //finalizers

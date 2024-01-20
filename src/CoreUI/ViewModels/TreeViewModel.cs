@@ -1,7 +1,5 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
-using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
@@ -124,11 +122,10 @@ namespace TradeSharp.CoreUI.ViewModels
         OnRefresh();
         SelectedNode = Nodes.FirstOrDefault();
 
-        IDialogService dialogService = Ioc.Default.GetRequiredService<IDialogService>();
         if (count > 0)
-          await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} nodes with it's children");
+          await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} nodes with it's children");
         else
-          await dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "Failure", $"Deleted {count} nodes");
+          await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "Failure", $"Deleted {count} nodes");
       });
     }
 

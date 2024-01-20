@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using CommunityToolkit.Mvvm.DependencyInjection;
+using TradeSharp.Common;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -29,7 +30,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public ExchangesView()
     {
-      ViewModel = Ioc.Default.GetRequiredService<ExchangeViewModel>();
+      ViewModel = (ExchangeViewModel)((IApplication)Application.Current).Services.GetService(typeof(ExchangeViewModel));
       this.InitializeComponent();
     }
 

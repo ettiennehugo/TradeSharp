@@ -1,13 +1,11 @@
 ﻿using TradeSharp.Data;
 using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Repositories;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using CsvHelper;
 using System.Globalization;
-using System.Diagnostics;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -49,11 +47,11 @@ namespace TradeSharp.CoreUI.Services
     private IDatabase m_database;
 
     //constructors
-    public InstrumentBarDataService(ILoggerFactory loggerFactory, IDatabase database, IDialogService dialogService): base(dialogService)
+    public InstrumentBarDataService(IInstrumentBarDataRepository repository, ILoggerFactory loggerFactory, IDatabase database, IDialogService dialogService): base(dialogService)
     {
       m_loggerFactory = loggerFactory;
       m_database = database;
-      m_repository = Ioc.Default.GetRequiredService<IInstrumentBarDataRepository>();  //need to do this to get a unique transient repository instance associated with this specific service
+      m_repository = repository;
       DataProvider = string.Empty;
       Instrument = null;
       Resolution = Resolution.Day;

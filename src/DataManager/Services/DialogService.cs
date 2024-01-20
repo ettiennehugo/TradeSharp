@@ -5,7 +5,6 @@ using Windows.UI.Popups;
 using System.Runtime.InteropServices;
 using TradeSharp.CoreUI.Services;
 using Microsoft.UI.Xaml.Controls;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using TradeSharp.Common;
 using TradeSharp.Data;
 using Microsoft.UI.Dispatching;
@@ -14,6 +13,7 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Microsoft.UI.Xaml;
 using System.Collections.Generic;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -82,13 +82,14 @@ namespace TradeSharp.WinDataManager.Services
       return Task.CompletedTask;
     }
 
+    protected InitNavigationService getInitNavigationService() => (InitNavigationService)((IApplication)Application.Current).Services.GetService(typeof(InitNavigationService));
+
     public async Task<CountryInfo?> ShowSelectCountryAsync()
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.CountrySelectorView view = new WinCoreUI.Views.CountrySelectorView();
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Title = "Select a country",
         Content = view,
         PrimaryButtonText = "OK",
@@ -105,11 +106,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<Holiday> ShowCreateHolidayAsync(Guid parentId)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView(parentId);
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Title = "Create Holiday",
         Content = view,
         PrimaryButtonText = "OK",
@@ -126,11 +126,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<Holiday?> ShowUpdateHolidayAsync(Holiday holiday)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView((Holiday)holiday.Clone());
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Title = "Update Holiday",
         Content = view,
         PrimaryButtonText = "OK",
@@ -147,11 +146,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<Exchange?> ShowCreateExchangeAsync()
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView();
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Title = "Create Exchange",
         Content = view,
         PrimaryButtonText = "OK",
@@ -181,11 +179,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<Exchange?> ShowUpdateExchangeAsync(Exchange exchange)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView((Exchange)exchange.Clone());
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Title = "Update Exchange",
         Content = view,
         PrimaryButtonText = "OK",
@@ -214,11 +211,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<Session?> ShowCreateSessionAsync(Guid parentId)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.SessionView view = new WinCoreUI.Views.SessionView(parentId);
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Title = "Create Session",
         Content = view,
         PrimaryButtonText = "OK",
@@ -234,11 +230,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<Session?> ShowUpdateSessionAsync(Session session)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.SessionView view = new WinCoreUI.Views.SessionView((Session)session.Clone());
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Title = "Update Session",
         Content = view,
         PrimaryButtonText = "OK",
@@ -254,11 +249,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<Instrument> ShowCreateInstrumentAsync()
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView();
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Create Instrument",
         Content = view,
@@ -275,11 +269,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<Instrument> ShowUpdateInstrumentAsync(Instrument instrument)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView((Instrument)instrument.Clone());
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Update Instrument",
         Content = view,
@@ -296,11 +289,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<ImportSettings?> ShowImportInstrumentsAsync()
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, true);
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Import Instruments",
         Content = view,
@@ -335,11 +327,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<InstrumentGroup> ShowCreateInstrumentGroupAsync(Guid parentId)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.InstrumentGroupView view = new WinCoreUI.Views.InstrumentGroupView(parentId);
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Create Instrument Group",
         Content = view,
@@ -356,11 +347,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<InstrumentGroup> ShowUpdateInstrumentGroupAsync(InstrumentGroup instrumentGroup)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.InstrumentGroupView view = new WinCoreUI.Views.InstrumentGroupView((InstrumentGroup)instrumentGroup.Clone());
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Update Instrument Group",
         Content = view,
@@ -377,11 +367,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<ImportSettings?> ShowImportInstrumentGroupsAsync()
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(false, true);
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Import Instrument Groups",
         Content = view,
@@ -419,14 +408,13 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution, DateTime dateTime)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.InstrumentBarDataView view = new WinCoreUI.Views.InstrumentBarDataView();
       view.Resolution = resolution;
       view.Date = dateTime.Date;
       view.Time = dateTime.TimeOfDay;
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Create new bar data",
         Content = view,
@@ -443,11 +431,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData)
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.InstrumentBarDataView view = new WinCoreUI.Views.InstrumentBarDataView(barData.Clone());
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Create new bar data",
         Content = view,
@@ -464,11 +451,10 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task<ImportSettings?> ShowImportBarDataAsync()
     {
-      InitNavigationService initNavigationService = Ioc.Default.GetRequiredService<InitNavigationService>();
       WinCoreUI.Views.ImportView view = new WinCoreUI.Views.ImportView(true, false);
       ContentDialog dialog = new ContentDialog()
       {
-        XamlRoot = initNavigationService.Frame.XamlRoot,
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
         Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
         Title = "Import Bar Data",
         Content = view,
@@ -506,7 +492,6 @@ namespace TradeSharp.WinDataManager.Services
     //properties
     public FontIcon StatusBarIcon { get; set; }
     public TextBlock StatusBarText { get; set; }
-    public ProgressRing StatusBarProgress { get; set; }
 
     //methods
     [DllImport("user32.dll")]

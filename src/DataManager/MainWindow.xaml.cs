@@ -1,12 +1,9 @@
 using Microsoft.UI.Xaml;
 using TradeSharp.WinDataManager.ViewModels;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
-using TradeSharp.CoreUI.Events;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.WinDataManager.Services;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Data;
+using TradeSharp.CoreUI.Common;
+using TradeSharp.Data;
 
 namespace TradeSharp.WinDataManager
 {
@@ -27,20 +24,7 @@ namespace TradeSharp.WinDataManager
     //attributes
 
 
-    //constructors
- 
-
-
-    //TODO:
-    //  - Read TAP article on how to do this.
-    //  - Need to add a high level exception handler as a catch all for errors.
-    //  - Set status when an import/export operation is started (currently it would notify you when it ends).
-    //  - See how you can indicate a lot of different async processes (e.g. maybe a list of overlayed progress rings or list of progress bars)
-    //     - Create an API for this related to the progress control in the status bar - this should support creating it with a proper tooltip, updating the state and 
-    //       removing it once the process is done.
-    //     - Currently the progress bar would always be visible, make it so it only shows up when a process is under way.
-
-    
+    //constructors   
     public MainWindow()
     {
       this.InitializeComponent();
@@ -61,9 +45,9 @@ namespace TradeSharp.WinDataManager
     //methods
     private void Window_Activated(object sender, WindowActivatedEventArgs args)
     {
-      ViewModel = Ioc.Default.GetRequiredService<MainWindowViewModel>();
+      ViewModel = (MainWindowViewModel)((IApplication)Application.Current).Services.GetService(typeof(MainWindowViewModel));
       ViewModel.SetNavigationFrame(m_mainContent);
-      DialogService dialogService = (DialogService)Ioc.Default.GetRequiredService<IDialogService>();
+      DialogService dialogService = (DialogService)((IApplication)Application.Current).Services.GetService(typeof(IDialogService));
       dialogService.StatusBarIcon = m_statusBarIcon;
       dialogService.StatusBarText = m_statusBarText;
       m_navigationView.SelectionChanged += ViewModel.OnNavigationSelectionChanged;

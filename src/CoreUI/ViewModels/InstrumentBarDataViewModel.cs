@@ -1,7 +1,6 @@
 ﻿using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.DependencyInjection;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -41,7 +40,7 @@ namespace TradeSharp.CoreUI.ViewModels
     private string m_priceValueFormatMask;
 
     //constructors
-    public InstrumentBarDataViewModel(INavigationService navigationService, IDialogService dialogService) : base(Ioc.Default.GetRequiredService<IInstrumentBarDataService>(), navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
+    public InstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService) : base(itemService, navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
     {
       m_barDataService = (IInstrumentBarDataService)m_itemsService;
       m_barDataService.Resolution = Resolution; //need to always keep the service resolution the same as the view model resolution
