@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Common;
@@ -43,7 +44,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_configurationService = (IConfigurationService)((IApplication)Application.Current).Services.GetService(typeof(IConfigurationService));
       InstrumentViewModel = (InstrumentViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentViewModel));
       DataProviders = new ObservableCollection<string>();
-      IncrementalInstruments = new IncrementalObservableCollection<Instrument>(InstrumentViewModel);
+      Instruments = new ObservableCollection<Instrument>(InstrumentViewModel.Items);
       this.InitializeComponent();
     }
 
@@ -55,7 +56,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public ObservableCollection<string> DataProviders { get; set; }
-    public IncrementalObservableCollection<Instrument> IncrementalInstruments { get; }
+    public ObservableCollection<Instrument> Instruments { get; set; }
     public InstrumentViewModel InstrumentViewModel { get; set; }
 
     //methods
@@ -66,44 +67,44 @@ namespace TradeSharp.WinCoreUI.Views
       foreach (var provider in m_configurationService.DataProviders) DataProviders.Add(provider.Key);
 
       //instrument view model is instantiated once and shared between screens, so we need to reset the filters when new screens are loaded
-      InstrumentViewModel.Filters.Clear();
-      refreshFilter();
+      resetFilter();
+    }
+
+    private bool filterInstrument(Instrument instrument)
+    {
+      if (m_instrumentFilter.Text.Length == 0) return true;
+
+      switch ((FilterField)m_filterMatchFields.SelectedIndex)
+      {
+        case FilterField.Ticker:
+          return instrument.Ticker.Contains(m_instrumentFilter.Text);
+        case FilterField.Name:
+          return instrument.Name.Contains(m_instrumentFilter.Text);
+        case FilterField.Description:
+          return instrument.Description.Contains(m_instrumentFilter.Text);
+        case FilterField.Any:
+          return instrument.Ticker.Contains(m_instrumentFilter.Text) || instrument.Name.Contains(m_instrumentFilter.Text) || instrument.Description.Contains(m_instrumentFilter.Text);
+        default:
+          return false;
+      }
     }
 
     private void refreshFilter()
     {
       if (m_instrumentFilter == null) return;
+      var filteredResult = from instrument in InstrumentViewModel.Items where filterInstrument(instrument) select instrument;
+      Instruments.Clear();
+      foreach (var instrument in filteredResult) Instruments.Add(instrument);
+      InstrumentViewModel.SelectedItem = Instruments.FirstOrDefault();
+    }
 
-      //restart load of the items using the new filter conditions
-      IncrementalInstruments.Clear();
-      InstrumentViewModel.OffsetIndex = 0;
-
-      //setup filters for view model
-      InstrumentViewModel.Filters.Clear();
-
-      if (m_instrumentFilter.Text.Length > 0)
-      {
-        switch ((FilterField)m_filterMatchFields.SelectedIndex)
-        {
-          case FilterField.Ticker:
-            InstrumentViewModel.Filters[InstrumentViewModel.FilterTicker] = m_instrumentFilter.Text;
-            break;
-          case FilterField.Name:
-            InstrumentViewModel.Filters[InstrumentViewModel.FilterName] = m_instrumentFilter.Text;
-            break;
-          case FilterField.Description:
-            InstrumentViewModel.Filters[InstrumentViewModel.FilterDescription] = m_instrumentFilter.Text;
-            break;
-          case FilterField.Any:
-            InstrumentViewModel.Filters[InstrumentViewModel.FilterTicker] = m_instrumentFilter.Text;
-            InstrumentViewModel.Filters[InstrumentViewModel.FilterName] = m_instrumentFilter.Text;
-            InstrumentViewModel.Filters[InstrumentViewModel.FilterDescription] = m_instrumentFilter.Text;
-            break;
-        }
-      }
-
-      //load the first page of the filtered items asynchronously
-      _ = IncrementalInstruments.LoadMoreItemsAsync(InstrumentViewModel.DefaultPageSize);
+    private void resetFilter()
+    {
+      m_instrumentFilter.ClearValue(TextBox.TextProperty);
+      m_filterMatchFields.SelectedIndex = (int)FilterField.Any;
+      Instruments.Clear();
+      foreach (var instrument in InstrumentViewModel.Items) Instruments.Add(instrument);
+      InstrumentViewModel.SelectedItem = Instruments.FirstOrDefault();
     }
 
     private void m_instrumentFilter_TextChanged(object sender, TextChangedEventArgs e)
@@ -118,6 +119,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_refreshCommand_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
+      resetFilter();
       InstrumentViewModel.RefreshCommandAsync.Execute(this);
     }
 

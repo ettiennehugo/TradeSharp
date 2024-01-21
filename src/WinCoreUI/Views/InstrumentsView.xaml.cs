@@ -1,9 +1,10 @@
+using System.Linq;
+using System.Collections.ObjectModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
-using TradeSharp.WinCoreUI.Common;
 
 namespace TradeSharp.WinCoreUI.Views
 {
@@ -28,15 +29,13 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private object m_refreshLock;
+
 
     //constructors
     public InstrumentsView()
     {
-      m_refreshLock = new object();
       ViewModel = (InstrumentViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentViewModel));
-      ViewModel.RefreshEvent += onViewModelRefresh;
-      IncrementalItems = new IncrementalObservableCollection<Instrument>(ViewModel);
+      Instruments = new ObservableCollection<Instrument>(ViewModel.Items);
       this.InitializeComponent();
     }
 
@@ -48,7 +47,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public InstrumentViewModel ViewModel { get; }
-    public IncrementalObservableCollection<Instrument> IncrementalItems;
+    public ObservableCollection<Instrument> Instruments;
 
     //methods
     private void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -57,57 +56,41 @@ namespace TradeSharp.WinCoreUI.Views
       resetFilter();
     }
 
+    private bool filterInstrument(Instrument instrument)
+    {
+      if (m_instrumentFilter.Text.Length == 0) return true;
+
+      switch ((FilterField)m_filterMatchFields.SelectedIndex)
+      {
+        case FilterField.Ticker:
+          return instrument.Ticker.Contains(m_instrumentFilter.Text);
+        case FilterField.Name:
+          return instrument.Name.Contains(m_instrumentFilter.Text);
+        case FilterField.Description:
+          return instrument.Description.Contains(m_instrumentFilter.Text);
+        case FilterField.Any:
+          return instrument.Ticker.Contains(m_instrumentFilter.Text) || instrument.Name.Contains(m_instrumentFilter.Text) || instrument.Description.Contains(m_instrumentFilter.Text);
+        default:
+          return false;
+      }
+    }
+
     private void refreshFilter()
     {
       if (m_instrumentFilter == null) return;
-
-      lock (m_refreshLock)
-      {
-        //restart load of the items using the new filter conditions
-        IncrementalItems.Clear();
-        ViewModel.OffsetIndex = 0;
-
-        //setup filters for view model
-        ViewModel.Filters.Clear();
-
-        if (m_instrumentFilter.Text.Length > 0)
-        {
-          switch ((FilterField)m_filterMatchFields.SelectedIndex)
-          {
-            case FilterField.Ticker:
-              ViewModel.Filters[InstrumentViewModel.FilterTicker] = m_instrumentFilter.Text;
-              break;
-            case FilterField.Name:
-              ViewModel.Filters[InstrumentViewModel.FilterName] = m_instrumentFilter.Text;
-              break;
-            case FilterField.Description:
-              ViewModel.Filters[InstrumentViewModel.FilterDescription] = m_instrumentFilter.Text;
-              break;
-            case FilterField.Any:
-              ViewModel.Filters[InstrumentViewModel.FilterTicker] = m_instrumentFilter.Text;
-              ViewModel.Filters[InstrumentViewModel.FilterName] = m_instrumentFilter.Text;
-              ViewModel.Filters[InstrumentViewModel.FilterDescription] = m_instrumentFilter.Text;
-              break;
-          }
-        }
-
-        //load the first page of the filtered items asynchronously
-        _ = IncrementalItems.LoadMoreItemsAsync(InstrumentViewModel.DefaultPageSize);
-      }
+      var filteredResult = from instrument in ViewModel.Items where filterInstrument(instrument) select instrument;
+      Instruments.Clear();
+      foreach (var instrument in filteredResult) Instruments.Add(instrument);
+      ViewModel.SelectedItem = Instruments.FirstOrDefault();
     }
 
     private void resetFilter()
     {
-      lock (m_refreshLock)
-      {
-        m_instrumentFilter.ClearValue(TextBox.TextProperty);
-        m_filterMatchFields.SelectedIndex = (int)FilterField.Any;
-        ViewModel.Filters.Clear();
-
-        IncrementalItems.Clear();
-        ViewModel.OffsetIndex = 0;
-        _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
-      }
+      m_instrumentFilter.ClearValue(TextBox.TextProperty);
+      m_filterMatchFields.SelectedIndex = (int)FilterField.Any;
+      Instruments.Clear();
+      foreach (var instrument in ViewModel.Items) Instruments.Add(instrument);
+      ViewModel.SelectedItem = Instruments.FirstOrDefault();
     }
 
     private void m_instrumentFilter_TextChanged(object sender, TextChangedEventArgs e)
@@ -118,12 +101,6 @@ namespace TradeSharp.WinCoreUI.Views
     private void m_filterMatchFields_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
       refreshFilter();
-    }
-
-    private void onViewModelRefresh(object? sender, RefreshEventArgs e)
-    {
-      //NOTE: Event to refresh will most likely come from a background thread, so we need to marshal the call to the UI thread.
-      m_instruments.DispatcherQueue.TryEnqueue(new Microsoft.UI.Dispatching.DispatcherQueueHandler(() => resetFilter()));
     }
   }
 }

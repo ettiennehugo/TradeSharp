@@ -123,11 +123,6 @@ namespace TradeSharp.CoreUI.Services
 
     public void Refresh()
     {
-
-
-      //TODO: When incremental loading is implemented this will need to just raise an exception since it does NOT support loading ALL items all at once.
-      
-
       var result = m_instrumentRepository.GetItems();
       Items.Clear();
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null

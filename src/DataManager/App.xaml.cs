@@ -49,6 +49,7 @@ namespace TradeSharp.WinDataManager
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
       registerServices();
+      loadCachedData();
       m_window = new MainWindow();
       m_window.Activate();
     }
@@ -76,20 +77,21 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<ISessionRepository, SessionRepository>();
           services.AddSingleton<IInstrumentRepository, InstrumentRepository>();
           services.AddSingleton<IInstrumentGroupRepository, InstrumentGroupRepository>();
-          services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddSingleton<ICountryService, CountryService>();
           services.AddSingleton<IHolidayService, HolidayService>();
           services.AddSingleton<IExchangeService, ExchangeService>();
           services.AddSingleton<ISessionService, SessionService>();
           services.AddSingleton<IInstrumentService, InstrumentService>();
           services.AddSingleton<IInstrumentGroupService, InstrumentGroupService>();
+          services.AddSingleton<CountryViewModel>();
+          services.AddSingleton<HolidayViewModel>();
+          services.AddSingleton<ExchangeViewModel>();
+          services.AddSingleton<SessionViewModel>();
+          services.AddSingleton<InstrumentViewModel>();
+          services.AddSingleton<InstrumentGroupViewModel>();
+
+          services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddTransient<IInstrumentBarDataService, InstrumentBarDataService>(); //this service must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
-          services.AddScoped<CountryViewModel>();
-          services.AddScoped<HolidayViewModel>();
-          services.AddScoped<ExchangeViewModel>();
-          services.AddScoped<SessionViewModel>();
-          services.AddScoped<InstrumentViewModel>();
-          services.AddScoped<InstrumentGroupViewModel>();
           services.AddTransient<InstrumentBarDataViewModel>();
         })
         .ConfigureLogging((context, logging) =>
@@ -101,6 +103,13 @@ namespace TradeSharp.WinDataManager
           if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) logging.AddEventLog();
         })
         .Build();
+    }
+
+    private void loadCachedData()
+    {
+      //start caching the instrument data
+      var instrumentViewModel = (InstrumentViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentViewModel));
+      instrumentViewModel.RefreshCommandAsync.Execute(null);
     }
   }
 }
