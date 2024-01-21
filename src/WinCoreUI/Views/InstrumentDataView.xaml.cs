@@ -65,9 +65,6 @@ namespace TradeSharp.WinCoreUI.Views
       //refresh the list of data providers
       DataProviders.Clear();
       foreach (var provider in m_configurationService.DataProviders) DataProviders.Add(provider.Key);
-
-      //instrument view model is instantiated once and shared between screens, so we need to reset the filters when new screens are loaded
-      resetFilter();
     }
 
     private bool filterInstrument(Instrument instrument)
@@ -119,8 +116,8 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_refreshCommand_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      resetFilter();
       InstrumentViewModel.RefreshCommandAsync.Execute(this);
+      resetFilter();
     }
 
     private void m_dataProviders_SelectionChanged(object sender, SelectionChangedEventArgs e)

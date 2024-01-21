@@ -1,6 +1,9 @@
 ﻿using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
+using TradeSharp.Common;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
+
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -29,22 +32,25 @@ namespace TradeSharp.CoreUI.ViewModels
     private Resolution m_resolution;
     private Instrument? m_instrument;
     private IInstrumentBarDataService m_barDataService;
+    private ILogger<InstrumentBarDataViewModel> m_logger;
     private DateTime m_oldFromDateTime;
     private DateTime m_oldToDateTime;
     private DateTime m_fromDateTime;
     private DateTime m_toDateTime;
     private Dictionary<string, object> m_filter;
-    private readonly object m_offsetIndexLock = new object();   //incremental loading is not thread safe, so we need to lock the offset index
+    private readonly object m_asyncLoadLock = new object();   //incremental loading is not thread safe, so we need to lock the offset index
     private int m_offsetIndex;
     private int m_offsetCount;
     private string m_priceValueFormatMask;
 
     //constructors
-    public InstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService) : base(itemService, navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
+    public InstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService, ILogger<InstrumentBarDataViewModel> logger) : base(itemService, navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
     {
       m_barDataService = (IInstrumentBarDataService)m_itemsService;
+      m_logger = logger;
       m_barDataService.Resolution = Resolution; //need to always keep the service resolution the same as the view model resolution
       m_barDataService.RefreshEvent += onServiceRefresh;
+      m_dataProvider = string.Empty;
       m_oldFromDateTime = m_fromDateTime = DateTime.MinValue;
       m_oldToDateTime = m_toDateTime = DateTime.MaxValue;
       m_filter = new Dictionary<string, object>();
@@ -161,13 +167,18 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public Task<IList<IBarData>> LoadMoreItemsAsync(int count)
     {
-      updateFilters();
-      OffsetCount = count;
-      int index = OffsetIndex;
-      int totalCount = Count;
-      OffsetIndex += m_offsetCount;
-      if (m_offsetIndex > totalCount) OffsetIndex = totalCount; //clip offset index to the number of items in the database
-      return Task.Run(() => m_barDataService.GetItems(m_fromDateTime, m_toDateTime, index, m_offsetCount));
+      return Task.Run(() => {
+        lock (m_asyncLoadLock)
+        {
+          updateFilters();
+          m_offsetCount = count;
+          int index = m_offsetIndex;
+          var items = m_barDataService.GetItems(m_fromDateTime, m_toDateTime, m_offsetIndex, m_offsetCount);
+          m_offsetIndex += items.Count;
+          if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogDebug($"Loaded {items.Count} for requested count {count} - range from {index} to {m_offsetIndex}.");
+          return items;
+        }
+      });
     }
 
     //properties
@@ -217,18 +228,29 @@ namespace TradeSharp.CoreUI.ViewModels
     public int Count { get { updateFilters(); return isKeyed() ? m_barDataService.GetCount(m_fromDateTime, m_toDateTime) : 0; } }
     public int OffsetIndex
     {
-      get => m_offsetIndex;
+      get
+      {
+        lock (m_asyncLoadLock) return m_offsetIndex;
+      }
       set
       {
         if (value < 0) throw new ArgumentException("Offset index must be positive or zero.");
-        lock (m_offsetIndexLock)
-        {
-          m_offsetIndex = value;
-        }
+        lock (m_asyncLoadLock) m_offsetIndex = value;
       }
     }
-    public int OffsetCount { get => m_offsetCount; set { if (value <= 0) throw new ArgumentException("Offset count must be positive."); m_offsetCount = value; } }
-    public bool HasMoreItems { get => m_offsetIndex < Count; }
+    public int OffsetCount 
+    {
+      get
+      {
+        lock (m_asyncLoadLock) return m_offsetCount;
+      }
+      set 
+      { 
+        if (value <= 0) throw new ArgumentException("Offset count must be positive.");
+        lock (m_asyncLoadLock) m_offsetCount = value;
+      }
+    }
+    public bool HasMoreItems { get => OffsetIndex < Count; }
     public IDictionary<string, object> Filter { get => m_filter; set => m_filter = (Dictionary<string, object>)value; }
     public string PriceValueFormatMask { get => m_priceValueFormatMask; } //string.Format value format mask for the price values based on Instrument
 

@@ -90,6 +90,7 @@ namespace TradeSharp.WinCoreUI.Views
         resetFilter();
       } 
     }
+
     public string FilterStartTooltip { get => (string)GetValue(FilterStartTooltipProperty); internal set { SetValue(FilterStartTooltipProperty, value); } }
     public string FilterEndTooltip { get => (string)GetValue(FilterEndTooltipProperty); internal set { SetValue(FilterEndTooltipProperty, value); } }
     public InstrumentBarDataViewModel ViewModel { get; internal set; }

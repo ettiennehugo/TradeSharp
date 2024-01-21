@@ -50,12 +50,6 @@ namespace TradeSharp.WinCoreUI.Views
     public ObservableCollection<Instrument> Instruments;
 
     //methods
-    private void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-    {
-      //instrument view model is instantiated once and shared between screens, so we need to reset the filters when new screens are loaded
-      resetFilter();
-    }
-
     private bool filterInstrument(Instrument instrument)
     {
       if (m_instrumentFilter.Text.Length == 0) return true;

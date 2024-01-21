@@ -7,6 +7,7 @@
   {
     //constants
     public static bool InstrumentsLoadAsync = true;   //log debugging messages for InstrumentsLoadAsync
+    public static bool InstrumentBarDataLoadAsync = true;   //log debugging messages for instrument bar data LoadAsync
 
     //enums
 
