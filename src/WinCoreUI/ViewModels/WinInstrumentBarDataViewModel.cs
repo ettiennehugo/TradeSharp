@@ -50,7 +50,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
     //interface implementations
     public override Task OnRefreshAsync()
     {
-      if (IsLoading) return Task.CompletedTask;   //only one load allowed at a time
+      if (!isKeyed() || IsLoading) return Task.CompletedTask;   //only one load allowed at a time
 
       if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogInformation($"OnRefreshAsync not loading - starting reload - (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId})");
       m_offsetIndex = 0;
@@ -78,17 +78,32 @@ namespace TradeSharp.WinCoreUI.ViewModels
           IsLoading = true;
           updateFilters();
 
+
+          //TODO:This is not working right, when typing in the filter the list update breaks on a COMException.
+
+
+          //force refresh for incremental loading
+          if (m_fromDateTime != m_oldFromDateTime || m_toDateTime != m_oldToDateTime)
+          {
+            IncrementalItems.Clear();
+            m_offsetIndex = 0;
+            HasMoreItems = true;
+            m_oldFromDateTime = m_fromDateTime;
+            m_oldToDateTime = m_toDateTime;
+          }
+
           items = m_barDataService.GetItems(m_fromDateTime, m_toDateTime, m_offsetIndex, count);
 
           if (Debugging.InstrumentBarDataLoadAsync)
           {
             int start = m_offsetIndex;
             int end = m_offsetIndex + items.Count;
-            m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId} From Date/Time: {m_fromDateTime} To Date/Time: {m_toDateTime})");
+            m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId}, From Date/Time: {m_fromDateTime}, To Date/Time: {m_toDateTime})");
           }
 
           m_offsetIndex += items.Count;
           IsLoading = false;
+          if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogInformation($"LoadMoreItemsAsync released load lock - (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId})");
         }
 
         return items;
@@ -113,21 +128,6 @@ namespace TradeSharp.WinCoreUI.ViewModels
     public bool IsLoading { get; internal set; }
 
     //methods
-    protected override void updateFilters()
-    {
-      m_fromDateTime = m_filter.ContainsKey(FilterFromDateTime) ? (DateTime)m_filter[FilterFromDateTime] : DateTime.MinValue;
-      m_toDateTime = m_filter.ContainsKey(FilterToDateTime) ? (DateTime)m_filter[FilterToDateTime] : DateTime.MinValue;
-      
-      //force refresh from first available bar if the filter date range has changed
-      if (m_fromDateTime != m_oldFromDateTime || m_toDateTime != m_oldToDateTime)
-      {
-        IncrementalItems.Clear();
-        m_offsetIndex = 0;
-        HasMoreItems = true;
-        m_oldFromDateTime = m_fromDateTime;
-        m_oldToDateTime = m_toDateTime;
-      }
-    }
 
 
   }

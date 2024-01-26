@@ -95,6 +95,7 @@ namespace TradeSharp.CoreUI.ViewModels
       AddCommand.NotifyCanExecuteChanged();
       UpdateCommand.NotifyCanExecuteChanged();
       DeleteCommand.NotifyCanExecuteChanged();
+      DeleteCommandAsync.NotifyCanExecuteChanged();
       ClearSelectionCommand.NotifyCanExecuteChanged();
       RefreshCommand.NotifyCanExecuteChanged();
       RefreshCommandAsync.NotifyCanExecuteChanged();
