@@ -12,6 +12,7 @@ using TradeSharp.CoreUI.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using TradeSharp.WinCoreUI.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -93,6 +94,7 @@ namespace TradeSharp.WinDataManager
           services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddTransient<IInstrumentBarDataService, InstrumentBarDataService>(); //this service must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddTransient<InstrumentBarDataViewModel>();
+          services.AddTransient<WinInstrumentBarDataViewModel>();
         })
         .ConfigureLogging((context, logging) =>
         {

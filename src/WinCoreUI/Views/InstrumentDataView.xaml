@@ -103,7 +103,8 @@
         </TabViewItem.Header>
         <wcui:InstrumentBarsDataView x:Name="m_minuteBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Minute" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
       </TabViewItem>
-      <TabViewItem x:Name="m_hoursTab" IsClosable="False">
+    
+      <!--<TabViewItem x:Name="m_hoursTab" IsClosable="False">
       <TabViewItem.Header>
           <StackPanel Orientation="Horizontal">
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC49;" />
@@ -138,7 +139,8 @@
           </StackPanel>
         </TabViewItem.Header>
         <wcui:InstrumentBarsDataView x:Name="m_monthsBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Month" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
-      </TabViewItem>
+      </TabViewItem>-->
+      
     </TabView>
   </Grid>
 </Page>

@@ -1,16 +1,15 @@
-﻿using TradeSharp.CoreUI.Services;
+﻿using Microsoft.Extensions.Logging;
+using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 using TradeSharp.Common;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.Logging;
-
 
 namespace TradeSharp.CoreUI.ViewModels
 {
   /// <summary>
   /// View model for instrument bar data.
   /// </summary>
-  public partial class InstrumentBarDataViewModel : ListViewModel<IBarData>, Common.IIncrementalSource<IBarData>
+  public partial class InstrumentBarDataViewModel : ListViewModel<IBarData>
   {
     //constants
     /// <summary>
@@ -18,7 +17,6 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     public const string FilterFromDateTime = "FromDateTime";
     public const string FilterToDateTime = "ToDateTime";
-    public const int DefaultPageSize = 500;
     public const string DefaultPriceValueFormatMask = "0:0.00";
 
     //enums
@@ -28,20 +26,17 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    private string m_dataProvider;
-    private Resolution m_resolution;
-    private Instrument? m_instrument;
-    private IInstrumentBarDataService m_barDataService;
-    private ILogger<InstrumentBarDataViewModel> m_logger;
-    private DateTime m_oldFromDateTime;
-    private DateTime m_oldToDateTime;
-    private DateTime m_fromDateTime;
-    private DateTime m_toDateTime;
-    private Dictionary<string, object> m_filter;
-    private readonly object m_asyncLoadLock = new object();   //incremental loading is not thread safe, so we need to lock the offset index
-    private int m_offsetIndex;
-    private int m_offsetCount;
-    private string m_priceValueFormatMask;
+    public static DateTime s_defaultStartDateTime = new DateTime(1900, 1, 1, 0, 0, 0);
+    public static DateTime s_defaultEndDateTime = new DateTime(2100, 12, 30, 23, 59, 00);
+    protected string m_dataProvider;
+    protected Resolution m_resolution;
+    protected Instrument? m_instrument;
+    protected IInstrumentBarDataService m_barDataService;
+    protected ILogger<InstrumentBarDataViewModel> m_logger;
+    protected DateTime m_fromDateTime;
+    protected DateTime m_toDateTime;
+    protected Dictionary<string, object> m_filter;
+    protected string m_priceValueFormatMask;
 
     //constructors
     public InstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService, ILogger<InstrumentBarDataViewModel> logger) : base(itemService, navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
@@ -51,11 +46,7 @@ namespace TradeSharp.CoreUI.ViewModels
       m_barDataService.Resolution = Resolution; //need to always keep the service resolution the same as the view model resolution
       m_barDataService.RefreshEvent += onServiceRefresh;
       m_dataProvider = string.Empty;
-      m_oldFromDateTime = m_fromDateTime = DateTime.MinValue;
-      m_oldToDateTime = m_toDateTime = DateTime.MaxValue;
       m_filter = new Dictionary<string, object>();
-      m_offsetIndex = 0;
-      m_offsetCount = DefaultPageSize;
       m_priceValueFormatMask = DefaultPriceValueFormatMask;
       Resolution = Resolution.Day;
       DataProvider = string.Empty;
@@ -104,8 +95,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override Task OnRefreshAsync()
     {
-      OffsetIndex = 0;
-      return LoadMoreItemsAsync(DefaultPageSize); //view model only supports incremental loading, so we just load the first page
+      return Task.Run(() => OnRefresh());
     }
 
     public override async Task OnImportAsync()
@@ -165,22 +155,6 @@ namespace TradeSharp.CoreUI.ViewModels
       throw new NotImplementedException();
     }
 
-    public Task<IList<IBarData>> LoadMoreItemsAsync(int count)
-    {
-      return Task.Run(() => {
-        lock (m_asyncLoadLock)
-        {
-          updateFilters();
-          m_offsetCount = count;
-          int index = m_offsetIndex;
-          var items = m_barDataService.GetItems(m_fromDateTime, m_toDateTime, m_offsetIndex, m_offsetCount);
-          m_offsetIndex += items.Count;
-          if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogDebug($"Loaded {items.Count} for requested count {count} - range from {index} to {m_offsetIndex}.");
-          return items;
-        }
-      });
-    }
-
     //properties
     public AsyncRelayCommand<object?> CopyToHourCommandAsync { get; internal set; }
     public AsyncRelayCommand<object?> CopyToDayCommandAsync { get; internal set; }
@@ -195,7 +169,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         SetProperty(ref m_dataProvider, value);
         m_barDataService.DataProvider = value;
-        if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
+        if (DataProvider != string.Empty && Instrument != null && Count > 0) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }
@@ -207,7 +181,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         SetProperty(ref m_resolution, value);
         m_barDataService.Resolution = value;
-        if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
+        if (DataProvider != string.Empty && Instrument != null && Count > 0) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }
@@ -220,56 +194,36 @@ namespace TradeSharp.CoreUI.ViewModels
         SetProperty(ref m_instrument, value);
         m_barDataService.Instrument = value;
         updatePriceValueFormatMask();
-        if (DataProvider != string.Empty && Instrument != null) RefreshCommandAsync.ExecuteAsync(null);
+        if (DataProvider != string.Empty && Instrument != null && Count > 0) RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }
 
-    public int Count { get { updateFilters(); return isKeyed() ? m_barDataService.GetCount(m_fromDateTime, m_toDateTime) : 0; } }
-    public int OffsetIndex
+    public int Count
     {
       get
       {
-        lock (m_asyncLoadLock) return m_offsetIndex;
-      }
-      set
-      {
-        if (value < 0) throw new ArgumentException("Offset index must be positive or zero.");
-        lock (m_asyncLoadLock) m_offsetIndex = value;
+        updateFilters();
+        return isKeyed() ? m_barDataService.GetCount(m_fromDateTime, m_toDateTime) : 0;
       }
     }
-    public int OffsetCount 
-    {
-      get
-      {
-        lock (m_asyncLoadLock) return m_offsetCount;
-      }
-      set 
-      { 
-        if (value <= 0) throw new ArgumentException("Offset count must be positive.");
-        lock (m_asyncLoadLock) m_offsetCount = value;
-      }
-    }
-    public bool HasMoreItems { get => OffsetIndex < Count; }
+
     public IDictionary<string, object> Filter { get => m_filter; set => m_filter = (Dictionary<string, object>)value; }
     public string PriceValueFormatMask { get => m_priceValueFormatMask; } //string.Format value format mask for the price values based on Instrument
 
     //methods
-    private bool isKeyed()
+    protected virtual bool isKeyed()
     {
       return DataProvider != string.Empty && Instrument != null;
     }
 
-    private void updateFilters()
+    protected virtual void updateFilters()
     {
       m_fromDateTime = m_filter.ContainsKey(FilterFromDateTime) ? (DateTime)m_filter[FilterFromDateTime] : DateTime.MinValue;
       m_toDateTime = m_filter.ContainsKey(FilterToDateTime) ? (DateTime)m_filter[FilterToDateTime] : DateTime.MinValue;
-      if (!m_oldFromDateTime.Equals(m_fromDateTime) || !m_oldToDateTime.Equals(m_toDateTime)) m_offsetIndex = 0; //reset the offset index if the filter has changed
-      m_oldFromDateTime = m_fromDateTime;
-      m_oldToDateTime = m_toDateTime;
     }
 
-    private void updatePriceValueFormatMask()
+    protected void updatePriceValueFormatMask()
     {
       m_priceValueFormatMask = DefaultPriceValueFormatMask;
       if (Instrument != null)

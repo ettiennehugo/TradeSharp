@@ -1,10 +1,12 @@
 using System;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.ViewModels;
 using Microsoft.UI.Xaml;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
-using TradeSharp.WinCoreUI.Common;
+using TradeSharp.WinCoreUI.ViewModels;
 
 namespace TradeSharp.WinCoreUI.Views
 {
@@ -14,7 +16,20 @@ namespace TradeSharp.WinCoreUI.Views
   public sealed partial class InstrumentBarsDataView : UserControl
   {
     //constants
-
+    /// <summary>
+    /// Constants to define how many bars to incrementally load in terms of pages and number of items per page when the user
+    /// crolls through the collection.
+    /// </summary>
+    public const double MinuteDataFethSize = 5.0;
+    public const double MinuteIncrementalLoadingThreshold = 1000.0;
+    public const double HourDataFethSize = 1.0;
+    public const double HourIncrementalLoadingThreshold = 10.0;
+    public const double DayDataFethSize = 1.0;
+    public const double DayIncrementalLoadingThreshold = 2.0;
+    public const double WeekDataFethSize = 1.0;
+    public const double WeekIncrementalLoadingThreshold = 1.0;     //weeks per year
+    public const double MonthDataFethSize = 1.0;
+    public const double MonthIncrementalLoadingThreshold = 1.0;    //months per year
 
     //enums
 
@@ -23,24 +38,15 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    //NOTE: These start/end dates are very much tied to the Date and Time controls, if these controls are changed
-    //      these dates would need to be changed as well to ensure the page works optimally.
-    public static DateTime s_defaultStartDateTime = new DateTime(1980, 1, 1, 0, 0, 0);
-    public static DateTime s_defaultEndDateTime = new DateTime(2075, 12, 30, 23, 59, 00); //NOTE: The 30 December is correct, for some reason that is the date control maximum when you max it out.
-    public static DateTimeOffset s_defaultStartDate = new DateTimeOffset(1980, 1, 1, 12, 0, 0, new TimeSpan(0, 0, 0));
-    public static DateTimeOffset s_defaultEndDate = new DateTimeOffset(2075, 12, 31, 0, 0, 0, new TimeSpan(0, 0, 0));
-    public static TimeSpan s_defaultStartTime = new TimeSpan(0, 0, 0);
-    public static TimeSpan s_defaultEndTime = new TimeSpan(23, 59, 59);
-    private object m_refreshLock;
+    private ILogger<InstrumentBarDataView> m_logger;
 
     //constructors
     public InstrumentBarsDataView()
     {
-      m_refreshLock = new object();
-      ViewModel = (InstrumentBarDataViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentBarDataViewModel));
+      ViewModel = (WinInstrumentBarDataViewModel)((IApplication)Application.Current).Services.GetService(typeof(WinInstrumentBarDataViewModel));
       ViewModel.Resolution = Resolution;
       ViewModel.RefreshEvent += onViewModelRefresh;
-      IncrementalItems = new IncrementalObservableCollection<IBarData>(ViewModel);
+      m_logger = (ILogger<InstrumentBarDataView>)((IApplication)Application.Current).Services.GetService(typeof(ILogger<InstrumentBarDataView>));
       this.InitializeComponent();
     }
 
@@ -75,26 +81,27 @@ namespace TradeSharp.WinCoreUI.Views
       {
         SetValue(ResolutionProperty, value);
         ViewModel.Resolution = value;
+        refreshIncrementalLoading();
         refreshCopyMenu();
         refreshFilterControls();
         resetFilter();
       }
     }
 
-    public Instrument? Instrument 
-    { 
-      get => (Instrument?)GetValue(InstrumentProperty); 
-      set { 
-        SetValue(InstrumentProperty, value); 
+    public Instrument? Instrument
+    {
+      get => (Instrument?)GetValue(InstrumentProperty);
+      set
+      {
+        SetValue(InstrumentProperty, value);
         ViewModel.Instrument = value;
         resetFilter();
-      } 
+      }
     }
 
     public string FilterStartTooltip { get => (string)GetValue(FilterStartTooltipProperty); internal set { SetValue(FilterStartTooltipProperty, value); } }
     public string FilterEndTooltip { get => (string)GetValue(FilterEndTooltipProperty); internal set { SetValue(FilterEndTooltipProperty, value); } }
-    public InstrumentBarDataViewModel ViewModel { get; internal set; }
-    public IncrementalObservableCollection<IBarData> IncrementalItems { get; }
+    public WinInstrumentBarDataViewModel ViewModel { get; internal set; }
 
     //methods
     private void refreshCopyMenu()
@@ -150,63 +157,100 @@ namespace TradeSharp.WinCoreUI.Views
         case Resolution.Minute:
           FilterStartTooltip = "Filter start date/time";
           FilterEndTooltip = "Filter end date/time";
-          m_startDate.DayVisible = true;
-          m_startDate.Margin = new Thickness(8, 8, 0, 8);   //place date/time controls right next to each other
-          m_endDate.DayVisible = true;
-          m_startTime.Visibility = Visibility.Visible;
-          m_endTime.Visibility = Visibility.Visible;
+          m_startDateTime.PlaceholderText = "yyyy/mm/dd hh:mm";
+          m_endDateTime.PlaceholderText = "yyyy/mm/dd hh:mm";
           break;
         case Resolution.Hour:
           FilterStartTooltip = "Filter start date/hour";
           FilterEndTooltip = "Filter end date/hour";
-          m_startDate.DayVisible = true;
-          m_startDate.Margin = new Thickness(8, 8, 0, 8);
-          m_endDate.DayVisible = true;
-          m_startTime.Visibility = Visibility.Visible;
-          m_endTime.Visibility = Visibility.Visible;
+          m_startDateTime.PlaceholderText = "yyyy/mm/dd hh:00";
+          m_endDateTime.PlaceholderText = "yyyy/mm/dd hh:00";
           break;
         case Resolution.Day:
         case Resolution.Week:
           FilterStartTooltip = "Filter start date";
           FilterEndTooltip = "Filter end date";
-          m_startDate.DayVisible = true;
-          m_startDate.Margin = new Thickness(8, 8, 8, 8);   //since time is hidden leave some space between start date field and separating "-"
-          m_endDate.DayVisible = true;
-          m_startTime.Visibility = Visibility.Collapsed;
-          m_endTime.Visibility = Visibility.Collapsed;
+          m_startDateTime.PlaceholderText = "yyyy/mm/dd";
+          m_endDateTime.PlaceholderText = "yyyy/mm/dd";
           break;
         case Resolution.Month:
           FilterStartTooltip = "Filter start date";
           FilterEndTooltip = "Filter end date";
-          m_startDate.DayVisible = false;
-          m_startDate.Margin = new Thickness(8, 8, 8, 8);
-          m_endDate.DayVisible = false;
-          m_startTime.Visibility = Visibility.Collapsed;
-          m_endTime.Visibility = Visibility.Collapsed;
+          m_startDateTime.PlaceholderText = "yyyy/mm/01";
+          m_endDateTime.PlaceholderText = "yyyy/mm/01";
+          break;
+      }
+    }
+
+    /// <summary>
+    /// Setup the incremental loading based on the resolution to make sure that incremental
+    /// blocks loaded would be appropriate for the resolution, e.g. minute bar data could be hundreds
+    /// of thousamds to millions while monthly resolution could be a few hundred.
+    /// </summary>
+    private void refreshIncrementalLoading()
+    {
+      switch (Resolution)
+      {
+        case Resolution.Level1:
+          throw new ArgumentException("Level1 resolution not supported by bar data view, use view for level1 data.");
+        case Resolution.Minute:
+          m_dataTable.IncrementalLoadingThreshold = MinuteIncrementalLoadingThreshold;
+          m_dataTable.DataFetchSize = MinuteDataFethSize;
+          break;
+        case Resolution.Hour:
+          m_dataTable.IncrementalLoadingThreshold = HourIncrementalLoadingThreshold;
+          m_dataTable.DataFetchSize = HourDataFethSize;
+          break;
+        case Resolution.Day:
+          m_dataTable.IncrementalLoadingThreshold = DayIncrementalLoadingThreshold;
+          m_dataTable.DataFetchSize = DayDataFethSize;
+          break;
+        case Resolution.Week:
+          m_dataTable.IncrementalLoadingThreshold = WeekIncrementalLoadingThreshold;
+          m_dataTable.DataFetchSize = WeekDataFethSize;
+          break;
+        case Resolution.Month:
+          m_dataTable.IncrementalLoadingThreshold = MonthIncrementalLoadingThreshold;
+          m_dataTable.DataFetchSize = MonthDataFethSize;
           break;
       }
     }
 
     private void resetFilter()
     {
-      lock(m_refreshLock)
+      //reset the date and time controls
+      m_startDateTime.ClearValue(TextBox.TextProperty);
+      m_endDateTime.ClearValue(TextBox.TextProperty);
+
+      //reset the view model filter
+      ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
+      ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = WinInstrumentBarDataViewModel.s_defaultEndDateTime;
+
+      //restart load of the items using the new filter conditions
+      ViewModel.OnRefreshAsync();
+    }
+
+    private void refreshFilter()
+    {
+      //set the view model filter
+      if (DateTime.TryParse(m_startDateTime.Text, out DateTime startDateTime))
       {
-        m_startDate.Date = s_defaultStartDate;
-        m_endDate.Date = s_defaultEndDate;
-        m_startTime.Time = s_defaultStartTime;
-        m_endTime.Time = s_defaultEndTime;
-
-        //update the view model filter
-        ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = new DateTime(m_startDate.Date.Year, m_startDate.Date.Month, m_startDate.Date.Day, m_startTime.Time.Hours, m_startTime.Time.Minutes, 0);
-        ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = new DateTime(m_endDate.Date.Year, m_endDate.Date.Month, m_endDate.Date.Day, m_endTime.Time.Hours, m_endTime.Time.Minutes, 0);
-
-        //restart load of the items using the new filter conditions
-        IncrementalItems.Clear();
-        ViewModel.OffsetIndex = 0;
-
-        //load the first page of the bar data asynchronously
-        if (DataProvider != string.Empty && Instrument != null) _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
+        if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter start date/time - {startDateTime}");
+        ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = startDateTime;
       }
+      else
+        ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
+
+      if (DateTime.TryParse(m_endDateTime.Text, out DateTime endDateTime))
+      {
+        if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter end date/time - {endDateTime}");
+        ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = endDateTime;
+      }
+      else
+        ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = WinInstrumentBarDataViewModel.s_defaultEndDateTime;
+
+      //restart load of the items using the new filter conditions
+      ViewModel.OnRefreshAsync();
     }
 
     private void m_resetFilter_Click(object sender, RoutedEventArgs e)
@@ -214,47 +258,20 @@ namespace TradeSharp.WinCoreUI.Views
       resetFilter();
     }
 
-    private void refreshFilter()
-    {
-      lock (m_refreshLock)
-      {
-        //set the view model filter
-        ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = new DateTime(m_startDate.Date.Year, m_startDate.Date.Month, m_startDate.Date.Day, m_startTime.Time.Hours, m_startTime.Time.Minutes, 0);
-        ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = new DateTime(m_endDate.Date.Year, m_endDate.Date.Month, m_endDate.Date.Day, m_endTime.Time.Hours, m_endTime.Time.Minutes, 0);
-
-        //restart load of the items using the new filter conditions
-        IncrementalItems.Clear();
-        ViewModel.OffsetIndex = 0;
-
-        //load the first page of the bar data asynchronously
-        if (DataProvider != string.Empty && Instrument != null) _ = IncrementalItems.LoadMoreItemsAsync(InstrumentBarDataViewModel.DefaultPageSize);
-      }
-    }
-
-    private void m_startDate_DateChanged(object sender, DatePickerValueChangedEventArgs e)
-    {
-      refreshFilter();
-    }
-
-    private void m_startTime_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
-    {
-      refreshFilter();
-    }
-
-    private void m_endDate_DateChanged(object sender, DatePickerValueChangedEventArgs e)
-    {
-      refreshFilter();
-    }
-
-    private void m_endTime_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
-    {
-      refreshFilter();
-    }
-
     private void onViewModelRefresh(object? sender, RefreshEventArgs e)
     {
       //NOTE: Event to refresh will most likely come from a background thread, so we need to marshal the call to the UI thread.
       m_dataTable.DispatcherQueue.TryEnqueue(new Microsoft.UI.Dispatching.DispatcherQueueHandler(() => resetFilter()));
+    }
+
+    private void m_startDateTime_TextChanged(object sender, TextChangedEventArgs e)
+    {
+      if (DateTime.TryParse(m_startDateTime.Text, out _)) refreshFilter();
+    }
+
+    private void m_endDateTime_TextChanged(object sender, TextChangedEventArgs e)
+    {
+      if (DateTime.TryParse(m_endDateTime.Text, out _)) refreshFilter();
     }
   }
 }

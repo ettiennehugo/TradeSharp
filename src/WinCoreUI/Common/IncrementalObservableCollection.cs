@@ -4,11 +4,9 @@ using System.Collections.ObjectModel;
 using Microsoft.UI.Xaml.Data;
 using Windows.Foundation;
 using System.Threading.Tasks;
-using System.Runtime.InteropServices.WindowsRuntime;
 using TradeSharp.CoreUI.Common;
 using System;
 using System.Linq;
-using System.Threading;
 
 namespace TradeSharp.WinCoreUI.Common
 {
@@ -18,7 +16,7 @@ namespace TradeSharp.WinCoreUI.Common
   public class IncrementalObservableCollection<T> : ObservableCollection<T>, ISupportIncrementalLoading
   {
     //constants
-
+    public const int DefaultPageSize = 20;
 
     //enums
 
@@ -28,31 +26,43 @@ namespace TradeSharp.WinCoreUI.Common
 
     //attributes
     protected IIncrementalSource<T> m_incrementalSource;
+    protected int m_defaultPageSize;
 
     //constructors
-    public IncrementalObservableCollection(IIncrementalSource<T> incrementalSource): base()
+    public IncrementalObservableCollection(IIncrementalSource<T> incrementalSource, int defaultPageSize = DefaultPageSize) : base()
     {
       m_incrementalSource = incrementalSource;
+      m_defaultPageSize = defaultPageSize;
+      IsLoading = false;
     }
 
-    public IncrementalObservableCollection(IIncrementalSource<T> incrementalSource, IEnumerable<T> collection): base(collection)
+    public IncrementalObservableCollection(IIncrementalSource<T> incrementalSource, IEnumerable<T> collection, int defaultPageSize = DefaultPageSize) : base(collection)
     {
       m_incrementalSource = incrementalSource;
+      m_defaultPageSize = defaultPageSize;
+      IsLoading = false;
     }
 
-    public IncrementalObservableCollection(IIncrementalSource<T> incrementalSource, IList<T> collection) : base(collection)
+    public IncrementalObservableCollection(IIncrementalSource<T> incrementalSource, IList<T> collection, int defaultPageSize = DefaultPageSize) : base(collection)
     {
       m_incrementalSource = incrementalSource;
+      m_defaultPageSize = defaultPageSize;
+      IsLoading = false;
     }
 
     //finalizers
 
 
     //interface implementations
-
+    public virtual async void RefreshAsync()
+    {
+      ClearItems();
+      await InternalLoadMoreItemsAsync(DefaultPageSize);
+    }
 
     //properties
     public bool HasMoreItems => m_incrementalSource.HasMoreItems;
+    public bool IsLoading { get; private set; }
 
     //methods
     public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count) => InternalLoadMoreItemsAsync(count).AsAsyncOperation();
@@ -62,7 +72,6 @@ namespace TradeSharp.WinCoreUI.Common
       IList<T> items = await m_incrementalSource.LoadMoreItemsAsync((int)count);
       int baseIndex = Count;
       for (int index = 0; index < items.Count; index++) Add(items[index]);
-      for (int index = 0; index < items.Count; index++) OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, this[baseIndex + index], index));
       return new LoadMoreItemsResult((uint)items.Count());
     }
   }

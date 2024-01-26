@@ -1511,7 +1511,7 @@ namespace TradeSharp.Data.Testing
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not persisted to database.");
-      Assert.AreEqual(5, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Day),
+      Assert.AreEqual(10, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Day),
         $"Ticker = '{m_instrument.Ticker}'")
       , "Actual bar values from list not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,

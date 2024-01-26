@@ -1,0 +1,134 @@
+﻿using Microsoft.Extensions.Logging;
+using TradeSharp.Data;
+using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Services;
+using TradeSharp.CoreUI.ViewModels;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Threading;
+using TradeSharp.Common;
+using TradeSharp.WinCoreUI.Common;
+using System;
+
+namespace TradeSharp.WinCoreUI.ViewModels
+{
+  /// <summary>
+  /// Windows specific implementatation of the InstrumentBarDataViewModel to support incremental loading on windows - not sure why these collections are tied to windows but it also means the view model needs to have a specific
+  /// implementation on Windows to support it!!!
+  /// </summary>
+  public class WinInstrumentBarDataViewModel : InstrumentBarDataViewModel, IIncrementalSource<IBarData>
+  {
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+    private int m_offsetIndex;
+    private DateTime m_oldFromDateTime;
+    private DateTime m_oldToDateTime;
+
+    //constructors
+    public WinInstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService, ILogger<InstrumentBarDataViewModel> logger) : base(itemService, navigationService, dialogService, logger) 
+    {
+      IncrementalItems = new IncrementalObservableCollection<IBarData>(this);
+      Items = IncrementalItems;
+      m_offsetIndex = 0;
+      HasMoreItems = true;
+      IsLoading = false;
+      m_oldFromDateTime = s_defaultStartDateTime;
+      m_oldToDateTime = s_defaultEndDateTime;
+    }
+
+    //finalizers
+
+
+    //interface implementations
+    public override Task OnRefreshAsync()
+    {
+      if (IsLoading) return Task.CompletedTask;   //only one load allowed at a time
+
+      if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogInformation($"OnRefreshAsync not loading - starting reload - (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId})");
+      m_offsetIndex = 0;
+      HasMoreItems = true;
+      IncrementalItems.RefreshAsync();
+
+      return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Load the specified number of items from the service.
+    /// </summary>
+    public async Task<IList<IBarData>> LoadMoreItemsAsync(int count)
+    {
+      if (!isKeyed() || IsLoading) return Array.Empty<IBarData>();
+
+      return await Task.Run(() =>
+      {
+        IList<IBarData> items = Array.Empty<IBarData>();
+
+        //critical section to refresh the list
+        lock (this)
+        {
+          if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogInformation($"LoadMoreItemsAsync acquired load lock - (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId})");
+          IsLoading = true;
+          updateFilters();
+
+          items = m_barDataService.GetItems(m_fromDateTime, m_toDateTime, m_offsetIndex, count);
+
+          if (Debugging.InstrumentBarDataLoadAsync)
+          {
+            int start = m_offsetIndex;
+            int end = m_offsetIndex + items.Count;
+            m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId} From Date/Time: {m_fromDateTime} To Date/Time: {m_toDateTime})");
+          }
+
+          m_offsetIndex += items.Count;
+          IsLoading = false;
+        }
+
+        return items;
+      });
+    }
+
+    //properties
+    /// <summary>
+    /// Concrete definition of the list of incremental items, Items will be the generic definition.
+    /// </summary>
+    public IncrementalObservableCollection<IBarData> IncrementalItems { get; set; }
+
+    /// <summary>
+    /// Returns whether the view model has loaded all items or not.
+    /// </summary>
+    public bool HasMoreItems { get; internal set; }
+
+  
+    /// <summary>
+    /// Returns whether the view model is currently loading items or not.
+    /// </summary>
+    public bool IsLoading { get; internal set; }
+
+    //methods
+    protected override void updateFilters()
+    {
+      m_fromDateTime = m_filter.ContainsKey(FilterFromDateTime) ? (DateTime)m_filter[FilterFromDateTime] : DateTime.MinValue;
+      m_toDateTime = m_filter.ContainsKey(FilterToDateTime) ? (DateTime)m_filter[FilterToDateTime] : DateTime.MinValue;
+      
+      //force refresh from first available bar if the filter date range has changed
+      if (m_fromDateTime != m_oldFromDateTime || m_toDateTime != m_oldToDateTime)
+      {
+        IncrementalItems.Clear();
+        m_offsetIndex = 0;
+        HasMoreItems = true;
+        m_oldFromDateTime = m_fromDateTime;
+        m_oldToDateTime = m_toDateTime;
+      }
+    }
+
+
+  }
+}
