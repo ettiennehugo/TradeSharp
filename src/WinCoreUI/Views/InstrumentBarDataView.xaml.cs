@@ -97,14 +97,9 @@ namespace TradeSharp.WinCoreUI.Views
       Time = BarData.DateTime.TimeOfDay;
     }
 
-    private void m_date_DateChanged(object sender, DatePickerValueChangedEventArgs e)
+    private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
-      BarData.DateTime = new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds);
-    }
-
-    private void m_time_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
-    {
-      BarData.DateTime = new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds);
+      BarData.DateTime = new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds, BarData.DateTime.Kind);
     }
   }
 }

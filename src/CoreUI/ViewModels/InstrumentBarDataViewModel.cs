@@ -26,8 +26,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    public static DateTime s_defaultStartDateTime = new DateTime(1900, 1, 1, 0, 0, 0);
-    public static DateTime s_defaultEndDateTime = new DateTime(2100, 12, 30, 23, 59, 00);
+    public static DateTime s_defaultStartDateTime = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);    //minimum date/time must be UTC as usd by the database
+    public static DateTime s_defaultEndDateTime = new DateTime(2100, 12, 30, 23, 59, 0, DateTimeKind.Utc);  //maximum date/time must be UTC as usd by the database
     protected string m_dataProvider;
     protected Resolution m_resolution;
     protected Instrument? m_instrument;
