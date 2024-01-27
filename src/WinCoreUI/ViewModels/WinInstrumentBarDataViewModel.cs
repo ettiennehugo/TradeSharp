@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.UI.Dispatching;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
@@ -42,6 +43,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
       IsLoading = false;
       m_oldFromDateTime = s_defaultStartDateTime;
       m_oldToDateTime = s_defaultEndDateTime;
+      UIDispatcherQueue = null;
     }
 
     //finalizers
@@ -78,14 +80,10 @@ namespace TradeSharp.WinCoreUI.ViewModels
           IsLoading = true;
           updateFilters();
 
-
-          //TODO:This is not working right, when typing in the filter the list update breaks on a COMException.
-
-
           //force refresh for incremental loading
           if (m_fromDateTime != m_oldFromDateTime || m_toDateTime != m_oldToDateTime)
           {
-            IncrementalItems.Clear();
+            UIDispatcherQueue.TryEnqueue(() => IncrementalItems.Clear()); //must run on the UI thread
             m_offsetIndex = 0;
             HasMoreItems = true;
             m_oldFromDateTime = m_fromDateTime;
@@ -111,6 +109,11 @@ namespace TradeSharp.WinCoreUI.ViewModels
     }
 
     //properties
+    /// <summary>
+    /// UI thread dispatcher queue to IncrementalItems collection in the UI thread.
+    /// </summary>
+    public DispatcherQueue UIDispatcherQueue { get; set; }
+
     /// <summary>
     /// Concrete definition of the list of incremental items, Items will be the generic definition.
     /// </summary>

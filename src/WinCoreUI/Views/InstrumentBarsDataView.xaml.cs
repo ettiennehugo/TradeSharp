@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.ViewModels;
@@ -44,6 +46,7 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentBarsDataView()
     {
       ViewModel = (WinInstrumentBarDataViewModel)((IApplication)Application.Current).Services.GetService(typeof(WinInstrumentBarDataViewModel));
+      ViewModel.UIDispatcherQueue = DispatcherQueue.GetForCurrentThread();
       ViewModel.Resolution = Resolution;
       ViewModel.RefreshEvent += onViewModelRefresh;
       m_logger = (ILogger<InstrumentBarDataView>)((IApplication)Application.Current).Services.GetService(typeof(ILogger<InstrumentBarDataView>));
@@ -233,7 +236,8 @@ namespace TradeSharp.WinCoreUI.Views
     private void refreshFilter()
     {
       //set the view model filter
-      if (DateTime.TryParse(m_startDateTime.Text, out DateTime startDateTime))
+      //NOTE: Date/time must be parsed as a UTC date/time since that is what is stored in the database - otherwise results will be wrong.
+      if (DateTime.TryParse(m_startDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime startDateTime))
       {
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter start date/time - {startDateTime}");
         ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = startDateTime;
@@ -241,7 +245,8 @@ namespace TradeSharp.WinCoreUI.Views
       else
         ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
 
-      if (DateTime.TryParse(m_endDateTime.Text, out DateTime endDateTime))
+      //NOTE: Date/time must be parsed as a UTC date/time since that is what is stored in the database - otherwise results will be wrong.
+      if (DateTime.TryParse(m_endDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime endDateTime))
       {
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter end date/time - {endDateTime}");
         ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = endDateTime;
@@ -261,7 +266,7 @@ namespace TradeSharp.WinCoreUI.Views
     private void onViewModelRefresh(object? sender, RefreshEventArgs e)
     {
       //NOTE: Event to refresh will most likely come from a background thread, so we need to marshal the call to the UI thread.
-      m_dataTable.DispatcherQueue.TryEnqueue(new Microsoft.UI.Dispatching.DispatcherQueueHandler(() => resetFilter()));
+      DispatcherQueue.TryEnqueue(new Microsoft.UI.Dispatching.DispatcherQueueHandler(() => resetFilter()));
     }
 
     private void m_startDateTime_TextChanged(object sender, TextChangedEventArgs e)
