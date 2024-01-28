@@ -1,10 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
-using System;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Drawing.Printing;
 using TradeSharp.Common;
-using TradeSharp.Data;
 
 namespace TradeSharp.Data
 {
@@ -58,11 +55,13 @@ namespace TradeSharp.Data
     private SqliteConnection m_connection;
     private AssociationCache m_countryFundamentalAssociations;
     private AssociationCache m_instrumentFundamentalAssociations;
+    private ILogger<SqliteDatabase> m_logger;
 
     //constructors
-    public SqliteDatabase(IConfigurationService configurationService)
+    public SqliteDatabase(IConfigurationService configurationService, ILogger<SqliteDatabase> logger)
     {
       m_configurationService = configurationService;
+      m_logger = logger;
       m_databaseFile = "";
       m_connectionString = "";
       m_connection = new SqliteConnection();
@@ -2601,6 +2600,7 @@ namespace TradeSharp.Data
     /// </summary>
     public int ExecuteCommand(string command)
     {
+      if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database non-query - ${command}");
       var commandObj = m_connection.CreateCommand();
       commandObj.CommandText = command;
       return commandObj.ExecuteNonQuery();
@@ -2608,6 +2608,7 @@ namespace TradeSharp.Data
 
     public object? ExecuteScalar(string command)
     {
+      if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database scalar read - ${command}");
       var commandObj = m_connection.CreateCommand();
       commandObj.CommandText = command;
       return commandObj.ExecuteScalar();

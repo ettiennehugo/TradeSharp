@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
 using TradeSharp.Common;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.Extensions.Logging;
 
 namespace TradeSharp.Data.Testing
 {
@@ -19,6 +19,7 @@ namespace TradeSharp.Data.Testing
 
     //attributes
     private Mock<IConfigurationService> m_configuration;
+    private ILoggerFactory m_loggerFactory;
     private Dictionary<string, object> m_generalConfiguration;
     private Mock<IDataProvider> m_dataProvider1;
     private Mock<IDataProvider> m_dataProvider2;
@@ -62,7 +63,8 @@ namespace TradeSharp.Data.Testing
       m_dataProviders.Add(m_dataProvider1.Object);
       m_dataProviders.Add(m_dataProvider2.Object);
 
-      m_database = new TradeSharp.Data.SqliteDatabase(m_configuration.Object);
+      m_loggerFactory = new LoggerFactory();
+      m_database = new TradeSharp.Data.SqliteDatabase(m_configuration.Object, new Logger<TradeSharp.Data.SqliteDatabase>(m_loggerFactory));
 
       //remove stale data from previous tests - this is to ensure proper test isolation and create the default objects used by the database
       m_database.ClearDatabase();

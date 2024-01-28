@@ -96,6 +96,8 @@ namespace TradeSharp.WinCoreUI.Views
     {
       Date = BarData.DateTime;
       Time = BarData.DateTime.TimeOfDay;
+      //IsLoading is already set at the beginning of this method and the modification of Date above would fire the change below
+      //causing corruption of the BarData.DateTime to the initial Time field value
       m_dateTimeInitialized = true;
     }
 

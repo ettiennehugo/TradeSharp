@@ -1,15 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static TradeSharp.Common.IConfigurationService;
-using TradeSharp.Common;
-using TradeSharp.Data;
-using Moq;
-using static TradeSharp.Data.IDatabase;
+﻿using TradeSharp.Common;
 using System.Globalization;
-using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 
 namespace TradeSharp.Data.Testing
@@ -28,7 +18,7 @@ namespace TradeSharp.Data.Testing
 
     //attributes
     private Mock<IConfigurationService> m_configuration;
-    private Mock<ILoggerFactory> m_loggerFactory;
+    private ILoggerFactory m_loggerFactory;
     private Dictionary<string, object> m_generalConfiguration;
     private CultureInfo m_cultureEnglish;
     private RegionInfo m_regionInfo;
@@ -52,9 +42,6 @@ namespace TradeSharp.Data.Testing
       m_cultureEnglish = CultureInfo.GetCultureInfo("en-US");
       m_regionInfo = new RegionInfo(m_cultureEnglish.LCID);
 
-      m_loggerFactory = new Mock<ILoggerFactory>(MockBehavior.Strict);
-      m_loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
-
       m_dataProvider = new Mock<IDataProvider>().SetupAllProperties();
       m_dataProvider.SetupGet(x => x.Name).Returns("TestDataProvider");
 
@@ -71,7 +58,8 @@ namespace TradeSharp.Data.Testing
 
       m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);
 
-      m_database = new TradeSharp.Data.SqliteDatabase(m_configuration.Object);
+      m_loggerFactory = new LoggerFactory();
+      m_database = new TradeSharp.Data.SqliteDatabase(m_configuration.Object, new Logger<TradeSharp.Data.SqliteDatabase>(m_loggerFactory));
 
       //remove stale data from previous tests - this is to ensure proper test isolation and create the default objects used by the database
       m_database.ClearDatabase();
