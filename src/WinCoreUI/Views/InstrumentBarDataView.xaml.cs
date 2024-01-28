@@ -23,17 +23,18 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-
+    private bool m_dateTimeInitialized;
 
     //constructors
     public InstrumentBarDataView()
     {
-      BarData = new BarData(Resolution, new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds), 0, 0, 0, 0, 0);
       this.InitializeComponent();
+      BarData = new BarData(Resolution, DateTime.Now, 0, 0, 0, 0, 0);
     }
 
     public InstrumentBarDataView(IBarData barData)
     {
+      m_dateTimeInitialized = false;
       BarData = barData;
       this.InitializeComponent();
       Resolution = barData.Resolution;
@@ -95,10 +96,18 @@ namespace TradeSharp.WinCoreUI.Views
     {
       Date = BarData.DateTime;
       Time = BarData.DateTime.TimeOfDay;
+      m_dateTimeInitialized = true;
     }
 
-    private void Page_Unloaded(object sender, RoutedEventArgs e)
+    private void m_date_DateChanged(object sender, DatePickerValueChangedEventArgs e)
     {
+      if (!m_dateTimeInitialized) return;  //don't modify date/time if not initialized, otherwise it assigns the control initial values
+      BarData.DateTime = new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds, BarData.DateTime.Kind);
+    }
+
+    private void m_time_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
+    {
+      if (!m_dateTimeInitialized) return;  //don't modify date/time if not initialized, otherwise it assigns the control initial values
       BarData.DateTime = new DateTime(Date.Year, Date.Month, Date.Day, Time.Hours, Time.Minutes, Time.Seconds, BarData.DateTime.Kind);
     }
   }
