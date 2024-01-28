@@ -144,9 +144,9 @@ namespace TradeSharp.CoreUI.ViewModels
           SelectedItem = Items.FirstOrDefault();
           count++;
         }
-        else if (target is IList)
+        else if (target is IList<TItem>)
         {
-          IList items = (IList)target;
+          IList<TItem> items = (IList<TItem>)target;
           foreach (TItem item in items)
           {
             m_itemsService.Delete(item);

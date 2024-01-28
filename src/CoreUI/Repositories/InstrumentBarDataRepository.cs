@@ -100,6 +100,18 @@ namespace TradeSharp.CoreUI.Repositories
       return items.Count; //TODO: Update count.
     }
 
+    public int Delete(IList<IBarData> items)
+    {
+      throwIfNotKeyed();
+      int result = 0;
+      foreach (IBarData item in items)
+      {
+        m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime);
+        result++;
+      }
+      return result;
+    }
+
     public bool Delete(IBarData item)
     {
       throwIfNotKeyed();

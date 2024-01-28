@@ -5,7 +5,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Instrument data service interface, mainly encapsulating the key information used to populate the underlying repository.
   /// </summary>
-  public interface IInstrumentDataService
+  public interface IInstrumentDataService<TItem>
   {
     //constants
 
@@ -25,10 +25,11 @@ namespace TradeSharp.CoreUI.Services
     Resolution Resolution { get; set; }
 
     //methods
+    int Delete(IList<TItem> items);   //mass delete of items
     int GetCount();
     int GetCount(DateTime from, DateTime to);
-    IList<IBarData> GetItems(DateTime from, DateTime to);
-    IList<IBarData> GetItems(int index, int count);
-    IList<IBarData> GetItems(DateTime from, DateTime to, int index, int count);
+    IList<TItem> GetItems(DateTime from, DateTime to);
+    IList<TItem> GetItems(int index, int count);
+    IList<TItem> GetItems(DateTime from, DateTime to, int index, int count);
   }
 }

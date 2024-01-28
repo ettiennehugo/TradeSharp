@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Dispatching;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
@@ -10,6 +11,7 @@ using System.Threading;
 using TradeSharp.Common;
 using TradeSharp.WinCoreUI.Common;
 using System;
+using System.Linq;
 
 namespace TradeSharp.WinCoreUI.ViewModels
 {
@@ -61,6 +63,55 @@ namespace TradeSharp.WinCoreUI.ViewModels
 
       return Task.CompletedTask;
     }
+
+    public override Task OnDeleteAsync(object? target)
+    {
+      return Task.Run(() =>
+      {
+        int count = 0;
+        if (target is IBarData)
+        {
+          IBarData item = (IBarData)target;
+          Items.Remove(item);
+          m_itemsService.Delete(item);
+          SelectedItem = Items.FirstOrDefault();
+          count++;
+        }
+        else if (target is IList<IBarData>)
+        {
+          IList<IBarData> items = (IList<IBarData>)target;
+          foreach (IBarData item in items)
+          {
+            m_itemsService.Delete(item);
+            count++;
+          }
+
+          OnRefresh();
+          SelectedItem = Items.FirstOrDefault();
+        }
+        else if (target is IReadOnlyList<ItemIndexRange>)
+        {
+          //can not read the control content asynchronously so must run on the UI thread
+          //OPTIMIZATION: Can pack the dates to be deleted into a range table and delete the whole range asynchronously.
+          UIDispatcherQueue.TryEnqueue(() =>
+          {
+            IReadOnlyList<ItemIndexRange> ranges = (IReadOnlyList<ItemIndexRange>)target;
+            IList<IBarData> itemsToDelete = new List<IBarData>();
+            foreach (ItemIndexRange range in ranges)
+              for (int i = range.FirstIndex; i <= range.LastIndex; i++)
+              {
+                itemsToDelete.Add(Items[i]);
+                count++;
+              }
+
+            m_barDataService.Delete(itemsToDelete);
+            OnRefreshAsync();
+            SelectedItem = Items.FirstOrDefault();
+          });
+        }
+      });
+    }
+
 
     /// <summary>
     /// Load the specified number of items from the service.

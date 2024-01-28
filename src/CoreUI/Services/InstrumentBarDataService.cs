@@ -88,6 +88,14 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
+    public int Delete(IList<IBarData> items)
+    {
+      int result = m_repository.Delete(items);
+      foreach (IBarData item in items) Items.Remove(item);
+      SelectedItem = Items.FirstOrDefault();
+      return result;
+    }
+
     public void Export(string filename)
     {
       string extension = Path.GetExtension(filename).ToLower();
