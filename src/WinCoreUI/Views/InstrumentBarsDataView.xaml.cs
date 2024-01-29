@@ -278,5 +278,10 @@ namespace TradeSharp.WinCoreUI.Views
     {
       if (DateTime.TryParse(m_endDateTime.Text, out _)) refreshFilter();
     }
+
+    private void UserControl_Loaded(object sender, RoutedEventArgs e)
+    {
+      resetFilter();
+    }
   }
 }

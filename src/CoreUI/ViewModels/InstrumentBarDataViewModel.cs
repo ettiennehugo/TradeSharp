@@ -123,6 +123,10 @@ namespace TradeSharp.CoreUI.ViewModels
       return Task.Run(() => m_barDataService.GetItems(from, to, index, count));
     }
 
+    /// <summary>
+    /// The copy functions will fill in the intermediate timeframes if the selected resolution is not
+    /// incrementally higher than the current resolution.
+    /// </summary>
     public virtual Task OnCopyToHourAsync()
     {
       return Task.Run(() => m_barDataService.Copy(Resolution.Minute));
@@ -130,28 +134,39 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public virtual Task OnCopyToDayAsync()
     {
-      return Task.Run(() => m_barDataService.Copy(Resolution.Hour));
+      return Task.Run(() => {
+        if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
+        m_barDataService.Copy(Resolution.Hour);
+      });
     }
 
     public virtual Task OnCopyToWeekAsync()
     {
-      return Task.Run(() => m_barDataService.Copy(Resolution.Day));
+      return Task.Run(() => {
+        if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
+        if (Resolution == Resolution.Hour) m_barDataService.Copy(Resolution.Hour);
+        m_barDataService.Copy(Resolution.Day);
+      });
     }
 
     public virtual Task OnCopyToMonthAsync()
     {
-      return Task.Run(() => m_barDataService.Copy(Resolution.Week));
+      return Task.Run(() => {
+        if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
+        if (Resolution == Resolution.Hour) m_barDataService.Copy(Resolution.Hour);
+        if (Resolution == Resolution.Day) m_barDataService.Copy(Resolution.Day);
+        m_barDataService.Copy(Resolution.Week);
+      });
     }
 
     public virtual Task OnCopyToAllAsync()
     {
-      //launch tasks based on resolution chaining subsequent resolutions together
-      if (Resolution == Resolution.Minute) CopyToHourCommandAsync.ExecuteAsync(null).ContinueWith(_ => CopyToDayCommandAsync.ExecuteAsync(null));
-      if (Resolution == Resolution.Hour) CopyToDayCommandAsync.ExecuteAsync(null).ContinueWith(_ => CopyToDayCommandAsync.ExecuteAsync(null));
-      if (Resolution == Resolution.Day) CopyToWeekCommandAsync.ExecuteAsync(null).ContinueWith(_ => CopyToWeekCommandAsync.ExecuteAsync(null));
-      if (Resolution == Resolution.Week) CopyToMonthCommandAsync.ExecuteAsync(null).ContinueWith(_ => CopyToMonthCommandAsync.ExecuteAsync(null));
-      //nothing to do with months as they are the highest resolution
-      return Task.CompletedTask;
+      return Task.Run(() => {
+        if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
+        if (Resolution == Resolution.Hour) m_barDataService.Copy(Resolution.Hour);
+        if (Resolution == Resolution.Day) m_barDataService.Copy(Resolution.Day);
+        if (Resolution == Resolution.Week) m_barDataService.Copy(Resolution.Week);
+      });
     }
 
     //properties

@@ -149,6 +149,18 @@ namespace TradeSharp.CoreUI.Services
       return m_repository.GetItems(from, to, index, count);
     }
 
+    //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
+    //NOTE: * This function only works for Gregorian dates which is fine, CultureInfo and ISOWeek returns anything and everything
+    //        except just a sane interpretation of the week number based on "which week of the year is this given that 1 January
+    //        is the start of the first week?".
+    //      * We are good with considering the first and last weeks of the year to be "partial" weeks. 
+    protected int weekOfYear(DateTime dateTime)
+    {
+      return ISOWeek.GetWeekOfYear(dateTime);
+
+      //return ((dateTime.DayOfYear - (int)(dateTime.DayOfWeek + 1)) / 7) + 1;
+    }
+
     public void Copy(Resolution from)
     {
       IList<IBarData> fromBarData = new List<IBarData>();
@@ -183,6 +195,7 @@ namespace TradeSharp.CoreUI.Services
               toBar.Volume += bar.Volume;
             }
 
+          if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
           toRepository.Update(toBarData);
 
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
@@ -206,6 +219,7 @@ namespace TradeSharp.CoreUI.Services
               toBar.Volume += bar.Volume;
             }
 
+          if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
           toRepository.Update(toBarData);
 
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
@@ -215,7 +229,7 @@ namespace TradeSharp.CoreUI.Services
 
           fromBarData = fromRepository.GetItems();
           foreach (IBarData bar in fromBarData)
-            if (toBar == null || CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(toBar.DateTime, CalendarWeekRule.FirstDay, DayOfWeek.Monday) != CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(bar.DateTime, CalendarWeekRule.FirstDay, DayOfWeek.Monday))  //ISO8601 considers Monday the start of the week
+            if (toBar == null || weekOfYear(toBar.DateTime) != weekOfYear(bar.DateTime))
             {
               toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
               toBarData.Add(toBar);
@@ -229,6 +243,7 @@ namespace TradeSharp.CoreUI.Services
               toBar.Volume += bar.Volume;
             }
 
+          if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
           toRepository.Update(toBarData);
 
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
@@ -252,6 +267,7 @@ namespace TradeSharp.CoreUI.Services
               toBar.Volume += bar.Volume;
             }
 
+          if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
           toRepository.Update(toBarData);
 
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
