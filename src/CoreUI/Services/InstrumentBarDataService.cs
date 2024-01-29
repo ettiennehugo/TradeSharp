@@ -149,18 +149,13 @@ namespace TradeSharp.CoreUI.Services
       return m_repository.GetItems(from, to, index, count);
     }
 
-    //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
-    //NOTE: * This function only works for Gregorian dates which is fine, CultureInfo and ISOWeek returns anything and everything
-    //        except just a sane interpretation of the week number based on "which week of the year is this given that 1 January
-    //        is the start of the first week?".
-    //      * We are good with considering the first and last weeks of the year to be "partial" weeks. 
-    protected int weekOfYear(DateTime dateTime)
-    {
-      return ISOWeek.GetWeekOfYear(dateTime);
-
-      //return ((dateTime.DayOfYear - (int)(dateTime.DayOfWeek + 1)) / 7) + 1;
-    }
-
+    /// <summary>
+    /// Copy the given bar resolution to the next higher resolution, e.g. minute input parameter copies the data to the
+    /// hourly timeframe.
+    /// NOTES:
+    ///   * The start bars' date/time is used as the date/time for the bar in the higher resolution, e.g. if you start with daily bars converting to
+    ///     weekly bars for stock data the resulting weekly bars will always start on a Monday date/time.
+    /// </summary>
     public void Copy(Resolution from)
     {
       IList<IBarData> fromBarData = new List<IBarData>();
@@ -229,7 +224,12 @@ namespace TradeSharp.CoreUI.Services
 
           fromBarData = fromRepository.GetItems();
           foreach (IBarData bar in fromBarData)
-            if (toBar == null || weekOfYear(toBar.DateTime) != weekOfYear(bar.DateTime))
+            //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
+            //NOTE: * This function only works for Gregorian dates which is fine, CultureInfo and ISOWeek returns anything and everything
+            //        except just a sane interpretation of the week number based on "which week of the year is this given that 1 January
+            //        is the start of the first week?".
+            //      * We are good with considering the first and last weeks of the year to be "partial" weeks.
+            if (toBar == null || ISOWeek.GetWeekOfYear(toBar.DateTime) != ISOWeek.GetWeekOfYear(bar.DateTime))
             {
               toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
               toBarData.Add(toBar);
