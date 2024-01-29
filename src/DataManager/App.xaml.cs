@@ -41,6 +41,7 @@ namespace TradeSharp.WinDataManager
     public App()
     {
       this.InitializeComponent();
+      IApplication.Current = this;
     }
 
     //finalizers

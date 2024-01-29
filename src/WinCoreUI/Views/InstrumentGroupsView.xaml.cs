@@ -28,7 +28,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public InstrumentGroupsView()
     {
-      ViewModel = (InstrumentGroupViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentGroupViewModel));
+      ViewModel = (InstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(InstrumentGroupViewModel));
       this.InitializeComponent();
     }
 

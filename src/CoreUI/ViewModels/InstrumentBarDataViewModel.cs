@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
-using TradeSharp.Common;
 using CommunityToolkit.Mvvm.Input;
+using TradeSharp.Common;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -15,8 +15,6 @@ namespace TradeSharp.CoreUI.ViewModels
     /// <summary>
     /// Supported filter fields for the instrument bar data service.
     /// </summary>
-    public const string FilterFromDateTime = "FromDateTime";
-    public const string FilterToDateTime = "ToDateTime";
     public const string DefaultPriceValueFormatMask = "0:0.00";
 
     //enums
@@ -58,11 +56,11 @@ namespace TradeSharp.CoreUI.ViewModels
       ImportCommandAsync = new AsyncRelayCommand(OnImportAsync, () => DataProvider != string.Empty && Instrument != null);
       ExportCommandAsync = new AsyncRelayCommand(OnExportAsync, () => DataProvider != string.Empty && Instrument != null && Items.Count > 0);
       CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0);
-      CopyToHourCommandAsync = new AsyncRelayCommand<object?>(OnCopyToHourAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution == Resolution.Minute);
-      CopyToDayCommandAsync = new AsyncRelayCommand<object?>(OnCopyToDayAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
-      CopyToWeekCommandAsync = new AsyncRelayCommand<object?>(OnCopyToWeekAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
-      CopyToMonthCommandAsync = new AsyncRelayCommand<object?>(OnCopyToMonthAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day || Resolution == Resolution.Week));
-      CopyToAllCommandAsync = new AsyncRelayCommand<object?>(OnCopyToAllAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution != Resolution.Month);
+      CopyToHourCommandAsync = new AsyncRelayCommand(OnCopyToHourAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution == Resolution.Minute);
+      CopyToDayCommandAsync = new AsyncRelayCommand(OnCopyToDayAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
+      CopyToWeekCommandAsync = new AsyncRelayCommand(OnCopyToWeekAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
+      CopyToMonthCommandAsync = new AsyncRelayCommand(OnCopyToMonthAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day || Resolution == Resolution.Week));
+      CopyToAllCommandAsync = new AsyncRelayCommand(OnCopyToAllAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution != Resolution.Month);
     }
 
     //finalizers
@@ -125,42 +123,43 @@ namespace TradeSharp.CoreUI.ViewModels
       return Task.Run(() => m_barDataService.GetItems(from, to, index, count));
     }
 
-    public virtual Task OnCopyToHourAsync(object? selection)
+    public virtual Task OnCopyToHourAsync()
     {
-      //TODO
-      throw new NotImplementedException();
+      return Task.Run(() => m_barDataService.Copy(Resolution.Minute));
     }
 
-    public virtual Task OnCopyToDayAsync(object? selection)
+    public virtual Task OnCopyToDayAsync()
     {
-      //TODO
-      throw new NotImplementedException();
+      return Task.Run(() => m_barDataService.Copy(Resolution.Hour));
     }
 
-    public virtual Task OnCopyToWeekAsync(object? selection)
+    public virtual Task OnCopyToWeekAsync()
     {
-      //TODO
-      throw new NotImplementedException();
+      return Task.Run(() => m_barDataService.Copy(Resolution.Day));
     }
 
-    public virtual Task OnCopyToMonthAsync(object? selection)
+    public virtual Task OnCopyToMonthAsync()
     {
-      //TODO
-      throw new NotImplementedException();
+      return Task.Run(() => m_barDataService.Copy(Resolution.Week));
     }
 
-    public virtual Task OnCopyToAllAsync(object? selection)
+    public virtual Task OnCopyToAllAsync()
     {
-      //TODO
-      throw new NotImplementedException();
+      //launch tasks based on resolution chaining subsequent resolutions together
+      if (Resolution == Resolution.Minute) CopyToHourCommandAsync.ExecuteAsync(null).ContinueWith(_ => CopyToDayCommandAsync.ExecuteAsync(null));
+      if (Resolution == Resolution.Hour) CopyToDayCommandAsync.ExecuteAsync(null).ContinueWith(_ => CopyToDayCommandAsync.ExecuteAsync(null));
+      if (Resolution == Resolution.Day) CopyToWeekCommandAsync.ExecuteAsync(null).ContinueWith(_ => CopyToWeekCommandAsync.ExecuteAsync(null));
+      if (Resolution == Resolution.Week) CopyToMonthCommandAsync.ExecuteAsync(null).ContinueWith(_ => CopyToMonthCommandAsync.ExecuteAsync(null));
+      //nothing to do with months as they are the highest resolution
+      return Task.CompletedTask;
     }
 
     //properties
-    public AsyncRelayCommand<object?> CopyToHourCommandAsync { get; internal set; }
-    public AsyncRelayCommand<object?> CopyToDayCommandAsync { get; internal set; }
-    public AsyncRelayCommand<object?> CopyToWeekCommandAsync { get; internal set; }
-    public AsyncRelayCommand<object?> CopyToMonthCommandAsync { get; internal set; }
-    public AsyncRelayCommand<object?> CopyToAllCommandAsync { get; internal set; }
+    public AsyncRelayCommand CopyToHourCommandAsync { get; internal set; }
+    public AsyncRelayCommand CopyToDayCommandAsync { get; internal set; }
+    public AsyncRelayCommand CopyToWeekCommandAsync { get; internal set; }
+    public AsyncRelayCommand CopyToMonthCommandAsync { get; internal set; }
+    public AsyncRelayCommand CopyToAllCommandAsync { get; internal set; }
 
     public string DataProvider
     {
@@ -203,24 +202,30 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       get
       {
-        updateFilters();
-        return isKeyed() ? m_barDataService.GetCount(m_fromDateTime, m_toDateTime) : 0;
+        int result = isKeyed() ? m_barDataService.GetCount(m_fromDateTime, m_toDateTime) : 0;
+        if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogInformation($"Returned bar data count: {result}");
+        return result;
       }
     }
 
-    public IDictionary<string, object> Filter { get => m_filter; set => m_filter = (Dictionary<string, object>)value; }
+    public DateTime FromDateTime
+    {
+      get => m_fromDateTime;
+      set => m_fromDateTime = value;
+    }
+
+    public DateTime ToDateTime
+    {
+      get => m_toDateTime;
+      set => m_toDateTime = value;
+    }
+
     public string PriceValueFormatMask { get => m_priceValueFormatMask; } //string.Format value format mask for the price values based on Instrument
 
     //methods
     protected virtual bool isKeyed()
     {
       return DataProvider != string.Empty && Instrument != null;
-    }
-
-    protected virtual void updateFilters()
-    {
-      m_fromDateTime = m_filter.ContainsKey(FilterFromDateTime) ? (DateTime)m_filter[FilterFromDateTime] : DateTime.MinValue;
-      m_toDateTime = m_filter.ContainsKey(FilterToDateTime) ? (DateTime)m_filter[FilterToDateTime] : DateTime.MinValue;
     }
 
     protected void updatePriceValueFormatMask()

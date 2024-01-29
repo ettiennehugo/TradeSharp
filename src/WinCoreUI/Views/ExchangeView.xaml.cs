@@ -87,7 +87,7 @@ namespace TradeSharp.WinCoreUI.Views
     private void loadCountries()
     {
       //load defined countries
-      IDatabase database = (IDatabase)((IApplication)Application.Current).Services.GetService(typeof(IDatabase));
+      IDatabase database = (IDatabase)IApplication.Current.Services.GetService(typeof(IDatabase));
       Countries = database.GetCountries();
     }
 

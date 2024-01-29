@@ -28,7 +28,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public InstrumentView()
     {
-      m_database = (IDatabase)((IApplication)Application.Current).Services.GetService(typeof(IDatabase));
+      m_database = (IDatabase)IApplication.Current.Services.GetService(typeof(IDatabase));
       Exchanges = m_database.GetExchanges();
       Instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "", InstrumentType.Stock, "", "", "", DateTime.Today, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, new List<Guid>());
       this.InitializeComponent();
@@ -36,7 +36,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     public InstrumentView(Instrument instrument)
     {
-      m_database = (IDatabase)((IApplication)Application.Current).Services.GetService(typeof(IDatabase));
+      m_database = (IDatabase)IApplication.Current.Services.GetService(typeof(IDatabase));
       Exchanges = m_database.GetExchanges();
       Instrument = instrument;
       this.InitializeComponent();

@@ -6,6 +6,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using CsvHelper;
 using System.Globalization;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -47,7 +48,7 @@ namespace TradeSharp.CoreUI.Services
     private IDatabase m_database;
 
     //constructors
-    public InstrumentBarDataService(IInstrumentBarDataRepository repository, ILoggerFactory loggerFactory, IDatabase database, IDialogService dialogService): base(dialogService)
+    public InstrumentBarDataService(IInstrumentBarDataRepository repository, ILoggerFactory loggerFactory, IDatabase database, IDialogService dialogService) : base(dialogService)
     {
       m_loggerFactory = loggerFactory;
       m_database = database;
@@ -146,6 +147,119 @@ namespace TradeSharp.CoreUI.Services
     public IList<IBarData> GetItems(DateTime from, DateTime to, int index, int count)
     {
       return m_repository.GetItems(from, to, index, count);
+    }
+
+    public void Copy(Resolution from)
+    {
+      IList<IBarData> fromBarData = new List<IBarData>();
+      IList<IBarData> toBarData = new List<IBarData>();
+      IInstrumentBarDataRepository fromRepository = (IInstrumentBarDataRepository)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataRepository))!;
+      IInstrumentBarDataRepository toRepository = (IInstrumentBarDataRepository)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataRepository))!;
+      fromRepository.DataProvider = DataProvider;
+      fromRepository.Instrument = Instrument;
+      fromRepository.Resolution = from;
+      toRepository.DataProvider = DataProvider;
+      toRepository.Instrument = Instrument;
+
+      IBarData? toBar = null;
+      switch (from)
+      {
+        case Resolution.Minute:
+          toRepository.Resolution = Resolution.Hour;
+
+          fromBarData = fromRepository.GetItems();
+          foreach (IBarData bar in fromBarData)
+            if (toBar == null || toBar.DateTime.Hour != bar.DateTime.Hour)
+            {
+              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+              toBarData.Add(toBar);
+            }
+            else //keep constructing bar while it's in the same to-resolution
+            {
+              //nothing to do for the open, that is set when the new bar is created
+              toBar.High = Math.Max(toBar.High, bar.High);
+              toBar.Low = Math.Min(toBar.Low, bar.Low);
+              toBar.Close = bar.Close;
+              toBar.Volume += bar.Volume;
+            }
+
+          toRepository.Update(toBarData);
+
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          break;
+        case Resolution.Hour:
+          toRepository.Resolution = Resolution.Day;
+
+          fromBarData = fromRepository.GetItems();
+          foreach (IBarData bar in fromBarData)
+            if (toBar == null || toBar.DateTime.Day != bar.DateTime.Day)
+            {
+              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+              toBarData.Add(toBar);
+            }
+            else //keep constructing bar while it's in the same to-resolution
+            {
+              //nothing to do for the open, that is set when the new bar is created
+              toBar.High = Math.Max(toBar.High, bar.High);
+              toBar.Low = Math.Min(toBar.Low, bar.Low);
+              toBar.Close = bar.Close;
+              toBar.Volume += bar.Volume;
+            }
+
+          toRepository.Update(toBarData);
+
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          break;
+        case Resolution.Day:
+          toRepository.Resolution = Resolution.Week;
+
+          fromBarData = fromRepository.GetItems();
+          foreach (IBarData bar in fromBarData)
+            if (toBar == null || CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(toBar.DateTime, CalendarWeekRule.FirstDay, DayOfWeek.Monday) != CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(bar.DateTime, CalendarWeekRule.FirstDay, DayOfWeek.Monday))  //ISO8601 considers Monday the start of the week
+            {
+              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+              toBarData.Add(toBar);
+            }
+            else //keep constructing bar while it's in the same to-resolution
+            {
+              //nothing to do for the open, that is set when the new bar is created
+              toBar.High = Math.Max(toBar.High, bar.High);
+              toBar.Low = Math.Min(toBar.Low, bar.Low);
+              toBar.Close = bar.Close;
+              toBar.Volume += bar.Volume;
+            }
+
+          toRepository.Update(toBarData);
+
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          break;
+        case Resolution.Week:
+          toRepository.Resolution = Resolution.Month;
+
+          fromBarData = fromRepository.GetItems();
+          foreach (IBarData bar in fromBarData)
+            if (toBar == null || toBar.DateTime.Month != bar.DateTime.Month)
+            {
+              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+              toBarData.Add(toBar);
+            }
+            else //keep constructing bar while it's in the same to-resolution
+            {
+              //nothing to do for the open, that is set when the new bar is created
+              toBar.High = Math.Max(toBar.High, bar.High);
+              toBar.Low = Math.Min(toBar.Low, bar.Low);
+              toBar.Close = bar.Close;
+              toBar.Volume += bar.Volume;
+            }
+
+          toRepository.Update(toBarData);
+
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          break;
+        case Resolution.Month:
+          //nothing to do
+          break;
+      }
     }
 
     public bool Update(IBarData item)

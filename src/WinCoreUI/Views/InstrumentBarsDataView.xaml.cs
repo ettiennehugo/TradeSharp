@@ -45,11 +45,11 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public InstrumentBarsDataView()
     {
-      ViewModel = (WinInstrumentBarDataViewModel)((IApplication)Application.Current).Services.GetService(typeof(WinInstrumentBarDataViewModel));
+      ViewModel = (WinInstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(WinInstrumentBarDataViewModel));
       ViewModel.UIDispatcherQueue = DispatcherQueue.GetForCurrentThread();
       ViewModel.Resolution = Resolution;
       ViewModel.RefreshEvent += onViewModelRefresh;
-      m_logger = (ILogger<InstrumentBarDataView>)((IApplication)Application.Current).Services.GetService(typeof(ILogger<InstrumentBarDataView>));
+      m_logger = (ILogger<InstrumentBarDataView>)IApplication.Current.Services.GetService(typeof(ILogger<InstrumentBarDataView>));
       this.InitializeComponent();
     }
 
@@ -226,8 +226,8 @@ namespace TradeSharp.WinCoreUI.Views
       m_endDateTime.ClearValue(TextBox.TextProperty);
 
       //reset the view model filter
-      ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
-      ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = WinInstrumentBarDataViewModel.s_defaultEndDateTime;
+      ViewModel.FromDateTime = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
+      ViewModel.ToDateTime = WinInstrumentBarDataViewModel.s_defaultEndDateTime;
 
       //restart load of the items using the new filter conditions
       ViewModel.OnRefreshAsync();
@@ -240,19 +240,19 @@ namespace TradeSharp.WinCoreUI.Views
       if (DateTime.TryParse(m_startDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime startDateTime))
       {
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter start date/time - {startDateTime}");
-        ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = startDateTime;
+        ViewModel.FromDateTime = startDateTime;
       }
       else
-        ViewModel.Filter[InstrumentBarDataViewModel.FilterFromDateTime] = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
+        ViewModel.FromDateTime = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
 
       //NOTE: Date/time must be parsed as a UTC date/time since that is what is stored in the database - otherwise results will be wrong.
       if (DateTime.TryParse(m_endDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime endDateTime))
       {
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter end date/time - {endDateTime}");
-        ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = endDateTime;
+        ViewModel.ToDateTime = endDateTime;
       }
       else
-        ViewModel.Filter[InstrumentBarDataViewModel.FilterToDateTime] = WinInstrumentBarDataViewModel.s_defaultEndDateTime;
+        ViewModel.ToDateTime = WinInstrumentBarDataViewModel.s_defaultEndDateTime;
 
       //restart load of the items using the new filter conditions
       ViewModel.OnRefreshAsync();

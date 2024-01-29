@@ -129,7 +129,6 @@ namespace TradeSharp.WinCoreUI.ViewModels
         {
           if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogInformation($"LoadMoreItemsAsync acquired load lock - (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId})");
           IsLoading = true;
-          updateFilters();
 
           //force refresh for incremental loading
           if (m_fromDateTime != m_oldFromDateTime || m_toDateTime != m_oldToDateTime)
@@ -147,10 +146,14 @@ namespace TradeSharp.WinCoreUI.ViewModels
           {
             int start = m_offsetIndex;
             int end = m_offsetIndex + items.Count;
-            m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId}, From Date/Time: {m_fromDateTime}, To Date/Time: {m_toDateTime})");
+            if (items.Count > 0)
+              m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId}, From Date/Time: {m_fromDateTime}, To Date/Time: {m_toDateTime}, First bar date/time: {items[0].DateTime})");
+            else
+              m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId}, From Date/Time: {m_fromDateTime}, To Date/Time: {m_toDateTime}, First bar date/time: no ars loaded)");
           }
 
           m_offsetIndex += items.Count;
+          HasMoreItems = m_offsetIndex < Count;
           IsLoading = false;
           if (Debugging.InstrumentBarDataLoadAsync) m_logger.LogInformation($"LoadMoreItemsAsync released load lock - (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId})");
         }
@@ -175,7 +178,6 @@ namespace TradeSharp.WinCoreUI.ViewModels
     /// </summary>
     public bool HasMoreItems { get; internal set; }
 
-  
     /// <summary>
     /// Returns whether the view model is currently loading items or not.
     /// </summary>

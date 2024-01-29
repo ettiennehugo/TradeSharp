@@ -25,7 +25,7 @@ namespace TradeSharp.WinCoreUI.Common
     //constructors
     public ExchangeIdToNameConverter()
     {
-      m_database = (IDatabase)((IApplication)Application.Current).Services.GetService(typeof(IDatabase));
+      m_database = (IDatabase)IApplication.Current.Services.GetService(typeof(IDatabase));
     }
 
     //finalizers

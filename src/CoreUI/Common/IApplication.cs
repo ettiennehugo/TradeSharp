@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-
-namespace TradeSharp.CoreUI.Common
+﻿namespace TradeSharp.CoreUI.Common
 {
   /// <summary>
   /// Interface to support application wide behaviour.
@@ -23,7 +21,7 @@ namespace TradeSharp.CoreUI.Common
     IServiceProvider Services { get; }
 
     //methods
-
+    public static IApplication Current { get; set; }
 
   }
 }

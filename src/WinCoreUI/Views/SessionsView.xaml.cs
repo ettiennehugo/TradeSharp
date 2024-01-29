@@ -31,8 +31,8 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public SessionsView()
     {
-      ViewModel = (SessionViewModel)((IApplication)Application.Current).Services.GetService(typeof(SessionViewModel));
-      ExchangeViewModel = (ExchangeViewModel)((IApplication)Application.Current).Services.GetService(typeof(ExchangeViewModel));
+      ViewModel = (SessionViewModel)IApplication.Current.Services.GetService(typeof(SessionViewModel));
+      ExchangeViewModel = (ExchangeViewModel)IApplication.Current.Services.GetService(typeof(ExchangeViewModel));
       this.InitializeComponent();
     }
 

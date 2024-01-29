@@ -30,7 +30,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public ExchangesView()
     {
-      ViewModel = (ExchangeViewModel)((IApplication)Application.Current).Services.GetService(typeof(ExchangeViewModel));
+      ViewModel = (ExchangeViewModel)IApplication.Current.Services.GetService(typeof(ExchangeViewModel));
       this.InitializeComponent();
     }
 

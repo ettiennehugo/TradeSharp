@@ -25,7 +25,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public CountriesView()
     {
-      ViewModel = (CountryViewModel)((IApplication)Application.Current).Services.GetService(typeof(CountryViewModel));
+      ViewModel = (CountryViewModel)IApplication.Current.Services.GetService(typeof(CountryViewModel));
       this.InitializeComponent();
     }
 
