@@ -54,16 +54,16 @@ namespace TradeSharp.CoreUI.ViewModels
     /// <summary>
     /// Set of supported operations.
     /// </summary>
-    public RelayCommand AddCommand { get; internal set; }
-    public RelayCommand UpdateCommand { get; internal set; }
-    public RelayCommand<object?> DeleteCommand { get; internal set; }
-    public AsyncRelayCommand<object?> DeleteCommandAsync { get; internal set; } //use async delete to allow long running deletes to run in the background
-    public RelayCommand ClearSelectionCommand { get; internal set; }
-    public RelayCommand RefreshCommand { get; internal set; }
-    public AsyncRelayCommand RefreshCommandAsync { get; internal set; } //use async refresh to allow long running refreshes to run in the background
-    public AsyncRelayCommand<object?> CopyCommandAsync { get; internal set; }
-    public AsyncRelayCommand ImportCommandAsync { get; internal set; }
-    public AsyncRelayCommand ExportCommandAsync { get; internal set; }
+    public RelayCommand AddCommand { get; set; }
+    public RelayCommand UpdateCommand { get; set; }
+    public RelayCommand<object?> DeleteCommand { get; set; }
+    public AsyncRelayCommand<object?> DeleteCommandAsync { get; set; } //use async delete to allow long running deletes to run in the background
+    public RelayCommand ClearSelectionCommand { get; set; }
+    public RelayCommand RefreshCommand { get; set; }
+    public AsyncRelayCommand RefreshCommandAsync { get; set; } //use async refresh to allow long running refreshes to run in the background
+    public AsyncRelayCommand<object?> CopyCommandAsync { get; set; }
+    public AsyncRelayCommand ImportCommandAsync { get; set; }
+    public AsyncRelayCommand ExportCommandAsync { get; set; }
 
     //events
     public event IRefreshable.RefreshEventHandler? RefreshEvent;
@@ -71,7 +71,7 @@ namespace TradeSharp.CoreUI.ViewModels
     //methods
     public abstract void OnAdd();
     public abstract void OnUpdate();
-    
+
     public virtual async void OnDelete(object? target)
     {
       await OnDeleteAsync(target);
@@ -80,7 +80,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public abstract void OnRefresh();
     public abstract Task OnRefreshAsync();
-    
+
     public abstract void OnClearSelection();
     public abstract Task OnCopyAsync(object? target);
     public abstract Task OnImportAsync();

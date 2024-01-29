@@ -12,7 +12,7 @@
 
     // Instrument Bar Data debugging switches
     public static bool InstrumentBarDataLoadAsync = false;   //debugging for instrument bar data LoadAsync
-    public static bool InstrumentBarDataCopy = false;   //debugging for instrument bar data copy functionality
+    public static bool InstrumentBarDataCopy = true;   //debugging for instrument bar data copy functionality
     public static bool InstrumentBarDataFilterParse = false;   //debugging for instrument bar data filter start/end date parsing
 
     //enums

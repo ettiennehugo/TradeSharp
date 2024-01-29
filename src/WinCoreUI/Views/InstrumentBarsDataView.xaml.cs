@@ -45,7 +45,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public InstrumentBarsDataView()
     {
-      ViewModel = (WinInstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(WinInstrumentBarDataViewModel));
+      ViewModel = (WinInstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
       ViewModel.UIDispatcherQueue = DispatcherQueue.GetForCurrentThread();
       ViewModel.Resolution = Resolution;
       ViewModel.RefreshEvent += onViewModelRefresh;

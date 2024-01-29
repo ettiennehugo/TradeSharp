@@ -9,7 +9,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of sessions associated with an exchange specified as the parent id.
   /// </summary>
-  public class SessionViewModel: ListViewModel<Session>
+  public class SessionViewModel : ListViewModel<Session>, ISessionViewModel
   {
     //constants
 
@@ -70,7 +70,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override Task OnCopyAsync(object? target)
     {
-      return Task.Run(async () => {
+      return Task.Run(async () =>
+      {
         if (target == null) return; //should not occur if UI menu is setup correctly, just do nothing
 
         int copiedCount = 0;

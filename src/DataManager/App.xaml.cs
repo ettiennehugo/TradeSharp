@@ -85,17 +85,16 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<ISessionService, SessionService>();
           services.AddSingleton<IInstrumentService, InstrumentService>();
           services.AddSingleton<IInstrumentGroupService, InstrumentGroupService>();
-          services.AddSingleton<CountryViewModel>();
-          services.AddSingleton<HolidayViewModel>();
-          services.AddSingleton<ExchangeViewModel>();
-          services.AddSingleton<SessionViewModel>();
-          services.AddSingleton<InstrumentViewModel>();
-          services.AddSingleton<InstrumentGroupViewModel>();
+          services.AddSingleton<ICountryViewModel, CountryViewModel>();
+          services.AddSingleton<IHolidayViewModel, HolidayViewModel>();
+          services.AddSingleton<IExchangeViewModel, ExchangeViewModel>();
+          services.AddSingleton<ISessionViewModel, SessionViewModel>();
+          services.AddSingleton<IInstrumentViewModel, InstrumentViewModel>();
+          services.AddSingleton<IInstrumentGroupViewModel, InstrumentGroupViewModel>();
 
           services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddTransient<IInstrumentBarDataService, InstrumentBarDataService>(); //this service must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
-          services.AddTransient<InstrumentBarDataViewModel>();
-          services.AddTransient<WinInstrumentBarDataViewModel>();
+          services.AddTransient<IInstrumentBarDataViewModel, WinInstrumentBarDataViewModel>();  //windows implementation is used in order to support incremental loading
         })
         .ConfigureLogging((context, logging) =>
         {
@@ -111,7 +110,7 @@ namespace TradeSharp.WinDataManager
     private void loadCachedData()
     {
       //start caching the instrument data
-      var instrumentViewModel = (InstrumentViewModel)((IApplication)Application.Current).Services.GetService(typeof(InstrumentViewModel));
+      var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       instrumentViewModel.RefreshCommandAsync.Execute(null);
     }
   }

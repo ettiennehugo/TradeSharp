@@ -9,7 +9,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of countries with their details using the associated item view model.
   /// </summary>
-  public class CountryViewModel : ListViewModel<Country>
+  public class CountryViewModel : ListViewModel<Country>, ICountryViewModel
   {
     //constants
 
@@ -24,7 +24,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //constructors
-    public CountryViewModel(ICountryService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) 
+    public CountryViewModel(ICountryService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));

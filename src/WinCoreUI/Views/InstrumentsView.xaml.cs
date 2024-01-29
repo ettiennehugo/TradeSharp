@@ -34,7 +34,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public InstrumentsView()
     {
-      ViewModel = (InstrumentViewModel)IApplication.Current.Services.GetService(typeof(InstrumentViewModel));
+      ViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       Instruments = new ObservableCollection<Instrument>(ViewModel.Items);
       this.InitializeComponent();
     }
@@ -46,7 +46,7 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //properties
-    public InstrumentViewModel ViewModel { get; }
+    public IInstrumentViewModel ViewModel { get; }
     public ObservableCollection<Instrument> Instruments;
 
     //methods

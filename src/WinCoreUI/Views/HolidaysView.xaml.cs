@@ -29,7 +29,7 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public HolidaysView()
     {
-      ViewModel = (HolidayViewModel)IApplication.Current.Services.GetService(typeof(HolidayViewModel));
+      ViewModel = (IHolidayViewModel)IApplication.Current.Services.GetService(typeof(IHolidayViewModel));
       this.InitializeComponent();
     }
 
@@ -52,7 +52,7 @@ namespace TradeSharp.WinCoreUI.Views
       }
     }
 
-    public HolidayViewModel ViewModel { get; }
+    public IHolidayViewModel ViewModel { get; }
 
     //methods
 

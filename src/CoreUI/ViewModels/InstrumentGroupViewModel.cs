@@ -13,7 +13,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of instrument groups defined and the instruments contained by them.
   /// </summary>
-  public class InstrumentGroupViewModel : TreeViewModel<Guid, InstrumentGroup>
+  public class InstrumentGroupViewModel : TreeViewModel<Guid, InstrumentGroup>, IInstrumentGroupViewModel
   {
     //constants
 
@@ -74,7 +74,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override Task OnCopyAsync(object? target)
     {
-      return Task.Run(async () => {
+      return Task.Run(async () =>
+      {
         if (SelectedNode != null)
           m_itemsService.Copy(SelectedNode);
         else

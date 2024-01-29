@@ -8,7 +8,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of holidays associated with a country of exchange specified as the parent Id of the base class.
   /// </summary>
-  public partial class HolidayViewModel : ListViewModel<Holiday>
+  public partial class HolidayViewModel : ListViewModel<Holiday>, IHolidayViewModel
   {
     //constants
 

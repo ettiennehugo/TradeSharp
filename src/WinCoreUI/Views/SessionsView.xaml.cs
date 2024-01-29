@@ -31,8 +31,8 @@ namespace TradeSharp.WinCoreUI.Views
     //constructors
     public SessionsView()
     {
-      ViewModel = (SessionViewModel)IApplication.Current.Services.GetService(typeof(SessionViewModel));
-      ExchangeViewModel = (ExchangeViewModel)IApplication.Current.Services.GetService(typeof(ExchangeViewModel));
+      ViewModel = (ISessionViewModel)IApplication.Current.Services.GetService(typeof(ISessionViewModel));
+      ExchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
       this.InitializeComponent();
     }
 
@@ -55,8 +55,8 @@ namespace TradeSharp.WinCoreUI.Views
       }
     }
 
-    public SessionViewModel ViewModel { get; }
-    public ExchangeViewModel ExchangeViewModel { get; }
+    public ISessionViewModel ViewModel { get; }
+    public IExchangeViewModel ExchangeViewModel { get; }
 
     //methods
     private void UserControl_Loaded(object sender, RoutedEventArgs e)

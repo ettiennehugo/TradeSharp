@@ -9,7 +9,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for list of instruments, it supports incremental loading of the objects from the service.
   /// </summary>
-  public class InstrumentViewModel : ListViewModel<Instrument>
+  public class InstrumentViewModel : ListViewModel<Instrument>, IInstrumentViewModel
   {
     //constants
 

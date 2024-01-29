@@ -8,7 +8,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for a list of exchanges with their details.
   /// </summary>
-  public class ExchangeViewModel : ListViewModel<Exchange>
+  public class ExchangeViewModel : ListViewModel<Exchange>, IExchangeViewModel
   {
     //constants
 

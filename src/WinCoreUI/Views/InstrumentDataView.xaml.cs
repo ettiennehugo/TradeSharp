@@ -42,7 +42,7 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentDataView()
     {
       m_configurationService = (IConfigurationService)IApplication.Current.Services.GetService(typeof(IConfigurationService));
-      InstrumentViewModel = (InstrumentViewModel)IApplication.Current.Services.GetService(typeof(InstrumentViewModel));
+      InstrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       DataProviders = new ObservableCollection<string>();
       Instruments = new ObservableCollection<Instrument>(InstrumentViewModel.Items);
       this.InitializeComponent();
@@ -57,7 +57,7 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public ObservableCollection<string> DataProviders { get; set; }
     public ObservableCollection<Instrument> Instruments { get; set; }
-    public InstrumentViewModel InstrumentViewModel { get; set; }
+    public IInstrumentViewModel InstrumentViewModel { get; set; }
 
     //methods
     private void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)

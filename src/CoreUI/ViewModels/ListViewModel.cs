@@ -12,8 +12,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// IMPORTANT: The model assumes synchronous operation in the UI thread so it does not do anything fancy to support background worker threads, for services that require
   ///            long running background processes the structure of the refresh, refresh async and Items properties.
   /// </summary>
-  public abstract partial class ListViewModel<TItem> : ViewModelBase
-    where TItem : class
+  public abstract partial class ListViewModel<TItem> : ViewModelBase, IListViewModel<TItem> where TItem : class
   {
     //constants
 

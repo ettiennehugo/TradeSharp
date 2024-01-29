@@ -9,7 +9,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// View model for instrument bar data.
   /// </summary>
-  public partial class InstrumentBarDataViewModel : ListViewModel<IBarData>
+  public partial class InstrumentBarDataViewModel : ListViewModel<IBarData>, IInstrumentBarDataViewModel
   {
     //constants
     /// <summary>
@@ -134,7 +134,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public virtual Task OnCopyToDayAsync()
     {
-      return Task.Run(() => {
+      return Task.Run(() =>
+      {
         if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
         m_barDataService.Copy(Resolution.Hour);
       });
@@ -142,7 +143,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public virtual Task OnCopyToWeekAsync()
     {
-      return Task.Run(() => {
+      return Task.Run(() =>
+      {
         if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
         if (Resolution == Resolution.Hour) m_barDataService.Copy(Resolution.Hour);
         m_barDataService.Copy(Resolution.Day);
@@ -151,7 +153,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public virtual Task OnCopyToMonthAsync()
     {
-      return Task.Run(() => {
+      return Task.Run(() =>
+      {
         if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
         if (Resolution == Resolution.Hour) m_barDataService.Copy(Resolution.Hour);
         if (Resolution == Resolution.Day) m_barDataService.Copy(Resolution.Day);
@@ -161,11 +164,29 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public virtual Task OnCopyToAllAsync()
     {
-      return Task.Run(() => {
-        if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
-        if (Resolution == Resolution.Hour) m_barDataService.Copy(Resolution.Hour);
-        if (Resolution == Resolution.Day) m_barDataService.Copy(Resolution.Day);
-        if (Resolution == Resolution.Week) m_barDataService.Copy(Resolution.Week);
+      return Task.Run(() =>
+      {
+        switch (Resolution)
+        {
+          case Resolution.Minute:
+            m_barDataService.Copy(Resolution.Minute);
+            m_barDataService.Copy(Resolution.Hour);
+            m_barDataService.Copy(Resolution.Day);
+            m_barDataService.Copy(Resolution.Week);
+            break;
+          case Resolution.Hour:
+            m_barDataService.Copy(Resolution.Hour);
+            m_barDataService.Copy(Resolution.Day);
+            m_barDataService.Copy(Resolution.Week);
+            break;
+          case Resolution.Day:
+            m_barDataService.Copy(Resolution.Day);
+            m_barDataService.Copy(Resolution.Week);
+            break;
+          case Resolution.Week:
+            m_barDataService.Copy(Resolution.Week);
+            break;
+        }
       });
     }
 
@@ -249,7 +270,7 @@ namespace TradeSharp.CoreUI.ViewModels
       if (Instrument != null)
       {
         m_priceValueFormatMask = "0:0"; //need to at least have a value with zero decimals
-        
+
         if (Instrument.PriceDecimals > 0)
         {
           m_priceValueFormatMask += ".";

@@ -7,8 +7,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// Base calss for models that support viewing of items in a tree fashion driven by an ITreeItemService.
   /// </summary>
-  public abstract class TreeViewModel<TKey, TItem> : ViewModelBase
-    where TItem : class
+  public abstract class TreeViewModel<TKey, TItem> : ViewModelBase, ITreeViewModel<TKey, TItem> where TItem : class
   {
     //constants
 
@@ -137,8 +136,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override async Task OnExportAsync()
     {
-        string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
-        if (filename != null) _ = Task.Run(() => m_itemsService.Export(filename));
+      string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
+      if (filename != null) _ = Task.Run(() => m_itemsService.Export(filename));
     }
 
     ///Generic handler to re-raise the service refresh event as a view model refresh event.
