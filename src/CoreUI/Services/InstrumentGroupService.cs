@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Diagnostics;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -62,7 +63,7 @@ namespace TradeSharp.CoreUI.Services
 
     //attributes
     private IDatabase m_database;
-    private ILoggerFactory m_loggerFactory;
+    private ILogger<InstrumentGroupService> m_logger;
     private IInstrumentGroupRepository m_instrumentGroupRepository;
     private ITreeNodeType<Guid, InstrumentGroup>? m_selectedNode;
     public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> SelectedNodes { get; set; }
@@ -70,9 +71,9 @@ namespace TradeSharp.CoreUI.Services
     public ObservableCollection<InstrumentGroup> Items { get; internal set; }
 
     //constructors
-    public InstrumentGroupService(ILoggerFactory loggerFactory, IDatabase database, IInstrumentGroupRepository instrumentGroupRepository, IDialogService dialogService): base(dialogService)
+    public InstrumentGroupService(ILogger<InstrumentGroupService> logger, IDatabase database, IInstrumentGroupRepository instrumentGroupRepository, IDialogService dialogService): base(dialogService)
     {
-      m_loggerFactory = loggerFactory;
+      m_logger = logger;
       m_database = database;
       m_instrumentGroupRepository = instrumentGroupRepository;
       m_selectedNode = null;
@@ -260,7 +261,8 @@ namespace TradeSharp.CoreUI.Services
       long createdCount = 0;
 
       string statusMessage = $"Importing instrument groups - \"{importSettings.Filename}\"";
-      ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+      IDisposable? loggerScope = null;
+      if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       Dictionary<string, InstrumentGroup> definedInstrumentGroups = new Dictionary<string, InstrumentGroup>();
@@ -373,18 +375,18 @@ namespace TradeSharp.CoreUI.Services
                 switch (importSettings.ReplaceBehavior)
                 {
                   case ImportReplaceBehavior.Skip:
-                    logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag}");
+                    if (Debugging.ImportExport) m_logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag}");
                     skippedCount++;
                     break;
                   case ImportReplaceBehavior.Replace:
                     //will update the name, description and tag and remove instrument associations
-                    logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
+                    if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
                     m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, new List<Guid>()));
                     replacedCount++;
                     break;
                   case ImportReplaceBehavior.Update:
                     //will update the name and description and keep all the associated instruments                  
-                    logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
+                    if (Debugging.ImportExport)  m_logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
                     m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, definedInstrumentGroup.Instruments));
                     updatedCount++;
                     break;
@@ -392,7 +394,7 @@ namespace TradeSharp.CoreUI.Services
               }
               else if (fileInstrumentGroup.Value.Ticker.Length == 0)
               {
-                logger.LogInformation($"Creating - {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
+                if (Debugging.ImportExport) m_logger.LogInformation($"Creating - {fileInstrumentGroup.Value.Name}, {fileInstrumentGroup.Value.Description}, {fileInstrumentGroup.Value.Tag}");
                 m_instrumentGroupRepository.Add(new InstrumentGroup(fileInstrumentGroup.Value.Id, fileInstrumentGroup.Value.Attributes, fileInstrumentGroup.Value.Tag, fileInstrumentGroup.Value.ParentId, fileInstrumentGroup.Value.Name, fileInstrumentGroup.Value.Description, new List<Guid>()));
                 createdCount++;
               }
@@ -409,13 +411,14 @@ namespace TradeSharp.CoreUI.Services
                 else
                 {
                   statusMessage = $"Instrument with ticker \"{fileInstrumentGroup.Value.Ticker}\" not defined, association with instrument group \"{fileInstrumentGroup.Value.Name}\" not created - define instruments first before importing instrument groups.";
-                  logger.LogError(statusMessage);
+                  if (Debugging.ImportExport) m_logger.LogError(statusMessage);
                 }
               }
           }
         }
       }
 
+      if (Debugging.ImportExport) m_logger.LogInformation($"Completed import from \"{importSettings.Filename}\" - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Completed import from \"{importSettings.Filename}\" - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
       RaiseRefreshEvent();
     }
@@ -471,7 +474,8 @@ namespace TradeSharp.CoreUI.Services
       using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         string statusMessage = $"Exporting instrument groups to \"{filename}\"";
-        ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+        IDisposable? loggerScope = null;
+        if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
         m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
         IList<Instrument> instrumentsList = m_database.GetInstruments();
 
@@ -550,7 +554,7 @@ namespace TradeSharp.CoreUI.Services
               includeTicker = true;
               if (instrumentGroupPerLine.Count < longestBranch)
               {
-                logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
+                if (Debugging.ImportExport) m_logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
                 includeTicker = false;
                 break;
               }
@@ -571,7 +575,7 @@ namespace TradeSharp.CoreUI.Services
               includeTicker = true;
               if (branchNodeCount < longestBranch)
               {
-                logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
+                if (Debugging.ImportExport) m_logger.LogError($"Ticker output are suppressed for CSV output since instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\" define instruments in a non-leaf node - rather use JSON output for this kind of configuration.");
                 includeTicker = false;
                 break;
               }
@@ -622,12 +626,13 @@ namespace TradeSharp.CoreUI.Services
             foreach (Guid instrumentId in lastInstrumentGroup.Instruments)
               if (instruments.TryGetValue(instrumentId, out Instrument? instrument))
                 file.WriteLine("{0}, {1}", instrumentGroupDefinitions, instrument.Ticker);
-              else
-                logger.LogError($"Failed to find instrument \"{instrumentId.ToString()}\" associated with instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\".");
+              else if (Debugging.ImportExport) 
+                m_logger.LogError($"Failed to find instrument \"{instrumentId.ToString()}\" associated with instrument group \"{lastInstrumentGroup.Name}, {lastInstrumentGroup.Tag}\".");
           }
         }
       }
 
+      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} groups to \"{filename}\"");
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} groups to \"{filename}\"");
     }
 
@@ -671,7 +676,8 @@ namespace TradeSharp.CoreUI.Services
       {
         JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
         string statusMessage = $"Importing instrument groups from \"{importSettings.Filename}\"";
-        ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+        IDisposable? loggerScope = null;
+        if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
         m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
         if (documentNode != null)
@@ -685,17 +691,18 @@ namespace TradeSharp.CoreUI.Services
           foreach (Instrument instrument in instruments) definedInstruments.Add(instrument.Ticker, instrument);
 
           JsonArray rootNodes = documentNode.AsArray();
-          foreach (JsonObject? node in rootNodes) if (node != null) importJsonNode(node!, importSettings.ReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, counts);
+          foreach (JsonObject? node in rootNodes) if (node != null) importJsonNode(node!, importSettings.ReplaceBehavior, definedInstrumentGroups, definedInstruments, m_logger, counts);
         }
         else
         {
           statusMessage = $"Failed to parse file \"{importSettings.Filename}\" as a JSON file.";
-          logger.LogError(statusMessage);
+          if (Debugging.ImportExport) m_logger.LogError(statusMessage);
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
           noErrors = false;
         }
       }
 
+      if (Debugging.ImportExport) m_logger.LogInformation($"Completed instument group import from \"{importSettings.Filename}\" - Skipped({counts.Skipped}), Replaced({counts.Replaced}), Updated({counts.Updated}), Created({counts.Created}).");
       if (noErrors) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed instument group import from \"{importSettings.Filename}\" - Skipped({counts.Skipped}), Replaced({counts.Replaced}), Updated({counts.Updated}), Created({counts.Created}).");
       RaiseRefreshEvent();
     }
@@ -766,7 +773,10 @@ namespace TradeSharp.CoreUI.Services
     private void exportJSON(string filename, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
     {
       int exportCount = 0;
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exporting instrument groups to \"{filename}\"");
+      string statusMessage = $"Exporting instrument groups to \"{filename}\"";
+      IDisposable? loggerScope = null;
+      if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       //determine the root node(s) based on whether we have a selected node or not
       //NOTE: For exporting the nodes we adjust the parent Id's to the root node Id which again would be adjusted to the import to the selected node Id or it would be kept the root node Id if
@@ -805,6 +815,7 @@ namespace TradeSharp.CoreUI.Services
         file.WriteLine("]");
       }
 
+      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} groups to \"{filename}\"");
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} groups to \"{filename}\"");
     }
 

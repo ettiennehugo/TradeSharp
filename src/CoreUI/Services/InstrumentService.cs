@@ -8,6 +8,7 @@ using CsvHelper;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TradeSharp.Common;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -20,8 +21,6 @@ namespace TradeSharp.CoreUI.Services
     public const string FilterTicker = "Ticker";
     public const string FilterName = "Name";
     public const string FilterDescription = "Description";
-
-    public int DefaultPageSize = 1000;
 
     // Tokens used by the import/export functionality.
     private const string extensionCSV = ".csv";
@@ -69,15 +68,15 @@ namespace TradeSharp.CoreUI.Services
 
 
     //attributes
-    private ILoggerFactory m_loggerFactory;
+    private ILogger<InstrumentService> m_logger;
     private IInstrumentRepository m_instrumentRepository;
     private IDatabase m_database;
     private Instrument? m_selectedItem;
 
     //constructors
-    public InstrumentService(ILoggerFactory loggerFactory, IDatabase database, IInstrumentRepository instrumentRepository, IDialogService dialogService): base(dialogService)
+    public InstrumentService(ILogger<InstrumentService> logger, IDatabase database, IInstrumentRepository instrumentRepository, IDialogService dialogService): base(dialogService)
     {
-      m_loggerFactory = loggerFactory;
+      m_logger = logger;
       m_instrumentRepository = instrumentRepository;
       m_database = database;
       m_selectedItem = null;
@@ -206,7 +205,8 @@ namespace TradeSharp.CoreUI.Services
       long createdCount = 0;
 
       string statusMessage = $"Importing instruments from \"{importSettings.Filename}\"";
-      ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+      IDisposable? loggerScope = null;
+      if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       bool noErrors = true;
@@ -259,7 +259,7 @@ namespace TradeSharp.CoreUI.Services
             }
             else
             {
-              logger.LogWarning($"Failed to find exchange \"{exchangeId}\" for instrument \"{ticker}\", defaulting to global exchange.");
+              if (Debugging.ImportExport) m_logger.LogWarning($"Failed to find exchange \"{exchangeId}\" for instrument \"{ticker}\", defaulting to global exchange.");
               if (globalExchange != null)
               {
                 exchangeId = globalExchange!.Id;
@@ -283,12 +283,12 @@ namespace TradeSharp.CoreUI.Services
                   if (definedExchanges.TryGetValue(secondaryExchangeId.Value.ToString(), out Exchange? definedExchange))
                     secondaryExchanges.Add(secondaryExchangeId.Value);
                   else
-                    logger.LogWarning($"No secondary Exchange with Guid \"{secondaryExchangeId.ToString()}\" at index {index} for instrument \"{ticker}\" found, discarding it.");
+                    if (Debugging.ImportExport) m_logger.LogWarning($"No secondary Exchange with Guid \"{secondaryExchangeId.ToString()}\" at index {index} for instrument \"{ticker}\" found, discarding it.");
                 }
                 else
                 {
                   statusMessage = $"Failed to parse secondary Exchange Guid at index {index} for instrument \"{ticker}\".";
-                  logger.LogError(statusMessage);
+                  if (Debugging.ImportExport) m_logger.LogError(statusMessage);
                 }
                 index++;
               }
@@ -299,18 +299,18 @@ namespace TradeSharp.CoreUI.Services
               switch (importSettings.ReplaceBehavior)
               {
                 case ImportReplaceBehavior.Skip:
-                  logger.LogWarning($"Skipping - {name}, {description}, {tag}");
+                  if (Debugging.ImportExport) m_logger.LogWarning($"Skipping - {name}, {description}, {tag}");
                   skippedCount++;
                   break;
                 case ImportReplaceBehavior.Replace:
                   //replacing name, description, tag and all defined instruments
-                  logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
+                  if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
                   m_instrumentRepository.Update(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId!.Value, secondaryExchanges));
                   replacedCount++;
                   break;
                 case ImportReplaceBehavior.Update:
                   //updating name, description, tag and merge in defined instruments
-                  logger.LogInformation($"Updating - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
+                  if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
                   m_instrumentRepository.Update(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId!.Value, secondaryExchanges));
                   updatedCount++;
                   break;
@@ -326,12 +326,13 @@ namespace TradeSharp.CoreUI.Services
         else
         {
           statusMessage = $"Failed to parse file \"{importSettings.Filename}\" as a JSON file.";
-          logger.LogError(statusMessage);
+          if (Debugging.ImportExport) m_logger.LogError(statusMessage);
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
           noErrors = false;
         }
       }
 
+      if (Debugging.ImportExport) m_logger.LogInformation($"Import success: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\"");
       if (noErrors) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Import success: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\"");
       RaiseRefreshEvent();  //notify view model of changes
     }
@@ -349,7 +350,8 @@ namespace TradeSharp.CoreUI.Services
       long replacedCount = 0;
       long createdCount = 0;
       string statusMessage = $"Importing instruments from \"{importSettings.Filename}\"";
-      ILogger logger = m_loggerFactory.CreateLogger(statusMessage);
+      IDisposable? loggerScope = null;
+      if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
@@ -464,7 +466,7 @@ namespace TradeSharp.CoreUI.Services
             }
             else
             {
-              logger.LogWarning($"Failed to find exchange \"{exchange}\" for instrument \"{ticker}\", defaulting to global exchange.");
+              if (Debugging.ImportExport) m_logger.LogWarning($"Failed to find exchange \"{exchange}\" for instrument \"{ticker}\", defaulting to global exchange.");
               if (globalExchange != null)
               {
                 exchangeId = globalExchange!.Id;
@@ -485,17 +487,17 @@ namespace TradeSharp.CoreUI.Services
               switch (importSettings.ReplaceBehavior)
               {
                 case ImportReplaceBehavior.Skip:
-                  logger.LogWarning($"Skipping - {fileInstrument.Ticker}");
+                  if (Debugging.ImportExport) m_logger.LogWarning($"Skipping - {fileInstrument.Ticker}");
                   skippedCount++;
                   break;
                 case ImportReplaceBehavior.Replace:
-                  logger.LogInformation($"Replacing - {fileInstrument.Ticker}");
+                  if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {fileInstrument.Ticker}");
                   fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
                   m_instrumentRepository.Update(fileInstrument);
                   replacedCount++;
                   break;
                 case ImportReplaceBehavior.Update:
-                  logger.LogInformation($"Updating - {fileInstrument.Ticker}");
+                  if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {fileInstrument.Ticker}");
                   fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
                   fileInstrument.SecondaryExchangeIds = definedInstrument.SecondaryExchangeIds;
                   m_instrumentRepository.Update(fileInstrument);
@@ -505,7 +507,7 @@ namespace TradeSharp.CoreUI.Services
             }
             else
             {
-              logger.LogInformation($"Creating - {fileInstrument.Ticker}");
+              if (Debugging.ImportExport) m_logger.LogInformation($"Creating - {fileInstrument.Ticker}");
               m_instrumentRepository.Add(fileInstrument);
               createdCount++;
             }
@@ -515,6 +517,7 @@ namespace TradeSharp.CoreUI.Services
         }
       }
 
+      if (Debugging.ImportExport) m_logger.LogInformation($"Import from \"{importSettings.Filename}\" complete - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Import from \"{importSettings.Filename}\" complete - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
       RaiseRefreshEvent();  //notify view model of changes
     }

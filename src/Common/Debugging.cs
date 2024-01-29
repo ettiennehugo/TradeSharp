@@ -6,8 +6,13 @@
   public class Debugging
   {
     //constants
+    // General debugging switches
     public static bool DatabaseCalls = false;   //log database calls, e.g. SQL queries
-    public static bool InstrumentBarDataLoadAsync = true;   //debugging for instrument bar data LoadAsync
+    public static bool ImportExport = false;    //log debug messages around import/export functionality
+
+    // Instrument Bar Data debugging switches
+    public static bool InstrumentBarDataLoadAsync = false;   //debugging for instrument bar data LoadAsync
+    public static bool InstrumentBarDataCopy = false;   //debugging for instrument bar data copy functionality
     public static bool InstrumentBarDataFilterParse = false;   //debugging for instrument bar data filter start/end date parsing
 
     //enums
