@@ -176,7 +176,7 @@ namespace TradeSharp.CoreUI.Services
           toRepository.Resolution = Resolution.Hour;
 
           fromBarData = fromRepository.GetItems();
-          if (Debugging.InstrumentBarDataCopy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
+          if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Hour != bar.DateTime.Hour)
             {
@@ -195,14 +195,14 @@ namespace TradeSharp.CoreUI.Services
           if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
           toRepository.Update(toBarData);
 
-          if (Debugging.InstrumentBarDataCopy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           break;
         case Resolution.Hour:
           toRepository.Resolution = Resolution.Day;
 
           fromBarData = fromRepository.GetItems();
-          if (Debugging.InstrumentBarDataCopy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
+          if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Day != bar.DateTime.Day)
             {
@@ -221,14 +221,14 @@ namespace TradeSharp.CoreUI.Services
           if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
           toRepository.Update(toBarData);
 
-          if (Debugging.InstrumentBarDataCopy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           break;
         case Resolution.Day:
           toRepository.Resolution = Resolution.Week;
 
           fromBarData = fromRepository.GetItems();
-          if (Debugging.InstrumentBarDataCopy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
+          if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
             //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
             //NOTE: * This function only works for Gregorian dates which is fine, CultureInfo and ISOWeek returns anything and everything
@@ -252,14 +252,14 @@ namespace TradeSharp.CoreUI.Services
           if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
           toRepository.Update(toBarData);
 
-          if (Debugging.InstrumentBarDataCopy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           break;
         case Resolution.Week:
           toRepository.Resolution = Resolution.Month;
 
           fromBarData = fromRepository.GetItems();
-          if (Debugging.InstrumentBarDataCopy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
+          if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Month != bar.DateTime.Month)
             {
@@ -278,7 +278,7 @@ namespace TradeSharp.CoreUI.Services
           if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
           toRepository.Update(toBarData);
 
-          if (Debugging.InstrumentBarDataCopy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           break;
         case Resolution.Month:
