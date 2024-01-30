@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 
@@ -28,6 +27,7 @@ namespace TradeSharp.CoreUI.ViewModels
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
+      GlobalExchange = GetItem(Exchange.InternationalId)!;
     }
 
     //finalizers
@@ -37,7 +37,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-
+    public Exchange GlobalExchange { get; }
 
     //methods
     public override async void OnAdd()
@@ -59,6 +59,11 @@ namespace TradeSharp.CoreUI.ViewModels
           m_itemsService.Update(updatedExchange);
         //TBD: Might have to update the item in the items list to make it reflect changes.
       }
+    }
+
+    public Exchange? GetItem(Guid id)
+    {
+      return Items.FirstOrDefault(x => x.Id == id);
     }
   }
 }

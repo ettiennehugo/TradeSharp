@@ -112,7 +112,6 @@ namespace TradeSharp.WinCoreUI.ViewModels
       });
     }
 
-
     /// <summary>
     /// Load the specified number of items from the service.
     /// </summary>

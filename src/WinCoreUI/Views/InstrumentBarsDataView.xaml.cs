@@ -40,11 +40,15 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
+    private IConfigurationService m_configurationService;
+    private IExchangeViewModel m_exchangeViewModel;
     private ILogger<InstrumentBarDataView> m_logger;
 
     //constructors
     public InstrumentBarsDataView()
     {
+      m_configurationService = (IConfigurationService)IApplication.Current.Services.GetService(typeof(IConfigurationService));
+      m_exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
       ViewModel = (WinInstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
       ViewModel.UIDispatcherQueue = DispatcherQueue.GetForCurrentThread();
       ViewModel.Resolution = Resolution;
@@ -153,32 +157,33 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void refreshFilterControls()
     {
+      string timeZoneValue = m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone].ToString();
       switch (Resolution)
       {
         case Resolution.Level1:
           throw new ArgumentException("Level1 resolution not supported by bar data view, use view for level1 data.");
         case Resolution.Minute:
-          FilterStartTooltip = "Filter start date/time";
-          FilterEndTooltip = "Filter end date/time";
+          FilterStartTooltip = $"Filter start date/time ({timeZoneValue} time-zone)";
+          FilterEndTooltip = $"Filter end date/time ({timeZoneValue} time-zone)";
           m_startDateTime.PlaceholderText = "yyyy/mm/dd hh:mm";
           m_endDateTime.PlaceholderText = "yyyy/mm/dd hh:mm";
           break;
         case Resolution.Hour:
-          FilterStartTooltip = "Filter start date/hour";
-          FilterEndTooltip = "Filter end date/hour";
+          FilterStartTooltip = $"Filter start date/hour ({timeZoneValue} time-zone)";
+          FilterEndTooltip = $"Filter end date/hour ({timeZoneValue} time-zone)";
           m_startDateTime.PlaceholderText = "yyyy/mm/dd hh:00";
           m_endDateTime.PlaceholderText = "yyyy/mm/dd hh:00";
           break;
         case Resolution.Day:
         case Resolution.Week:
-          FilterStartTooltip = "Filter start date";
-          FilterEndTooltip = "Filter end date";
+          FilterStartTooltip = $"Filter start date ({timeZoneValue} time-zone)";
+          FilterEndTooltip = $"Filter end date ({timeZoneValue} time-zone)";
           m_startDateTime.PlaceholderText = "yyyy/mm/dd";
           m_endDateTime.PlaceholderText = "yyyy/mm/dd";
           break;
         case Resolution.Month:
-          FilterStartTooltip = "Filter start date";
-          FilterEndTooltip = "Filter end date";
+          FilterStartTooltip = $"Filter start date ({timeZoneValue} time-zone)";
+          FilterEndTooltip = $"Filter end date ({timeZoneValue} time-zone)";
           m_startDateTime.PlaceholderText = "yyyy/mm/01";
           m_endDateTime.PlaceholderText = "yyyy/mm/01";
           break;
@@ -233,6 +238,24 @@ namespace TradeSharp.WinCoreUI.Views
       ViewModel.OnRefreshAsync();
     }
 
+    private static DateTime convertDateTimeBasedOnConfiguration(DateTime utcDateTime, IConfigurationService.TimeZone timeZoneToUse, Exchange? exchange)
+    {
+      //NOTE: Database stores the data in UTC, so we need to convert the date/time to the appropriate time zone. This is the opposite of the database
+      //      which converts the date/time to UTC before storing it.
+      switch (timeZoneToUse)
+      {
+        case IConfigurationService.TimeZone.UTC:
+          return utcDateTime;
+        case IConfigurationService.TimeZone.Local:
+          return utcDateTime.Subtract(TimeZoneInfo.Local.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
+        case IConfigurationService.TimeZone.Exchange:
+          if (exchange == null) throw new ArgumentException("Exchange must be specified when using Exchange time zone.");
+          return utcDateTime.Subtract(exchange.TimeZone.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
+      }
+
+      return utcDateTime; //default to UTC
+    }
+
     private void refreshFilter()
     {
       //set the view model filter
@@ -240,7 +263,9 @@ namespace TradeSharp.WinCoreUI.Views
       if (DateTime.TryParse(m_startDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime startDateTime))
       {
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter start date/time - {startDateTime}");
-        ViewModel.FromDateTime = startDateTime;
+        Exchange exchange = m_exchangeViewModel.GetItem(ViewModel.Instrument!.PrimaryExchangeId) ?? m_exchangeViewModel.GlobalExchange;
+        startDateTime = convertDateTimeBasedOnConfiguration(startDateTime, (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone], exchange);
+        ViewModel.FromDateTime = startDateTime;        
       }
       else
         ViewModel.FromDateTime = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
@@ -249,6 +274,8 @@ namespace TradeSharp.WinCoreUI.Views
       if (DateTime.TryParse(m_endDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime endDateTime))
       {
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter end date/time - {endDateTime}");
+        Exchange exchange = m_exchangeViewModel.GetItem(ViewModel.Instrument!.PrimaryExchangeId) ?? m_exchangeViewModel.GlobalExchange;
+        endDateTime = convertDateTimeBasedOnConfiguration(endDateTime, (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone], exchange);
         ViewModel.ToDateTime = endDateTime;
       }
       else

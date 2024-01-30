@@ -11,8 +11,10 @@
   <ItemGroup>
     <None Remove="Styles\ColorStyles.xaml" />
     <None Remove="Templates\ControlTemplates.xaml" />
+    <None Remove="Views\BrokersView.xaml" />
     <None Remove="Views\CountriesView.xaml" />
     <None Remove="Views\CountrySelectorView.xaml" />
+    <None Remove="Views\DataProvidersView.xaml" />
     <None Remove="Views\ExchangesView.xaml" />
     <None Remove="Views\ExchangeView.xaml" />
     <None Remove="Views\HolidaysView.xaml" />
@@ -98,6 +100,16 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Remove="Views\InstrumentsView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\BrokersView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\DataProvidersView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\InstrumentBarDataView.xaml">

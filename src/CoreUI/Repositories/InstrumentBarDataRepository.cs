@@ -82,14 +82,14 @@ namespace TradeSharp.CoreUI.Repositories
     public bool Add(IBarData item)
     {
       throwIfNotKeyed();
-      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume); //TODO: Update count.
+      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume);
       return true; 
     }
 
     public bool Update(IBarData item)
     {
       throwIfNotKeyed();
-      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume); //TODO: Update count.return
+      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume);
       return true;
     }
 
@@ -97,7 +97,7 @@ namespace TradeSharp.CoreUI.Repositories
     {
       throwIfNotKeyed();
       m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, items);
-      return items.Count; //TODO: Update count.
+      return items.Count;
     }
 
     public int Delete()
@@ -121,7 +121,7 @@ namespace TradeSharp.CoreUI.Repositories
     public bool Delete(IBarData item)
     {
       throwIfNotKeyed();
-      return m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime) != 0; //TODO: Update count.
+      return m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime) != 0;
     }
 
     //properties
