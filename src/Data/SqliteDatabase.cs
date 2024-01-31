@@ -1738,11 +1738,6 @@ namespace TradeSharp.Data
       return result;
     }
 
-    private static int compareBarData(Tuple<DateTime, double, double, double, double, long, bool> x, Tuple<DateTime, double, double, double, double, long, bool> y)
-    {
-      return x.Item1.CompareTo(y.Item1);
-    }
-
     private static DateTime convertDateTimeBasedOnConfiguration(DateTime utcDateTime, IConfigurationService.TimeZone timeZoneToUse, Exchange? exchange)
     {
       switch (timeZoneToUse)
