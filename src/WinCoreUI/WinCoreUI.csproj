@@ -26,6 +26,9 @@
     <None Remove="Views\InstrumentGroupView.xaml" />
     <None Remove="Views\InstrumentsView.xaml" />
     <None Remove="Views\InstrumentView.xaml" />
+    <None Remove="Views\MassDownloadInstrumentDataView.xaml" />
+    <None Remove="Views\MassExportInstrumentDataView.xaml" />
+    <None Remove="Views\MassImportInstrumentDataView.xaml" />
     <None Remove="Views\SessionsView.xaml" />
     <None Remove="Views\SessionView.xaml" />
   </ItemGroup>
@@ -100,6 +103,21 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Remove="Views\InstrumentsView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\MassDownloadInstrumentDataView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\MassImportInstrumentDataView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\MassExportInstrumentDataView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\BrokersView.xaml">

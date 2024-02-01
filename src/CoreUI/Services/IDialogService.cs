@@ -1,10 +1,20 @@
 ﻿using TradeSharp.Common;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.ComponentModel;
 
 namespace TradeSharp.CoreUI.Services
 {
   //types
+  /// <summary>
+  /// Supported import/export file types.
+  /// </summary>
+  public enum ImportExportFileTypes
+  {
+    CSV,
+    JSON,
+  }  
+  
   /// <summary>
   /// Behavior when importing instrument groups or instruments when an item already exists in the database.
   /// </summary>
@@ -40,6 +50,57 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] ImportReplaceBehavior m_replaceBehavior;
     [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
     [ObservableProperty] string m_filename;
+  }
+
+  /// <summary>
+  /// Structure to use for mass import/export of instrument data.
+  /// </summary>
+  public enum MassImportExportStructure
+  {
+    [Description("Directories and files")]
+    DiretoriesAndFiles,   //export data into directories according to timeframe and then individual files for the stock data
+    [Description("Files only")]
+    FilesOnly,            //export data into individual files for the data with the format <instrument>.<resolution>.csv/json
+  }
+
+  /// <summary>
+  /// Settings used for mass import of instrument data.
+  /// </summary>
+  public partial class MassImportSettings: ObservableObject
+  {
+    public MassImportSettings()
+    {
+      ReplaceBehavior = ImportReplaceBehavior.Update;
+      DateTimeTimeZone = ImportDataDateTimeTimeZone.UTC;
+      Directory = "";
+      FileType = ImportExportFileTypes.CSV;
+      ThreadCount = 1;    //clip this the Environment.ProcessorCount as max since it would not be useful to have more threads than processors
+    }
+
+    [ObservableProperty] ImportReplaceBehavior m_replaceBehavior;
+    [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] string m_directory;
+    [ObservableProperty] ImportExportFileTypes m_fileType;
+    [ObservableProperty] int m_threadCount;
+  }
+
+  /// <summary>
+  /// Settings used for mass export of instrument data.
+  /// </summary>
+  public partial class MassExportSettings: ObservableObject
+  {
+    public MassExportSettings()
+    {
+      DateTimeTimeZone = ImportDataDateTimeTimeZone.UTC;
+      Directory = "";
+      FileType = ImportExportFileTypes.CSV;
+      ThreadCount = 1;    //clip this the Environment.ProcessorCount as max since it would not be useful to have more threads than processors
+    }
+
+    [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] string m_directory;
+    [ObservableProperty] ImportExportFileTypes m_fileType;
+    [ObservableProperty] int m_threadCount;
   }
 
   /// <summary>
@@ -109,5 +170,9 @@ namespace TradeSharp.CoreUI.Services
     Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData);
     Task<ImportSettings?> ShowImportBarDataAsync();
     Task<string?> ShowExportBarDataAsync();
+
+    Task ShowMassDataImportAsync();
+    Task ShowMassDataExportAsync();
+    Task ShowMassDataDownloadAsync();
   }
 }

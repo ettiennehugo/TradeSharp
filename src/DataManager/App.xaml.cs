@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.CoreUI.Repositories;
+using TradeSharp.WinCoreUI.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -89,6 +90,8 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<IHolidayViewModel, HolidayViewModel>();
           services.AddSingleton<IExchangeViewModel, ExchangeViewModel>();
           services.AddSingleton<ISessionViewModel, SessionViewModel>();
+          services.AddSingleton<IMassImportInstrumentDataService, MassImportInstrumentDataService>();
+          services.AddSingleton<IMassExportInstrumentDataService, MassExportInstrumentDataService>();
           services.AddSingleton<IInstrumentViewModel, InstrumentViewModel>();
           services.AddSingleton<IInstrumentGroupViewModel, InstrumentGroupViewModel>();
 

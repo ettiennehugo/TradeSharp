@@ -477,7 +477,7 @@ namespace TradeSharp.WinDataManager.Services
       savePicker.DefaultFileExtension = ".csv";
       savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
       savePicker.FileTypeChoices.Add("CSV", new List<string>() { ".csv" }); //default to CSV as it is more compact and faster to write
-      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" }); 
+      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" });
 
       var hwnd = GetActiveWindow();
       InitializeWithWindow.Initialize(savePicker, hwnd);
@@ -488,6 +488,32 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
+    public Task ShowMassDataImportAsync()
+    {
+      Window window = new Window();
+      window.ExtendsContentIntoTitleBar = true;
+      window.Content = new WinCoreUI.Views.MassImportInstrumentDataView();
+      window.Activate();
+      return Task.CompletedTask;
+    }
+
+    public Task ShowMassDataExportAsync()
+    {
+      Window window = new Window();
+      window.ExtendsContentIntoTitleBar = true;
+      window.Content = new WinCoreUI.Views.MassExportInstrumentDataView();
+      window.Activate();
+      return Task.CompletedTask;
+    }
+
+    public Task ShowMassDataDownloadAsync()
+    {
+      Window window = new Window();
+      window.ExtendsContentIntoTitleBar = true;
+      window.Content = new WinCoreUI.Views.MassDownloadInstrumentDataView();
+      window.Activate();
+      return Task.CompletedTask;
+    }
 
     //properties
     public FontIcon StatusBarIcon { get; set; }

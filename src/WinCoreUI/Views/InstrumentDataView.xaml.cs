@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -6,9 +5,8 @@ using TradeSharp.Common;
 using TradeSharp.CoreUI.ViewModels;
 using System.Collections.ObjectModel;
 using TradeSharp.Data;
-using TradeSharp.WinCoreUI.Common;
 using TradeSharp.CoreUI.Common;
-using Microsoft.Extensions.DependencyInjection;
+using TradeSharp.CoreUI.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -37,12 +35,14 @@ namespace TradeSharp.WinCoreUI.Views
 
     //attributes
     private IConfigurationService m_configurationService;
+    private IDialogService m_dialogService;
 
     //constructors
     public InstrumentDataView()
     {
       m_configurationService = (IConfigurationService)IApplication.Current.Services.GetService(typeof(IConfigurationService));
       InstrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
+      m_dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       DataProviders = new ObservableCollection<string>();
       Instruments = new ObservableCollection<Instrument>(InstrumentViewModel.Items);
       this.InitializeComponent();
@@ -124,6 +124,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_massImport.IsEnabled = true;
       m_massExport.IsEnabled = true;
+      m_massDownload.IsEnabled = true;
       m_minuteBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
       m_hoursBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
       m_daysBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
@@ -140,14 +141,19 @@ namespace TradeSharp.WinCoreUI.Views
       m_monthsBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
     }
 
-    private void m_massImport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private async void m_massImport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      throw new NotImplementedException();    //TODO
+      await m_dialogService.ShowMassDataImportAsync();
     }
 
-    private void m_massExport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private async void m_massExport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      throw new NotImplementedException();    //TODO
+      await m_dialogService.ShowMassDataExportAsync();
+    }
+
+    private async void m_massDownload_Click(object sender, RoutedEventArgs e)
+    {
+      await m_dialogService.ShowMassDataDownloadAsync();
     }
   }
 }

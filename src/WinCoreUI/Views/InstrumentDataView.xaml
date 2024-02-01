@@ -32,6 +32,12 @@
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE803;"/>
           </AppBarButton.Icon>
         </AppBarButton>
+        <AppBarSeparator/>
+        <AppBarButton x:Name="m_massDownload" Click="m_massDownload_Click" IsEnabled="False" ToolTipService.ToolTip="Mass download bar data" IsCompact="True">
+          <AppBarButton.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE753;"/>
+          </AppBarButton.Icon>
+        </AppBarButton>
       </CommandBar>
     </StackPanel>
     <TextBlock x:Name="m_dataProvidersHeader" Text="Data Providers" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="1" Grid.Column="0"/>
