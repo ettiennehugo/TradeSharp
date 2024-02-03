@@ -490,9 +490,12 @@ namespace TradeSharp.WinDataManager.Services
 
     public Task ShowMassDataImportAsync()
     {
+      //https://learn.microsoft.com/en-us/windows/apps/get-started/samples#windows-app-sdk--winui-3-samples
       Window window = new Window();
-      window.ExtendsContentIntoTitleBar = true;
-      window.Content = new WinCoreUI.Views.MassImportInstrumentDataView();
+      window.Title = "Mass Import of Instrument Data";
+      WinCoreUI.Views.MassImportInstrumentDataView importView = new WinCoreUI.Views.MassImportInstrumentDataView();
+      importView.ParentWindow = window;
+      window.Content = importView;
       window.Activate();
       return Task.CompletedTask;
     }
@@ -500,18 +503,24 @@ namespace TradeSharp.WinDataManager.Services
     public Task ShowMassDataExportAsync()
     {
       Window window = new Window();
-      window.ExtendsContentIntoTitleBar = true;
-      window.Content = new WinCoreUI.Views.MassExportInstrumentDataView();
-      window.Activate();
+      window.Title = "Mass Export of Instrument Data";
+      WinCoreUI.Views.MassExportInstrumentDataView exportView = new WinCoreUI.Views.MassExportInstrumentDataView();
+      exportView.ParentWindow = window;
+      window.Content = exportView;
+      
+
+      window.Activate();    //TODO: This window does not size properly.
       return Task.CompletedTask;
     }
 
     public Task ShowMassDataDownloadAsync()
     {
       Window window = new Window();
-      window.ExtendsContentIntoTitleBar = true;
-      window.Content = new WinCoreUI.Views.MassDownloadInstrumentDataView();
-      window.Activate();
+      window.Title = "Mass Download of Instrument Data";
+      WinCoreUI.Views.MassDownloadInstrumentDataView downloadView = new WinCoreUI.Views.MassDownloadInstrumentDataView();
+      downloadView.ParentWindow = window;
+      window.Content = downloadView;
+      window.Activate();    //TODO: This window does not size properly.
       return Task.CompletedTask;
     }
 

@@ -70,16 +70,22 @@ namespace TradeSharp.CoreUI.Services
   {
     public MassImportSettings()
     {
+      FromDateTime = DateTime.Now;
+      ToDateTime = DateTime.Now;
       ReplaceBehavior = ImportReplaceBehavior.Update;
       DateTimeTimeZone = ImportDataDateTimeTimeZone.UTC;
       Directory = "";
+      ImportStructure = MassImportExportStructure.DiretoriesAndFiles;
       FileType = ImportExportFileTypes.CSV;
       ThreadCount = 1;    //clip this the Environment.ProcessorCount as max since it would not be useful to have more threads than processors
     }
 
+    [ObservableProperty] DateTime m_fromDateTime;
+    [ObservableProperty] DateTime m_toDateTime;
     [ObservableProperty] ImportReplaceBehavior m_replaceBehavior;
     [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
     [ObservableProperty] string m_directory;
+    [ObservableProperty] MassImportExportStructure m_importStructure;
     [ObservableProperty] ImportExportFileTypes m_fileType;
     [ObservableProperty] int m_threadCount;
   }
@@ -91,15 +97,54 @@ namespace TradeSharp.CoreUI.Services
   {
     public MassExportSettings()
     {
+      FromDateTime = DateTime.Now;
+      ToDateTime = DateTime.Now;
       DateTimeTimeZone = ImportDataDateTimeTimeZone.UTC;
       Directory = "";
+      ExportStructure = MassImportExportStructure.DiretoriesAndFiles;
       FileType = ImportExportFileTypes.CSV;
       ThreadCount = 1;    //clip this the Environment.ProcessorCount as max since it would not be useful to have more threads than processors
     }
 
+    [ObservableProperty] DateTime m_fromDateTime;
+    [ObservableProperty] DateTime m_toDateTime;
     [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
     [ObservableProperty] string m_directory;
+    [ObservableProperty] MassImportExportStructure m_exportStructure;
     [ObservableProperty] ImportExportFileTypes m_fileType;
+    [ObservableProperty] int m_threadCount;
+  }
+
+  /// <summary>
+  /// Settings used for mass download of instrument data.
+  /// </summary>
+  public partial class MassDownloadSettings: ObservableObject
+  {
+    public MassDownloadSettings()
+    {
+      FromDateTime = DateTime.Now;
+      ToDateTime = DateTime.Now;
+      DateTimeTimeZone = ImportDataDateTimeTimeZone.UTC;
+      ResolutionMinute = true;
+      ResolutionHour = true;
+      ResolutionDay = true;
+      ResolutionWeek = true;
+      CopyWeekFromDay = true;
+      ResolutionMonth = true;
+      CopyMonthFromDayWeek = true;
+      ThreadCount = 1;    //clip this the Environment.ProcessorCount as max since it would not be useful to have more threads than processors
+    }
+
+    [ObservableProperty] DateTime m_fromDateTime;
+    [ObservableProperty] DateTime m_toDateTime;
+    [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] bool m_resolutionMinute;
+    [ObservableProperty] bool m_resolutionHour;
+    [ObservableProperty] bool m_resolutionDay;
+    [ObservableProperty] bool m_resolutionWeek;
+    [ObservableProperty] bool m_copyWeekFromDay;
+    [ObservableProperty] bool m_resolutionMonth;
+    [ObservableProperty] bool m_copyMonthFromDayWeek;
     [ObservableProperty] int m_threadCount;
   }
 

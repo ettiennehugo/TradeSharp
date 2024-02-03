@@ -43,8 +43,8 @@ namespace TradeSharp.WinCoreUI.ViewModels
       m_offsetIndex = 0;
       HasMoreItems = true;
       IsLoading = false;
-      m_oldFromDateTime = s_defaultStartDateTime;
-      m_oldToDateTime = s_defaultEndDateTime;
+      m_oldFromDateTime = Constants.DefaultMinimumDateTime;
+      m_oldToDateTime = Constants.DefaultMaximumDateTime;
       UIDispatcherQueue = null;
     }
 

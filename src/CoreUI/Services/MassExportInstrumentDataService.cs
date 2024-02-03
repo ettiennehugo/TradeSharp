@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TradeSharp.CoreUI.Services;
 
-namespace TradeSharp.WinCoreUI.Services
+namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
   /// Windows implementation of the mass export of instrument data - use as singleton.

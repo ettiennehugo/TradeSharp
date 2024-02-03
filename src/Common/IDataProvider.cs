@@ -32,6 +32,11 @@ namespace TradeSharp.Common
     string Name { get; set; }
     IPluginConfigurationProfile ConfigurationProfile { get; set; }
 
+
+    //TODO:
+    // * Add get-property to return the maximum number of connections allowed, this will be used in the download dialog to control the maximum number of threads to use for the download.
+
+
     //methods
     
 

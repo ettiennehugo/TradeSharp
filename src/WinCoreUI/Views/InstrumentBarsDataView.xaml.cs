@@ -231,8 +231,8 @@ namespace TradeSharp.WinCoreUI.Views
       m_endDateTime.ClearValue(TextBox.TextProperty);
 
       //reset the view model filter
-      ViewModel.FromDateTime = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
-      ViewModel.ToDateTime = WinInstrumentBarDataViewModel.s_defaultEndDateTime;
+      ViewModel.FromDateTime = Constants.DefaultMinimumDateTime;
+      ViewModel.ToDateTime = Constants.DefaultMaximumDateTime;
 
       //restart load of the items using the new filter conditions
       ViewModel.OnRefreshAsync();
@@ -265,10 +265,10 @@ namespace TradeSharp.WinCoreUI.Views
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter start date/time - {startDateTime}");
         Exchange exchange = m_exchangeViewModel.GetItem(ViewModel.Instrument!.PrimaryExchangeId) ?? m_exchangeViewModel.GlobalExchange;
         startDateTime = convertDateTimeBasedOnConfiguration(startDateTime, (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone], exchange);
-        ViewModel.FromDateTime = startDateTime;        
+        ViewModel.FromDateTime = startDateTime;
       }
       else
-        ViewModel.FromDateTime = WinInstrumentBarDataViewModel.s_defaultStartDateTime;
+        ViewModel.FromDateTime = Constants.DefaultMinimumDateTime;
 
       //NOTE: Date/time must be parsed as a UTC date/time since that is what is stored in the database - otherwise results will be wrong.
       if (DateTime.TryParse(m_endDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime endDateTime))
@@ -279,7 +279,7 @@ namespace TradeSharp.WinCoreUI.Views
         ViewModel.ToDateTime = endDateTime;
       }
       else
-        ViewModel.ToDateTime = WinInstrumentBarDataViewModel.s_defaultEndDateTime;
+        ViewModel.ToDateTime = Constants.DefaultMaximumDateTime;
 
       //restart load of the items using the new filter conditions
       ViewModel.OnRefreshAsync();
