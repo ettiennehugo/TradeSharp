@@ -14,6 +14,7 @@ using Windows.Storage;
 using Microsoft.UI.Xaml;
 using System.Collections.Generic;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.WinCoreUI.Views;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -488,39 +489,43 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public Task ShowMassDataImportAsync()
+    public Task ShowMassDataImportAsync(string dataProvider)
     {
       //https://learn.microsoft.com/en-us/windows/apps/get-started/samples#windows-app-sdk--winui-3-samples
       Window window = new Window();
       window.Title = "Mass Import of Instrument Data";
       WinCoreUI.Views.MassImportInstrumentDataView importView = new WinCoreUI.Views.MassImportInstrumentDataView();
-      importView.ParentWindow = window;
+      importView.ParentWindow = window;   //set so view can close the window
+      importView.DataProvider = dataProvider;
       window.Content = importView;
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 850));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       window.Activate();
       return Task.CompletedTask;
     }
 
-    public Task ShowMassDataExportAsync()
+    public Task ShowMassDataExportAsync(string dataProvider)
     {
       Window window = new Window();
       window.Title = "Mass Export of Instrument Data";
       WinCoreUI.Views.MassExportInstrumentDataView exportView = new WinCoreUI.Views.MassExportInstrumentDataView();
-      exportView.ParentWindow = window;
+      exportView.ParentWindow = window;   //set so view can close the window
+      exportView.DataProvider = dataProvider;
       window.Content = exportView;
-      
-
-      window.Activate();    //TODO: This window does not size properly.
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 850));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      window.Activate();
       return Task.CompletedTask;
     }
 
-    public Task ShowMassDataDownloadAsync()
+    public Task ShowMassDataDownloadAsync(string dataProvider)
     {
       Window window = new Window();
       window.Title = "Mass Download of Instrument Data";
       WinCoreUI.Views.MassDownloadInstrumentDataView downloadView = new WinCoreUI.Views.MassDownloadInstrumentDataView();
-      downloadView.ParentWindow = window;
+      downloadView.ParentWindow = window;   //set so view can close the window
+      downloadView.DataProvider = dataProvider;
       window.Content = downloadView;
-      window.Activate();    //TODO: This window does not size properly.
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 660));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      window.Activate();
       return Task.CompletedTask;
     }
 

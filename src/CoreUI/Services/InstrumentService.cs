@@ -174,6 +174,16 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentRepository.GetCount(instrumentType, tickerFilter, nameFilter, descriptionFilter);
     }
 
+    public Instrument? GetItem(Guid id)
+    {
+      return m_instrumentRepository.GetItem(id);
+    }
+    
+    public Instrument? GetItem(string ticker)
+    {
+      return m_instrumentRepository.GetItem(ticker);
+    }
+
     public IList<Instrument> GetItems(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
     {
       return m_instrumentRepository.GetItems(tickerFilter, nameFilter, descriptionFilter, offset, count);

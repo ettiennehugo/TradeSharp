@@ -36,7 +36,6 @@ namespace TradeSharp.WinCoreUI.Views
       m_cancellationToken = new CancellationToken();
       m_massDownloadInstrumentDataService = (IMassDownloadInstrumentDataService)IApplication.Current.Services.GetService(typeof(IMassDownloadInstrumentDataService));
       this.InitializeComponent();
-      updateCopyCheckBoxEnabled();
     }
 
     //finalizers
@@ -51,12 +50,12 @@ namespace TradeSharp.WinCoreUI.Views
     public MassDownloadSettings Settings { get; internal set; }
     public int ThreadCountMax { get => Environment.ProcessorCount; }
     public Window ParentWindow { get; set; }
+    public string DataProvider { get; set; }
 
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportDataDateTimeTimeZone));
-      ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32((int)ActualWidth, (int)ActualHeight));
     }
 
     private bool enableDownloadButton()
@@ -67,7 +66,16 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_downloadBtn_Click(object sender, RoutedEventArgs e)
     {
-      throw new NotImplementedException();
+      
+      //TODO: Need to look up a data provider once the data provider service/view model is available.  
+
+      //IDataProviderService
+      //m_massDownloadInstrumentDataService.DataProvider = getDataProvider(DataProvider);
+
+
+      m_massDownloadInstrumentDataService.Settings = Settings;
+      m_massDownloadInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass download service - this can be done as an improvement when we have a progress dialog working.
+      m_massDownloadInstrumentDataService.Start(m_cancellationToken);   //TODO: Currently we do not support cancellation.
     }
 
     private void m_cancelBtn_Click(object sender, RoutedEventArgs e)
@@ -87,22 +95,14 @@ namespace TradeSharp.WinCoreUI.Views
       m_downloadBtn.IsEnabled = enableDownloadButton();
     }
 
-    private void updateCopyCheckBoxEnabled()
-    {
-      m_copyWeekFromDay.IsEnabled = (bool)m_resolutionWeek.IsChecked && (bool)m_resolutionDay.IsChecked;
-      m_copyMonthFromDayWeek.IsEnabled = (bool)m_resolutionMonth.IsChecked && ((bool)m_resolutionDay.IsChecked || (bool)m_resolutionWeek.IsChecked);
-    }
-
     private void m_resolutionCheckBox_Checked(object sender, RoutedEventArgs e)
     {
       m_downloadBtn.IsEnabled = enableDownloadButton();
-      updateCopyCheckBoxEnabled();
     }
 
     private void m_resolutionCheckBox_Unchecked(object sender, RoutedEventArgs e)
     {
       m_downloadBtn.IsEnabled = enableDownloadButton();
-      updateCopyCheckBoxEnabled();
     }
   }
 }

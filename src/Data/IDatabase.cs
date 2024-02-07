@@ -876,6 +876,7 @@ namespace TradeSharp.Data
     IList<Instrument> GetInstrumentsPage(string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize);  //paged loading of instruments
     IList<Instrument> GetInstrumentsPage(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize);  //paged loading of instruments
     Instrument? GetInstrument(Guid id);
+    Instrument? GetInstrument(string ticker);
     void UpdateInstrument(Instrument instrument);
     int DeleteInstrument(Instrument instrument);
     int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId);

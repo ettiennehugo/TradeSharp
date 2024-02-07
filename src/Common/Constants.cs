@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TradeSharp.Common
+﻿namespace TradeSharp.Common
 {
   /// <summary>
   /// Global constants used by TradeSharp components.

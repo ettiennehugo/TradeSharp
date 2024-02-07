@@ -1179,6 +1179,23 @@ namespace TradeSharp.Data
       return null;
     }
 
+    public Instrument? GetInstrument(string ticker)
+    {
+      string normalizedTicker = ticker.ToUpper();
+      normalizedTicker = normalizedTicker.Trim();
+      using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} WHERE Ticker = '{normalizedTicker}'"))
+        if (reader.Read())
+        {
+          Guid id = reader.GetGuid(0);
+          List<Guid> secondaryExchangeIds = new List<Guid>();
+          using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{id.ToString()}'"))
+            while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
+          return new Instrument(id, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), DateTime.FromBinary(reader.GetInt64(8)), reader.GetInt32(9), reader.GetInt32(10), reader.GetInt32(11), reader.GetGuid(7), secondaryExchangeIds);
+        }
+
+      return null;
+    }
+
     public void UpdateInstrument(Instrument instrument)
     {
       ExecuteCommand(

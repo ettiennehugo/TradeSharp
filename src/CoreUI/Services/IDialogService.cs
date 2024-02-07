@@ -42,11 +42,15 @@ namespace TradeSharp.CoreUI.Services
   {
     public ImportSettings()
     {
+      FromDateTime = Constants.DefaultMinimumDateTime;
+      ToDateTime = Constants.DefaultMaximumDateTime;
       ReplaceBehavior = ImportReplaceBehavior.Skip;
       DateTimeTimeZone = ImportDataDateTimeTimeZone.Exchange;
       Filename = "";
     }
 
+    [ObservableProperty] DateTime m_fromDateTime;
+    [ObservableProperty] DateTime m_toDateTime;
     [ObservableProperty] ImportReplaceBehavior m_replaceBehavior;
     [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
     [ObservableProperty] string m_filename;
@@ -77,7 +81,12 @@ namespace TradeSharp.CoreUI.Services
       Directory = "";
       ImportStructure = MassImportExportStructure.DiretoriesAndFiles;
       FileType = ImportExportFileTypes.CSV;
-      ThreadCount = 1;    //clip this the Environment.ProcessorCount as max since it would not be useful to have more threads than processors
+      ResolutionMinute = true;
+      ResolutionHour = true;
+      ResolutionDay = true;
+      ResolutionWeek = true;
+      ResolutionMonth = true;
+      ThreadCount = Environment.ProcessorCount;    //clip this the Environment.ProcessorCount as max since it would most likely not be useful to have more threads than processors
     }
 
     [ObservableProperty] DateTime m_fromDateTime;
@@ -87,6 +96,11 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] string m_directory;
     [ObservableProperty] MassImportExportStructure m_importStructure;
     [ObservableProperty] ImportExportFileTypes m_fileType;
+    [ObservableProperty] bool m_resolutionMinute;
+    [ObservableProperty] bool m_resolutionHour;
+    [ObservableProperty] bool m_resolutionDay;
+    [ObservableProperty] bool m_resolutionWeek;
+    [ObservableProperty] bool m_resolutionMonth;
     [ObservableProperty] int m_threadCount;
   }
 
@@ -103,7 +117,12 @@ namespace TradeSharp.CoreUI.Services
       Directory = "";
       ExportStructure = MassImportExportStructure.DiretoriesAndFiles;
       FileType = ImportExportFileTypes.CSV;
-      ThreadCount = 1;    //clip this the Environment.ProcessorCount as max since it would not be useful to have more threads than processors
+      ResolutionMinute = true;
+      ResolutionHour = true;
+      ResolutionDay = true;
+      ResolutionWeek = true;
+      ResolutionMonth = true;
+      ThreadCount = Environment.ProcessorCount;    //clip this the Environment.ProcessorCount as max since it would most likely not be useful to have more threads than processors
     }
 
     [ObservableProperty] DateTime m_fromDateTime;
@@ -112,6 +131,11 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] string m_directory;
     [ObservableProperty] MassImportExportStructure m_exportStructure;
     [ObservableProperty] ImportExportFileTypes m_fileType;
+    [ObservableProperty] bool m_resolutionMinute;
+    [ObservableProperty] bool m_resolutionHour;
+    [ObservableProperty] bool m_resolutionDay;
+    [ObservableProperty] bool m_resolutionWeek;
+    [ObservableProperty] bool m_resolutionMonth;
     [ObservableProperty] int m_threadCount;
   }
 
@@ -129,10 +153,8 @@ namespace TradeSharp.CoreUI.Services
       ResolutionHour = true;
       ResolutionDay = true;
       ResolutionWeek = true;
-      CopyWeekFromDay = true;
       ResolutionMonth = true;
-      CopyMonthFromDayWeek = true;
-      ThreadCount = 1;    //clip this the Environment.ProcessorCount as max since it would not be useful to have more threads than processors
+      ThreadCount = 1;    //clip this the Environment.ProcessorCount as max and the data provider max connection count, it would most likely not be useful to have more threads than processors
     }
 
     [ObservableProperty] DateTime m_fromDateTime;
@@ -142,9 +164,7 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] bool m_resolutionHour;
     [ObservableProperty] bool m_resolutionDay;
     [ObservableProperty] bool m_resolutionWeek;
-    [ObservableProperty] bool m_copyWeekFromDay;
     [ObservableProperty] bool m_resolutionMonth;
-    [ObservableProperty] bool m_copyMonthFromDayWeek;
     [ObservableProperty] int m_threadCount;
   }
 
@@ -216,8 +236,8 @@ namespace TradeSharp.CoreUI.Services
     Task<ImportSettings?> ShowImportBarDataAsync();
     Task<string?> ShowExportBarDataAsync();
 
-    Task ShowMassDataImportAsync();
-    Task ShowMassDataExportAsync();
-    Task ShowMassDataDownloadAsync();
+    Task ShowMassDataImportAsync(string dataProvider);
+    Task ShowMassDataExportAsync(string dataProvider);
+    Task ShowMassDataDownloadAsync(string dataProvider);
   }
 }

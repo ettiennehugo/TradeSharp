@@ -29,7 +29,8 @@ namespace TradeSharp.CoreUI.Repositories
     int Update(IList<T> items);   //mass update of items
     int Delete(IList<T> items);   //mass delete of items
     int Delete();                 //mass delete all defined items
-    int GetCount();   //gets the total number of items in the database
+    int Delete(DateTime from, DateTime to); //mass delete items between given dates
+    int GetCount();               //gets the total number of items in the database
     int GetCount(DateTime from, DateTime to);   //gets the total number of items in the database within a given date/time range
     IList<T> GetItems(DateTime from, DateTime to);   //loads all the data within a given date/time range (can be slow with big windows!!!)
     IList<T> GetItems(int index, int count);   //loads a spesific number of items from the database from a specific index (used for paged loading of large amounts of data)

@@ -54,9 +54,10 @@ namespace TradeSharp.Data
     //properties
     public string Name { get; }
     public IList<string> Tickers => throw new NotImplementedException();    //this should refer directly into the data manager
+    public virtual int ConnectionCountMax => Environment.ProcessorCount;
+    public IPluginConfigurationProfile ConfigurationProfile { get; set; }
 
     //methods
-
 
   }
 }

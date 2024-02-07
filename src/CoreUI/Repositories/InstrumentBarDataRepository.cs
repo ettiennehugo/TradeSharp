@@ -124,6 +124,12 @@ namespace TradeSharp.CoreUI.Repositories
       return m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime) != 0;
     }
 
+    public int Delete(DateTime from, DateTime to)
+    {
+      throwIfNotKeyed();
+      return m_database.DeleteData(DataProvider, Instrument!.Ticker, Resolution, from, to);
+    }
+
     //properties
     public string DataProvider { get; set; }
     public Instrument? Instrument { get; set; }

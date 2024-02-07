@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TradeSharp.Common;
 
 namespace TradeSharp.Data.Testing
 {
@@ -49,6 +50,8 @@ namespace TradeSharp.Data.Testing
     //properties
     public string Name => m_name;
     public IList<string> Tickers => m_tickers;
+    public int ConnectionCountMax => Environment.ProcessorCount;
+    public IPluginConfigurationProfile ConfigurationProfile { get; set; }
 
     //methods
 

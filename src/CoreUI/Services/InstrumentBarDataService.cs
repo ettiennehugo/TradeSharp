@@ -157,17 +157,21 @@ namespace TradeSharp.CoreUI.Services
     ///   * The start bars' date/time is used as the date/time for the bar in the higher resolution, e.g. if you start with daily bars converting to
     ///     weekly bars for stock data the resulting weekly bars will always start on a Monday date/time.
     /// </summary>
-    public void Copy(Resolution from)
+    public void Copy(Resolution from, DateTime? fromDateTime = null, DateTime? toDateTime = null)
     {
-      IList<IBarData> fromBarData = new List<IBarData>();
-      IList<IBarData> toBarData = new List<IBarData>();
+      DateTime internalFromDateTime = fromDateTime ?? Constants.DefaultMinimumDateTime;
+      DateTime internalToDateTime = toDateTime ?? Constants.DefaultMaximumDateTime;
+
       IInstrumentBarDataRepository fromRepository = (IInstrumentBarDataRepository)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataRepository))!;
       IInstrumentBarDataRepository toRepository = (IInstrumentBarDataRepository)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataRepository))!;
       fromRepository.DataProvider = DataProvider;
       fromRepository.Instrument = Instrument;
       fromRepository.Resolution = from;
+      IList<IBarData> fromBarData = fromRepository.GetItems(internalFromDateTime, internalToDateTime);
+
       toRepository.DataProvider = DataProvider;
       toRepository.Instrument = Instrument;
+      IList<IBarData> toBarData = new List<IBarData>();
 
       IBarData? toBar = null;
       switch (from)
@@ -175,7 +179,6 @@ namespace TradeSharp.CoreUI.Services
         case Resolution.Minute:
           toRepository.Resolution = Resolution.Hour;
 
-          fromBarData = fromRepository.GetItems();
           if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Hour != bar.DateTime.Hour)
@@ -192,7 +195,7 @@ namespace TradeSharp.CoreUI.Services
               toBar.Volume += bar.Volume;
             }
 
-          if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
+          if (toBarData.Count > 0) toRepository.Delete(internalFromDateTime, internalToDateTime); //we replace the bars of data
           toRepository.Update(toBarData);
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
@@ -201,7 +204,6 @@ namespace TradeSharp.CoreUI.Services
         case Resolution.Hour:
           toRepository.Resolution = Resolution.Day;
 
-          fromBarData = fromRepository.GetItems();
           if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Day != bar.DateTime.Day)
@@ -218,7 +220,7 @@ namespace TradeSharp.CoreUI.Services
               toBar.Volume += bar.Volume;
             }
 
-          if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
+          if (toBarData.Count > 0) toRepository.Delete(internalFromDateTime, internalToDateTime); //we replace the bars of data
           toRepository.Update(toBarData);
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
@@ -227,7 +229,6 @@ namespace TradeSharp.CoreUI.Services
         case Resolution.Day:
           toRepository.Resolution = Resolution.Week;
 
-          fromBarData = fromRepository.GetItems();
           if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
             //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
@@ -249,7 +250,7 @@ namespace TradeSharp.CoreUI.Services
               toBar.Volume += bar.Volume;
             }
 
-          if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
+          if (toBarData.Count > 0) toRepository.Delete(internalFromDateTime, internalToDateTime); //we replace the bars of data
           toRepository.Update(toBarData);
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
@@ -258,7 +259,6 @@ namespace TradeSharp.CoreUI.Services
         case Resolution.Week:
           toRepository.Resolution = Resolution.Month;
 
-          fromBarData = fromRepository.GetItems();
           if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Month != bar.DateTime.Month)
@@ -275,7 +275,7 @@ namespace TradeSharp.CoreUI.Services
               toBar.Volume += bar.Volume;
             }
 
-          if (toBarData.Count > 0) toRepository.Delete(); //we replace the bars of data
+          if (toBarData.Count > 0) toRepository.Delete(internalFromDateTime, internalToDateTime); //we replace the bars of data
           toRepository.Update(toBarData);
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
@@ -285,6 +285,177 @@ namespace TradeSharp.CoreUI.Services
           //nothing to do
           break;
       }
+    }
+
+    public void Copy(Resolution from, Resolution to, DateTime? fromDateTime = null, DateTime? toDateTime = null)
+    {
+      //make sure the from resolution is lower than the to resolution
+      if (Debugging.Copy && from >= to)
+      {
+        string statusMessage = $"The from resolution {from} must be lower than the to resolution {to}.";
+        m_logger.LogError(statusMessage);
+        return;
+      }
+
+      //handle trivial cases already covered by the Copy(Resolution from) method
+      if (from == Resolution.Minute && to == Resolution.Hour)
+      {
+        Copy(from);
+        return;
+      }
+      
+      if (from == Resolution.Hour && to == Resolution.Day)
+      {
+        Copy(from);
+        return;
+      }
+      
+      if (from == Resolution.Day && to == Resolution.Week)
+      {
+        Copy(from);
+        return;
+      }
+      
+      if (from == Resolution.Week && to == Resolution.Month)
+      {
+        Copy(from);
+        return;
+      }
+
+      //handle rest of the more complex cases
+      DateTime internalFromDateTime = fromDateTime ?? Constants.DefaultMinimumDateTime;
+      DateTime internalToDateTime = toDateTime ?? Constants.DefaultMaximumDateTime;
+
+      IInstrumentBarDataRepository fromRepository = (IInstrumentBarDataRepository)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataRepository))!;
+      IInstrumentBarDataRepository toRepository = (IInstrumentBarDataRepository)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataRepository))!;
+      fromRepository.DataProvider = DataProvider;
+      fromRepository.Instrument = Instrument;
+      fromRepository.Resolution = from;
+      IList<IBarData> fromBarData = fromRepository.GetItems(internalFromDateTime, internalToDateTime);
+
+      toRepository.DataProvider = DataProvider;
+      toRepository.Instrument = Instrument;
+      toRepository.Resolution = to;
+      IList<IBarData> toBarData = new List<IBarData>();
+
+      for (Resolution resolution = from; resolution < to; resolution++)
+      {
+        IBarData? toBar = null;
+        switch (from)
+        {
+          case Resolution.Minute:
+            toRepository.Resolution = Resolution.Hour;
+
+            if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
+            foreach (IBarData bar in fromBarData)
+              if (bar.DateTime >= internalFromDateTime && bar.DateTime <= internalToDateTime)
+              {
+                if (toBar == null || toBar.DateTime.Hour != bar.DateTime.Hour)
+                {
+                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                  toBarData.Add(toBar);
+                }
+                else //keep constructing bar while it's in the same to-resolution
+                {
+                  //nothing to do for the open, that is set when the new bar is created
+                  toBar.High = Math.Max(toBar.High, bar.High);
+                  toBar.Low = Math.Min(toBar.Low, bar.Low);
+                  toBar.Close = bar.Close;
+                  toBar.Volume += bar.Volume;
+                }
+              }
+
+            if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+            fromBarData = new List<IBarData>(toBarData); //copy the data to the next resolution
+            break;
+          case Resolution.Hour:
+            toRepository.Resolution = Resolution.Day;
+
+            if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
+            foreach (IBarData bar in fromBarData)
+              if (bar.DateTime >= internalFromDateTime && bar.DateTime <= internalToDateTime)
+              {
+                if (toBar == null || toBar.DateTime.Day != bar.DateTime.Day)
+                {
+                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                  toBarData.Add(toBar);
+                }
+                else //keep constructing bar while it's in the same to-resolution
+                {
+                  //nothing to do for the open, that is set when the new bar is created
+                  toBar.High = Math.Max(toBar.High, bar.High);
+                  toBar.Low = Math.Min(toBar.Low, bar.Low);
+                  toBar.Close = bar.Close;
+                  toBar.Volume += bar.Volume;
+                }
+              }
+
+            if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+            fromBarData = new List<IBarData>(toBarData); //copy the data to the next resolution
+            break;
+          case Resolution.Day:
+            toRepository.Resolution = Resolution.Week;
+
+            if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
+            foreach (IBarData bar in fromBarData)
+              if (bar.DateTime >= internalFromDateTime && bar.DateTime <= internalToDateTime)
+              {
+                //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
+                //NOTE: * This function only works for Gregorian dates which is fine, CultureInfo and ISOWeek returns anything and everything
+                //        except just a sane interpretation of the week number based on "which week of the year is this given that 1 January
+                //        is the start of the first week?".
+                //      * We are good with considering the first and last weeks of the year to be "partial" weeks.
+                if (toBar == null || ISOWeek.GetWeekOfYear(toBar.DateTime) != ISOWeek.GetWeekOfYear(bar.DateTime))
+                {
+                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                  toBarData.Add(toBar);
+                }
+                else //keep constructing bar while it's in the same to-resolution
+                {
+                  //nothing to do for the open, that is set when the new bar is created
+                  toBar.High = Math.Max(toBar.High, bar.High);
+                  toBar.Low = Math.Min(toBar.Low, bar.Low);
+                  toBar.Close = bar.Close;
+                  toBar.Volume += bar.Volume;
+                }
+              }
+
+            if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+            fromBarData = new List<IBarData>(toBarData); //copy the data to the next resolution
+            break;
+          case Resolution.Week:
+            toRepository.Resolution = Resolution.Month;
+
+            if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
+            foreach (IBarData bar in fromBarData)
+              if (bar.DateTime >= internalFromDateTime && bar.DateTime <= internalToDateTime)
+              {
+                if (toBar == null || toBar.DateTime.Month != bar.DateTime.Month)
+                {
+                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                  toBarData.Add(toBar);
+                }
+                else //keep constructing bar while it's in the same to-resolution
+                {
+                  //nothing to do for the open, that is set when the new bar is created
+                  toBar.High = Math.Max(toBar.High, bar.High);
+                  toBar.Low = Math.Min(toBar.Low, bar.Low);
+                  toBar.Close = bar.Close;
+                  toBar.Volume += bar.Volume;
+                }
+              }
+
+            if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+            fromBarData = new List<IBarData>(toBarData); //copy the data to the next resolution
+            break;
+          case Resolution.Month:
+            //nothing to do
+            break;
+        }
+      }
+
+      if (toBarData.Count > 0) toRepository.Delete(internalFromDateTime, internalToDateTime); //we replace the bars of data
+      toRepository.Update(toBarData);
     }
 
     public bool Update(IBarData item)
@@ -483,8 +654,11 @@ namespace TradeSharp.CoreUI.Services
                     break;
                 }
 
-              bars.Add(new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume));
-              barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
+              if (dateTime >= importSettings.FromDateTime && dateTime <= importSettings.ToDateTime)
+              {
+                bars.Add(new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume));
+                barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
+              }
             }
             catch (Exception e)
             {
@@ -603,6 +777,9 @@ namespace TradeSharp.CoreUI.Services
               m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "", statusMessage);
               continue; //skip to next bar definition
             }
+
+            //skip bars that are not within the import date/time range
+            if (dateTime >= importSettings.FromDateTime && dateTime <= importSettings.ToDateTime) continue;
 
             double open = barDataJson![tokenJsonOpen]!.AsValue().Deserialize<double>();
             double high = barDataJson![tokenJsonHigh]!.AsValue().Deserialize<double>();

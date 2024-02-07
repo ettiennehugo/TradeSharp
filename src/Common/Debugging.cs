@@ -12,7 +12,11 @@
 
     // Instrument Bar Data debugging switches
     public static bool InstrumentBarDataLoadAsync = true;   //debugging for instrument bar data LoadAsync
-    public static bool InstrumentBarDataFilterParse = true;   //debugging for instrument bar data filter start/end date parsing
+    public static bool InstrumentBarDataFilterParse = true; //debugging for instrument bar data filter start/end date parsing
+    public static bool MassInstrumentDataExport = true;     //debugging of mass export instrument bar data 
+    public static bool MassInstrumentDataImport = true;     //debugging of mass import instrument bar data
+    public static bool MassInstrumentDataDownload = true;   //debugging of mass download instrument bar data 
+
 
   }
 }

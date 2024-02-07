@@ -1,16 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+using TradeSharp.Common;
+using TradeSharp.Data;
 namespace TradeSharp.CoreUI.Services
 {
   /// <summary> 
   /// Implementation of the mass download of instrument data.
   /// </summary>
-  public class MassDownloadInstrumentDataService : IMassDownloadInstrumentDataService
+  public class MassDownloadInstrumentDataService : ServiceBase, IMassDownloadInstrumentDataService
   {
     //constants
 
@@ -22,10 +18,18 @@ namespace TradeSharp.CoreUI.Services
 
 
     //attributes
-
+    IInstrumentService m_instrumentService;
+    ILogger<MassDownloadInstrumentDataService> m_logger;
+    ILogger? m_taskLogger;
 
     //constructors
-
+    public MassDownloadInstrumentDataService(ILogger<MassDownloadInstrumentDataService> logger, IDialogService dialogService, IInstrumentService instrumentService) : base(dialogService)
+    {
+      Settings = new MassDownloadSettings();
+      m_logger = logger;
+      IsRunning = false;
+      m_instrumentService = instrumentService;
+    }
 
     //finalizers
 
@@ -34,6 +38,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
+    public IDataProvider DataProvider { get; set; }
     public ILogger Logger { get; set; }
     public MassDownloadSettings Settings { get; set; }
     public bool IsRunning { get; internal set; }
@@ -41,7 +46,13 @@ namespace TradeSharp.CoreUI.Services
     //methods
     public Task Start(CancellationToken cancellationToken = default)
     {
-      throw new NotImplementedException();
+      if (DataProvider == null)
+      {
+        if (Debugging.MassInstrumentDataDownload) m_logger.LogInformation("Failed to start mass download, no data provider was set");
+        return Task.CompletedTask;
+      }
+
+      return Task.CompletedTask;    //TODO: Implement running of task.
     }
   }
 }

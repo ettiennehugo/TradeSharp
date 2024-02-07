@@ -46,6 +46,11 @@ namespace TradeSharp.CoreUI.Repositories
       return m_database.GetInstrument(id);
     }
 
+    public Instrument? GetItem(string ticker)
+    {
+      return m_database.GetInstrument(ticker);
+    }
+
     public IList<Instrument> GetItems()
     {
       return m_database.GetInstruments();

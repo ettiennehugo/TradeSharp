@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -20,7 +21,8 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
-    ILogger Logger { get; set; }
+    IDataProvider DataProvider { get; set; }
+    ILogger? Logger { get; set; }
     MassDownloadSettings Settings { get; set; }
     public bool IsRunning { get; }
 

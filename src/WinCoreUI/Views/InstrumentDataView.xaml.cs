@@ -143,17 +143,17 @@ namespace TradeSharp.WinCoreUI.Views
 
     private async void m_massImport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      await m_dialogService.ShowMassDataImportAsync();
+      await m_dialogService.ShowMassDataImportAsync((string)m_dataProviders.SelectedItem);
     }
 
     private async void m_massExport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      await m_dialogService.ShowMassDataExportAsync();
+      await m_dialogService.ShowMassDataExportAsync((string)m_dataProviders.SelectedItem);
     }
 
     private async void m_massDownload_Click(object sender, RoutedEventArgs e)
     {
-      await m_dialogService.ShowMassDataDownloadAsync();
+      await m_dialogService.ShowMassDataDownloadAsync((string)m_dataProviders.SelectedItem);
     }
   }
 }

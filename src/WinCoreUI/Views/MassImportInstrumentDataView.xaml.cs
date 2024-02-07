@@ -55,6 +55,7 @@ namespace TradeSharp.WinCoreUI.Views
     public int ThreadCountMax { get => Environment.ProcessorCount; }
     public string ImportStructureTooltip { get; internal set; }
     public Window ParentWindow { get; set; }
+    public string DataProvider { get; set; }
 
     //methods
     [DllImport("user32.dll")]
@@ -65,7 +66,6 @@ namespace TradeSharp.WinCoreUI.Views
       Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportDataDateTimeTimeZone));
       Common.Utilities.populateComboBoxFromEnum(ref m_importStructure, typeof(MassImportExportStructure));
       Common.Utilities.populateComboBoxFromEnum(ref m_fileType, typeof(ImportExportFileTypes));
-      ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32((int)ActualWidth, (int)ActualHeight));
     }
 
     private async void m_inputDirectoryBtn_Click(object sender, RoutedEventArgs e)
@@ -80,6 +80,7 @@ namespace TradeSharp.WinCoreUI.Views
       if (folder != null)
       {
         m_inputDirectory.Text = folder.Path;
+        Settings.Directory = folder.Path;
       }
     }
 
@@ -98,12 +99,16 @@ namespace TradeSharp.WinCoreUI.Views
 
     private bool enableImportButton()
     {
-      return m_startDateTime != null && DateTime.TryParse(m_startDateTime.Text, out _) && DateTime.TryParse(m_endDateTime.Text, out _) && m_inputDirectory.Text.Length > 0;
+      return m_startDateTime != null && DateTime.TryParse(m_startDateTime.Text, out _) && DateTime.TryParse(m_endDateTime.Text, out _) && m_inputDirectory.Text.Length > 0 &&
+        ((bool)m_resolutionMinute.IsChecked || (bool)m_resolutionHour.IsChecked || (bool)m_resolutionDay.IsChecked || (bool)m_resolutionWeek.IsChecked || (bool)m_resolutionMonth.IsChecked);
     }
 
     private void m_importBtn_Click(object sender, RoutedEventArgs e)
     {
-      throw new NotImplementedException();
+      m_massImportInstrumentDataService.DataProvider = DataProvider;
+      m_massImportInstrumentDataService.Settings = Settings;
+      m_massImportInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass export service - this can be done as an improvement when we have a progress dialog working.
+      m_massImportInstrumentDataService.Start(m_cancellationToken);   //TODO: Currently we do not support cancellation.
     }
 
     private void m_cancelBtn_Click(object sender, RoutedEventArgs e)
@@ -124,6 +129,16 @@ namespace TradeSharp.WinCoreUI.Views
     }
 
     private void m_inputDirectory_TextChanged(object sender, TextChangedEventArgs e)
+    {
+      m_importBtn.IsEnabled = enableImportButton();
+    }
+
+    private void m_resolutionCheckBox_Checked(object sender, RoutedEventArgs e)
+    {
+      m_importBtn.IsEnabled = enableImportButton();
+    }
+
+    private void m_resolutionCheckBox_Unchecked(object sender, RoutedEventArgs e)
     {
       m_importBtn.IsEnabled = enableImportButton();
     }

@@ -2112,6 +2112,22 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
+    public void GetInstrument_ByTicker_Success()
+    {
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
+
+      m_database.CreateInstrument(stock);
+
+      Instrument? retrievedStock = m_database.GetInstrument(stock.Ticker);
+
+      Assert.IsNotNull(retrievedStock, "Data store did not return the stock.");
+      Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == secondExchange.Id).Single());
+      Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == thirdExchange.Id).Single());
+    }
+
+    [TestMethod]
     public void GetFundmentals_ReturnPersistedData_Success()
     {
       Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestCountryFundamental1", "TestCountryFundamentalDescription1", FundamentalCategory.Country, FundamentalReleaseInterval.Daily);
