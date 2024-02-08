@@ -121,20 +121,23 @@ namespace TradeSharp.Data
 
     public void CreateCountry(Country country)
     {
-      ExecuteCommand($"INSERT OR REPLACE INTO {c_TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet}, '{SqlSafeString(country.Tag)}','{country.IsoCode}')");
+      lock (this) ExecuteCommand($"INSERT OR REPLACE INTO {c_TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet}, '{SqlSafeString(country.Tag)}','{country.IsoCode}')");
     }
 
     public void UpdateCountry(Country country)
     {
-      ExecuteCommand($"INSERT OR REPLACE INTO {c_TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet}, '{SqlSafeString(country.Tag)}','{country.IsoCode}')");
+      lock (this)
+      {
+        ExecuteCommand($"INSERT OR REPLACE INTO {c_TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet}, '{SqlSafeString(country.Tag)}','{country.IsoCode}')");
 
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableExchange} " +
-          $"SET AttributeSet = {(long)country.AttributeSet}, " +
-              $"Tag = '{SqlSafeString(country.Tag)}', " +
-          //$"IsoCode = '{country.IsoCode}' " +   //no update of the IsoCode, is only set on creation
-          $"WHERE Id = '{country.Id.ToString()}'"
-        );
+        ExecuteCommand(
+          $"UPDATE OR FAIL {c_TableExchange} " +
+            $"SET AttributeSet = {(long)country.AttributeSet}, " +
+                $"Tag = '{SqlSafeString(country.Tag)}', " +
+            //$"IsoCode = '{country.IsoCode}' " +   //no update of the IsoCode, is only set on creation
+            $"WHERE Id = '{country.Id.ToString()}'"
+          );
+      }
     }
 
     public Country? GetCountry(Guid id)
@@ -220,19 +223,20 @@ namespace TradeSharp.Data
 
     public void UpdateExchange(Exchange exchange)
     {
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableExchange} " +
-          $"SET CountryId = '{exchange.CountryId.ToString()}', " +
-              $"Name = '{SqlSafeString(exchange.Name)}', " +
-              $"AttributeSet = {(long)exchange.AttributeSet}, " +
-              $"Tag = '{SqlSafeString(exchange.Tag)}', " +
-              $"TimeZone = '{exchange.TimeZone.ToSerializedString()}', " +
-              $"LogoId = '{exchange.LogoId}', " +
-              $"DefaultPriceDecimals = {exchange.DefaultPriceDecimals}, " +
-              $"DefaultMinimumMovement = {exchange.DefaultMinimumMovement}, " +
-              $"DefaultBigPointValue = {exchange.DefaultBigPointValue} " +
-          $"WHERE Id = '{exchange.Id.ToString()}'"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"UPDATE OR FAIL {c_TableExchange} " +
+            $"SET CountryId = '{exchange.CountryId.ToString()}', " +
+                $"Name = '{SqlSafeString(exchange.Name)}', " +
+                $"AttributeSet = {(long)exchange.AttributeSet}, " +
+                $"Tag = '{SqlSafeString(exchange.Tag)}', " +
+                $"TimeZone = '{exchange.TimeZone.ToSerializedString()}', " +
+                $"LogoId = '{exchange.LogoId}', " +
+                $"DefaultPriceDecimals = {exchange.DefaultPriceDecimals}, " +
+                $"DefaultMinimumMovement = {exchange.DefaultMinimumMovement}, " +
+                $"DefaultBigPointValue = {exchange.DefaultBigPointValue} " +
+            $"WHERE Id = '{exchange.Id.ToString()}'"
+        );
     }
 
     public int DeleteExchange(Guid id)
@@ -260,22 +264,23 @@ namespace TradeSharp.Data
 
     public void CreateHoliday(Holiday holiday)
     {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableHoliday} (Id, AttributeSet, Tag, ParentId, Name, HolidayType, Month, DayOfMonth, WeekOfMonth, DayOfWeek, MoveWeekendHoliday) " +
-          $"VALUES (" +
-            $"'{holiday.Id.ToString()}', " +
-            $"{(long)holiday.AttributeSet}, " +
-            $"'{SqlSafeString(holiday.Tag)}', " +
-            $"'{holiday.ParentId.ToString()}', " +
-            $"'{SqlSafeString(holiday.Name)}', " +
-            $"{(int)holiday.Type}, " +
-            $"{(int)holiday.Month}, " +
-            $"{(int)holiday.DayOfMonth}, " +
-            $"{(int)holiday.WeekOfMonth}, " +
-            $"{(int)holiday.DayOfWeek}, " +
-            $"{(int)holiday.MoveWeekendHoliday}" +
-          ")"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {c_TableHoliday} (Id, AttributeSet, Tag, ParentId, Name, HolidayType, Month, DayOfMonth, WeekOfMonth, DayOfWeek, MoveWeekendHoliday) " +
+            $"VALUES (" +
+              $"'{holiday.Id.ToString()}', " +
+              $"{(long)holiday.AttributeSet}, " +
+              $"'{SqlSafeString(holiday.Tag)}', " +
+              $"'{holiday.ParentId.ToString()}', " +
+              $"'{SqlSafeString(holiday.Name)}', " +
+              $"{(int)holiday.Type}, " +
+              $"{(int)holiday.Month}, " +
+              $"{(int)holiday.DayOfMonth}, " +
+              $"{(int)holiday.WeekOfMonth}, " +
+              $"{(int)holiday.DayOfWeek}, " +
+              $"{(int)holiday.MoveWeekendHoliday}" +
+            ")"
+        );
     }
 
     public Holiday? GetHoliday(Guid id)
@@ -313,20 +318,21 @@ namespace TradeSharp.Data
 
     public void UpdateHoliday(Holiday holiday)
     {
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableHoliday} " +
-          $"SET ParentId = '{holiday.ParentId.ToString()}', " +
-              $"Name = '{SqlSafeString(holiday.Name)}', " +
-              $"AttributeSet = {(long)holiday.AttributeSet}, " +
-              $"Tag = '{SqlSafeString(holiday.Tag)}', " +
-              $"HolidayType = {(int)holiday.Type}, " +
-              $"Month = {(int)holiday.Month}, " +
-              $"DayOfMonth = {(int)holiday.DayOfMonth}, " +
-              $"WeekOfMonth = {(int)holiday.WeekOfMonth}, " +
-              $"DayOfWeek = {(int)holiday.DayOfWeek}, " +
-              $"MoveWeekendHoliday = {(int)holiday.MoveWeekendHoliday} " +
-          $"WHERE Id = '{holiday.Id.ToString()}'"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"UPDATE OR FAIL {c_TableHoliday} " +
+            $"SET ParentId = '{holiday.ParentId.ToString()}', " +
+                $"Name = '{SqlSafeString(holiday.Name)}', " +
+                $"AttributeSet = {(long)holiday.AttributeSet}, " +
+                $"Tag = '{SqlSafeString(holiday.Tag)}', " +
+                $"HolidayType = {(int)holiday.Type}, " +
+                $"Month = {(int)holiday.Month}, " +
+                $"DayOfMonth = {(int)holiday.DayOfMonth}, " +
+                $"WeekOfMonth = {(int)holiday.WeekOfMonth}, " +
+                $"DayOfWeek = {(int)holiday.DayOfWeek}, " +
+                $"MoveWeekendHoliday = {(int)holiday.MoveWeekendHoliday} " +
+            $"WHERE Id = '{holiday.Id.ToString()}'"
+        );
     }
 
     public int DeleteHoliday(Guid id)
@@ -336,19 +342,20 @@ namespace TradeSharp.Data
 
     public void CreateSession(Session session)
     {
-      ExecuteCommand(
-      $"INSERT OR REPLACE INTO {c_TableSession} (Id, AttributeSet, Tag, Name, ExchangeId, DayOfWeek, StartTime, EndTime) " +
-        $"VALUES (" +
-          $"'{session.Id.ToString()}', " +
-          $"{(long)session.AttributeSet}, " +
-          $"'{SqlSafeString(session.Tag)}', " +
-          $"'{SqlSafeString(session.Name)}', " +
-          $"'{session.ExchangeId.ToString()}', " +
-          $"{(int)session.DayOfWeek}, " +
-          $"{session.Start.Ticks}, " +
-          $"{session.End.Ticks}" +
-        $")"
-      );
+      lock (this)
+        ExecuteCommand(
+        $"INSERT OR REPLACE INTO {c_TableSession} (Id, AttributeSet, Tag, Name, ExchangeId, DayOfWeek, StartTime, EndTime) " +
+          $"VALUES (" +
+            $"'{session.Id.ToString()}', " +
+            $"{(long)session.AttributeSet}, " +
+            $"'{SqlSafeString(session.Tag)}', " +
+            $"'{SqlSafeString(session.Name)}', " +
+            $"'{session.ExchangeId.ToString()}', " +
+            $"{(int)session.DayOfWeek}, " +
+            $"{session.Start.Ticks}, " +
+            $"{session.End.Ticks}" +
+          $")"
+        );
     }
 
     public Session? GetSession(Guid id)
@@ -383,17 +390,18 @@ namespace TradeSharp.Data
 
     public void UpdateSession(Session session)
     {
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableSession} " +
-          $"SET Name = '{SqlSafeString(session.Name)}', " +
-              $"ExchangeId = '{session.ExchangeId.ToString()}', " +
-              $"AttributeSet = {(long)session.AttributeSet}, " +
-              $"Tag = '{SqlSafeString(session.Tag)}', " +
-              $"DayOfWeek = {(int)session.DayOfWeek}, " +
-              $"StartTime = {session.Start.Ticks}, " +
-              $"EndTime = {session.End.Ticks} " +
-          $"WHERE Id = '{session.Id.ToString()}'"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"UPDATE OR FAIL {c_TableSession} " +
+            $"SET Name = '{SqlSafeString(session.Name)}', " +
+                $"ExchangeId = '{session.ExchangeId.ToString()}', " +
+                $"AttributeSet = {(long)session.AttributeSet}, " +
+                $"Tag = '{SqlSafeString(session.Tag)}', " +
+                $"DayOfWeek = {(int)session.DayOfWeek}, " +
+                $"StartTime = {session.Start.Ticks}, " +
+                $"EndTime = {session.End.Ticks} " +
+            $"WHERE Id = '{session.Id.ToString()}'"
+        );
     }
 
     public int DeleteSession(Guid id)
@@ -403,30 +411,32 @@ namespace TradeSharp.Data
 
     public void CreateInstrumentGroup(InstrumentGroup instrumentGroup)
     {
-      ExecuteCommand(
-      $"INSERT OR REPLACE INTO {c_TableInstrumentGroup} (Id, AttributeSet, Tag, ParentId, Name, Description) " +
-        $"VALUES (" +
-          $"'{instrumentGroup.Id.ToString()}', " +
-          $"{(long)instrumentGroup.AttributeSet}, " +
-          $"'{SqlSafeString(instrumentGroup.Tag)}', " +
-          $"'{instrumentGroup.ParentId.ToString()}', " +
-          $"'{SqlSafeString(instrumentGroup.Name)}', " +
-          $"'{SqlSafeString(instrumentGroup.Description)}'" +
-        $")"
-      );
+      lock (this)
+        ExecuteCommand(
+        $"INSERT OR REPLACE INTO {c_TableInstrumentGroup} (Id, AttributeSet, Tag, ParentId, Name, Description) " +
+          $"VALUES (" +
+            $"'{instrumentGroup.Id.ToString()}', " +
+            $"{(long)instrumentGroup.AttributeSet}, " +
+            $"'{SqlSafeString(instrumentGroup.Tag)}', " +
+            $"'{instrumentGroup.ParentId.ToString()}', " +
+            $"'{SqlSafeString(instrumentGroup.Name)}', " +
+            $"'{SqlSafeString(instrumentGroup.Description)}'" +
+          $")"
+        );
 
       foreach (Guid instrumentId in instrumentGroup.Instruments) CreateInstrumentGroupInstrument(instrumentGroup.Id, instrumentId);
     }
 
     public void CreateInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId)
     {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
-          $"VALUES (" +
-            $"'{instrumentGroupId.ToString()}', " +
-            $"'{instrumentId.ToString()}' " +
-        $")"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
+            $"VALUES (" +
+              $"'{instrumentGroupId.ToString()}', " +
+              $"'{instrumentId.ToString()}' " +
+          $")"
+        );
     }
 
     public InstrumentGroup? GetInstrumentGroup(Guid id)
@@ -470,26 +480,29 @@ namespace TradeSharp.Data
 
     public void UpdateInstrumentGroup(InstrumentGroup instrumentGroup)
     {
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableInstrumentGroup} SET " +
-            $"ParentId = '{instrumentGroup.ParentId.ToString()}', " +
-            $"AttributeSet = {(long)instrumentGroup.AttributeSet}, " +
-            $"Tag = '{SqlSafeString(instrumentGroup.Tag)}', " +
-            $"Name = '{SqlSafeString(instrumentGroup.Name)}', " +
-            $"Description = '{instrumentGroup.Description}' " +
-          $"WHERE Id = '{instrumentGroup.Id.ToString()}'"
-      );
-
-      Delete(c_TableInstrumentGroupInstrument, instrumentGroup.Id, "InstrumentGroupId");
-
-      foreach (Guid instrumentId in instrumentGroup.Instruments)
+      lock (this)
+      {
         ExecuteCommand(
-          $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
-            $"VALUES (" +
-              $"'{instrumentGroup.Id.ToString()}', " +
-              $"'{instrumentId.ToString()}'" +
-          $")"
+          $"UPDATE OR FAIL {c_TableInstrumentGroup} SET " +
+              $"ParentId = '{instrumentGroup.ParentId.ToString()}', " +
+              $"AttributeSet = {(long)instrumentGroup.AttributeSet}, " +
+              $"Tag = '{SqlSafeString(instrumentGroup.Tag)}', " +
+              $"Name = '{SqlSafeString(instrumentGroup.Name)}', " +
+              $"Description = '{instrumentGroup.Description}' " +
+            $"WHERE Id = '{instrumentGroup.Id.ToString()}'"
         );
+
+        Delete(c_TableInstrumentGroupInstrument, instrumentGroup.Id, "InstrumentGroupId");
+
+        foreach (Guid instrumentId in instrumentGroup.Instruments)
+          ExecuteCommand(
+            $"INSERT OR REPLACE INTO {c_TableInstrumentGroupInstrument} (InstrumentGroupId, InstrumentId) " +
+              $"VALUES (" +
+                $"'{instrumentGroup.Id.ToString()}', " +
+                $"'{instrumentId.ToString()}'" +
+            $")"
+          );
+      }
     }
 
     public int DeleteInstrumentGroup(Guid id)
@@ -498,8 +511,11 @@ namespace TradeSharp.Data
       using (var reader = ExecuteReader($"SELECT Id FROM {c_TableInstrumentGroup} WHERE ParentId = '{id.ToString()}'"))
         while (reader.Read()) result += DeleteInstrumentGroup(reader.GetGuid(0));
 
-      result += ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{id.ToString()}'");
-      result += ExecuteCommand($"DELETE FROM {c_TableInstrumentGroup} WHERE Id = '{id.ToString()}'");
+      lock (this)
+      {
+        result += ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{id.ToString()}'");
+        result += ExecuteCommand($"DELETE FROM {c_TableInstrumentGroup} WHERE Id = '{id.ToString()}'");
+      }
 
       return result;
     }
@@ -507,55 +523,63 @@ namespace TradeSharp.Data
     public int DeleteInstrumentGroupChild(Guid parentId, Guid childId)
     {
       //NOTE: We do not use the parentId for Sqlite, we just reset the parentId on the instrument group table for the given child.
-      return ExecuteCommand($"UPDATE OR IGNORE {c_TableInstrumentGroup} SET ParentId = '{InstrumentGroup.InstrumentGroupRoot.ToString()}' WHERE Id = '{childId.ToString()}'");
+      int result = 0;
+      lock (this) result = ExecuteCommand($"UPDATE OR IGNORE {c_TableInstrumentGroup} SET ParentId = '{InstrumentGroup.InstrumentGroupRoot.ToString()}' WHERE Id = '{childId.ToString()}'");
+      return result;
     }
 
     public int DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId)
     {
-      return ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' AND InstrumentId = '{instrumentId.ToString()}'");
+      int result = 0;
+      lock (this) result = ExecuteCommand($"DELETE FROM {c_TableInstrumentGroupInstrument} WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' AND InstrumentId = '{instrumentId.ToString()}'");
+      return result;
     }
 
     public void CreateInstrument(Instrument instrument)
     {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableInstrument} (Id, AttributeSet, Tag, Type, Ticker, Name, Description, PrimaryExchangeId, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue) " +
-          $"VALUES (" +
-            $"'{instrument.Id.ToString()}', " +
-            $"{(long)instrument.AttributeSet}, " +
-            $"'{SqlSafeString(instrument.Tag)}', " +
-            $"{(int)instrument.Type}, " +
-            $"'{instrument.Ticker}', " +
-            $"'{SqlSafeString(instrument.Name)}', " +
-            $"'{SqlSafeString(instrument.Description)}', " +
-            $"'{instrument.PrimaryExchangeId.ToString()}', " +
-            $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}, " +
-            $"{instrument.PriceDecimals}, " +
-            $"{instrument.MinimumMovement}, " +
-            $"{instrument.BigPointValue}" +
-          $")"
-      );
-
-      foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
+      lock (this)
       {
         ExecuteCommand(
-          $"INSERT OR REPLACE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
+          $"INSERT OR REPLACE INTO {c_TableInstrument} (Id, AttributeSet, Tag, Type, Ticker, Name, Description, PrimaryExchangeId, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue) " +
             $"VALUES (" +
               $"'{instrument.Id.ToString()}', " +
-              $"'{otherExchangeId.ToString()}'" +
+              $"{(long)instrument.AttributeSet}, " +
+              $"'{SqlSafeString(instrument.Tag)}', " +
+              $"{(int)instrument.Type}, " +
+              $"'{instrument.Ticker}', " +
+              $"'{SqlSafeString(instrument.Name)}', " +
+              $"'{SqlSafeString(instrument.Description)}', " +
+              $"'{instrument.PrimaryExchangeId.ToString()}', " +
+              $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}, " +
+              $"{instrument.PriceDecimals}, " +
+              $"{instrument.MinimumMovement}, " +
+              $"{instrument.BigPointValue}" +
             $")"
         );
+
+        foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
+        {
+          ExecuteCommand(
+            $"INSERT OR REPLACE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
+              $"VALUES (" +
+                $"'{instrument.Id.ToString()}', " +
+                $"'{otherExchangeId.ToString()}'" +
+              $")"
+          );
+        }
       }
     }
 
     public void AddInstrumentToExchange(Guid instrumentId, Guid exchangeId)
     {
-      ExecuteCommand(
-        $"INSERT OR IGNORE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
-          $"VALUES (" +
-            $"'{instrumentId.ToString()}', " +
-            $"'{exchangeId.ToString()}' " +
-          $")"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"INSERT OR IGNORE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
+            $"VALUES (" +
+              $"'{instrumentId.ToString()}', " +
+              $"'{exchangeId.ToString()}' " +
+            $")"
+        );
     }
 
     /// <summary>
@@ -1198,31 +1222,36 @@ namespace TradeSharp.Data
 
     public void UpdateInstrument(Instrument instrument)
     {
-      ExecuteCommand(
-        $"UPDATE OR FAIL {c_TableInstrument} " +
-          $"SET Ticker = '{instrument.Ticker}', " +
-              $"AttributeSet = '{(long)instrument.AttributeSet}', " +
-              $"Tag = '{SqlSafeString(instrument.Tag)}', " +
-              $"Name = '{SqlSafeString(instrument.Name)}', " +
-              $"Description = '{SqlSafeString(instrument.Description)}', " +
-              $"PrimaryExchangeId = '{instrument.PrimaryExchangeId.ToString()}', " +
-              $"InceptionDate = {instrument.InceptionDate.ToUniversalTime().ToBinary()}, " +
-              $"PriceDecimals = {instrument.PriceDecimals}, " +
-              $"MinimumMovement = {instrument.MinimumMovement}, " +
-              $"BigPointValue = {instrument.BigPointValue} " +
-          $"WHERE Id = '{instrument.Id.ToString()}'"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"UPDATE OR FAIL {c_TableInstrument} " +
+            $"SET Ticker = '{instrument.Ticker}', " +
+                $"AttributeSet = '{(long)instrument.AttributeSet}', " +
+                $"Tag = '{SqlSafeString(instrument.Tag)}', " +
+                $"Name = '{SqlSafeString(instrument.Name)}', " +
+                $"Description = '{SqlSafeString(instrument.Description)}', " +
+                $"PrimaryExchangeId = '{instrument.PrimaryExchangeId.ToString()}', " +
+                $"InceptionDate = {instrument.InceptionDate.ToUniversalTime().ToBinary()}, " +
+                $"PriceDecimals = {instrument.PriceDecimals}, " +
+                $"MinimumMovement = {instrument.MinimumMovement}, " +
+                $"BigPointValue = {instrument.BigPointValue} " +
+            $"WHERE Id = '{instrument.Id.ToString()}'"
+        );
 
       Delete(c_TableInstrumentSecondaryExchange, instrument.Id, "InstrumentId");
-      foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
+
+      lock (this)
       {
-        ExecuteCommand(
-          $"INSERT OR REPLACE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
-            $"VALUES (" +
-              $"'{instrument.Id.ToString()}', " +
-              $"'{otherExchangeId.ToString()}'" +
-            $")"
-        );
+        foreach (Guid otherExchangeId in instrument.SecondaryExchangeIds)
+        {
+          ExecuteCommand(
+            $"INSERT OR REPLACE INTO {c_TableInstrumentSecondaryExchange} (InstrumentId, ExchangeId) " +
+              $"VALUES (" +
+                $"'{instrument.Id.ToString()}', " +
+                $"'{otherExchangeId.ToString()}'" +
+              $")"
+          );
+        }
       }
     }
 
@@ -1240,7 +1269,8 @@ namespace TradeSharp.Data
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
         using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations)} WHERE InstrumentId = '{id.ToString()}'"))
-          while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+          lock (this)
+            while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
         result += Delete(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations), id, "InstrumentId");
         result += deleteData(dataProvider.Key, ticker, null);
         CacheInstrumentFundamentalAssociations(dataProvider.Key);
@@ -1251,23 +1281,26 @@ namespace TradeSharp.Data
 
     public int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId)
     {
-      return ExecuteCommand($"DELETE FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}' AND ExchangeId = '{exchangeId.ToString()}'");
+      int result = 0;
+      lock (this) result = ExecuteCommand($"DELETE FROM {c_TableInstrumentSecondaryExchange} WHERE InstrumentId = '{instrumentId.ToString()}' AND ExchangeId = '{exchangeId.ToString()}'");
+      return result;
     }
 
     public void CreateFundamental(Fundamental fundamental)
     {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {c_TableFundamentals} (Id, AttributeSet, Tag, Name, Description, Category, ReleaseInterval)" +
-          $"VALUES (" +
-            $"'{fundamental.Id.ToString()}', " +
-            $"{(long)fundamental.AttributeSet}, " +
-            $"'{SqlSafeString(fundamental.Tag)}', " +
-            $"'{SqlSafeString(fundamental.Name)}', " +
-            $"'{SqlSafeString(fundamental.Description)}', " +
-            $"{(int)fundamental.Category}, " +
-            $"{(int)fundamental.ReleaseInterval}" +
-        $")"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {c_TableFundamentals} (Id, AttributeSet, Tag, Name, Description, Category, ReleaseInterval)" +
+            $"VALUES (" +
+              $"'{fundamental.Id.ToString()}', " +
+              $"{(long)fundamental.AttributeSet}, " +
+              $"'{SqlSafeString(fundamental.Tag)}', " +
+              $"'{SqlSafeString(fundamental.Name)}', " +
+              $"'{SqlSafeString(fundamental.Description)}', " +
+              $"{(int)fundamental.Category}, " +
+              $"{(int)fundamental.ReleaseInterval}" +
+          $")"
+        );
     }
 
     public IList<Fundamental> GetFundamentals()
@@ -1308,10 +1341,10 @@ namespace TradeSharp.Data
       int result = 0;
 
       using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations)} WHERE FundamentalId = '{id.ToString()}'"))
-        while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+        lock (this) while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
 
       using (var reader = ExecuteReader($"SELECT Id FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations)} WHERE FundamentalId = '{id.ToString()}'"))
-        while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
+        lock (this) while (reader.Read()) result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{reader.GetGuid(0).ToString()}'");
 
       foreach (var dataProvider in m_configurationService.DataProviders)
       {
@@ -1324,14 +1357,15 @@ namespace TradeSharp.Data
 
     public void CreateCountryFundamental(CountryFundamental fundamental)
     {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {GetDataProviderDBName(fundamental.DataProviderName, c_TableCountryFundamentalAssociations)} (Id, FundamentalId, CountryId) " +
-          $"VALUES (" +
-            $"'{fundamental.AssociationId.ToString()}', " +
-            $"'{fundamental.FundamentalId.ToString()}', " +
-            $"'{fundamental.CountryId.ToString()}'" +
-          $")"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {GetDataProviderDBName(fundamental.DataProviderName, c_TableCountryFundamentalAssociations)} (Id, FundamentalId, CountryId) " +
+            $"VALUES (" +
+              $"'{fundamental.AssociationId.ToString()}', " +
+              $"'{fundamental.FundamentalId.ToString()}', " +
+              $"'{fundamental.CountryId.ToString()}'" +
+            $")"
+        );
 
       AssociationCacheEntry? cacheEntry;
       if (m_countryFundamentalAssociations.TryGetValue(fundamental.DataProviderName, out cacheEntry))
@@ -1385,14 +1419,15 @@ namespace TradeSharp.Data
       Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
       if (!associationId.HasValue) throw new ArgumentException($"Country ({countryId}) is not associated with fundamental ({fundamentalId}).");
 
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} (AssociationId, DateTime, Value) " +
-          $"VALUES (" +
-            $"'{associationId!.Value.ToString()}', " +
-            $"{dateTime.ToUniversalTime().ToBinary()}, " +
-            $"{value.ToString()}" +
-        $")"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} (AssociationId, DateTime, Value) " +
+            $"VALUES (" +
+              $"'{associationId!.Value.ToString()}', " +
+              $"{dateTime.ToUniversalTime().ToBinary()}, " +
+              $"{value.ToString()}" +
+          $")"
+        );
     }
 
     public int DeleteCountryFundamental(string dataProviderName, Guid fundamentalId, Guid countryId)
@@ -1400,8 +1435,13 @@ namespace TradeSharp.Data
       Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
       if (!associationId.HasValue) return 0;
 
-      int result = ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations)} WHERE Id = '{associationId.ToString()}'");
-      result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}'");
+      int result = 0;
+
+      lock (this)
+      {
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalAssociations)} WHERE Id = '{associationId.ToString()}'");
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}'");
+      }
 
       CacheCountryFundamentalAssociations(dataProviderName);
 
@@ -1411,22 +1451,23 @@ namespace TradeSharp.Data
     public int DeleteCountryFundamentalValue(string dataProviderName, Guid fundamentalId, Guid countryId, DateTime dateTime)
     {
       Guid? associationId = GetCountryFundamentalAssociationId(dataProviderName, fundamentalId, countryId);
-
       if (!associationId.HasValue) return 0;  //no association, nothing to remove
-
-      return ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}"); ;
+      int result = 0;
+      lock (this) result = ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableCountryFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}");
+      return result;
     }
 
     public void CreateInstrumentFundamental(InstrumentFundamental fundamental)
     {
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {GetDataProviderDBName(fundamental.DataProviderName, c_TableInstrumentFundamentalAssociations)} (Id, FundamentalId, InstrumentId) " +
-          $"VALUES (" +
-            $"'{fundamental.AssociationId.ToString()}', " +
-            $"'{fundamental.FundamentalId.ToString()}', " +
-            $"'{fundamental.InstrumentId.ToString()}'" +
-          $")"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {GetDataProviderDBName(fundamental.DataProviderName, c_TableInstrumentFundamentalAssociations)} (Id, FundamentalId, InstrumentId) " +
+            $"VALUES (" +
+              $"'{fundamental.AssociationId.ToString()}', " +
+              $"'{fundamental.FundamentalId.ToString()}', " +
+              $"'{fundamental.InstrumentId.ToString()}'" +
+            $")"
+        );
 
       AssociationCacheEntry? cacheEntry;
       if (m_instrumentFundamentalAssociations.TryGetValue(fundamental.DataProviderName, out cacheEntry))
@@ -1480,14 +1521,15 @@ namespace TradeSharp.Data
       Guid? associationId = GetInstrumentFundamentalAssociationId(dataProviderName, fundamentalId, instrumentId);
       if (!associationId.HasValue) throw new ArgumentException($"Instrument ({instrumentId}) is not associated with fundamental ({fundamentalId}).");
 
-      ExecuteCommand(
-        $"INSERT OR REPLACE INTO {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} (AssociationId, DateTime, Value) " +
-          $"VALUES (" +
-            $"'{associationId!.Value.ToString()}', " +
-            $"{dateTime.ToUniversalTime().ToBinary()}, " +
-            $"{value.ToString()}" +
-        $")"
-      );
+      lock (this)
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} (AssociationId, DateTime, Value) " +
+            $"VALUES (" +
+              $"'{associationId!.Value.ToString()}', " +
+              $"{dateTime.ToUniversalTime().ToBinary()}, " +
+              $"{value.ToString()}" +
+          $")"
+        );
     }
 
     public int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId)
@@ -1495,8 +1537,13 @@ namespace TradeSharp.Data
       Guid? associationId = GetInstrumentFundamentalAssociationId(dataProviderName, fundamentalId, instrumentId);
       if (!associationId.HasValue) return 0;
 
-      int result = ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations)} WHERE Id = '{associationId.ToString()}'");
-      result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}'");
+      int result = 0;
+
+      lock (this)
+      {
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalAssociations)} WHERE Id = '{associationId.ToString()}'");
+        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}'");
+      }
 
       CacheInstrumentFundamentalAssociations(dataProviderName);
 
@@ -1506,10 +1553,10 @@ namespace TradeSharp.Data
     public int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime)
     {
       Guid? associationId = GetInstrumentFundamentalAssociationId(dataProviderName, fundamentalId, instrumentId);
-
       if (!associationId.HasValue) return 0;  //no association, nothing to remove
-
-      return ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}");
+      int result = 0;
+      lock (this) result = ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentFundamentalValues)} WHERE AssociationId = '{associationId.ToString()}' AND DateTime = {dateTime.ToUniversalTime().ToBinary()}");
+      return result;
     }
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume)
@@ -1534,7 +1581,7 @@ namespace TradeSharp.Data
             $"{volume}" +
         $")";
 
-      ExecuteCommand(command);
+      lock (this) ExecuteCommand(command);
     }
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize)
@@ -1557,7 +1604,7 @@ namespace TradeSharp.Data
             $"{lastSize}" +
         $")";
 
-      ExecuteCommand(command);
+      lock (this) ExecuteCommand(command);
     }
 
     /// <summary>
@@ -1570,32 +1617,34 @@ namespace TradeSharp.Data
       if (bars.Count == 0) return;
 
       //create database update
-      using (var transaction = m_connection.BeginTransaction())
-      {
-        var command = m_connection.CreateCommand();
-        command.Transaction = transaction;
-
-        string normalizedTicker = ticker.ToUpper();
-        string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
-        
-        for (int index = 0; index < bars.Count; index++)
+      lock (this)
+        using (var transaction = m_connection.BeginTransaction())
         {
-          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
-            $"VALUES (" +
-              $"'{normalizedTicker}', " +
-              $"{bars.DateTime[index].ToUniversalTime().ToBinary()}, " +
-              $"{bars.Open[index]}, " +
-              $"{bars.High[index]}, " +
-              $"{bars.Low[index]}, " +
-              $"{bars.Close[index]}, " +
-              $"{bars.Volume[index]}" +
-            $")";
+          var command = m_connection.CreateCommand();
+          command.CommandTimeout = 0;   //wait for concurrent writes to finish indefinitely
+          command.Transaction = transaction;
 
-          command.ExecuteNonQuery();
+          string normalizedTicker = ticker.ToUpper();
+          string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
+
+          for (int index = 0; index < bars.Count; index++)
+          {
+            command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
+              $"VALUES (" +
+                $"'{normalizedTicker}', " +
+                $"{bars.DateTime[index].ToUniversalTime().ToBinary()}, " +
+                $"{bars.Open[index]}, " +
+                $"{bars.High[index]}, " +
+                $"{bars.Low[index]}, " +
+                $"{bars.Close[index]}, " +
+                $"{bars.Volume[index]}" +
+              $")";
+
+            command.ExecuteNonQuery();
+          }
+
+          transaction.Commit();
         }
-
-        transaction.Commit();
-      }
     }
 
     /// <summary>
@@ -1608,32 +1657,33 @@ namespace TradeSharp.Data
       if (bars.Count == 0) return;
 
       //create database update
-      using (var transaction = m_connection.BeginTransaction())
-      {
-        var command = m_connection.CreateCommand();
-        command.Transaction = transaction;
-
-        string normalizedTicker = ticker.ToUpper();
-        string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
-
-        foreach (IBarData bar in bars)
+      lock (this)
+        using (var transaction = m_connection.BeginTransaction())
         {
-          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
-            $"VALUES (" +
-              $"'{normalizedTicker}', " +
-              $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
-              $"{bar.Open}, " +
-              $"{bar.High}, " +
-              $"{bar.Low}, " +
-              $"{bar.Close}, " +
-              $"{bar.Volume}" +
-            $")";
+          string normalizedTicker = ticker.ToUpper();
+          string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
 
-          command.ExecuteNonQuery();
+          foreach (IBarData bar in bars)
+          {
+            var command = m_connection.CreateCommand();
+            command.CommandTimeout = 0;   //wait for concurrent writes to finish indefinitely
+            command.Transaction = transaction;
+
+            command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
+              $"VALUES (" +
+                $"'{normalizedTicker}', " +
+                $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
+                $"{bar.Open}, " +
+                $"{bar.High}, " +
+                $"{bar.Low}, " +
+                $"{bar.Close}, " +
+                $"{bar.Volume}" +
+              $")";
+            command.ExecuteNonQuery();
+          }
+
+          transaction.Commit();
         }
-
-        transaction.Commit();
-      }
     }
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DataCacheLevel1 level1Data)
@@ -1641,33 +1691,34 @@ namespace TradeSharp.Data
       if (level1Data.Count == 0) throw new ArgumentException("Update data count should not be zero.");
 
       //create database update
-      using (var transaction = m_connection.BeginTransaction())
-      {
-        var command = m_connection.CreateCommand();
-        command.Transaction = transaction;
-
-        string normalizedTicker = ticker.ToUpper();
-        string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1);
-
-        for (int index = 0; index < level1Data.Count; index++)
+      lock (this)
+        using (var transaction = m_connection.BeginTransaction())
         {
-          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
-            $"VALUES (" +
-              $"'{normalizedTicker}', " +
-              $"{level1Data.DateTime[index].ToUniversalTime().ToBinary()}, " +
-              $"{level1Data.Bid[index]}, " +
-              $"{level1Data.BidSize[index]}, " +
-              $"{level1Data.Ask[index]}, " +
-              $"{level1Data.AskSize[index]}, " +
-              $"{level1Data.Last[index]}, " +
-              $"{level1Data.LastSize[index]}" +
-            $")";
+          var command = m_connection.CreateCommand();
+          command.CommandTimeout = 0;   //wait for concurrent writes to finish indefinitely
+          command.Transaction = transaction;
 
-          command.ExecuteNonQuery();
+          string normalizedTicker = ticker.ToUpper();
+          string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1);
+
+          for (int index = 0; index < level1Data.Count; index++)
+          {
+            command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
+              $"VALUES (" +
+                $"'{normalizedTicker}', " +
+                $"{level1Data.DateTime[index].ToUniversalTime().ToBinary()}, " +
+                $"{level1Data.Bid[index]}, " +
+                $"{level1Data.BidSize[index]}, " +
+                $"{level1Data.Ask[index]}, " +
+                $"{level1Data.AskSize[index]}, " +
+                $"{level1Data.Last[index]}, " +
+                $"{level1Data.LastSize[index]}" +
+              $")";
+            command.ExecuteNonQuery();
+          }
+
+          transaction.Commit();
         }
-
-        transaction.Commit();
-      }
     }
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<ILevel1Data> bars)
@@ -1677,33 +1728,35 @@ namespace TradeSharp.Data
       if (bars.Count == 0) return;
 
       //create database update
-      using (var transaction = m_connection.BeginTransaction())
-      {
-        var command = m_connection.CreateCommand();
-        command.Transaction = transaction;
-
-        string normalizedTicker = ticker.ToUpper();
-        string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
-
-        foreach (ILevel1Data bar in bars)
+      lock (this)
+        using (var transaction = m_connection.BeginTransaction())
         {
-          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
-            $"VALUES (" +
-              $"'{normalizedTicker}', " +
-              $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
-              $"{bar.Bid}, " +
-              $"{bar.BidSize}, " +
-              $"{bar.Ask}, " +
-              $"{bar.AskSize}, " +
-              $"{bar.Last}, " +
-              $"{bar.LastSize}" +
-            $")";
+          string normalizedTicker = ticker.ToUpper();
+          string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
 
-          command.ExecuteNonQuery();
+          foreach (ILevel1Data bar in bars)
+          {
+            var command = m_connection.CreateCommand();
+            command.CommandTimeout = 0;   //wait for concurrent writes to finish indefinitely
+            command.Transaction = transaction;
+
+            command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
+              $"VALUES (" +
+                $"'{normalizedTicker}', " +
+                $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
+                $"{bar.Bid}, " +
+                $"{bar.BidSize}, " +
+                $"{bar.Ask}, " +
+                $"{bar.AskSize}, " +
+                $"{bar.Last}, " +
+                $"{bar.LastSize}" +
+              $")";
+
+            command.ExecuteNonQuery();
+          }
+
+          transaction.Commit();
         }
-
-        transaction.Commit();
-      }
     }
 
     public int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime)
@@ -1718,18 +1771,21 @@ namespace TradeSharp.Data
     {
       int result = 0;
 
-      if (resolution.HasValue)
+      lock (this)
       {
-        result += dateTime.HasValue ? ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution.Value)} WHERE Ticker = '{ticker}' AND DateTime = {dateTime.Value.ToUniversalTime().ToBinary()}") :
-                                        ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution.Value)} WHERE Ticker = '{ticker}'");
-      }
-      else
-      {
-        //delete all resolutions
-        foreach (Resolution res in s_SupportedResolutions)
+        if (resolution.HasValue)
         {
+          result += dateTime.HasValue ? ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution.Value)} WHERE Ticker = '{ticker}' AND DateTime = {dateTime.Value.ToUniversalTime().ToBinary()}") :
+                                          ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution.Value)} WHERE Ticker = '{ticker}'");
+        }
+        else
+        {
+          //delete all resolutions
+          foreach (Resolution res in s_SupportedResolutions)
+          {
             result += dateTime.HasValue ? ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, res)} WHERE Ticker = '{ticker}' AND DateTime = {dateTime.Value.ToUniversalTime().ToBinary()}") :
                                           ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, res)} WHERE Ticker = '{ticker}'");
+          }
         }
       }
 
@@ -1744,12 +1800,15 @@ namespace TradeSharp.Data
       if (from != null) where += $"AND DateTime >= {from.Value.ToUniversalTime().ToBinary()}";
       if (to != null) where += $"AND DateTime >= {to.Value.ToUniversalTime().ToBinary()}";
 
-      if (resolution != null)
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution.Value)} WHERE " + where);
-      else
+      lock (this)
       {
-        foreach (Resolution res in s_SupportedResolutions)
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, res)} WHERE " + where);
+        if (resolution != null)
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution.Value)} WHERE " + where);
+        else
+        {
+          foreach (Resolution res in s_SupportedResolutions)
+            result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, res)} WHERE " + where);
+        }
       }
 
       return result;
@@ -2140,15 +2199,15 @@ namespace TradeSharp.Data
       }
 
       //get actual bar data
-        command =
-          $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1)} " +
-            $"WHERE " +
-              $"Ticker = '{normalizedTicker}' " +
-              $"AND DateTime == {dateTimeUtc.ToBinary()}";
+      command =
+        $"SELECT DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize FROM {GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1)} " +
+          $"WHERE " +
+            $"Ticker = '{normalizedTicker}' " +
+            $"AND DateTime == {dateTimeUtc.ToBinary()}";
 
-        using (SqliteDataReader reader = ExecuteReader(command))
-          if (reader.Read())
-            return new Level1Data(convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6));
+      using (SqliteDataReader reader = ExecuteReader(command))
+        if (reader.Read())
+          return new Level1Data(convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6));
 
       return null;
     }
@@ -2228,7 +2287,9 @@ namespace TradeSharp.Data
     /// </summary>
     protected int Delete(string tableName, Guid id, string idFieldname = "Id")
     {
-      return ExecuteCommand($"DELETE FROM {tableName} WHERE {idFieldname} = '{id.ToString()}'");
+      int result = 0;
+      lock (this) result = ExecuteCommand($"DELETE FROM {tableName} WHERE {idFieldname} = '{id.ToString()}'");
+      return result;
     }
 
     /// <summary>
@@ -2261,39 +2322,42 @@ namespace TradeSharp.Data
     /// </summary>
     public void CreateSchema()
     {
-      try
+      lock (this)
       {
-        StartTransaction();
-
-        //create general data tables if required
-        CreateCountryTable();
-        CreateHolidayTable();
-        CreateExchangeTable();
-        CreateSessionTable();
-        CreateInstrumentGroupTable();
-        CreateInstrumentGroupInstrumentTable();
-        CreateInstrumentTable();
-        CreateInstrumentSecondaryExchangeTable();
-        CreateFundamentalsTable();
-
-        //create data provider specific data tables if required
-        foreach (var dataProvider in m_configurationService.DataProviders)
+        try
         {
-          if (!requireTableDefinitions(dataProvider.Key)) continue;
-          CreateCountryFundamentalAssociationTable(dataProvider.Key);
-          CreateCountryFundamentalValuesTable(dataProvider.Key);
-          CreateInstrumentFundamentalAssociationTable(dataProvider.Key);
-          CreateInstrumentFundamentalValuesTable(dataProvider.Key);
-          foreach (Resolution resolution in s_SupportedResolutions)
-            CreateInstrumentDataTable(dataProvider.Key, resolution);
-        }
+          StartTransaction();
 
-        EndTransaction(true);
-      }
-      catch (Exception)
-      {
-        EndTransaction(false);
-        throw;  //rethrow the exception with the stack in place
+          //create general data tables if required
+          CreateCountryTable();
+          CreateHolidayTable();
+          CreateExchangeTable();
+          CreateSessionTable();
+          CreateInstrumentGroupTable();
+          CreateInstrumentGroupInstrumentTable();
+          CreateInstrumentTable();
+          CreateInstrumentSecondaryExchangeTable();
+          CreateFundamentalsTable();
+
+          //create data provider specific data tables if required
+          foreach (var dataProvider in m_configurationService.DataProviders)
+          {
+            if (!requireTableDefinitions(dataProvider.Key)) continue;
+            CreateCountryFundamentalAssociationTable(dataProvider.Key);
+            CreateCountryFundamentalValuesTable(dataProvider.Key);
+            CreateInstrumentFundamentalAssociationTable(dataProvider.Key);
+            CreateInstrumentFundamentalValuesTable(dataProvider.Key);
+            foreach (Resolution resolution in s_SupportedResolutions)
+              CreateInstrumentDataTable(dataProvider.Key, resolution);
+          }
+
+          EndTransaction(true);
+        }
+        catch (Exception)
+        {
+          EndTransaction(false);
+          throw;  //rethrow the exception with the stack in place
+        }
       }
     }
 
@@ -2302,26 +2366,29 @@ namespace TradeSharp.Data
     /// </summary>
     public void CreateDefaultObjects()
     {
-      try
+      lock (this)
       {
-        StartTransaction();
+        try
+        {
+          StartTransaction();
 
-        if (GetRowCount(c_TableCountry, $"Id == '{Country.InternationalId.ToString()}'") == 0) CreateCountry(new Country(Country.InternationalId, Attributes.None, "", Country.InternationalIsoCode));
-        if (GetRowCount(c_TableExchange, $"Id == '{Exchange.InternationalId.ToString()}'") == 0) CreateExchange(new Exchange(Exchange.InternationalId, Attributes.None, "", Country.InternationalId, "Global Exchange", TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId));
-        if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Monday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Monday", Exchange.InternationalId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Tuesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Tuesday", Exchange.InternationalId, DayOfWeek.Tuesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Wednesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Wednesday", Exchange.InternationalId, DayOfWeek.Wednesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Thursday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Thursday", Exchange.InternationalId, DayOfWeek.Thursday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Friday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Friday", Exchange.InternationalId, DayOfWeek.Friday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Saturday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Saturday", Exchange.InternationalId, DayOfWeek.Saturday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Sunday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Sunday", Exchange.InternationalId, DayOfWeek.Sunday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+          if (GetRowCount(c_TableCountry, $"Id == '{Country.InternationalId.ToString()}'") == 0) CreateCountry(new Country(Country.InternationalId, Attributes.None, "", Country.InternationalIsoCode));
+          if (GetRowCount(c_TableExchange, $"Id == '{Exchange.InternationalId.ToString()}'") == 0) CreateExchange(new Exchange(Exchange.InternationalId, Attributes.None, "", Country.InternationalId, "Global Exchange", TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId));
+          if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Monday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Monday", Exchange.InternationalId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+          if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Tuesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Tuesday", Exchange.InternationalId, DayOfWeek.Tuesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+          if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Wednesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Wednesday", Exchange.InternationalId, DayOfWeek.Wednesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+          if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Thursday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Thursday", Exchange.InternationalId, DayOfWeek.Thursday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+          if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Friday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Friday", Exchange.InternationalId, DayOfWeek.Friday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+          if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Saturday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Saturday", Exchange.InternationalId, DayOfWeek.Saturday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+          if (GetRowCount(c_TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Sunday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Sunday", Exchange.InternationalId, DayOfWeek.Sunday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
 
-        EndTransaction(true);
-      }
-      catch (Exception)
-      {
-        EndTransaction(false);
-        throw;
+          EndTransaction(true);
+        }
+        catch (Exception)
+        {
+          EndTransaction(false);
+          throw;
+        }
       }
     }
 
@@ -2331,43 +2398,46 @@ namespace TradeSharp.Data
     public void DropSchema()
     {
       //https://sqlite.org/lang_droptable.html
-      try
+      lock (this)
       {
-        StartTransaction();
-
-        DropTable(c_TableCountry);
-        DropTable(c_TableHoliday);
-        DropTable(c_TableExchange);
-        DropTable(c_TableSession);
-        DropTable(c_TableInstrumentGroup);
-        DropTable(c_TableInstrumentGroupInstrument);
-        DropTable(c_TableFundamentals);
-        DropTable(c_TableInstrument);
-        DropTable(c_TableInstrumentSecondaryExchange);
-        DropTable(c_TableInstrumentData);
-        DropIndex(c_IndexInstrumentData);
-
-        //drop the data provider specific tables and indexes
-        foreach (var dataProvider in m_configurationService.DataProviders)
+        try
         {
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableFundamentals));
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalAssociations));
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalValues));
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations));
-          DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalValues));
-          foreach (Resolution resolution in s_SupportedResolutions)
-          {
-            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentData, resolution));
-            DropIndex(GetDataProviderDBName(dataProvider.Key, c_IndexInstrumentData, resolution));
-          }
-        }
+          StartTransaction();
 
-        EndTransaction(true);
-      }
-      catch (Exception)
-      {
-        EndTransaction(false);
-        throw;
+          DropTable(c_TableCountry);
+          DropTable(c_TableHoliday);
+          DropTable(c_TableExchange);
+          DropTable(c_TableSession);
+          DropTable(c_TableInstrumentGroup);
+          DropTable(c_TableInstrumentGroupInstrument);
+          DropTable(c_TableFundamentals);
+          DropTable(c_TableInstrument);
+          DropTable(c_TableInstrumentSecondaryExchange);
+          DropTable(c_TableInstrumentData);
+          DropIndex(c_IndexInstrumentData);
+
+          //drop the data provider specific tables and indexes
+          foreach (var dataProvider in m_configurationService.DataProviders)
+          {
+            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableFundamentals));
+            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalAssociations));
+            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableCountryFundamentalValues));
+            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalAssociations));
+            DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentFundamentalValues));
+            foreach (Resolution resolution in s_SupportedResolutions)
+            {
+              DropTable(GetDataProviderDBName(dataProvider.Key, c_TableInstrumentData, resolution));
+              DropIndex(GetDataProviderDBName(dataProvider.Key, c_IndexInstrumentData, resolution));
+            }
+          }
+
+          EndTransaction(true);
+        }
+        catch (Exception)
+        {
+          EndTransaction(false);
+          throw;
+        }
       }
     }
 
@@ -2609,19 +2679,22 @@ namespace TradeSharp.Data
 
     /// <summary>
     /// Execute non-query method on the database.
+    /// timeout = a timeout of zero is interpreted as an infinite timeout.
     /// </summary>
-    public int ExecuteCommand(string command)
+    public int ExecuteCommand(string command, int timeout = -1)
     {
       if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database non-query - ${command}");
       var commandObj = m_connection.CreateCommand();
+      commandObj.CommandTimeout = timeout >= 0 ? timeout : m_connection.DefaultTimeout;
       commandObj.CommandText = command;
       return commandObj.ExecuteNonQuery();
     }
 
-    public object? ExecuteScalar(string command)
+    public object? ExecuteScalar(string command, int timeout = -1)
     {
       if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database scalar read - ${command}");
       var commandObj = m_connection.CreateCommand();
+      commandObj.CommandTimeout = timeout >= 0 ? timeout : m_connection.DefaultTimeout;
       commandObj.CommandText = command;
       return commandObj.ExecuteScalar();
     }
@@ -2629,9 +2702,10 @@ namespace TradeSharp.Data
     /// <summary>
     /// Execute a database reader on the database.
     /// </summary>
-    public SqliteDataReader ExecuteReader(string command)
+    public SqliteDataReader ExecuteReader(string command, int timeout = -1)
     {
       var commandObj = m_connection.CreateCommand();
+      commandObj.CommandTimeout = timeout >= 0 ? timeout : m_connection.DefaultTimeout;
       commandObj.CommandText = command;
       return commandObj.ExecuteReader();
     }
@@ -2641,22 +2715,27 @@ namespace TradeSharp.Data
     /// </summary>
     public int ClearDatabase()
     {
-      int result = ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableCountry}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableHoliday}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableExchange}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableSession}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentGroup}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentGroupInstrument}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrument}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentSecondaryExchange}");
-      result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableFundamentals}");
-      foreach (var dataProvider in m_configurationService.DataProviders)
-      {
-        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableCountryFundamentalValues)}");
-        result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableInstrumentFundamentalValues)}");
+      int result = 0;
 
-        foreach (Resolution resolution in SupportedDataResolutions)
-          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableInstrumentData, resolution)}");
+      lock (this)
+      {
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableCountry}");
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableHoliday}");
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableExchange}");
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableSession}");
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentGroup}");
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentGroupInstrument}");
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrument}");
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableInstrumentSecondaryExchange}");
+        result += ExecuteCommand($"DELETE FROM {Data.SqliteDatabase.c_TableFundamentals}");
+        foreach (var dataProvider in m_configurationService.DataProviders)
+        {
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableCountryFundamentalValues)}");
+          result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableInstrumentFundamentalValues)}");
+
+          foreach (Resolution resolution in SupportedDataResolutions)
+            result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.c_TableInstrumentData, resolution)}");
+        }
       }
 
       return result;

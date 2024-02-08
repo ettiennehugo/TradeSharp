@@ -57,6 +57,7 @@ namespace TradeSharp.CoreUI.Services
       DataProvider = string.Empty;
       Instrument = null;
       Resolution = Resolution.Day;
+      MassOperation = false;
       m_selectedItem = null;
       Items = new ObservableCollection<IBarData>();
     }
@@ -199,7 +200,7 @@ namespace TradeSharp.CoreUI.Services
           toRepository.Update(toBarData);
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           break;
         case Resolution.Hour:
           toRepository.Resolution = Resolution.Day;
@@ -224,7 +225,7 @@ namespace TradeSharp.CoreUI.Services
           toRepository.Update(toBarData);
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           break;
         case Resolution.Day:
           toRepository.Resolution = Resolution.Week;
@@ -254,7 +255,7 @@ namespace TradeSharp.CoreUI.Services
           toRepository.Update(toBarData);
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           break;
         case Resolution.Week:
           toRepository.Resolution = Resolution.Month;
@@ -279,7 +280,7 @@ namespace TradeSharp.CoreUI.Services
           toRepository.Update(toBarData);
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+          if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           break;
         case Resolution.Month:
           //nothing to do
@@ -480,6 +481,7 @@ namespace TradeSharp.CoreUI.Services
     public string DataProvider { get => m_repository.DataProvider; set => m_repository.DataProvider = value; }
     public Instrument? Instrument { get => m_repository.Instrument; set => m_repository.Instrument = value; }
     public Resolution Resolution { get => m_repository.Resolution; set => m_repository.Resolution = value; }
+    public bool MassOperation { get; set; }
     public event EventHandler<IBarData?>? SelectedItemChanged;
     public IBarData? SelectedItem
     {
@@ -505,7 +507,7 @@ namespace TradeSharp.CoreUI.Services
       string statusMessage = $"Importing bar data from \"{importSettings.Filename}\"";
       IDisposable? loggerScope = null;
       if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
+      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       long barsUpdated = 0;
       bool noErrors = true;
@@ -519,7 +521,7 @@ namespace TradeSharp.CoreUI.Services
         {
           statusMessage = $"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.";
           if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+          if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
           return;
         }
       }
@@ -568,14 +570,14 @@ namespace TradeSharp.CoreUI.Services
           {
             statusMessage = "DateTime or (Date and Time) fields are required to import bar data.";
             if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-            m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+            if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
           }
 
           if (!openFound || !highFound || !lowFound || !closeFound || !volumeFound)
           {
             statusMessage = "Open, high, low, close and volume fields are required to import bar data.";
             if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-            m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+            if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
           }
 
           //parse the file data, first load the bars into a cache and then mass update the database (mass update is faster)
@@ -664,7 +666,7 @@ namespace TradeSharp.CoreUI.Services
             {
               statusMessage = $"Failed to parse bar on line {lineNo} with exception \"{e.Message}\".";
               if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+              if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
               bars.Clear();
               noErrors = false;
             }
@@ -676,7 +678,7 @@ namespace TradeSharp.CoreUI.Services
         {
           statusMessage = $"Unable to parse header.";
           if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+          if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
           noErrors = false;
         }
       }
@@ -684,9 +686,11 @@ namespace TradeSharp.CoreUI.Services
       if (Debugging.ImportExport) m_logger.LogInformation($"Imported {barsUpdated} bars from \"{importSettings.Filename}\".");
 
       if (noErrors)
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+      {
+        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+      }
       else
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
 
       RaiseRefreshEvent();  //notify view model of changes
     }
@@ -698,7 +702,7 @@ namespace TradeSharp.CoreUI.Services
       string statusMessage = $"Importing bar data from \"{importSettings.Filename}\"";
       IDisposable? loggerScope = null;
       if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
+      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       bool noErrors = true;
 
@@ -711,7 +715,7 @@ namespace TradeSharp.CoreUI.Services
         {
           statusMessage = $"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId.ToString()}\" can not import data based on Exchange.";
           if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+          if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
           return;
         }
       }
@@ -774,7 +778,7 @@ namespace TradeSharp.CoreUI.Services
             {
               statusMessage = $"Bar at index {barIndex} does not contain a valid date/time specification.";  //JSON library contains zero information on where it found this data so the best we can do is use an index.
               if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "", statusMessage);
+              if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "", statusMessage);
               continue; //skip to next bar definition
             }
 
@@ -797,9 +801,11 @@ namespace TradeSharp.CoreUI.Services
       if (Debugging.ImportExport) m_logger.LogInformation($"Imported {barsUpdated} bars from \"{importSettings.Filename}\".");
 
       if (noErrors)
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+      {
+        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+      }
       else
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
+        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
 
       RaiseRefreshEvent();  //notify view model of changes
     }
@@ -811,7 +817,7 @@ namespace TradeSharp.CoreUI.Services
       string statusMessage = $"Exporting bar data to \"{filename}\"";
       IDisposable? loggerScope = null;
       if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
+      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
 
@@ -819,7 +825,7 @@ namespace TradeSharp.CoreUI.Services
       {
         statusMessage = $"Date/time exported without UTC conversion, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\".";
         if (Debugging.ImportExport) m_logger.LogWarning(statusMessage);
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
         return;
       }
 
@@ -855,7 +861,7 @@ namespace TradeSharp.CoreUI.Services
       }
 
       if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} bars to \"{filename}\".");
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{filename}\".");
+      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{filename}\".");
     }
 
     //NOTE: Export always writes out the data in the Exchange time-zone, so the import defaults to Exchange time-zone.
@@ -865,14 +871,14 @@ namespace TradeSharp.CoreUI.Services
       string statusMessage = $"Exporting bar data to \"{filename}\"";
       IDisposable? loggerScope = null;
       if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
+      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
       Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
 
       if (exchange == null)
       {
         statusMessage = $"Date/time exported without UTC conversion, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\".";
         if (Debugging.ImportExport) m_logger.LogWarning(statusMessage);
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
         return;
       }
 
@@ -913,7 +919,7 @@ namespace TradeSharp.CoreUI.Services
       }
 
       if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} bars to \"{filename}\".");
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{filename}\".");
+      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{filename}\".");
     }
   }
 }

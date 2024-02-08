@@ -141,6 +141,7 @@ namespace TradeSharp.CoreUI.Services
 
                 IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
                 instrumentBarDataService.DataProvider = DataProvider;
+                instrumentBarDataService.MassOperation = true;
                 instrumentBarDataService.Resolution = resolution;
 
                 while (instrumentsList.Count > 0 && !cancellationToken.IsCancellationRequested)
