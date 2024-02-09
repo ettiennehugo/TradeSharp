@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using TradeSharp.Common;
@@ -8,7 +9,7 @@ namespace TradeSharp.Data
   /// <summary>
   /// Data store for Sqlite database.
   /// </summary>
-  public class SqliteDatabase : IDatabase
+  public partial class SqliteDatabase : ObservableObject, IDatabase
   {
     //constants
     public const string c_TableCountry = "Country";
@@ -58,7 +59,7 @@ namespace TradeSharp.Data
     private ILogger<SqliteDatabase> m_logger;
 
     //constructors
-    public SqliteDatabase(IConfigurationService configurationService, ILogger<SqliteDatabase> logger)
+    public SqliteDatabase(IConfigurationService configurationService, ILogger<SqliteDatabase> logger): base()
     {
       m_configurationService = configurationService;
       m_logger = logger;
@@ -67,6 +68,7 @@ namespace TradeSharp.Data
       m_connection = new SqliteConnection();
       m_countryFundamentalAssociations = new AssociationCache();
       m_instrumentFundamentalAssociations = new AssociationCache();
+      IsOptimizing = false;
 
       //Info on connection strings - https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/connection-strings
       //Low level interoperability - https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/interop
@@ -89,6 +91,9 @@ namespace TradeSharp.Data
 
       //enable write-ahead-log journalling for concurrent write/read operations - https://sqlite.org/wal.html
       ExecuteCommand("PRAGMA journal_mode=WAL");
+
+      //optimize database as best possible - this makes the DB very slow so rather use a once off optimization.
+      //ExecuteCommand("PRAGMA auto_vacuum=1");   //perform cleanup after each commit (slows down the database) - https://sqlite.org/pragma.html#pragma_auto_vacuum
 
       //create the data store schema
       CreateSchema();
@@ -117,6 +122,19 @@ namespace TradeSharp.Data
         ExecuteCommand("END TRANSACTION");
       else
         ExecuteCommand("ROLLBACK TRANSACTION");
+    }
+
+    public void Optimize()
+    {
+      if (IsOptimizing)
+      {
+        if (Debugging.DatabaseCalls) m_logger.LogWarning("Database is already optimizing, skipping this call.");
+        return;
+      }
+
+      IsOptimizing = true;
+      ExecuteCommand("VACUUM");
+      IsOptimizing = false;
     }
 
     public void CreateCountry(Country country)
@@ -163,9 +181,7 @@ namespace TradeSharp.Data
 
     public int DeleteCountry(Guid id)
     {
-      int result = 0;
-
-      result = Delete(c_TableCountry, id);
+      int result = Delete(c_TableCountry, id);
       foreach (var holidayId in GetAssociatedIds(c_TableHoliday, id, "ParentId")) result += DeleteHoliday(holidayId);
       foreach (var exchangeId in GetAssociatedIds(c_TableExchange, id, "CountryId")) result += DeleteExchange(exchangeId);
 
@@ -1616,35 +1632,30 @@ namespace TradeSharp.Data
       if (resolution == Resolution.Level1) throw new ArgumentException("Update for bar data can not update Level 1 data.");
       if (bars.Count == 0) return;
 
-      //create database update
+      //aquire database lock
       lock (this)
-        using (var transaction = m_connection.BeginTransaction())
+      {
+        string normalizedTicker = ticker.ToUpper();
+        string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
+
+        for (int index = 0; index < bars.Count; index++)
         {
+          //create command for update - NOTE: you can not reuse commands in SQLite
           var command = m_connection.CreateCommand();
-          command.CommandTimeout = 0;   //wait for concurrent writes to finish indefinitely
-          command.Transaction = transaction;
+          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
+            $"VALUES (" +
+              $"'{normalizedTicker}', " +
+              $"{bars.DateTime[index].ToUniversalTime().ToBinary()}, " +
+              $"{bars.Open[index]}, " +
+              $"{bars.High[index]}, " +
+              $"{bars.Low[index]}, " +
+              $"{bars.Close[index]}, " +
+              $"{bars.Volume[index]}" +
+            $")";
 
-          string normalizedTicker = ticker.ToUpper();
-          string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
-
-          for (int index = 0; index < bars.Count; index++)
-          {
-            command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
-              $"VALUES (" +
-                $"'{normalizedTicker}', " +
-                $"{bars.DateTime[index].ToUniversalTime().ToBinary()}, " +
-                $"{bars.Open[index]}, " +
-                $"{bars.High[index]}, " +
-                $"{bars.Low[index]}, " +
-                $"{bars.Close[index]}, " +
-                $"{bars.Volume[index]}" +
-              $")";
-
-            command.ExecuteNonQuery();
-          }
-
-          transaction.Commit();
+          command.ExecuteNonQuery();
         }
+      }
     }
 
     /// <summary>
@@ -1658,32 +1669,27 @@ namespace TradeSharp.Data
 
       //create database update
       lock (this)
-        using (var transaction = m_connection.BeginTransaction())
+      {
+        string normalizedTicker = ticker.ToUpper();
+        string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
+
+        foreach (IBarData bar in bars)
         {
-          string normalizedTicker = ticker.ToUpper();
-          string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
+          var command = m_connection.CreateCommand();
+          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
+            $"VALUES (" +
+              $"'{normalizedTicker}', " +
+              $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
+              $"{bar.Open}, " +
+              $"{bar.High}, " +
+              $"{bar.Low}, " +
+              $"{bar.Close}, " +
+              $"{bar.Volume}" +
+            $")";
 
-          foreach (IBarData bar in bars)
-          {
-            var command = m_connection.CreateCommand();
-            command.CommandTimeout = 0;   //wait for concurrent writes to finish indefinitely
-            command.Transaction = transaction;
-
-            command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Open, High, Low, Close, Volume) " +
-              $"VALUES (" +
-                $"'{normalizedTicker}', " +
-                $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
-                $"{bar.Open}, " +
-                $"{bar.High}, " +
-                $"{bar.Low}, " +
-                $"{bar.Close}, " +
-                $"{bar.Volume}" +
-              $")";
-            command.ExecuteNonQuery();
-          }
-
-          transaction.Commit();
+          command.ExecuteNonQuery();
         }
+      }
     }
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DataCacheLevel1 level1Data)
@@ -1692,33 +1698,28 @@ namespace TradeSharp.Data
 
       //create database update
       lock (this)
-        using (var transaction = m_connection.BeginTransaction())
+      {
+        string normalizedTicker = ticker.ToUpper();
+        string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1);
+
+        for (int index = 0; index < level1Data.Count; index++)
         {
+          //create command for update - NOTE: you can not reuse commands in SQLite
           var command = m_connection.CreateCommand();
-          command.CommandTimeout = 0;   //wait for concurrent writes to finish indefinitely
-          command.Transaction = transaction;
-
-          string normalizedTicker = ticker.ToUpper();
-          string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, Resolution.Level1);
-
-          for (int index = 0; index < level1Data.Count; index++)
-          {
-            command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
-              $"VALUES (" +
-                $"'{normalizedTicker}', " +
-                $"{level1Data.DateTime[index].ToUniversalTime().ToBinary()}, " +
-                $"{level1Data.Bid[index]}, " +
-                $"{level1Data.BidSize[index]}, " +
-                $"{level1Data.Ask[index]}, " +
-                $"{level1Data.AskSize[index]}, " +
-                $"{level1Data.Last[index]}, " +
-                $"{level1Data.LastSize[index]}" +
-              $")";
-            command.ExecuteNonQuery();
-          }
-
-          transaction.Commit();
+          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
+            $"VALUES (" +
+              $"'{normalizedTicker}', " +
+              $"{level1Data.DateTime[index].ToUniversalTime().ToBinary()}, " +
+              $"{level1Data.Bid[index]}, " +
+              $"{level1Data.BidSize[index]}, " +
+              $"{level1Data.Ask[index]}, " +
+              $"{level1Data.AskSize[index]}, " +
+              $"{level1Data.Last[index]}, " +
+              $"{level1Data.LastSize[index]}" +
+            $")";
+          command.ExecuteNonQuery();
         }
+      }
     }
 
     public void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<ILevel1Data> bars)
@@ -1729,34 +1730,28 @@ namespace TradeSharp.Data
 
       //create database update
       lock (this)
-        using (var transaction = m_connection.BeginTransaction())
+      {
+        string normalizedTicker = ticker.ToUpper();
+        string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
+
+        foreach (ILevel1Data bar in bars)
         {
-          string normalizedTicker = ticker.ToUpper();
-          string tableName = GetDataProviderDBName(dataProviderName, c_TableInstrumentData, resolution);
+          var command = m_connection.CreateCommand();
+          command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
+            $"VALUES (" +
+              $"'{normalizedTicker}', " +
+              $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
+              $"{bar.Bid}, " +
+              $"{bar.BidSize}, " +
+              $"{bar.Ask}, " +
+              $"{bar.AskSize}, " +
+              $"{bar.Last}, " +
+              $"{bar.LastSize}" +
+            $")";
 
-          foreach (ILevel1Data bar in bars)
-          {
-            var command = m_connection.CreateCommand();
-            command.CommandTimeout = 0;   //wait for concurrent writes to finish indefinitely
-            command.Transaction = transaction;
-
-            command.CommandText = $"INSERT OR REPLACE INTO {tableName} (Ticker, DateTime, Bid, BidSize, Ask, AskSize, Last, LastSize) " +
-              $"VALUES (" +
-                $"'{normalizedTicker}', " +
-                $"{bar.DateTime.ToUniversalTime().ToBinary()}, " +
-                $"{bar.Bid}, " +
-                $"{bar.BidSize}, " +
-                $"{bar.Ask}, " +
-                $"{bar.AskSize}, " +
-                $"{bar.Last}, " +
-                $"{bar.LastSize}" +
-              $")";
-
-            command.ExecuteNonQuery();
-          }
-
-          transaction.Commit();
+          command.ExecuteNonQuery();
         }
+      }
     }
 
     public int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime)
@@ -2012,7 +2007,6 @@ namespace TradeSharp.Data
     public int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution)
     {
       //create database command
-      int result = 0;  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
       string normalizedTicker = ticker.ToUpper();
 
       SqliteCommand commandObj = m_connection.CreateCommand();
@@ -2026,7 +2020,6 @@ namespace TradeSharp.Data
     public int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to)
     {
       //create database command
-      int result = 0;  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
       string normalizedTicker = ticker.ToUpper();
 
       //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
@@ -2280,6 +2273,7 @@ namespace TradeSharp.Data
 
     //properties
     public IList<Resolution> SupportedDataResolutions { get => s_SupportedResolutions; }
+    [ObservableProperty] bool m_isOptimizing;
 
     //methods
     /// <summary>

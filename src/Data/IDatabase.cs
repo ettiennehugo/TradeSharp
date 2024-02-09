@@ -796,16 +796,14 @@ namespace TradeSharp.Data
 
     //properties
     IList<Resolution> SupportedDataResolutions { get; }
+    bool IsOptimizing { get; }
 
     /// <summary>
-    /// Start a transaction if the data store supports transactional updates.
+    /// Utility functions.
     /// </summary>
     void StartTransaction();
-
-    /// <summary>
-    /// End a transaction if the data store supports transactional updates.
-    /// </summary>
     void EndTransaction(bool success);
+    void Optimize();
 
     /// <summary>
     /// Country definition interface.

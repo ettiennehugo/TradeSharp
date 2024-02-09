@@ -77,15 +77,15 @@ namespace TradeSharp.CoreUI.Services
       FromDateTime = DateTime.Now;
       ToDateTime = DateTime.Now;
       ReplaceBehavior = ImportReplaceBehavior.Update;
-      DateTimeTimeZone = ImportDataDateTimeTimeZone.UTC;
+      DateTimeTimeZone = ImportDataDateTimeTimeZone.Exchange; //most data are captured in exchange time zone
       Directory = "";
       ImportStructure = MassImportExportStructure.DiretoriesAndFiles;
       FileType = ImportExportFileTypes.CSV;
-      ResolutionMinute = true;
-      ResolutionHour = true;
+      ResolutionMinute = false;
+      ResolutionHour = false;
       ResolutionDay = true;
-      ResolutionWeek = true;
-      ResolutionMonth = true;
+      ResolutionWeek = false;
+      ResolutionMonth = false;
       ThreadCount = Environment.ProcessorCount;    //clip this the Environment.ProcessorCount as max since it would most likely not be useful to have more threads than processors
     }
 

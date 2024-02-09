@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TradeSharp.Common;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
+using System.Diagnostics;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -18,7 +19,12 @@ namespace TradeSharp.CoreUI.Services
 
 
     //types
-
+    private class ExportFile
+    {
+      public string Filename { get; set; }
+      public Resolution Resolution { get; set; }
+      public Instrument Instrument { get; set; }
+    }
 
     //attributes
     IInstrumentService m_instrumentService;
@@ -59,21 +65,23 @@ namespace TradeSharp.CoreUI.Services
       {
         IsRunning = true;
         int exportInstrumentCount = 0;
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
 
         //draw up the set of instruments to export in a stack
         if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Starting mass export of instrument data for {m_instrumentService.Items.Count} instruments");
 
         //create export directories if they don't exist
-        string directory = Settings.Directory;
-        if (!Directory.Exists(directory)) 
+        string parentDirectory = Settings.Directory;
+        if (!Directory.Exists(Settings.Directory)) 
         {
-          if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Creating export directory \"{directory}\"");
-          Directory.CreateDirectory(directory);
+          if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Creating export directory \"{Settings.Directory}\"");
+          Directory.CreateDirectory(Settings.Directory);
         }
 
         if (Settings.ResolutionMinute && Settings.ExportStructure == MassImportExportStructure.DiretoriesAndFiles)
         {
-          directory = $"{Settings.Directory}\\{IMassExportInstrumentDataService.TokenMinute}";
+          string directory = $"{Settings.Directory}\\{IMassExportInstrumentDataService.TokenMinute}";
           if (!Directory.Exists(directory))
           {
             if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Creating export directory \"{directory}\"");
@@ -109,86 +117,129 @@ namespace TradeSharp.CoreUI.Services
           }
         }
 
+        //construct the set of files to be exported
+        Stack<ExportFile> exportFileList = new Stack<ExportFile>();
+        if (!Settings.ResolutionMinute)
+          foreach (Instrument instrument in m_instrumentService.Items)
+          {
+            ExportFile exportFile = new ExportFile();
+            exportFile.Filename = getExportFileName(Resolution.Minute, instrument);
+            exportFile.Resolution = Resolution.Minute;
+            exportFile.Instrument = instrument;
+            exportFileList.Push(exportFile);
+          }
+
+        if (!Settings.ResolutionHour)
+          foreach (Instrument instrument in m_instrumentService.Items)
+          {
+            ExportFile exportFile = new ExportFile();
+            exportFile.Filename = getExportFileName(Resolution.Hour, instrument);
+            exportFile.Resolution = Resolution.Hour;
+            exportFile.Instrument = instrument;
+            exportFileList.Push(exportFile);
+          }
+
+        if (!Settings.ResolutionDay)
+          foreach (Instrument instrument in m_instrumentService.Items)
+          {
+            ExportFile exportFile = new ExportFile();
+            exportFile.Filename = getExportFileName(Resolution.Day, instrument);
+            exportFile.Resolution = Resolution.Day;
+            exportFile.Instrument = instrument;
+            exportFileList.Push(exportFile);
+          }
+
+        if (!Settings.ResolutionWeek)
+          foreach (Instrument instrument in m_instrumentService.Items)
+          {
+            ExportFile exportFile = new ExportFile();
+            exportFile.Filename = getExportFileName(Resolution.Week, instrument);
+            exportFile.Resolution = Resolution.Week;
+            exportFile.Instrument = instrument;
+            exportFileList.Push(exportFile);
+          }
+
+        if (!Settings.ResolutionMonth)
+          foreach (Instrument instrument in m_instrumentService.Items)
+          {
+            ExportFile exportFile = new ExportFile();
+            exportFile.Filename = getExportFileName(Resolution.Month, instrument);
+            exportFile.Resolution = Resolution.Month;
+            exportFile.Instrument = instrument;
+            exportFileList.Push(exportFile);
+          }
+
+        exportFileList = reverseStack(exportFileList);
+
         //export all the data according to the defined data resolutions
+        int exportFileCount = 0;
+        object successCountLock = new object();
+        int successCount = 0;
+        object failureCountLock = new object();
+        int failureCount = 0;
 
+        exportFileCount = exportFileList.Count();
+        if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Starting mass export for \"{DataProvider}\" of instrument data for {exportFileCount} files");
 
-        //TODO: Rework this logic to first build up the list of instruments and resolutions to process and then run the export.
+        List<Task> taskPool = new List<Task>();
+        for (int i = 0; i < Settings.ThreadCount; i++)
+          taskPool.Add(
+          Task.Run(() =>
+          {
+            if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Started worker thread for export for data provider \"{DataProvider}\" (Thread id: {Task.CurrentId})");
 
+            IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
+            instrumentBarDataService.DataProvider = DataProvider;
+            instrumentBarDataService.MassOperation = true;
 
-        foreach (Resolution resolution in Enum.GetValues(typeof(Resolution)))
-        {
-          //skip resolution if not selected
-          if (resolution == Resolution.Minute && !Settings.ResolutionMinute) continue;
-          if (resolution == Resolution.Hour && !Settings.ResolutionHour) continue;
-          if (resolution == Resolution.Day && !Settings.ResolutionDay) continue;
-          if (resolution == Resolution.Week && !Settings.ResolutionWeek) continue;
-          if (resolution == Resolution.Month && !Settings.ResolutionMonth) continue;
-
-          //load up the stack with the instruments to process
-          Stack<Instrument> instrumentsList = new Stack<Instrument>();
-          foreach (Instrument instrument in m_instrumentService.Items) instrumentsList.Push(instrument);
-          instrumentsList = reverseStack(instrumentsList);
-          exportInstrumentCount += instrumentsList.Count;
-
-          //start the list of tasks that would pop an instrument off the stack and export the data, when the stack is empty
-          //or the cancellation token set the tasks would exit
-          List<Task> taskPool = new List<Task>();
-          for (int i = 0; i < Settings.ThreadCount; i++)
-            taskPool.Add(
-            Task.Run(() =>
+            while (exportFileList.Count > 0 && !cancellationToken.IsCancellationRequested)
             {
-                if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Started worker thread for export for data provider \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+              //pop an instrument off the stack and export the data
+              ExportFile? exportFile = null;
+              lock (exportFileList) 
+                if (exportFileList.Count > 0) exportFile = exportFileList.Pop();  //only pop if there are instruments otherwise this will raise an exception
+              if (exportFile == null) continue; //failed to find a an instrument to export, stack should be empty should be empty
 
-                IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
-                instrumentBarDataService.DataProvider = DataProvider;
-                instrumentBarDataService.MassOperation = true;
-                instrumentBarDataService.Resolution = resolution;
+              instrumentBarDataService.Resolution = exportFile.Resolution;
+              instrumentBarDataService.Instrument = exportFile.Instrument;
+              if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Exporting {exportFile.Instrument.Ticker} for resolution {exportFile.Resolution} to file \"{exportFile.Filename}\"");
 
-                while (instrumentsList.Count > 0 && !cancellationToken.IsCancellationRequested)
-                {
-                  //pop an instrument off the stack and export the data
-                  Instrument? instrument = null;
-                  lock (instrumentsList) 
-                    if (instrumentsList.Count > 0) instrument = instrumentsList.Pop();  //only pop if there are instruments otherwise this will raise an exception
-                  if (instrument == null) continue; //failed to find a an instrument to export, stack should be empty should be empty
+              try
+              {
 
 
+                //UNCOMMENT AFTER INITIAL TESTING
+                //instrumentBarDataService.Export(exportFilename);
 
 
-                instrumentBarDataService.Instrument = instrument;
-                  string exportFilename = getExportFileName(resolution, instrument);
-                  if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Starting export for instrument data {instrument.Ticker} for resolution {resolution} to file \"{exportFilename}\"");
+                lock (successCountLock) successCount++;
+              }
+              catch (Exception e)
+              {
+                lock (failureCountLock) failureCount++;
+                if (Debugging.MassInstrumentDataImport || Debugging.MassInstrumentDataImportException) m_logger.LogError($"EXCEPTION: Failed to export \"{exportFile.Filename}\" for {exportFile.Instrument.Ticker} at resolution {exportFile.Resolution} - (Exception: \"{e.Message}\", Thread id: {Task.CurrentId})");
+              }
+            }
 
+            if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Ending worker thread for export for data provider \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+          }, cancellationToken));
 
+        //wait for tasks to finish exporting data for this resolution
+        Task.WaitAll(taskPool.ToArray());
 
-                  //UNCOMMENT AFTER INITIAL TESTING
-                  //instrumentBarDataService.Export(exportFilename);
-
-
-
-                }
-
-              if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Ending worker thread for export for data provider \"{DataProvider}\" (Thread id: {Task.CurrentId})");
-            }, cancellationToken)
-            );
-
-          //wait for tasks to finish exporting data for this resolution
-          Task.WaitAll(taskPool.ToArray());
-
-          //exit processing if the cancellation token is set
-          if (cancellationToken.IsCancellationRequested) break;
-        }
-
+        stopwatch.Stop();
+        TimeSpan elapsed = stopwatch.Elapsed;
         IsRunning = false;
 
         //output status message
+        if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Mass export complete - Attempted {exportFileCount} files, exported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
         m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Export", $"Exported {exportInstrumentCount} files for the selected resolutions");
       });
     }
 
-    private Stack<Instrument> reverseStack(Stack<Instrument> input)
+    private Stack<ExportFile> reverseStack(Stack<ExportFile> input)
     {
-      Stack<Instrument> output = new Stack<Instrument>();
+      Stack<ExportFile> output = new Stack<ExportFile>();
       while (input.Count > 0) output.Push(input.Pop());
       return output;
     }

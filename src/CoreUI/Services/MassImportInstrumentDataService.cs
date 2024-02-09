@@ -82,7 +82,7 @@ namespace TradeSharp.WinCoreUI.Services
           importFiles = scanImportFiles();
 
         importFileCount = importFiles!.Count;
-        if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Starting mass import for \"{DataProvider}\" of instrument data for {importFileCount} files");
+        if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Starting mass import for \"{DataProvider}\" of instrument data for {importFileCount} files from \"{Settings.Directory}\"");
 
         //start the requested set of thread to import the data from the list of files
         List<Task> taskPool = new List<Task>();
@@ -134,7 +134,7 @@ namespace TradeSharp.WinCoreUI.Services
                   catch (Exception e)
                   {
                     lock (failureCountLock) failureCount++;
-                    if (Debugging.MassInstrumentDataImport) m_logger.LogError($"EXCEPTION: Failed to import \"{importFile.Filename}\" for {importFile.Ticker} at resolution {importFile.Resolution} - (Exception: \"{e.Message}\", Thread id: {Task.CurrentId})");
+                    if (Debugging.MassInstrumentDataImport || Debugging.MassInstrumentDataImportException) m_logger.LogError($"EXCEPTION: Failed to import \"{importFile.Filename}\" for {importFile.Ticker} at resolution {importFile.Resolution} - (Exception: \"{e.Message}\", Thread id: {Task.CurrentId})");
                   }
                 }
 
