@@ -1,4 +1,5 @@
 ﻿using TradeSharp.Common;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.ComponentModel;
@@ -107,8 +108,8 @@ namespace TradeSharp.CoreUI.Services
   {
     public MassImportSettings()
     {
-      FromDateTime = DateTime.Now;
-      ToDateTime = DateTime.Now;
+      FromDateTime = Constants.DefaultMinimumDateTime;
+      ToDateTime = Constants.DefaultMaximumDateTime;
       ReplaceBehavior = ImportReplaceBehavior.Update;
       DateTimeTimeZone = ImportExportDataDateTimeTimeZone.Exchange; //most data are captured in exchange time zone
       Directory = "";
@@ -144,8 +145,8 @@ namespace TradeSharp.CoreUI.Services
   {
     public MassExportSettings()
     {
-      FromDateTime = DateTime.Now;
-      ToDateTime = DateTime.Now;
+      FromDateTime = Constants.DefaultMinimumDateTime;
+      ToDateTime = Constants.DefaultMaximumDateTime;
       DateTimeTimeZone = ImportExportDataDateTimeTimeZone.Exchange;
       Directory = "";
       ExportStructure = MassImportExportStructure.DiretoriesAndFiles;
@@ -181,8 +182,8 @@ namespace TradeSharp.CoreUI.Services
   {
     public MassDownloadSettings()
     {
-      FromDateTime = DateTime.Now;
-      ToDateTime = DateTime.Now;
+      FromDateTime = Constants.DefaultMinimumDateTime;
+      ToDateTime = Constants.DefaultMaximumDateTime;
       DateTimeTimeZone = ImportExportDataDateTimeTimeZone.UTC;
       ResolutionMinute = true;
       ResolutionHour = true;
@@ -244,6 +245,7 @@ namespace TradeSharp.CoreUI.Services
     //methods
     Task ShowPopupMessageAsync(string message);
     Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
+    IProgressDialog ShowProgressDialog(string title);
 
     Task<CountryInfo?> ShowSelectCountryAsync();
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -46,7 +47,6 @@ namespace TradeSharp.CoreUI.Services
     public bool IsRunning { get; }
 
     //methods
-    Task Start(CancellationToken cancellationToken = default(CancellationToken));
-
+    Task StartAsync(IProgressDialog progressDialog);
   }
 }

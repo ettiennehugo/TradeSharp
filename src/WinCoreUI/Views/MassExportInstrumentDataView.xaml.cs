@@ -108,7 +108,10 @@ namespace TradeSharp.WinCoreUI.Views
       m_massExportInstrumentDataService.DataProvider = DataProvider;
       m_massExportInstrumentDataService.Settings = Settings;
       m_massExportInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass export service - this can be done as an improvement when we have a progress dialog working.
-      m_massExportInstrumentDataService.Start(m_cancellationToken);   //TODO: Currently we do not support cancellation.
+      IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
+      IProgressDialog progressDialog = dialogService.ShowProgressDialog("Mass Export Progress");
+      m_massExportInstrumentDataService.StartAsync(progressDialog);
+      ParentWindow.Close();
     }
 
     private void m_cancelBtn_Click(object sender, RoutedEventArgs e)

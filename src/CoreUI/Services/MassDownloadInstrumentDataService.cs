@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using TradeSharp.Common;
 using TradeSharp.Data;
+using TradeSharp.CoreUI.Common;
+
 namespace TradeSharp.CoreUI.Services
 {
   /// <summary> 
@@ -46,7 +48,7 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] public bool m_isRunning;
 
     //methods
-    public Task Start(CancellationToken cancellationToken = default)
+    public Task StartAsync(IProgressDialog progressDialog)
     {
       if (DataProvider == null)
       {
@@ -62,27 +64,36 @@ namespace TradeSharp.CoreUI.Services
 
       return Task.Run(() =>
       {
-        IsRunning = true;
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
+        try
+        {
+          IsRunning = true;
+          Stopwatch stopwatch = new Stopwatch();
+          stopwatch.Start();
 
-        int instrumentDownloadCount = 0;
-        object successCountLock = new object();
-        int successCount = 0;
-        object failureCountLock = new object();
-        int failureCount = 0;
+          int instrumentDownloadCount = 0;
+          object successCountLock = new object();
+          int successCount = 0;
+          object failureCountLock = new object();
+          int failureCount = 0;
 
 
-        //TODO: implement mass download of instrument data
+          //TODO: implement mass download of instrument data
 
 
-        stopwatch.Stop();
-        TimeSpan elapsed = stopwatch.Elapsed;
-        IsRunning = false;
+          stopwatch.Stop();
+          TimeSpan elapsed = stopwatch.Elapsed;
+          IsRunning = false;
 
-        //output status message
-        if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Mass download complete - Attempted {instrumentDownloadCount} instruments, downloaded {successCount} instruments successfully and failed on {failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Download", $"Downloaded data for {instrumentDownloadCount} instruments for the selected resolutions");
+          //output status message
+          if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Mass download complete - Attempted {instrumentDownloadCount} instruments, downloaded {successCount} instruments successfully and failed on {failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Download", $"Downloaded data for {instrumentDownloadCount} instruments for the selected resolutions");
+        }
+        catch (Exception e)
+        {
+          IsRunning = false;
+          if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"EXCEPTION: Mass download main thread failed - (Exception: \"{e.Message}\"");
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Download Failed", $"Mass download main thread failed - (Exception: \"{e.Message}\"");
+        }
       });
     }
   }

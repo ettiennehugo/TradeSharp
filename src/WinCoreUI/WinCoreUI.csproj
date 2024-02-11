@@ -9,6 +9,15 @@
     <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
   <ItemGroup>
+    <Content Remove="LockScreenLogo.scale-200.png" />
+    <Content Remove="SplashScreen.scale-200.png" />
+    <Content Remove="Square150x150Logo.scale-200.png" />
+    <Content Remove="Square44x44Logo.scale-200.png" />
+    <Content Remove="Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Remove="StoreLogo.png" />
+    <Content Remove="Wide310x150Logo.scale-200.png" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="Styles\ColorStyles.xaml" />
     <None Remove="Templates\ControlTemplates.xaml" />
     <None Remove="Views\BrokersView.xaml" />
@@ -30,6 +39,7 @@
     <None Remove="Views\MassDownloadInstrumentDataView.xaml" />
     <None Remove="Views\MassExportInstrumentDataView.xaml" />
     <None Remove="Views\MassImportInstrumentDataView.xaml" />
+    <None Remove="Views\ProgressDialogView.xaml" />
     <None Remove="Views\SessionsView.xaml" />
     <None Remove="Views\SessionView.xaml" />
   </ItemGroup>
@@ -44,6 +54,17 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.2428" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+  </ItemGroup>
+
   <ItemGroup>
     <Page Update="Styles\ColorStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -168,5 +189,10 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Remove="Views\ExportView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\ProgressDialogView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>

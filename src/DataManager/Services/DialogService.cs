@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 using WinRT.Interop;
 using System.Threading.Tasks;
 using Windows.UI.Popups;
@@ -9,12 +10,9 @@ using TradeSharp.Common;
 using TradeSharp.Data;
 using Microsoft.UI.Dispatching;
 using static TradeSharp.CoreUI.Services.IDialogService;
-using Windows.Storage.Pickers;
-using Windows.Storage;
 using Microsoft.UI.Xaml;
-using System.Collections.Generic;
 using TradeSharp.CoreUI.Common;
-using TradeSharp.WinCoreUI.Views;
+using WinRT.Interop;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -41,6 +39,26 @@ namespace TradeSharp.WinDataManager.Services
 
     //finalizers
 
+
+    //external imports
+    // from winuser.h
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/
+    // https://learn.microsoft.com/en-us/windows/win32/winmsg/window-styles
+    private const int GWL_STYLE = -16;
+    private const int WS_MAXIMIZEBOX = 0x10000;
+    private const int WS_MINIMIZEBOX = 0x20000;
+    private const int WS_SYSMENU = 0x80000;
+    private const int WS_DLGFRAME = 0x400000;
+    private const int WS_SIZEBOX = 0x40000;
+    
+    [DllImport("user32.dll")]
+    extern private static IntPtr GetActiveWindow();
+
+    [DllImport("user32.dll")]
+    extern private static int GetWindowLong(IntPtr hwnd, int index);
+
+    [DllImport("user32.dll")]
+    extern private static int SetWindowLong(IntPtr hwnd, int index, int value);
 
     //interface implementations
     public async Task ShowPopupMessageAsync(string message)
@@ -81,6 +99,20 @@ namespace TradeSharp.WinDataManager.Services
       });
 
       return Task.CompletedTask;
+    }
+
+    public IProgressDialog ShowProgressDialog(string title)
+    {
+      Window window = new Window();
+      window.ExtendsContentIntoTitleBar = true;
+      WinCoreUI.Views.ProgressDialogView progressView = new WinCoreUI.Views.ProgressDialogView();
+      progressView.Title = title;
+      progressView.ParentWindow = window;   //set so view can close the window
+      window.Content = progressView;
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 220));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      MakeDialog(window);
+      //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
+      return progressView;
     }
 
     protected InitNavigationService getInitNavigationService() => (InitNavigationService)((IApplication)Application.Current).Services.GetService(typeof(InitNavigationService));
@@ -552,8 +584,18 @@ namespace TradeSharp.WinDataManager.Services
     public TextBlock StatusBarText { get; set; }
 
     //methods
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetActiveWindow();
+    internal static void HideMinimizeAndMaximizeButtons(Window window)
+    {
+      IntPtr hwnd =  WindowNative.GetWindowHandle(window);
+      var currentStyle = GetWindowLong(hwnd, GWL_STYLE);
+      SetWindowLong(hwnd, GWL_STYLE, (currentStyle & ~WS_MAXIMIZEBOX & ~WS_MINIMIZEBOX));
+    }
 
+    internal static void MakeDialog(Window window)
+    {
+      IntPtr hwnd = WindowNative.GetWindowHandle(window);
+      var currentStyle = GetWindowLong(hwnd, GWL_STYLE);
+      SetWindowLong(hwnd, GWL_STYLE, (currentStyle & WS_DLGFRAME));
+    }
   }
 }

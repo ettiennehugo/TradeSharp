@@ -75,7 +75,10 @@ namespace TradeSharp.WinCoreUI.Views
 
       m_massDownloadInstrumentDataService.Settings = Settings;
       m_massDownloadInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass download service - this can be done as an improvement when we have a progress dialog working.
-      m_massDownloadInstrumentDataService.Start(m_cancellationToken);   //TODO: Currently we do not support cancellation.
+      IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
+      IProgressDialog progressDialog = dialogService.ShowProgressDialog("Mass Download Progress");
+      m_massDownloadInstrumentDataService.StartAsync(progressDialog);
+      ParentWindow.Close();
     }
 
     private void m_cancelBtn_Click(object sender, RoutedEventArgs e)
