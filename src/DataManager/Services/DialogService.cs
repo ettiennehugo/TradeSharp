@@ -309,19 +309,23 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public async Task<string?> ShowExportInstrumentsAsync()
+    public async Task<ExportSettings?> ShowExportInstrumentsAsync()
     {
-      FileSavePicker savePicker = new FileSavePicker();
-      savePicker.DefaultFileExtension = ".json";  //JSON allows better structure of the instrument definitions
-      savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
-      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" }); //default export to JSON
-      savePicker.FileTypeChoices.Add("CSV", new List<string>() { ".csv" });
+      WinCoreUI.Views.ExportView view = new WinCoreUI.Views.ExportView(false, true);
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+        Title = "Export Instruments",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+        Width = 575,
+      };
 
-      var hwnd = GetActiveWindow();
-      InitializeWithWindow.Initialize(savePicker, hwnd);
-
-      StorageFile file = await savePicker.PickSaveFileAsync();
-      if (file != null) return file.Path;
+      ContentDialogResult result = await dialog.ShowAsync();
+      if (result == ContentDialogResult.Primary) return view.ExportSettings;
 
       return null;
     }
@@ -389,20 +393,23 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public async Task<string?> ShowExportInstrumentGroupsAsync()
+    public async Task<ExportSettings?> ShowExportInstrumentGroupsAsync()
     {
-      //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
-      FileSavePicker savePicker = new FileSavePicker();
-      savePicker.DefaultFileExtension = ".json";  //JSON allows better structure of the instrument group definitions
-      savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
-      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" }); //default export to JSON
-      savePicker.FileTypeChoices.Add("CSV", new List<string>() { ".csv" });
+      WinCoreUI.Views.ExportView view = new WinCoreUI.Views.ExportView(false, true);
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+        Title = "Export Instrument Groups",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+        Width = 575,
+      };
 
-      var hwnd = GetActiveWindow();
-      InitializeWithWindow.Initialize(savePicker, hwnd);
-
-      StorageFile file = await savePicker.PickSaveFileAsync();
-      if (file != null) return file.Path;
+      ContentDialogResult result = await dialog.ShowAsync();
+      if (result == ContentDialogResult.Primary) return view.ExportSettings;
 
       return null;
     }
@@ -471,20 +478,23 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public async Task<string?> ShowExportBarDataAsync()
+    public async Task<ExportSettings?> ShowExportBarDataAsync()
     {
-      //https://learn.microsoft.com/en-us/samples/microsoft/windows-universal-samples/filepicker/
-      FileSavePicker savePicker = new FileSavePicker();
-      savePicker.DefaultFileExtension = ".csv";
-      savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
-      savePicker.FileTypeChoices.Add("CSV", new List<string>() { ".csv" }); //default to CSV as it is more compact and faster to write
-      savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" });
+      WinCoreUI.Views.ExportView view = new WinCoreUI.Views.ExportView(true, true);
+      ContentDialog dialog = new ContentDialog()
+      {
+        XamlRoot = getInitNavigationService().Frame.XamlRoot,
+        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+        Title = "Export Bar Data",
+        Content = view,
+        PrimaryButtonText = "OK",
+        CloseButtonText = "Cancel",
+        DefaultButton = ContentDialogButton.Primary,
+        Width = 575,
+      };
 
-      var hwnd = GetActiveWindow();
-      InitializeWithWindow.Initialize(savePicker, hwnd);
-
-      StorageFile file = await savePicker.PickSaveFileAsync();
-      if (file != null) return file.Path;
+      ContentDialogResult result = await dialog.ShowAsync();
+      if (result == ContentDialogResult.Primary) return view.ExportSettings;
 
       return null;
     }
@@ -511,8 +521,16 @@ namespace TradeSharp.WinDataManager.Services
       exportView.ParentWindow = window;   //set so view can close the window
       exportView.DataProvider = dataProvider;
       window.Content = exportView;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 850));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 930));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       window.Activate();
+      return Task.CompletedTask;
+    }
+
+    public Task ShowMassDataCopyAsync(string dataProvider)
+    {
+      
+      //TODO: Implement mass copy of instrument data
+
       return Task.CompletedTask;
     }
 

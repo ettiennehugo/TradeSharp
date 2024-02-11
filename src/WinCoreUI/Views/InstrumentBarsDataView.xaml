@@ -17,6 +17,7 @@
         <AppBarButton x:Name="m_buttonAdd" Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add bar" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonEdit" Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update bar" IsCompact="True"/>
         <AppBarButton x:Name="m_buttonDelete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommandAsync}" CommandParameter="{x:Bind m_dataTable.SelectedRanges}" ToolTipService.ToolTip="Delete bar(s)" IsCompact="True"/>
+        <AppBarSeparator/>
         <AppBarButton x:Name="m_buttonCopy"  Icon="Copy" Command="{x:Bind ViewModel.CopyCommandAsync}" Label="Copy bar(s)" IsCompact="True">
           <AppBarButton.Flyout>
             <MenuFlyout x:Name="m_copyFlyout">
@@ -29,7 +30,6 @@
             </MenuFlyout>
           </AppBarButton.Flyout>
         </AppBarButton>
-        <AppBarSeparator/>
         <AppBarButton Command="{x:Bind ViewModel.ImportCommandAsync}" ToolTipService.ToolTip="Import bar data" IsCompact="True">
           <AppBarButton.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE802;"/>

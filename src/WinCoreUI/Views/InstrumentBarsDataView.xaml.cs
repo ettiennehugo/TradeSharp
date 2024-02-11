@@ -298,12 +298,12 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_startDateTime_TextChanged(object sender, TextChangedEventArgs e)
     {
-      if (DateTime.TryParse(m_startDateTime.Text, out _)) refreshFilter();
+      if (m_startDateTime.Text.Trim().Length == 0 || DateTime.TryParse(m_startDateTime.Text, out _)) refreshFilter();
     }
 
     private void m_endDateTime_TextChanged(object sender, TextChangedEventArgs e)
     {
-      if (DateTime.TryParse(m_endDateTime.Text, out _)) refreshFilter();
+      if (m_endDateTime.Text.Trim().Length == 0 || DateTime.TryParse(m_endDateTime.Text, out _)) refreshFilter();
     }
 
     private void UserControl_Loaded(object sender, RoutedEventArgs e)

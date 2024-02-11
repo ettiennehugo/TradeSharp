@@ -33,6 +33,7 @@
           </AppBarButton.Icon>
         </AppBarButton>
         <AppBarSeparator/>
+        <AppBarButton x:Name="m_massCopy" Icon="Copy" Click="m_massCopy_Click" IsEnabled="False" ToolTipService.ToolTip="Mass copy bar data" IsCompact="True"/>
         <AppBarButton x:Name="m_massDownload" Click="m_massDownload_Click" IsEnabled="False" ToolTipService.ToolTip="Mass download bar data" IsCompact="True">
           <AppBarButton.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE753;"/>
@@ -118,7 +119,7 @@
         </TabViewItem.Header>
         <wcui:InstrumentBarsDataView x:Name="m_hoursBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Hour" Instrument="{x:Bind m_instrumentsGrid.SelectedItem, Mode=TwoWay, Converter={StaticResource TypeCastConverter}}"/>
       </TabViewItem>
-      <TabViewItem x:Name="m_daysTab" IsClosable="False">
+      <TabViewItem x:Name="m_daysTab" IsClosable="False" IsSelected="True">
         <TabViewItem.Header>
           <StackPanel Orientation="Horizontal">
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE787;" />

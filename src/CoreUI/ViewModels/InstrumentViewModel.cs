@@ -55,8 +55,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override async Task OnExportAsync()
     {
-      string? filename = await m_dialogService.ShowExportInstrumentsAsync();
-      if (filename != null) _ = Task.Run(() => m_itemsService.Export(filename));
+      ExportSettings? exportSettings = await m_dialogService.ShowExportInstrumentsAsync();
+      if (exportSettings != null) _ = Task.Run(() => m_itemsService.Export(exportSettings));
     }
 
     public override Task OnRefreshAsync()

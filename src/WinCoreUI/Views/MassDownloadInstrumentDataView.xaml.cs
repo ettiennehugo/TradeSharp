@@ -55,7 +55,7 @@ namespace TradeSharp.WinCoreUI.Views
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportDataDateTimeTimeZone));
+      Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportExportDataDateTimeTimeZone));
     }
 
     private bool enableDownloadButton()

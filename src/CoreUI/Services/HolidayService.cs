@@ -88,7 +88,5 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public bool Copy(Holiday item) => throw new NotImplementedException();
-    public void Import(ImportSettings importSettings) => throw new NotImplementedException();
-    public void Export(string filename) => throw new NotImplementedException();
   }
 }

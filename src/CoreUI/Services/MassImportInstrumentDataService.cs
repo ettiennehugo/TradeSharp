@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using TradeSharp.Data;
 using TradeSharp.Common;
@@ -10,7 +11,7 @@ namespace TradeSharp.WinCoreUI.Services
   /// <summary>
   /// Windows implementation of the mass import of instrument data - use as singleton.
   /// </summary>
-  public class MassImportInstrumentDataService : ServiceBase, IMassImportInstrumentDataService
+  public partial class MassImportInstrumentDataService : ServiceBase, IMassImportInstrumentDataService
   {
     //constants
 
@@ -51,7 +52,7 @@ namespace TradeSharp.WinCoreUI.Services
     public string DataProvider { get; set; }
     public ILogger? Logger { get => m_taskLogger; set => m_taskLogger = value; }
     public MassImportSettings Settings { get; set; }
-    public bool IsRunning { get; internal set; }
+    [ObservableProperty] public bool m_isRunning;
 
     //methods
     public Task Start(CancellationToken cancellationToken)

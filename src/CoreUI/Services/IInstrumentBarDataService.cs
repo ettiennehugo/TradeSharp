@@ -25,6 +25,11 @@ namespace TradeSharp.CoreUI.Services
 
     //methods
     /// <summary>
+    /// Refresh the service to the given date/time range.
+    /// </summary>
+    void Refresh(DateTime from, DateTime to);
+    
+    /// <summary>
     /// Copy data to the subsequent higher resolution, Resolution.Month will do nothing.
     /// NOTE: This method operates on the data available in the repository, so, if the repository
     ///       is not populated with data, this method will produce incorrect results.

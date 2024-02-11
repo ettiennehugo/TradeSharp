@@ -124,6 +124,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_massImport.IsEnabled = true;
       m_massExport.IsEnabled = true;
+      m_massCopy.IsEnabled = true;
       m_massDownload.IsEnabled = true;
       m_minuteBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
       m_hoursBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
@@ -149,6 +150,11 @@ namespace TradeSharp.WinCoreUI.Views
     private async void m_massExport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
       await m_dialogService.ShowMassDataExportAsync((string)m_dataProviders.SelectedItem);
+    }
+
+    private async void m_massCopy_Click(object sender, RoutedEventArgs e)
+    {
+      await m_dialogService.ShowMassDataCopyAsync((string)m_dataProviders.SelectedItem);
     }
 
     private async void m_massDownload_Click(object sender, RoutedEventArgs e)

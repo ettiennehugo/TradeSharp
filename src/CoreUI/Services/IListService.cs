@@ -36,6 +36,6 @@ namespace TradeSharp.CoreUI.Services
     bool Delete(T item);
     bool Copy(T item);
     void Import(ImportSettings importSettings);
-    void Export(string filename);
+    void Export(ExportSettings exportSettings);
   }
 }

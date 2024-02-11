@@ -136,8 +136,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override async Task OnExportAsync()
     {
-      string? filename = await m_dialogService.ShowExportInstrumentGroupsAsync();
-      if (filename != null) _ = Task.Run(() => m_itemsService.Export(filename));
+      ExportSettings? exportSettings = await m_dialogService.ShowExportInstrumentGroupsAsync();
+      if (exportSettings != null) _ = Task.Run(() => m_itemsService.Export(exportSettings));
     }
 
     ///Generic handler to re-raise the service refresh event as a view model refresh event.

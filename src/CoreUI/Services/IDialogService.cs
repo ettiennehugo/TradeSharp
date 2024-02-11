@@ -11,12 +11,14 @@ namespace TradeSharp.CoreUI.Services
   /// </summary>
   public enum ImportExportFileTypes
   {
+    [Description("Comma Separated Values (CSV)")]
     CSV,
+    [Description("JavaScript Object Notation (JSON)")]
     JSON,
   }  
   
   /// <summary>
-  /// Behavior when importing instrument groups or instruments when an item already exists in the database.
+  /// Behavior when importing instrument groups, instruments or instrument bar data when an item already exists in the database.
   /// </summary>
   public enum ImportReplaceBehavior
   {
@@ -26,10 +28,20 @@ namespace TradeSharp.CoreUI.Services
   }
 
   /// <summary>
+  /// Behavior when exporting instrument groups, instruments or instrument bar data when an export file aready exists.
+  /// </summary>
+  public enum ExportReplaceBehavior
+  {
+    Skip,
+    Replace,
+  }
+
+  /// <summary>
   /// Timezone of the date/time values specified in a instrument data file being imported.
   /// </summary>
-  public enum ImportDataDateTimeTimeZone
+  public enum ImportExportDataDateTimeTimeZone
   {
+    [Description("Coordinated Universal Time (UTC)")]
     UTC,
     Exchange,
     Local,    //local machine timezone
@@ -45,14 +57,35 @@ namespace TradeSharp.CoreUI.Services
       FromDateTime = Constants.DefaultMinimumDateTime;
       ToDateTime = Constants.DefaultMaximumDateTime;
       ReplaceBehavior = ImportReplaceBehavior.Skip;
-      DateTimeTimeZone = ImportDataDateTimeTimeZone.Exchange;
+      DateTimeTimeZone = ImportExportDataDateTimeTimeZone.Exchange;
       Filename = "";
     }
 
     [ObservableProperty] DateTime m_fromDateTime;
     [ObservableProperty] DateTime m_toDateTime;
     [ObservableProperty] ImportReplaceBehavior m_replaceBehavior;
-    [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] ImportExportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] string m_filename;
+  }
+
+  /// <summary>
+  /// Settings to use for exporting instrument groups, instruments and instrument data.
+  /// </summary>
+  public partial class ExportSettings: ObservableObject
+  {
+    public ExportSettings()
+    {
+      FromDateTime = Constants.DefaultMinimumDateTime;
+      ToDateTime = Constants.DefaultMaximumDateTime;
+      ReplaceBehavior = ExportReplaceBehavior.Skip;
+      DateTimeTimeZone = ImportExportDataDateTimeTimeZone.Exchange;
+      Filename = "";
+    }
+
+    [ObservableProperty] DateTime m_fromDateTime;
+    [ObservableProperty] DateTime m_toDateTime;
+    [ObservableProperty] ExportReplaceBehavior m_replaceBehavior;
+    [ObservableProperty] ImportExportDataDateTimeTimeZone m_dateTimeTimeZone;
     [ObservableProperty] string m_filename;
   }
 
@@ -77,7 +110,7 @@ namespace TradeSharp.CoreUI.Services
       FromDateTime = DateTime.Now;
       ToDateTime = DateTime.Now;
       ReplaceBehavior = ImportReplaceBehavior.Update;
-      DateTimeTimeZone = ImportDataDateTimeTimeZone.Exchange; //most data are captured in exchange time zone
+      DateTimeTimeZone = ImportExportDataDateTimeTimeZone.Exchange; //most data are captured in exchange time zone
       Directory = "";
       ImportStructure = MassImportExportStructure.DiretoriesAndFiles;
       FileType = ImportExportFileTypes.CSV;
@@ -92,7 +125,7 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] DateTime m_fromDateTime;
     [ObservableProperty] DateTime m_toDateTime;
     [ObservableProperty] ImportReplaceBehavior m_replaceBehavior;
-    [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] ImportExportDataDateTimeTimeZone m_dateTimeTimeZone;
     [ObservableProperty] string m_directory;
     [ObservableProperty] MassImportExportStructure m_importStructure;
     [ObservableProperty] ImportExportFileTypes m_fileType;
@@ -113,12 +146,13 @@ namespace TradeSharp.CoreUI.Services
     {
       FromDateTime = DateTime.Now;
       ToDateTime = DateTime.Now;
-      DateTimeTimeZone = ImportDataDateTimeTimeZone.UTC;
+      DateTimeTimeZone = ImportExportDataDateTimeTimeZone.Exchange;
       Directory = "";
       ExportStructure = MassImportExportStructure.DiretoriesAndFiles;
       FileType = ImportExportFileTypes.CSV;
-      ResolutionMinute = true;
-      ResolutionHour = true;
+      CreateEmptyFiles = false;
+      ResolutionMinute = false;
+      ResolutionHour = false;
       ResolutionDay = true;
       ResolutionWeek = true;
       ResolutionMonth = true;
@@ -127,10 +161,11 @@ namespace TradeSharp.CoreUI.Services
 
     [ObservableProperty] DateTime m_fromDateTime;
     [ObservableProperty] DateTime m_toDateTime;
-    [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] ImportExportDataDateTimeTimeZone m_dateTimeTimeZone;
     [ObservableProperty] string m_directory;
     [ObservableProperty] MassImportExportStructure m_exportStructure;
     [ObservableProperty] ImportExportFileTypes m_fileType;
+    [ObservableProperty] bool m_createEmptyFiles;
     [ObservableProperty] bool m_resolutionMinute;
     [ObservableProperty] bool m_resolutionHour;
     [ObservableProperty] bool m_resolutionDay;
@@ -148,7 +183,7 @@ namespace TradeSharp.CoreUI.Services
     {
       FromDateTime = DateTime.Now;
       ToDateTime = DateTime.Now;
-      DateTimeTimeZone = ImportDataDateTimeTimeZone.UTC;
+      DateTimeTimeZone = ImportExportDataDateTimeTimeZone.UTC;
       ResolutionMinute = true;
       ResolutionHour = true;
       ResolutionDay = true;
@@ -159,7 +194,7 @@ namespace TradeSharp.CoreUI.Services
 
     [ObservableProperty] DateTime m_fromDateTime;
     [ObservableProperty] DateTime m_toDateTime;
-    [ObservableProperty] ImportDataDateTimeTimeZone m_dateTimeTimeZone;
+    [ObservableProperty] ImportExportDataDateTimeTimeZone m_dateTimeTimeZone;
     [ObservableProperty] bool m_resolutionMinute;
     [ObservableProperty] bool m_resolutionHour;
     [ObservableProperty] bool m_resolutionDay;
@@ -224,20 +259,21 @@ namespace TradeSharp.CoreUI.Services
     Task<Instrument?> ShowCreateInstrumentAsync();
     Task<Instrument?> ShowUpdateInstrumentAsync(Instrument instrument);
     Task<ImportSettings?> ShowImportInstrumentsAsync();
-    Task<string?> ShowExportInstrumentsAsync();
+    Task<ExportSettings?> ShowExportInstrumentsAsync();
 
     Task<InstrumentGroup?> ShowCreateInstrumentGroupAsync(Guid parentId);
     Task<InstrumentGroup?> ShowUpdateInstrumentGroupAsync(InstrumentGroup instrumentGroup);
     Task<ImportSettings?> ShowImportInstrumentGroupsAsync();
-    Task<string?> ShowExportInstrumentGroupsAsync();
+    Task<ExportSettings?> ShowExportInstrumentGroupsAsync();
 
     Task<IBarData?> ShowCreateBarDataAsync(Resolution resolution, DateTime dateTime);
     Task<IBarData?> ShowUpdateBarDataAsync(IBarData barData);
     Task<ImportSettings?> ShowImportBarDataAsync();
-    Task<string?> ShowExportBarDataAsync();
+    Task<ExportSettings?> ShowExportBarDataAsync();
 
     Task ShowMassDataImportAsync(string dataProvider);
     Task ShowMassDataExportAsync(string dataProvider);
+    Task ShowMassDataCopyAsync(string dataProvider);
     Task ShowMassDataDownloadAsync(string dataProvider);
   }
 }

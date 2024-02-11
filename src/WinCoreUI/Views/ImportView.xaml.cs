@@ -53,6 +53,7 @@ namespace TradeSharp.WinCoreUI.Views
       set => SetValue(s_importSettingsProperty, (ImportSettings)value);
     }
 
+    //methods
     [DllImport("user32.dll")]
     private static extern IntPtr GetActiveWindow();
 
@@ -74,11 +75,9 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportDataDateTimeTimeZone));
+      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportExportDataDateTimeTimeZone));
       WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_replaceBehavior, typeof(ImportReplaceBehavior));
     }
-
-    //methods
 
 
   }

@@ -190,7 +190,7 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentGroupRepository.Update(node.Item);
     }
 
-    public void Import(ImportSettings importSettings)
+    public override void Import(ImportSettings importSettings)
     {
       string extension = Path.GetExtension(importSettings.Filename).ToLower();
       if (extension == extensionCSV)
@@ -199,14 +199,21 @@ namespace TradeSharp.CoreUI.Services
         importJSON(importSettings);
     }
 
-    public void Export(string filename)
+    public override void Export(ExportSettings exportSettings)
     {
+      //only output the data if the replacing the file is allowed
+      if (exportSettings.ReplaceBehavior == ExportReplaceBehavior.Skip && File.Exists(exportSettings.Filename))
+      {
+        if (Debugging.ImportExport) m_logger.LogWarning($"File \"{exportSettings.Filename}\" already exists and the export settings are set to skip it.");
+        return;
+      }
+
       IDictionary<Guid, Tuple<InstrumentGroup, bool>> leafNodes = getLeafInstrumentGroups();
-      string extension = Path.GetExtension(filename).ToLower();
+      string extension = Path.GetExtension(exportSettings.Filename).ToLower();
       if (extension == extensionCSV)
-        exportCSV(filename, leafNodes);
+        exportCSV(exportSettings, leafNodes);
       else if (extension == extensionJSON)
-        exportJSON(filename, leafNodes);
+        exportJSON(exportSettings, leafNodes);
     }
 
     /// <summary>
@@ -467,13 +474,12 @@ namespace TradeSharp.CoreUI.Services
     /// 
     ///     Parent Name, Parent Description, Parent Tag, Child Name, Child Description, Child Tag, Child Name, Child Description, Child Tag, TickerN
     /// </summary>
-    private void exportCSV(string filename, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
+    private void exportCSV(ExportSettings exportSettings, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
     {
       long exportCount = 0;
-
-      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+      using (StreamWriter file = File.CreateText(exportSettings.Filename))
       {
-        string statusMessage = $"Exporting instrument groups to \"{filename}\"";
+        string statusMessage = $"Exporting instrument groups to \"{exportSettings.Filename}\"";
         IDisposable? loggerScope = null;
         if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
         m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
@@ -632,8 +638,8 @@ namespace TradeSharp.CoreUI.Services
         }
       }
 
-      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} groups to \"{filename}\"");
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} groups to \"{filename}\"");
+      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} groups to \"{exportSettings.Filename}\"");
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} groups to \"{exportSettings.Filename}\"");
     }
 
     private struct ImportCounts
@@ -770,10 +776,10 @@ namespace TradeSharp.CoreUI.Services
           if (childNode != null) importJsonNode(childNode, importReplaceBehavior, definedInstrumentGroups, definedInstruments, logger, counts);
     }
 
-    private void exportJSON(string filename, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
+    private void exportJSON(ExportSettings exportSettings, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups)
     {
       int exportCount = 0;
-      string statusMessage = $"Exporting instrument groups to \"{filename}\"";
+      string statusMessage = $"Exporting instrument groups to \"{exportSettings.Filename}\"";
       IDisposable? loggerScope = null;
       if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
@@ -799,7 +805,17 @@ namespace TradeSharp.CoreUI.Services
           if (instrumentGroupTuple.Value.Item1.ParentId == InstrumentGroup.InstrumentGroupRoot) rootNodes.Add(writeJsonNode(InstrumentGroup.InstrumentGroupRoot, instrumentGroupTuple.Value.Item1, instrumentGroups, ref exportCount));
       }
 
-      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+
+
+      //TODO: Implement the export settings structure to control the export process.
+      // * only replace file if export setting is set to overwrite
+      // * only output bar data that is within the date/time range specified in the export settings
+      // * convert the date/time to the specified time-zone in the export settings time-zone (HARD PART).
+      throw new NotImplementedException("Export settings are not implemented yet.");
+
+
+
+      using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
         int rootNodeCount = rootNodes.Count;
@@ -815,8 +831,8 @@ namespace TradeSharp.CoreUI.Services
         file.WriteLine("]");
       }
 
-      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} groups to \"{filename}\"");
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} groups to \"{filename}\"");
+      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} groups to \"{exportSettings.Filename}\"");
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} groups to \"{exportSettings.Filename}\"");
     }
 
     private JsonObject writeJsonNode(Guid adjustedParentNodeId, InstrumentGroup instrumentGroup, IDictionary<Guid, Tuple<InstrumentGroup, bool>> instrumentGroups, ref int resultCount)

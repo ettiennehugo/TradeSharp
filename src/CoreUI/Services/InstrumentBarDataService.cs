@@ -8,6 +8,7 @@ using CsvHelper;
 using System.Globalization;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
+using System;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -44,16 +45,18 @@ namespace TradeSharp.CoreUI.Services
 
     //attributes
     private IInstrumentBarDataRepository m_repository;
+    private IConfigurationService m_configurationService;
     private IBarData? m_selectedItem;
     private ILogger<InstrumentBarDataService> m_logger;
     private IDatabase m_database;
 
     //constructors
-    public InstrumentBarDataService(IInstrumentBarDataRepository repository, ILogger<InstrumentBarDataService> logger, IDatabase database, IDialogService dialogService) : base(dialogService)
+    public InstrumentBarDataService(IInstrumentBarDataRepository repository, ILogger<InstrumentBarDataService> logger, IDatabase database, IConfigurationService configurationService, IDialogService dialogService) : base(dialogService)
     {
       m_logger = logger;
       m_database = database;
       m_repository = repository;
+      m_configurationService = configurationService;
       DataProvider = string.Empty;
       Instrument = null;
       Resolution = Resolution.Day;
@@ -69,7 +72,7 @@ namespace TradeSharp.CoreUI.Services
     public bool Add(IBarData item)
     {
       var result = m_repository.Add(item);
-      Utilities.SortedInsert(item, Items);
+      Data.Utilities.SortedInsert(item, Items);
       SelectedItem = item;
       SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
@@ -99,16 +102,41 @@ namespace TradeSharp.CoreUI.Services
       return result;
     }
 
-    public void Export(string filename)
+    public override void Export(ExportSettings exportSettings)
     {
-      string extension = Path.GetExtension(filename).ToLower();
+      //only output the data if the replacing the file is allowed
+      if (exportSettings.ReplaceBehavior == ExportReplaceBehavior.Skip && File.Exists(exportSettings.Filename))
+      {
+        string statusMessage = $"File \"{exportSettings.Filename}\" already exists and the export settings are set to skip it.";
+        if (Debugging.ImportExport) m_logger.LogWarning(statusMessage);
+        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "", statusMessage);
+        return;
+      }
+
+      //get the instrument exchange if Exchange time-zone is used for export data
+      Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
+      if (exportSettings.DateTimeTimeZone == ImportExportDataDateTimeTimeZone.Exchange && exchange == null)
+      {
+        string statusMessage = $"Date/time requested time-zone for export is Exchange, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\", skipping export.";
+        if (Debugging.ImportExport) m_logger.LogWarning(statusMessage);
+        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+        return;
+      }
+
+      IConfigurationService.TimeZone dbTimeZoneUsed = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+
+      string extension = Path.GetExtension(exportSettings.Filename).ToLower();
+      long exportCount = 0;
       if (extension == extensionCSV)
-        exportCSV(filename);
+        exportCount = exportCSV(exportSettings, dbTimeZoneUsed, exchange);
       else if (extension == extensionJSON)
-        exportJSON(filename);
+        exportCount = exportJSON(exportSettings, dbTimeZoneUsed, exchange);
+
+      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} bars to \"{exportSettings.Filename}\".");
+      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{exportSettings.Filename}\".");
     }
 
-    public void Import(ImportSettings importSettings)
+    public override void Import(ImportSettings importSettings)
     {
       string extension = Path.GetExtension(importSettings.Filename).ToLower();
       if (extension == extensionCSV)
@@ -120,6 +148,15 @@ namespace TradeSharp.CoreUI.Services
     public void Refresh()
     {
       var result = m_repository.GetItems();
+      Items.Clear();
+      SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
+      foreach (var item in result) Items.Add(item);
+      if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+    }
+
+    public void Refresh(DateTime from, DateTime to)
+    {
+      var result = m_repository.GetItems(from, to);
       Items.Clear();
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
@@ -304,19 +341,19 @@ namespace TradeSharp.CoreUI.Services
         Copy(from);
         return;
       }
-      
+
       if (from == Resolution.Hour && to == Resolution.Day)
       {
         Copy(from);
         return;
       }
-      
+
       if (from == Resolution.Day && to == Resolution.Week)
       {
         Copy(from);
         return;
       }
-      
+
       if (from == Resolution.Week && to == Resolution.Month)
       {
         Copy(from);
@@ -514,7 +551,7 @@ namespace TradeSharp.CoreUI.Services
 
       //make sure we can retrieve the primary exhange for the instrument if we are importing date/time in the Exchange timezone
       Exchange? exchange = null;
-      if (importSettings.DateTimeTimeZone == ImportDataDateTimeTimeZone.Exchange)
+      if (importSettings.DateTimeTimeZone == ImportExportDataDateTimeTimeZone.Exchange)
       {
         exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
         if (exchange == null)
@@ -605,16 +642,16 @@ namespace TradeSharp.CoreUI.Services
                   {
                     switch (importSettings.DateTimeTimeZone)
                     {
-                      case ImportDataDateTimeTimeZone.UTC:
+                      case ImportExportDataDateTimeTimeZone.UTC:
                         dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
                         break;
-                      case ImportDataDateTimeTimeZone.Exchange:
+                      case ImportExportDataDateTimeTimeZone.Exchange:
                         //parse date as local time, convert it so exhange timezone and then convert that to UTC timezone
                         dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
                         DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
                         dateTime = dateTimeOffset.DateTime.ToUniversalTime();
                         break;
-                      case ImportDataDateTimeTimeZone.Local:
+                      case ImportExportDataDateTimeTimeZone.Local:
                         //adjust local time to UTC time use by database layer
                         dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
                         break;
@@ -641,14 +678,14 @@ namespace TradeSharp.CoreUI.Services
               if (date != null && time != null)
                 switch (importSettings.DateTimeTimeZone)
                 {
-                  case ImportDataDateTimeTimeZone.UTC:
+                  case ImportExportDataDateTimeTimeZone.UTC:
                     dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Utc);
                     break;
-                  case ImportDataDateTimeTimeZone.Local:
+                  case ImportExportDataDateTimeTimeZone.Local:
                     dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Local);
                     dateTime = dateTime.Value.ToUniversalTime();
                     break;
-                  case ImportDataDateTimeTimeZone.Exchange:
+                  case ImportExportDataDateTimeTimeZone.Exchange:
                     //create date/time without timezone and then set it on a date/time offset to the exchange timezone before convert to UTC
                     dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Unspecified);
                     DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
@@ -708,7 +745,7 @@ namespace TradeSharp.CoreUI.Services
 
       //make sure we can retrieve the primary exhange for the instrument if we are importing date/time in the Exchange timezone
       Exchange? exchange = null;
-      if (importSettings.DateTimeTimeZone == ImportDataDateTimeTimeZone.Exchange)
+      if (importSettings.DateTimeTimeZone == ImportExportDataDateTimeTimeZone.Exchange)
       {
         exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
         if (exchange == null)
@@ -738,16 +775,16 @@ namespace TradeSharp.CoreUI.Services
             {
               switch (importSettings.DateTimeTimeZone)
               {
-                case ImportDataDateTimeTimeZone.UTC:
+                case ImportExportDataDateTimeTimeZone.UTC:
                   dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
                   break;
-                case ImportDataDateTimeTimeZone.Exchange:
+                case ImportExportDataDateTimeTimeZone.Exchange:
                   //parse date as local time, convert it so exhange timezone and then convert that to UTC timezone
                   dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
                   DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
                   dateTime = dateTimeOffset.DateTime.ToUniversalTime();
                   break;
-                case ImportDataDateTimeTimeZone.Local:
+                case ImportExportDataDateTimeTimeZone.Local:
                   //adjust local time to UTC time use by database layer
                   dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
                   break;
@@ -759,14 +796,14 @@ namespace TradeSharp.CoreUI.Services
               TimeOnly time = TimeOnly.Parse(barDataJson![tokenJsonTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
               switch (importSettings.DateTimeTimeZone)
               {
-                case ImportDataDateTimeTimeZone.UTC:
+                case ImportExportDataDateTimeTimeZone.UTC:
                   dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Utc);
                   break;
-                case ImportDataDateTimeTimeZone.Local:
+                case ImportExportDataDateTimeTimeZone.Local:
                   dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Local);
                   dateTime = dateTime.ToUniversalTime();
                   break;
-                case ImportDataDateTimeTimeZone.Exchange:
+                case ImportExportDataDateTimeTimeZone.Exchange:
                   //create date/time without timezone and then set it on a date/time offset to the exchange timezone before convert to UTC
                   dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Unspecified);
                   DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
@@ -810,41 +847,61 @@ namespace TradeSharp.CoreUI.Services
       RaiseRefreshEvent();  //notify view model of changes
     }
 
+
+    private DateTime convertExportDateTime(DateTime dateTime, IConfigurationService.TimeZone dbOutputTimeZone, ImportExportDataDateTimeTimeZone exportTimeZone, Exchange? exchange)
+    {
+      switch (exportTimeZone)
+      {
+        case ImportExportDataDateTimeTimeZone.UTC:
+          return dateTime.ToUniversalTime();
+        case ImportExportDataDateTimeTimeZone.Exchange:
+          //convert date/time to the requested Exchange export time
+          switch (dbOutputTimeZone)
+          {
+            case IConfigurationService.TimeZone.UTC:
+              return dateTime.Add(exchange!.TimeZone.BaseUtcOffset);
+            case IConfigurationService.TimeZone.Local:
+              return dateTime.ToUniversalTime().Add(exchange!.TimeZone.BaseUtcOffset);
+            case IConfigurationService.TimeZone.Exchange:
+              return dateTime;
+          }
+          break;
+        case ImportExportDataDateTimeTimeZone.Local:
+          //convert date/time to the requested Local export time
+          switch (dbOutputTimeZone)
+          {
+            case IConfigurationService.TimeZone.UTC:
+              return dateTime.ToLocalTime();
+            case IConfigurationService.TimeZone.Local:
+              return dateTime;
+            case IConfigurationService.TimeZone.Exchange:
+              return dateTime.ToUniversalTime().ToLocalTime();
+          }
+          break;
+      }
+
+      return dateTime;  //should never reach this point, just keep the compiler happy
+    }
+
+
     //NOTE: Export always writes out the data in the Exchange time-zone, so the import settings structure defaults to Exchange time-zone.
-    private void exportCSV(string filename)
+    private long exportCSV(ExportSettings exportSettings, IConfigurationService.TimeZone dbTimeZoneUsed, Exchange? exchange)
     {
       long exportCount = 0;
-      string statusMessage = $"Exporting bar data to \"{filename}\"";
+      string statusMessage = $"Exporting bar data to \"{exportSettings.Filename}\"";
       IDisposable? loggerScope = null;
       if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
       if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
-      Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
-
-      if (exchange == null)
-      {
-        statusMessage = $"Date/time exported without UTC conversion, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\".";
-        if (Debugging.ImportExport) m_logger.LogWarning(statusMessage);
-        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
-        return;
-      }
-
-      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+      using (StreamWriter file = File.CreateText(exportSettings.Filename))
       {
         file.WriteLine($"{tokenCsvDateTime},{tokenCsvOpen},{tokenCsvHigh},{tokenCsvLow},{tokenCsvClose},{tokenCsvVolume}");
 
         foreach (IBarData barData in Items)
         {
-          string barDataStr = "";
-
-          if (exchange != null)
-          {
-            DateTimeOffset dateTimeOffset = new DateTimeOffset(barData.DateTime.Ticks, exchange.TimeZone.BaseUtcOffset);
-            barDataStr = dateTimeOffset.UtcDateTime.ToString();
-          }
-          else
-            barDataStr = barData.DateTime.ToString();
-
+          DateTime exportDateTime = convertExportDateTime(barData.DateTime, dbTimeZoneUsed, exportSettings.DateTimeTimeZone, exchange);
+          if (exportDateTime < exportSettings.FromDateTime || exportDateTime > exportSettings.ToDateTime) continue; //skip bars that are not within the export date/time range
+          string barDataStr = exportDateTime.ToString();
           barDataStr += ", ";
           barDataStr += barData.Open.ToString();
           barDataStr += ", ";
@@ -860,29 +917,18 @@ namespace TradeSharp.CoreUI.Services
         }
       }
 
-      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} bars to \"{filename}\".");
-      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{filename}\".");
+      return exportCount;
     }
 
-    //NOTE: Export always writes out the data in the Exchange time-zone, so the import defaults to Exchange time-zone.
-    private void exportJSON(string filename)
+    private long exportJSON(ExportSettings exportSettings, IConfigurationService.TimeZone dbTimeZoneUsed, Exchange? exchange)
     {
       long exportCount = 0;
-      string statusMessage = $"Exporting bar data to \"{filename}\"";
+      string statusMessage = $"Exporting bar data to \"{exportSettings.Filename}\"";
       IDisposable? loggerScope = null;
       if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
       if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
-      Exchange? exchange = m_database.GetExchange(Instrument!.PrimaryExchangeId);
 
-      if (exchange == null)
-      {
-        statusMessage = $"Date/time exported without UTC conversion, failed to find primary exchange \"{Instrument!.PrimaryExchangeId.ToString()}\" associated with instrument \"{Instrument!.Ticker}\".";
-        if (Debugging.ImportExport) m_logger.LogWarning(statusMessage);
-        if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
-        return;
-      }
-
-      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+      using (StreamWriter file = File.CreateText(exportSettings.Filename))
       {
         int barDataIndex = 0;
         int barDataCount = Items.Count;
@@ -891,14 +937,9 @@ namespace TradeSharp.CoreUI.Services
         file.WriteLine("[");
         foreach (IBarData barData in Items)
         {
-          string dateTimeStr = string.Empty;
-          if (exchange != null)
-          {
-            DateTimeOffset dateTimeOffset = new DateTimeOffset(barData.DateTime.Ticks, exchange.TimeZone.BaseUtcOffset);
-            dateTimeStr = dateTimeOffset.UtcDateTime.ToString();
-          }
-          else
-            dateTimeStr = barData.DateTime.ToString();
+          DateTime exportDateTime = convertExportDateTime(barData.DateTime, dbTimeZoneUsed, exportSettings.DateTimeTimeZone, exchange);
+          if (exportDateTime < exportSettings.FromDateTime || exportDateTime > exportSettings.ToDateTime) continue; //skip bars that are not within the export date/time range
+          string dateTimeStr = exportDateTime.ToString();
 
           JsonObject barDataJson = new JsonObject
           {
@@ -918,8 +959,7 @@ namespace TradeSharp.CoreUI.Services
         file.WriteLine("]");
       }
 
-      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} bars to \"{filename}\".");
-      if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Exported {exportCount} bars to \"{filename}\".");
+      return exportCount;
     }
   }
 }

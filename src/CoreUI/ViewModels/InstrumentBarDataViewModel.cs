@@ -52,7 +52,7 @@ namespace TradeSharp.CoreUI.ViewModels
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null);
       ImportCommandAsync = new AsyncRelayCommand(OnImportAsync, () => DataProvider != string.Empty && Instrument != null);
-      ExportCommandAsync = new AsyncRelayCommand(OnExportAsync, () => DataProvider != string.Empty && Instrument != null && Items.Count > 0);
+      ExportCommandAsync = new AsyncRelayCommand(OnExportAsync, () => DataProvider != string.Empty && Instrument != null);
       CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0);
       CopyToHourCommandAsync = new AsyncRelayCommand(OnCopyToHourAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution == Resolution.Minute);
       CopyToDayCommandAsync = new AsyncRelayCommand(OnCopyToDayAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
@@ -102,8 +102,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override async Task OnExportAsync()
     {
-      string? filename = await m_dialogService.ShowExportBarDataAsync();
-      if (filename != null) _ = Task.Run(() => m_itemsService.Export(filename));
+      ExportSettings? exportSettings = await m_dialogService.ShowExportBarDataAsync();
+      if (exportSettings != null) _ = Task.Run(() => m_itemsService.Export(exportSettings));
     }
 
     public Task<IList<IBarData>> GetItems(DateTime from, DateTime to)

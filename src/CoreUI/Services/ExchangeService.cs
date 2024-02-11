@@ -91,7 +91,5 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public bool Copy(Exchange item) => throw new NotImplementedException();
-    public void Import(ImportSettings importSettings) => throw new NotImplementedException();
-    public void Export(string filename) => throw new NotImplementedException();
   }
 }

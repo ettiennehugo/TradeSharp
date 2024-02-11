@@ -90,7 +90,7 @@ namespace TradeSharp.CoreUI.Services
     public bool Add(Instrument item)
     {
       var result = m_instrumentRepository.Add(item);
-      Utilities.SortedInsert(item, Items);
+      Data.Utilities.SortedInsert(item, Items);
       SelectedItem = item;
       SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
@@ -101,7 +101,7 @@ namespace TradeSharp.CoreUI.Services
       Instrument clone = (Instrument)item.Clone();
       clone.Id = Guid.NewGuid();
       var result = m_instrumentRepository.Add(clone);
-      Utilities.SortedInsert(clone, Items);
+      Data.Utilities.SortedInsert(clone, Items);
       SelectedItem = clone;
       SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
@@ -132,7 +132,7 @@ namespace TradeSharp.CoreUI.Services
     public bool Update(Instrument item)
     {
       var result = m_instrumentRepository.Update(item);
-      Utilities.UpdateItem(item, Items);
+      Data.Utilities.UpdateItem(item, Items);
       return result;
     }
 
@@ -145,13 +145,13 @@ namespace TradeSharp.CoreUI.Services
         importJSON(importSettings);
     }
 
-    public void Export(string filename)
+    public void Export(ExportSettings exportSettings)
     {
-      string extension = Path.GetExtension(filename).ToLower();
+      string extension = Path.GetExtension(exportSettings.Filename).ToLower();
       if (extension == extensionCSV)
-        exportCSV(filename);
+        exportCSV(exportSettings);
       else if (extension == extensionJSON)
-        exportJSON(filename);
+        exportJSON(exportSettings);
     }
 
     public int GetCount()
@@ -532,13 +532,22 @@ namespace TradeSharp.CoreUI.Services
       RaiseRefreshEvent();  //notify view model of changes
     }
 
-    private void exportJSON(string filename)
+    private void exportJSON(ExportSettings exportSettings)
     {
       long exportCount = 0;
-      string statusMessage = $"Importing instruments fto \"{filename}\"";
+      string statusMessage = $"Importing instruments fto \"{exportSettings.Filename}\"";
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
-      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+
+      //TODO: Implement the export settings structure to control the export process.
+      // * only replace file if export setting is set to overwrite
+      // * only output bar data that is within the date/time range specified in the export settings
+      // * convert the date/time to the specified time-zone in the export settings time-zone (HARD PART).
+      throw new NotImplementedException("Export settings are not implemented yet.");
+
+
+
+      using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         IList<Instrument> instruments = m_database.GetInstruments();
         int instrumentIndex = 0;
@@ -579,16 +588,27 @@ namespace TradeSharp.CoreUI.Services
         file.WriteLine("]");
       }
 
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exported {exportCount} instruments to \"{filename}\".");
+      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} instruments to \"{exportSettings.Filename}\".");
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exported {exportCount} instruments to \"{exportSettings.Filename}\".");
     }
 
-    private void exportCSV(string filename)
+    private void exportCSV(ExportSettings exportSettings)
     {
       long exportCount = 0;
-      string statusMessage = $"Importing instruments fto \"{filename}\"";
+      string statusMessage = $"Importing instruments fto \"{exportSettings.Filename}\"";
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
-      using (StreamWriter file = File.CreateText(filename))   //NOTE: This will always overwrite the text file if it exists.
+
+
+      //TODO: Implement the export settings structure to control the export process.
+      // * only replace file if export setting is set to overwrite
+      // * only output bar data that is within the date/time range specified in the export settings
+      // * convert the date/time to the specified time-zone in the export settings time-zone (HARD PART).
+      throw new NotImplementedException("Export settings are not implemented yet.");
+
+
+
+      using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         IList<Instrument> instruments = m_database.GetInstruments();
 
@@ -624,7 +644,8 @@ namespace TradeSharp.CoreUI.Services
         }
       }
 
-      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exported {exportCount} instruments to \"{filename}\".");
+      if (Debugging.ImportExport) m_logger.LogInformation($"Exported {exportCount} instruments to \"{exportSettings.Filename}\".");
+      m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exported {exportCount} instruments to \"{exportSettings.Filename}\".");
     }
   }
 }

@@ -63,7 +63,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportDataDateTimeTimeZone));
+      Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportExportDataDateTimeTimeZone));
       Common.Utilities.populateComboBoxFromEnum(ref m_importStructure, typeof(MassImportExportStructure));
       Common.Utilities.populateComboBoxFromEnum(ref m_fileType, typeof(ImportExportFileTypes));
     }

@@ -39,6 +39,9 @@ namespace TradeSharp.CoreUI.Services
     public event IRefreshable.RefreshEventHandler? RefreshEvent;
 
     //methods
+    public virtual void Import(ImportSettings importSettings) => throw new NotImplementedException();
+    public virtual void Export(ExportSettings exportSettings) => throw new NotImplementedException();
+
     protected virtual void RaiseRefreshEvent()
     {
       RefreshEvent?.Invoke(this, RefreshEventArgs.Empty);

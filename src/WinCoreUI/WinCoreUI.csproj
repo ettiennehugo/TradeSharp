@@ -17,6 +17,7 @@
     <None Remove="Views\DataProvidersView.xaml" />
     <None Remove="Views\ExchangesView.xaml" />
     <None Remove="Views\ExchangeView.xaml" />
+    <None Remove="Views\ExportView.xaml" />
     <None Remove="Views\HolidaysView.xaml" />
     <None Remove="Views\ImportView.xaml" />
     <None Remove="Views\InstrumentBarDataView.xaml" />
@@ -161,5 +162,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomAdditionalCompileInputs Remove="Views\ExportView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Remove="Views\ExportView.xaml" />
   </ItemGroup>
 </Project>

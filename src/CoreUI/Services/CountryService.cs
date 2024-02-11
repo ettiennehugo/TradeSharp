@@ -72,8 +72,6 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public bool Copy(Country item) => throw new NotImplementedException();
-    public void Import(ImportSettings importSettings) => throw new NotImplementedException();
-    public void Export(string filename) => throw new NotImplementedException();
 
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } } //countries to not have a parent
