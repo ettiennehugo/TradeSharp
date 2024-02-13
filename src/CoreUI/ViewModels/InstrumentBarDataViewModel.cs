@@ -202,7 +202,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         SetProperty(ref m_dataProvider, value);
         m_barDataService.DataProvider = value;
-        if (DataProvider != string.Empty && Instrument != null && Count > 0) RefreshCommandAsync.ExecuteAsync(null);
+        RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }
@@ -214,7 +214,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         SetProperty(ref m_resolution, value);
         m_barDataService.Resolution = value;
-        if (DataProvider != string.Empty && Instrument != null && Count > 0) RefreshCommandAsync.ExecuteAsync(null);
+        RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }
@@ -227,7 +227,7 @@ namespace TradeSharp.CoreUI.ViewModels
         SetProperty(ref m_instrument, value);
         m_barDataService.Instrument = value;
         updatePriceValueFormatMask();
-        if (DataProvider != string.Empty && Instrument != null && Count > 0) RefreshCommandAsync.ExecuteAsync(null);
+        RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
     }

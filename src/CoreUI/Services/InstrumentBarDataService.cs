@@ -760,7 +760,6 @@ namespace TradeSharp.CoreUI.Services
           }
 
           if (bars.Count > 0) m_repository.Update(bars);
-
         }
         else
         {
@@ -928,19 +927,21 @@ namespace TradeSharp.CoreUI.Services
         {
           DateTime exportDateTime = convertExportDateTime(barData.DateTime, dbTimeZoneUsed, exportSettings.DateTimeTimeZone, exchange);
           if (exportDateTime < exportSettings.FromDateTime || exportDateTime > exportSettings.ToDateTime) continue; //skip bars that are not within the export date/time range
-          //NOTE: We need to output the data in a very specific format to ensure that date/time parsing will work when importing the data (DateTime.Parse will fail if the format is not correct).
-          // o format = s: 2008-06-15T21:15:07.0000000 (not currently used since it's not needed).
-          // s format = s: 2008-06-15T21:15:07
+          //NOTES:
+          // * We need to output the data in a very specific format to ensure that date/time parsing will work when importing the data (DateTime.Parse will fail if the format is not correct).
+          //     o format = s: 2008-06-15T21:15:07.0000000 (not currently used since it's not needed).
+          //     s format = s: 2008-06-15T21:15:07
+          // * We do not include spaces between comma's and data since it adds additional bytes to the file.
           string barDataStr = exportDateTime.ToString("s");
-          barDataStr += ", ";
+          barDataStr += ",";
           barDataStr += barData.Open.ToString();
-          barDataStr += ", ";
+          barDataStr += ",";
           barDataStr += barData.High.ToString();
-          barDataStr += ", ";
+          barDataStr += ",";
           barDataStr += barData.Low.ToString();
-          barDataStr += ", ";
+          barDataStr += ",";
           barDataStr += barData.Close.ToString();
-          barDataStr += ", ";
+          barDataStr += ",";
           barDataStr += barData.Volume.ToString();
           file.WriteLine(barDataStr);
           exportCount++;

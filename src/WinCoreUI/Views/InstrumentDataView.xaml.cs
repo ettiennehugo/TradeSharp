@@ -93,6 +93,13 @@ namespace TradeSharp.WinCoreUI.Views
       Instruments.Clear();
       foreach (var instrument in filteredResult) Instruments.Add(instrument);
       InstrumentViewModel.SelectedItem = Instruments.FirstOrDefault();
+
+      //when the filter is cleared the selected instrument is unselected, so we need to reflect that to the bar data displays
+      m_minuteBarsData.Instrument = InstrumentViewModel.SelectedItem;
+      m_hoursBarsData.Instrument = InstrumentViewModel.SelectedItem;
+      m_daysBarsData.Instrument = InstrumentViewModel.SelectedItem;
+      m_weeksBarsData.Instrument = InstrumentViewModel.SelectedItem;
+      m_monthsBarsData.Instrument = InstrumentViewModel.SelectedItem;
     }
 
     private void resetFilter()

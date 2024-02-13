@@ -260,7 +260,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       //set the view model filter
       //NOTE: Date/time must be parsed as a UTC date/time since that is what is stored in the database - otherwise results will be wrong.
-      if (DateTime.TryParse(m_startDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime startDateTime))
+      if (ViewModel.Instrument != null && DateTime.TryParse(m_startDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime startDateTime))
       {
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter start date/time - {startDateTime}");
         Exchange exchange = m_exchangeViewModel.GetItem(ViewModel.Instrument!.PrimaryExchangeId) ?? m_exchangeViewModel.GlobalExchange;
@@ -271,7 +271,7 @@ namespace TradeSharp.WinCoreUI.Views
         ViewModel.FromDateTime = Constants.DefaultMinimumDateTime;
 
       //NOTE: Date/time must be parsed as a UTC date/time since that is what is stored in the database - otherwise results will be wrong.
-      if (DateTime.TryParse(m_endDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime endDateTime))
+      if (ViewModel.Instrument != null && DateTime.TryParse(m_endDateTime.Text, null, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal, out DateTime endDateTime))
       {
         if (Debugging.InstrumentBarDataFilterParse) m_logger.LogInformation($"Parsed filter end date/time - {endDateTime}");
         Exchange exchange = m_exchangeViewModel.GetItem(ViewModel.Instrument!.PrimaryExchangeId) ?? m_exchangeViewModel.GlobalExchange;
