@@ -182,7 +182,7 @@ namespace TradeSharp.CoreUI.Services
           progressDialog.Minimum = 0;
           progressDialog.Maximum = exportFileList!.Count;
           progressDialog.Progress = 0;
-          progressDialog.StatusMessage = $"Exporting data for {exportFileList.Count} files";
+          progressDialog.StatusMessage = $"Found {exportFileList.Count} instruments to export";
           progressDialog.ShowAsync();
 
           //export all the data according to the defined data resolutions
@@ -213,13 +213,13 @@ namespace TradeSharp.CoreUI.Services
                 lock (exportFileList)
                   if (exportFileList.Count > 0) exportFile = exportFileList.Pop();  //only pop if there are instruments otherwise this will raise an exception
                 if (exportFile == null) continue; //failed to find a an instrument to export, stack should be empty should be empty
+                progressDialog.Progress = progressDialog.Progress + 1;
 
                 instrumentBarDataService.Resolution = exportFile.Resolution;
                 instrumentBarDataService.Instrument = exportFile.Instrument;
                 instrumentBarDataService.Refresh(Settings.FromDateTime, Settings.ToDateTime);
 
                 //skip creation of empty files if no data within the given range
-                progressDialog.Progress = progressDialog.Progress + 1;
                 if (!Settings.CreateEmptyFiles && instrumentBarDataService.Items.Count == 0)
                 {
                   if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"No data in range for {exportFile.Instrument.Ticker} at resolution {exportFile.Resolution}, skipping creation of file \"{exportFile.Filename}\" (Thread id: {Task.CurrentId})");
@@ -232,10 +232,10 @@ namespace TradeSharp.CoreUI.Services
                 {
                   lock (attemptedFileCountLock) attemptedFileCount++;
                   ExportSettings exportSettings = new ExportSettings();
-                  exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-                  exportSettings.Filename = exportFile.Filename;
                   exportSettings.FromDateTime = Settings.FromDateTime;
                   exportSettings.ToDateTime = Settings.ToDateTime;
+                  exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
+                  exportSettings.Filename = exportFile.Filename;
                   exportSettings.DateTimeTimeZone = Settings.DateTimeTimeZone;
                   instrumentBarDataService.Export(exportSettings);
                   lock (successCountLock) successCount++;
@@ -253,7 +253,8 @@ namespace TradeSharp.CoreUI.Services
           //wait for tasks to finish exporting data for this resolution
           Task.WaitAll(taskPool.ToArray());
 
-          progressDialog.StatusMessage = $"Export complete - {successCount} successfully imported, {failureCount} failed";
+          progressDialog.Complete = true;
+          progressDialog.StatusMessage = $"Export complete - {successCount} files successfully exported, {failureCount} failed";
 
           stopwatch.Stop();
           TimeSpan elapsed = stopwatch.Elapsed;

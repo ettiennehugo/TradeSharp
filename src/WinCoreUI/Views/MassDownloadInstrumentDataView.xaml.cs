@@ -27,13 +27,11 @@ namespace TradeSharp.WinCoreUI.Views
 
     //attributes
     private IMassDownloadInstrumentDataService m_massDownloadInstrumentDataService;
-    private CancellationToken m_cancellationToken;
 
     //constructors
     public MassDownloadInstrumentDataView()
     {
       Settings = new MassDownloadSettings();
-      m_cancellationToken = new CancellationToken();
       m_massDownloadInstrumentDataService = (IMassDownloadInstrumentDataService)IApplication.Current.Services.GetService(typeof(IMassDownloadInstrumentDataService));
       this.InitializeComponent();
     }

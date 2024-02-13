@@ -34,6 +34,8 @@ namespace TradeSharp.WinCoreUI.Views
     private object m_progressLock;
     private double m_progress;
     private double m_progressPercent;
+    private object m_completeLock;
+    private bool m_complete;
     private object m_statusMessageLock;
     private string m_statusMessageText;
 
@@ -48,6 +50,8 @@ namespace TradeSharp.WinCoreUI.Views
       m_progressLock = new object();
       m_progress = 0;
       m_progressPercent = 0;
+      m_completeLock = new object();
+      m_complete = false;
       m_statusMessageLock = new object();
       m_statusMessageText = "";
       this.InitializeComponent();
@@ -102,7 +106,19 @@ namespace TradeSharp.WinCoreUI.Views
           m_progressPercent = m_maximum > 0 && m_progress >= 0 ? (m_progress / m_maximum) * 100 : 0;
           m_progressBar.DispatcherQueue.TryEnqueue(() => m_progressBar.Value = m_progress);
           m_progressLabel.DispatcherQueue.TryEnqueue(() => m_progressLabel.Text = $"{m_progressPercent:#0}%");
-          if (value == Maximum) m_cancelBtn.DispatcherQueue.TryEnqueue(() => m_cancelBtn.Content = "Close");
+        }
+      }
+    }
+
+    public bool Complete
+    {
+      get => m_complete;
+      set
+      {
+        lock (m_completeLock)
+        {
+          m_complete = value;
+          if (m_complete) m_cancelBtn.DispatcherQueue.TryEnqueue(() => m_cancelBtn.Content = "Close");
         }
       }
     }

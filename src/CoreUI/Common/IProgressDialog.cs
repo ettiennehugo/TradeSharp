@@ -26,6 +26,7 @@ namespace TradeSharp.CoreUI.Common
     double Minimum { get; set; }
     double Maximum { get; set; }
     double Progress { get; set; }
+    bool Complete { get; set; }
     string StatusMessage { get; set; }
 
     //methods

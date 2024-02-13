@@ -87,14 +87,14 @@ namespace TradeSharp.WinCoreUI.Services
           progressDialog.Minimum = 0;
           progressDialog.Maximum = importFiles!.Count;
           progressDialog.Progress = 0;
-          progressDialog.StatusMessage = $"Importing data from {importFiles.Count} files";
+          progressDialog.StatusMessage = $"Found {importFiles.Count} files to import";
           progressDialog.ShowAsync();
 
-          if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Starting mass import for \"{DataProvider}\" of instrument data for {progressDialog.Maximum:D0} files from \"{Settings.Directory}\"");
+          if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Starting mass import for \"{DataProvider}\" of instrument data for {progressDialog.Maximum:G0} files from \"{Settings.Directory}\"");
 
           //start the requested set of thread to import the data from the list of files
           List<Task> taskPool = new List<Task>();
-          if (progressDialog.Maximum > 0)
+          if (importFiles.Count > 0)
           {
             for (int i = 0; i < Settings.ThreadCount; i++)
               taskPool.Add(
@@ -114,15 +114,17 @@ namespace TradeSharp.WinCoreUI.Services
                     lock (importFiles)
                       if (importFiles.Count > 0) importFile = importFiles.Pop();  //only pop if there are items otherwise this will raise an exception
                     if (importFile == null) continue; //failed to find a file to import, import files should be empty
+                    progressDialog.Progress = progressDialog.Progress + 1;
 
                     //catch any import errors and log them to keep thread going
                     try
                     {
-                      progressDialog.Progress = progressDialog.Progress + 1;
                       if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Importing \"{importFile.Filename}\" for {importFile.Ticker}, resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
 
                       //import the data
                       ImportSettings importSettings = new ImportSettings();
+                      importSettings.FromDateTime = Settings.FromDateTime;
+                      importSettings.ToDateTime = Settings.ToDateTime;
                       importSettings.ReplaceBehavior = Settings.ReplaceBehavior;
                       importSettings.Filename = importFile.Filename;
                       importSettings.DateTimeTimeZone = Settings.DateTimeTimeZone;
@@ -154,15 +156,16 @@ namespace TradeSharp.WinCoreUI.Services
 
           Task.WaitAll(taskPool.ToArray());
 
-          progressDialog.StatusMessage = $"Import complete - {successCount} successfully imported, {failureCount} failed";
+          progressDialog.Complete = true;
+          progressDialog.StatusMessage = $"Import complete - {successCount} files successfully imported, {failureCount} failed";
 
           stopwatch.Stop();
           TimeSpan elapsed = stopwatch.Elapsed;
           IsRunning = false;
 
           //output status message
-          if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Mass import complete - Found {progressDialog.Maximum:D0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Import Complete", $"Found {progressDialog.Maximum:D0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+          if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Mass import complete - Found {progressDialog.Maximum:G0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Import Complete", $"Found {progressDialog.Maximum:G0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
         }
         catch (Exception e)
         {

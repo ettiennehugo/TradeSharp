@@ -9,6 +9,7 @@ using System.Globalization;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
 using System;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -532,6 +533,66 @@ namespace TradeSharp.CoreUI.Services
 
 
     //methods
+
+    /// <summary>
+    /// Convert the input column date/time value to the output value based on the import settings.
+    /// </summary>
+    private DateTime convertImportDateTime(string columnValue, ImportExportDataDateTimeTimeZone importTimeZone, Exchange? exchange, out DateTime unconvertedDateTime)
+    {
+      DateTime result = DateTime.Now;
+      unconvertedDateTime = DateTime.Now;
+      switch (importTimeZone)
+      {
+        case ImportExportDataDateTimeTimeZone.UTC:
+          result = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
+          unconvertedDateTime = result;
+          break;
+        case ImportExportDataDateTimeTimeZone.Exchange:
+          //parse date as-is and convert it from the exchange timezone to the UTC
+          result = DateTime.Parse(columnValue!);
+          unconvertedDateTime = result;
+          result = TimeZoneInfo.ConvertTimeToUtc(result, exchange!.TimeZone);
+          break;
+        case ImportExportDataDateTimeTimeZone.Local:
+          //adjust local time to UTC time used by database layer
+          unconvertedDateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
+          result = unconvertedDateTime.ToUniversalTime();
+          break;
+      }
+
+      return result;
+    }
+
+    /// <summary>
+    /// Convert the input column date/time value to UTC used by the database from the time-zone in the import settings, returns the unconverted date/time to be
+    /// used to filter the data.
+    /// </summary>
+    private DateTime convertImportDateTime(DateOnly date, TimeOnly time, ImportExportDataDateTimeTimeZone importTimeZone, Exchange? exchange, out DateTime unconvertedDateTime)
+    {
+      DateTime result = DateTime.Now;
+      unconvertedDateTime = DateTime.Now;
+      switch (importTimeZone)
+      {
+        case ImportExportDataDateTimeTimeZone.UTC:
+          result = new DateTime(date, time);
+          unconvertedDateTime = result;
+          break;
+        case ImportExportDataDateTimeTimeZone.Exchange:
+          //parse date as local time, convert it so exhange timezone and then convert that to UTC timezone
+          result = new DateTime(date, time);
+          unconvertedDateTime = result;
+          result = TimeZoneInfo.ConvertTimeToUtc(result, exchange!.TimeZone);
+          break;
+        case ImportExportDataDateTimeTimeZone.Local:
+          //adjust local time to UTC time used by database layer
+          unconvertedDateTime = new DateTime(date, time);
+          result = unconvertedDateTime.ToUniversalTime();
+          break;
+      }
+
+      return result;
+    }
+
     /// <summary>
     /// Import the bar data from a csv file that has the following formats:
     ///   datetime, open, high, low, close, volume[, id]
@@ -631,36 +692,43 @@ namespace TradeSharp.CoreUI.Services
             long volume = 0;
 
             lineNo++;
+            bool filterBar = false;
+
             try
             {
               for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
               {
+                if (filterBar) continue;    //skip rest of fields if bar will be filtered anyway
+
                 string? columnValue = null;
                 if (csv.TryGetField(columnIndex, out columnValue))
                 {
                   if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDateTime)
                   {
-                    switch (importSettings.DateTimeTimeZone)
-                    {
-                      case ImportExportDataDateTimeTimeZone.UTC:
-                        dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
-                        break;
-                      case ImportExportDataDateTimeTimeZone.Exchange:
-                        //parse date as local time, convert it so exhange timezone and then convert that to UTC timezone
-                        dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
-                        DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
-                        dateTime = dateTimeOffset.DateTime.ToUniversalTime();
-                        break;
-                      case ImportExportDataDateTimeTimeZone.Local:
-                        //adjust local time to UTC time use by database layer
-                        dateTime = DateTime.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
-                        break;
-                    }
+                    //convert input date/time value and filter the bar data if needed
+                    dateTime = convertImportDateTime(columnValue!, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
+                    filterBar = unconvertedDateTime < importSettings.FromDateTime && unconvertedDateTime > importSettings.ToDateTime;
                   }
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDate)
+                  {
                     date = DateOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
+                    if (date != null && time != null)
+                    {
+                      //convert input date/time value and filter the bar data if needed
+                      dateTime = convertImportDateTime((DateOnly)date, (TimeOnly)time, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
+                      filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
+                    }
+                  }
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTime)
+                  {
                     time = TimeOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
+                    if (date != null && time != null)
+                    {
+                      //convert input date/time value and filter the bar data if needed
+                      dateTime = convertImportDateTime((DateOnly)date, (TimeOnly)time, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
+                      filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
+                    }
+                  }
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvOpen)
                     open = double.Parse(columnValue!);
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvHigh)
@@ -674,26 +742,8 @@ namespace TradeSharp.CoreUI.Services
                 }
               }
 
-              //adjust date/time when separate date and time fields are used and convert it to UTC for database use
-              if (date != null && time != null)
-                switch (importSettings.DateTimeTimeZone)
-                {
-                  case ImportExportDataDateTimeTimeZone.UTC:
-                    dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Utc);
-                    break;
-                  case ImportExportDataDateTimeTimeZone.Local:
-                    dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Local);
-                    dateTime = dateTime.Value.ToUniversalTime();
-                    break;
-                  case ImportExportDataDateTimeTimeZone.Exchange:
-                    //create date/time without timezone and then set it on a date/time offset to the exchange timezone before convert to UTC
-                    dateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hour, time.Value.Minute, time.Value.Second, DateTimeKind.Unspecified);
-                    DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
-                    dateTime = dateTimeOffset.DateTime.ToUniversalTime();
-                    break;
-                }
-
-              if (dateTime >= importSettings.FromDateTime && dateTime <= importSettings.ToDateTime)
+              //filter the imported date/time according to 
+              if (!filterBar)
               {
                 bars.Add(new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume));
                 barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
@@ -709,7 +759,8 @@ namespace TradeSharp.CoreUI.Services
             }
           }
 
-          if (bars.Count != 0) m_repository.Update(bars);
+          if (bars.Count > 0) m_repository.Update(bars);
+
         }
         else
         {
@@ -719,7 +770,6 @@ namespace TradeSharp.CoreUI.Services
           noErrors = false;
         }
       }
-
       if (Debugging.ImportExport) m_logger.LogInformation($"Imported {barsUpdated} bars from \"{importSettings.Filename}\".");
 
       if (noErrors)
@@ -768,48 +818,21 @@ namespace TradeSharp.CoreUI.Services
           List<IBarData> bars = new List<IBarData>();
           foreach (JsonObject? barDataJson in barDataArray)
           {
+            bool filterBar = false;
             barIndex++;
             DateTime dateTime = DateTime.Now;
 
             if (barDataJson!.ContainsKey(tokenJsonDateTime))
             {
-              switch (importSettings.DateTimeTimeZone)
-              {
-                case ImportExportDataDateTimeTimeZone.UTC:
-                  dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal);
-                  break;
-                case ImportExportDataDateTimeTimeZone.Exchange:
-                  //parse date as local time, convert it so exhange timezone and then convert that to UTC timezone
-                  dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal);
-                  DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
-                  dateTime = dateTimeOffset.DateTime.ToUniversalTime();
-                  break;
-                case ImportExportDataDateTimeTimeZone.Local:
-                  //adjust local time to UTC time use by database layer
-                  dateTime = DateTime.Parse(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal);
-                  break;
-              }
+              dateTime = convertImportDateTime(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
+              filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
             }
             else if (barDataJson!.ContainsKey(tokenJsonDate) && barDataJson!.ContainsKey(tokenJsonTime))
             {
               DateOnly date = DateOnly.Parse(barDataJson![tokenJsonDate]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
               TimeOnly time = TimeOnly.Parse(barDataJson![tokenJsonTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
-              switch (importSettings.DateTimeTimeZone)
-              {
-                case ImportExportDataDateTimeTimeZone.UTC:
-                  dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Utc);
-                  break;
-                case ImportExportDataDateTimeTimeZone.Local:
-                  dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Local);
-                  dateTime = dateTime.ToUniversalTime();
-                  break;
-                case ImportExportDataDateTimeTimeZone.Exchange:
-                  //create date/time without timezone and then set it on a date/time offset to the exchange timezone before convert to UTC
-                  dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Unspecified);
-                  DateTimeOffset dateTimeOffset = new DateTimeOffset((DateTime)dateTime!, exchange!.TimeZone.BaseUtcOffset);
-                  dateTime = dateTimeOffset.DateTime.ToUniversalTime();
-                  break;
-              }
+              dateTime = convertImportDateTime((DateOnly)date, (TimeOnly)time, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
+              filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
             }
             else
             {
@@ -820,13 +843,14 @@ namespace TradeSharp.CoreUI.Services
             }
 
             //skip bars that are not within the import date/time range
-            if (dateTime >= importSettings.FromDateTime && dateTime <= importSettings.ToDateTime) continue;
+            if (filterBar) continue;
 
             double open = barDataJson![tokenJsonOpen]!.AsValue().Deserialize<double>();
             double high = barDataJson![tokenJsonHigh]!.AsValue().Deserialize<double>();
             double low = barDataJson![tokenJsonLow]!.AsValue().Deserialize<double>();
             double close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
             long volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<long>();
+
             bars.Add(new BarData(Resolution, dateTime, open, high, low, close, volume));
             barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
           }
@@ -848,6 +872,9 @@ namespace TradeSharp.CoreUI.Services
     }
 
 
+    /// <summary>
+    /// The database can be configured to output the date/time data in different time-zones, this function converts the database timezone to the requested exchange time-zone.
+    /// </summary>
     private DateTime convertExportDateTime(DateTime dateTime, IConfigurationService.TimeZone dbOutputTimeZone, ImportExportDataDateTimeTimeZone exportTimeZone, Exchange? exchange)
     {
       switch (exportTimeZone)
@@ -859,9 +886,9 @@ namespace TradeSharp.CoreUI.Services
           switch (dbOutputTimeZone)
           {
             case IConfigurationService.TimeZone.UTC:
-              return dateTime.Add(exchange!.TimeZone.BaseUtcOffset);
+              return TimeZoneInfo.ConvertTimeFromUtc(dateTime, exchange!.TimeZone);
             case IConfigurationService.TimeZone.Local:
-              return dateTime.ToUniversalTime().Add(exchange!.TimeZone.BaseUtcOffset);
+              return TimeZoneInfo.ConvertTimeFromUtc(dateTime.ToUniversalTime(), exchange!.TimeZone);
             case IConfigurationService.TimeZone.Exchange:
               return dateTime;
           }
@@ -901,7 +928,10 @@ namespace TradeSharp.CoreUI.Services
         {
           DateTime exportDateTime = convertExportDateTime(barData.DateTime, dbTimeZoneUsed, exportSettings.DateTimeTimeZone, exchange);
           if (exportDateTime < exportSettings.FromDateTime || exportDateTime > exportSettings.ToDateTime) continue; //skip bars that are not within the export date/time range
-          string barDataStr = exportDateTime.ToString();
+          //NOTE: We need to output the data in a very specific format to ensure that date/time parsing will work when importing the data (DateTime.Parse will fail if the format is not correct).
+          // o format = s: 2008-06-15T21:15:07.0000000 (not currently used since it's not needed).
+          // s format = s: 2008-06-15T21:15:07
+          string barDataStr = exportDateTime.ToString("s");
           barDataStr += ", ";
           barDataStr += barData.Open.ToString();
           barDataStr += ", ";
@@ -939,7 +969,11 @@ namespace TradeSharp.CoreUI.Services
         {
           DateTime exportDateTime = convertExportDateTime(barData.DateTime, dbTimeZoneUsed, exportSettings.DateTimeTimeZone, exchange);
           if (exportDateTime < exportSettings.FromDateTime || exportDateTime > exportSettings.ToDateTime) continue; //skip bars that are not within the export date/time range
-          string dateTimeStr = exportDateTime.ToString();
+
+          //NOTE: We need to output the data in a very specific format to ensure that date/time parsing will work when importing the data (DateTime.Parse will fail if the format is not correct).
+          // o format = s: 2008-06-15T21:15:07.0000000 (not currently used since it's not needed).
+          // s format = s: 2008-06-15T21:15:07
+          string dateTimeStr = exportDateTime.ToString("s");
 
           JsonObject barDataJson = new JsonObject
           {

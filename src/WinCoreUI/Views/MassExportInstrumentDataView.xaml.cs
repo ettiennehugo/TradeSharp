@@ -30,7 +30,6 @@ namespace TradeSharp.WinCoreUI.Views
 
     //attributes
     private IMassExportInstrumentDataService m_massExportInstrumentDataService;
-    private CancellationToken m_cancellationToken;
 
     //constructors
     public MassExportInstrumentDataView()
@@ -38,7 +37,6 @@ namespace TradeSharp.WinCoreUI.Views
       Settings = new MassExportSettings();
       ExportStructureTooltip = "";
       m_massExportInstrumentDataService = (IMassExportInstrumentDataService)IApplication.Current.Services.GetService(typeof(IMassExportInstrumentDataService));
-      m_cancellationToken = new CancellationToken();
       this.InitializeComponent();
     }
 

@@ -5,7 +5,6 @@ using Windows.Storage.Pickers;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.CoreUI.Common;
-using System.Threading;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 
@@ -30,7 +29,6 @@ namespace TradeSharp.WinCoreUI.Views
 
     //attributes
     private IMassImportInstrumentDataService m_massImportInstrumentDataService;
-    private CancellationToken m_cancellationToken;
 
     //constructors
     public MassImportInstrumentDataView()
@@ -38,7 +36,6 @@ namespace TradeSharp.WinCoreUI.Views
       Settings = new MassImportSettings();
       ImportStructureTooltip = "";
       m_massImportInstrumentDataService = (IMassImportInstrumentDataService)IApplication.Current.Services.GetService(typeof(IMassImportInstrumentDataService));
-      m_cancellationToken = new CancellationToken();
       this.InitializeComponent();
     }
 
