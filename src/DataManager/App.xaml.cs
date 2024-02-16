@@ -91,6 +91,7 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<IExchangeViewModel, ExchangeViewModel>();
           services.AddSingleton<ISessionViewModel, SessionViewModel>();
           services.AddSingleton<IMassDownloadInstrumentDataService, MassDownloadInstrumentDataService>();
+          services.AddSingleton<IMassCopyInstrumentDataService, MassCopyInstrumentDataService>();
           services.AddSingleton<IMassImportInstrumentDataService, MassImportInstrumentDataService>();
           services.AddSingleton<IMassExportInstrumentDataService, MassExportInstrumentDataService>();
           services.AddSingleton<IInstrumentViewModel, InstrumentViewModel>();

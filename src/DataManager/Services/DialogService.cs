@@ -541,6 +541,7 @@ namespace TradeSharp.WinDataManager.Services
       importView.DataProvider = dataProvider;
       window.Content = importView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 850));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      ResetSizeable(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -554,15 +555,22 @@ namespace TradeSharp.WinDataManager.Services
       exportView.DataProvider = dataProvider;
       window.Content = exportView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 930));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      ResetSizeable(window);
       window.Activate();
       return Task.CompletedTask;
     }
 
     public Task ShowMassDataCopyAsync(string dataProvider)
     {
-      
-      //TODO: Implement mass copy of instrument data
-
+      Window window = new Window();
+      window.Title = "Mass Copy of Instrument Data";
+      WinCoreUI.Views.MassCopyInstrumentDataView copyView = new WinCoreUI.Views.MassCopyInstrumentDataView();
+      copyView.ParentWindow = window;   //set so view can close the window
+      copyView.DataProvider = dataProvider;
+      window.Content = copyView;
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 520));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      ResetSizeable(window);
+      window.Activate();
       return Task.CompletedTask;
     }
 
@@ -575,6 +583,7 @@ namespace TradeSharp.WinDataManager.Services
       downloadView.DataProvider = dataProvider;
       window.Content = downloadView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 660));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      ResetSizeable(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -584,6 +593,13 @@ namespace TradeSharp.WinDataManager.Services
     public TextBlock StatusBarText { get; set; }
 
     //methods
+    internal static void ResetSizeable(Window window)
+    {
+      IntPtr hwnd = WindowNative.GetWindowHandle(window);
+      var currentStyle = GetWindowLong(hwnd, GWL_STYLE);
+      SetWindowLong(hwnd, GWL_STYLE, (currentStyle & ~WS_SIZEBOX));
+    }
+
     internal static void HideMinimizeAndMaximizeButtons(Window window)
     {
       IntPtr hwnd =  WindowNative.GetWindowHandle(window);

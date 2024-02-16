@@ -31,7 +31,7 @@
     <ComboBox x:Name="m_exportStructure" SelectedIndex="{x:Bind Settings.ExportStructure, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="4" ToolTipService.ToolTip="{x:Bind ExportStructureTooltip, Mode=OneWay}" SelectionChanged="m_exportStructure_SelectionChanged"/>
     <TextBlock Text="File type" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5"/>
     <ComboBox x:Name="m_fileType" SelectedIndex="{x:Bind Settings.FileType, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="5"/>
-    <TextBlock Text="Resolutions" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="6" Grid.RowSpan="6"/>
+    <TextBlock Text="Resolutions" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.RowSpan="6"/>
     <Grid Grid.Column="1" Grid.Row="6" Grid.RowSpan="5" Grid.ColumnSpan="2" RowDefinitions="Auto, Auto, Auto, Auto, Auto">
       <CheckBox x:Name="m_resolutionMinute" Content="Minute" IsChecked="{x:Bind Settings.ResolutionMinute, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
       <CheckBox x:Name="m_resolutionHour" Content="Hour" IsChecked="{x:Bind Settings.ResolutionHour, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1"/>

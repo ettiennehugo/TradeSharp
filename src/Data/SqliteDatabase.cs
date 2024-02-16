@@ -1792,8 +1792,8 @@ namespace TradeSharp.Data
       int result = 0;
 
       string where = $"Ticker = '{ticker}'";
-      if (from != null) where += $"AND DateTime >= {from.Value.ToUniversalTime().ToBinary()}";
-      if (to != null) where += $"AND DateTime >= {to.Value.ToUniversalTime().ToBinary()}";
+      if (from != null) where += $" AND DateTime >= {from.Value.ToUniversalTime().ToBinary()}";
+      if (to != null) where += $" AND DateTime >= {to.Value.ToUniversalTime().ToBinary()}";
 
       lock (this)
       {

@@ -228,6 +228,7 @@ namespace TradeSharp.CoreUI.Services
             else //keep constructing bar while it's in the same to-resolution
             {
               //nothing to do for the open, that is set when the new bar is created
+              toBar.DateTime = bar.DateTime;    //alwys keep the date/time to the last bar
               toBar.High = Math.Max(toBar.High, bar.High);
               toBar.Low = Math.Min(toBar.Low, bar.Low);
               toBar.Close = bar.Close;
@@ -253,6 +254,7 @@ namespace TradeSharp.CoreUI.Services
             else //keep constructing bar while it's in the same to-resolution
             {
               //nothing to do for the open, that is set when the new bar is created
+              toBar.DateTime = bar.DateTime;    //alwys keep the date/time to the last bar
               toBar.High = Math.Max(toBar.High, bar.High);
               toBar.Low = Math.Min(toBar.Low, bar.Low);
               toBar.Close = bar.Close;
@@ -270,12 +272,8 @@ namespace TradeSharp.CoreUI.Services
 
           if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
-            //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
-            //NOTE: * This function only works for Gregorian dates which is fine, CultureInfo and ISOWeek returns anything and everything
-            //        except just a sane interpretation of the week number based on "which week of the year is this given that 1 January
-            //        is the start of the first week?".
-            //      * We are good with considering the first and last weeks of the year to be "partial" weeks.
-            if (toBar == null || ISOWeek.GetWeekOfYear(toBar.DateTime) != ISOWeek.GetWeekOfYear(bar.DateTime))
+            //we always end the week on a Sunday and use Monday as the start of the week
+            if (toBar == null || (toBar.DateTime.DayOfWeek != DayOfWeek.Monday && bar.DateTime.DayOfWeek == DayOfWeek.Monday ))
             {
               toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
               toBarData.Add(toBar);
@@ -283,6 +281,7 @@ namespace TradeSharp.CoreUI.Services
             else //keep constructing bar while it's in the same to-resolution
             {
               //nothing to do for the open, that is set when the new bar is created
+              toBar.DateTime = bar.DateTime;    //alwys keep the date/time to the last bar
               toBar.High = Math.Max(toBar.High, bar.High);
               toBar.Low = Math.Min(toBar.Low, bar.Low);
               toBar.Close = bar.Close;
@@ -308,6 +307,7 @@ namespace TradeSharp.CoreUI.Services
             else //keep constructing bar while it's in the same to-resolution
             {
               //nothing to do for the open, that is set when the new bar is created
+              toBar.DateTime = bar.DateTime;    //alwys keep the date/time to the last bar
               toBar.High = Math.Max(toBar.High, bar.High);
               toBar.Low = Math.Min(toBar.Low, bar.Low);
               toBar.Close = bar.Close;

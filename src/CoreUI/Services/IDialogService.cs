@@ -176,6 +176,31 @@ namespace TradeSharp.CoreUI.Services
   }
 
   /// <summary>
+  /// Settings used for mass copy of instrument data.
+  /// </summary>
+  public partial class MassCopySettings : ObservableObject
+  {
+    public MassCopySettings()
+    {
+      FromDateTime = Constants.DefaultMinimumDateTime;
+      ToDateTime = Constants.DefaultMaximumDateTime;
+      ResolutionHour = false;
+      ResolutionDay = false;
+      ResolutionWeek = false;
+      ResolutionMonth = false;
+      ThreadCount = Environment.ProcessorCount;    //clip this the Environment.ProcessorCount as max since it would most likely not be useful to have more threads than processors
+    }
+
+    [ObservableProperty] DateTime m_fromDateTime;
+    [ObservableProperty] DateTime m_toDateTime;
+    [ObservableProperty] bool m_resolutionHour;
+    [ObservableProperty] bool m_resolutionDay;
+    [ObservableProperty] bool m_resolutionWeek;
+    [ObservableProperty] bool m_resolutionMonth;
+    [ObservableProperty] int m_threadCount;
+  }
+
+  /// <summary>
   /// Settings used for mass download of instrument data.
   /// </summary>
   public partial class MassDownloadSettings: ObservableObject

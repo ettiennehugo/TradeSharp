@@ -5,9 +5,9 @@ using TradeSharp.CoreUI.Common;
 namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
-  /// Service to implement that mass download of instrument data.
+  /// Interface for the mass copy instrument data service.
   /// </summary>
-  public interface IMassDownloadInstrumentDataService
+  public interface IMassCopyInstrumentDataService
   {
     //constants
 
@@ -22,9 +22,9 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
-    IDataProvider DataProvider { get; set; }
+    string DataProvider { get; set; }
     ILogger? Logger { get; set; }
-    MassDownloadSettings Settings { get; set; }
+    MassCopySettings Settings { get; set; }
     public bool IsRunning { get; }
 
     //methods

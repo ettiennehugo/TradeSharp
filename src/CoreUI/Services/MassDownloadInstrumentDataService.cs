@@ -32,6 +32,7 @@ namespace TradeSharp.CoreUI.Services
       Settings = new MassDownloadSettings();
       m_logger = logger;
       IsRunning = false;
+      ///DataProvider = null;   //TODO: Set the first available data provider as the default.
       m_instrumentService = instrumentService;
     }
 

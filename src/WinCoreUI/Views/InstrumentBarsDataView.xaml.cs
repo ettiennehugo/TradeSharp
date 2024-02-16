@@ -146,7 +146,7 @@ namespace TradeSharp.WinCoreUI.Views
           m_copyToMonth.Visibility = Visibility.Visible;
           break;
         case Resolution.Month:
-          m_buttonCopy.Visibility = Visibility.Visible;
+          m_buttonCopy.Visibility = Visibility.Collapsed;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Collapsed;
           m_copyToWeek.Visibility = Visibility.Collapsed;

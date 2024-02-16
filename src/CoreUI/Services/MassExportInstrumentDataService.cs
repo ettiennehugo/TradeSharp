@@ -37,6 +37,7 @@ namespace TradeSharp.CoreUI.Services
       Settings = new MassExportSettings();
       m_logger = logger;
       IsRunning = false;
+      DataProvider = string.Empty;
       m_instrumentService = instrumentService;
     }
 
