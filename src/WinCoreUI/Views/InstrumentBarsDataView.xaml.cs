@@ -184,8 +184,8 @@ namespace TradeSharp.WinCoreUI.Views
         case Resolution.Month:
           FilterStartTooltip = $"Filter start date ({timeZoneValue} time-zone)";
           FilterEndTooltip = $"Filter end date ({timeZoneValue} time-zone)";
-          m_startDateTime.PlaceholderText = "yyyy/mm/01";
-          m_endDateTime.PlaceholderText = "yyyy/mm/01";
+          m_startDateTime.PlaceholderText = "yyyy/mm/dd";
+          m_endDateTime.PlaceholderText = "yyyy/mm/dd";
           break;
       }
     }
@@ -238,22 +238,26 @@ namespace TradeSharp.WinCoreUI.Views
       ViewModel.OnRefreshAsync();
     }
 
-    private static DateTime convertDateTimeBasedOnConfiguration(DateTime utcDateTime, IConfigurationService.TimeZone timeZoneToUse, Exchange? exchange)
+    private DateTime convertDateTimeBasedOnConfiguration(DateTime utcDateTime, IConfigurationService.TimeZone timeZoneToUse, Exchange? exchange)
     {
       //NOTE: Database stores the data in UTC, so we need to convert the date/time to the appropriate time zone. This is the opposite of the database
       //      which converts the date/time to UTC before storing it.
+      DateTime result = utcDateTime;
       switch (timeZoneToUse)
       {
         case IConfigurationService.TimeZone.UTC:
-          return utcDateTime;
+          break;    //nothing to do
         case IConfigurationService.TimeZone.Local:
-          return utcDateTime.Subtract(TimeZoneInfo.Local.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
+          result = utcDateTime.Subtract(TimeZoneInfo.Local.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
+          break;
         case IConfigurationService.TimeZone.Exchange:
           if (exchange == null) throw new ArgumentException("Exchange must be specified when using Exchange time zone.");
-          return utcDateTime.Subtract(exchange.TimeZone.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
+          result =  utcDateTime.Subtract(exchange.TimeZone.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
+          break;
       }
 
-      return utcDateTime; //default to UTC
+      if (Resolution == Resolution.Day || Resolution == Resolution.Week || Resolution == Resolution.Month) result = new DateTime(result.Year, result.Month, result.Day, 23, 59, 59);  //set the time to midnight 11:59:59 PM to ensure to include the entire day/week/month
+      return result;
     }
 
     private void refreshFilter()
