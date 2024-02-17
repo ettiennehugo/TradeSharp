@@ -118,7 +118,7 @@ namespace TradeSharp.WinCoreUI.Views
         lock (m_completeLock)
         {
           m_complete = value;
-          if (m_complete) m_cancelBtn.DispatcherQueue.TryEnqueue(() => m_cancelBtn.Content = "Close");
+          if (m_complete) m_cancelBtn.DispatcherQueue.TryEnqueue(() => { m_cancelBtn.Content = "Close"; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
         }
       }
     }

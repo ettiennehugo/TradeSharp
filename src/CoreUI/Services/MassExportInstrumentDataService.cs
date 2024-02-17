@@ -214,7 +214,6 @@ namespace TradeSharp.CoreUI.Services
                 lock (exportFileList)
                   if (exportFileList.Count > 0) exportFile = exportFileList.Pop();  //only pop if there are instruments otherwise this will raise an exception
                 if (exportFile == null) continue; //failed to find a an instrument to export, stack should be empty should be empty
-                progressDialog.Progress = progressDialog.Progress + 1;
 
                 instrumentBarDataService.Resolution = exportFile.Resolution;
                 instrumentBarDataService.Instrument = exportFile.Instrument;
@@ -246,6 +245,9 @@ namespace TradeSharp.CoreUI.Services
                   lock (failureCountLock) failureCount++;
                   if (Debugging.MassInstrumentDataImport || Debugging.MassInstrumentDataImportException) m_logger.LogError($"EXCEPTION: Failed to export \"{exportFile.Filename}\" for {exportFile.Instrument.Ticker} at resolution {exportFile.Resolution} - (Exception: \"{e.Message}\", Thread id: {Task.CurrentId})");
                 }
+
+                //update progress after exporting a file
+                progressDialog.Progress = progressDialog.Progress + 1;
               }
 
               if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Ending worker thread for export for data provider \"{DataProvider}\" (Thread id: {Task.CurrentId})");

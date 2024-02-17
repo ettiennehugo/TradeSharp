@@ -83,6 +83,15 @@ namespace TradeSharp.WinCoreUI.Services
           else if (Settings.ImportStructure == MassImportExportStructure.FilesOnly)
             importFiles = scanImportFiles();
 
+          //exit if no files were found
+          if (importFiles == null || importFiles.Count == 0)
+          {
+            IsRunning = false;
+            if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"No files found to import in \"{Settings.Directory}\"");
+            m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Import", $"No files found to import in \"{Settings.Directory}\"");
+            return;
+          }
+
           //setup progress dialog
           progressDialog.Minimum = 0;
           progressDialog.Maximum = importFiles!.Count;
@@ -92,67 +101,66 @@ namespace TradeSharp.WinCoreUI.Services
 
           if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Starting mass import for \"{DataProvider}\" of instrument data for {progressDialog.Maximum:G0} files from \"{Settings.Directory}\"");
 
-          //start the requested set of thread to import the data from the list of files
+          //start the requested set of threads to import the data from the list of files
           List<Task> taskPool = new List<Task>();
-          if (importFiles.Count > 0)
-          {
-            for (int i = 0; i < Settings.ThreadCount; i++)
-              taskPool.Add(
-                Task.Run(() =>
+          for (int i = 0; i < Settings.ThreadCount; i++)
+            taskPool.Add(
+              Task.Run(() =>
+              {
+                if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Started worker thread for mass import into data provider tables \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+
+                //get the instrument bar data service to import files
+                IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
+                instrumentBarDataService.DataProvider = DataProvider;
+                instrumentBarDataService.MassOperation = true;
+
+                //keep on importing files until the list is empty or the cancellation token is set
+                while (importFiles!.Count > 0 && !progressDialog.CancellationTokenSource.Token.IsCancellationRequested)
                 {
-                  if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Started worker thread for mass import into data provider tables \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+                  ImportFile? importFile = null;
+                  lock (importFiles)
+                    if (importFiles.Count > 0) importFile = importFiles.Pop();  //only pop if there are items otherwise this will raise an exception
+                  if (importFile == null) continue; //failed to find a file to import, import files should be empty
 
-                  //get the instrument bar data service to import files
-                  IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
-                  instrumentBarDataService.DataProvider = DataProvider;
-                  instrumentBarDataService.MassOperation = true;
-
-                  //keep on importing files until the list is empty or the cancellation token is set
-                  while (importFiles!.Count > 0 && !progressDialog.CancellationTokenSource.Token.IsCancellationRequested)
+                  //catch any import errors and log them to keep thread going
+                  try
                   {
-                    ImportFile? importFile = null;
-                    lock (importFiles)
-                      if (importFiles.Count > 0) importFile = importFiles.Pop();  //only pop if there are items otherwise this will raise an exception
-                    if (importFile == null) continue; //failed to find a file to import, import files should be empty
-                    progressDialog.Progress = progressDialog.Progress + 1;
+                    if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Importing \"{importFile.Filename}\" for {importFile.Ticker}, resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
 
-                    //catch any import errors and log them to keep thread going
-                    try
+                    //import the data
+                    ImportSettings importSettings = new ImportSettings();
+                    importSettings.FromDateTime = Settings.FromDateTime;
+                    importSettings.ToDateTime = Settings.ToDateTime;
+                    importSettings.ReplaceBehavior = Settings.ReplaceBehavior;
+                    importSettings.Filename = importFile.Filename;
+                    importSettings.DateTimeTimeZone = Settings.DateTimeTimeZone;
+                    instrumentBarDataService.Resolution = importFile.Resolution;
+                    instrumentBarDataService.Instrument = m_instrumentService.GetItem(importFile.Ticker);
+
+                    if (instrumentBarDataService.Instrument != null)
                     {
-                      if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Importing \"{importFile.Filename}\" for {importFile.Ticker}, resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
-
-                      //import the data
-                      ImportSettings importSettings = new ImportSettings();
-                      importSettings.FromDateTime = Settings.FromDateTime;
-                      importSettings.ToDateTime = Settings.ToDateTime;
-                      importSettings.ReplaceBehavior = Settings.ReplaceBehavior;
-                      importSettings.Filename = importFile.Filename;
-                      importSettings.DateTimeTimeZone = Settings.DateTimeTimeZone;
-                      instrumentBarDataService.Resolution = importFile.Resolution;
-                      instrumentBarDataService.Instrument = m_instrumentService.GetItem(importFile.Ticker);
-
-                      if (instrumentBarDataService.Instrument != null)
-                      {
-                        instrumentBarDataService.Import(importSettings);
-                        lock (successCountLock) successCount++;
-                      }
-                      else
-                      {
-                        if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Failed to find instrument {importFile.Ticker} definition for \"{importFile.Filename}\" at resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
-                        lock (failureCountLock) failureCount++;
-                      }
+                      instrumentBarDataService.Import(importSettings);
+                      lock (successCountLock) successCount++;
                     }
-                    catch (Exception e)
+                    else
                     {
+                      if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Failed to find instrument {importFile.Ticker} definition for \"{importFile.Filename}\" at resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
                       lock (failureCountLock) failureCount++;
-                      if (Debugging.MassInstrumentDataImport || Debugging.MassInstrumentDataImportException) m_logger.LogError($"EXCEPTION: Failed to import \"{importFile.Filename}\" for {importFile.Ticker} at resolution {importFile.Resolution} - (Exception: \"{e.Message}\", Thread id: {Task.CurrentId})");
                     }
                   }
+                  catch (Exception e)
+                  {
+                    lock (failureCountLock) failureCount++;
+                    if (Debugging.MassInstrumentDataImport || Debugging.MassInstrumentDataImportException) m_logger.LogError($"EXCEPTION: Failed to import \"{importFile.Filename}\" for {importFile.Ticker} at resolution {importFile.Resolution} - (Exception: \"{e.Message}\", Thread id: {Task.CurrentId})");
+                  }
 
-                  if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Ending worker thread for mass import into data provider tables \"{DataProvider}\" (Thread id: {Task.CurrentId})");
-                }, progressDialog.CancellationTokenSource.Token)
-              );
-          }
+                  //update progress after importing a file
+                  progressDialog.Progress = progressDialog.Progress + 1;
+                }
+
+                if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Ending worker thread for mass import into data provider tables \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+              }, progressDialog.CancellationTokenSource.Token)
+            );
 
           Task.WaitAll(taskPool.ToArray());
 

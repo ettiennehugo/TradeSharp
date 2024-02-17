@@ -101,6 +101,7 @@ namespace TradeSharp.WinDataManager.Services
       return Task.CompletedTask;
     }
 
+    //NOTE: This function MUST be called from the UI thread to make sure the Window has the UI thread as it's SynchronizationContext/message pump.
     public IProgressDialog ShowProgressDialog(string title)
     {
       Window window = new Window();
