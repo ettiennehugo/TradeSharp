@@ -30,7 +30,6 @@ namespace TradeSharp.CoreUI.Services
     ObservableCollection<TItem> Items { get; }    //flat list of all items
 
     //events
-    event EventHandler<ITreeNodeType<TKey, TItem>?>? SelectedNodeChanged;
 
 
     //methods

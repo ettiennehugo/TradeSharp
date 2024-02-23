@@ -90,7 +90,7 @@ namespace TradeSharp.CoreUI.ViewModels
     /// Run refresh of the command states, call this method during any propery updates to ensure commands
     /// update based on property states.
     /// </summary>
-    protected void NotifyCanExecuteChanged()
+    protected virtual void NotifyCanExecuteChanged()
     {
       AddCommand.NotifyCanExecuteChanged();
       UpdateCommand.NotifyCanExecuteChanged();

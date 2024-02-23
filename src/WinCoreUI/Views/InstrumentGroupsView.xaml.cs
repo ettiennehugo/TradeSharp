@@ -30,6 +30,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       ViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
       this.InitializeComponent();
+      ViewModel.RefreshEvent += onViewModelRefresh;
     }
 
     //finalizers
@@ -51,6 +52,12 @@ namespace TradeSharp.WinCoreUI.Views
     {
       //NOTE: Event to refresh will most likely come from a background thread, so we need to marshal the call to the UI thread.
       m_instrumentGroups.DispatcherQueue.TryEnqueue(new Microsoft.UI.Dispatching.DispatcherQueueHandler(() => ViewModel.RefreshCommand.Execute(null)));
+    }
+
+    private void m_findInstrumentGroupFilter_TextChanged(object sender, TextChangedEventArgs e)
+    {
+      ViewModel.FindText = m_findInstrumentGroupFilter.Text;    //for some reason the binding is not working
+      if (ViewModel.FindFirstCommand.CanExecute(null)) ViewModel.FindFirstCommand.Execute(null);
     }
   }
 }

@@ -27,17 +27,21 @@ namespace TradeSharp.CoreUI.ViewModels
     ObservableCollection<ITreeNodeType<TKey, TItem>> Nodes { get; }
     ITreeNodeType<TKey, TItem>? SelectedNode { get; set; }
     ObservableCollection<ITreeNodeType<TKey, TItem>> SelectedNodes { get; set; }
+    string FindText { get; set; }
 
-    public RelayCommand AddCommand { get; set; }
-    public RelayCommand UpdateCommand { get; set; }
-    public RelayCommand<object?> DeleteCommand { get; set; }
-    public AsyncRelayCommand<object?> DeleteCommandAsync { get; set; } //use async delete to allow long running deletes to run in the background
-    public RelayCommand ClearSelectionCommand { get; set; }
-    public RelayCommand RefreshCommand { get; set; }
-    public AsyncRelayCommand RefreshCommandAsync { get; set; } //use async refresh to allow long running refreshes to run in the background
-    public AsyncRelayCommand<object?> CopyCommandAsync { get; set; }
-    public AsyncRelayCommand ImportCommandAsync { get; set; }
-    public AsyncRelayCommand ExportCommandAsync { get; set; }
+    RelayCommand AddCommand { get; set; }
+    RelayCommand UpdateCommand { get; set; }
+    RelayCommand<object?> DeleteCommand { get; set; }
+    AsyncRelayCommand<object?> DeleteCommandAsync { get; set; } //use async delete to allow long running deletes to run in the background
+    RelayCommand ClearSelectionCommand { get; set; }
+    RelayCommand RefreshCommand { get; set; }
+    AsyncRelayCommand RefreshCommandAsync { get; set; } //use async refresh to allow long running refreshes to run in the background
+    AsyncRelayCommand<object?> CopyCommandAsync { get; set; }
+    AsyncRelayCommand ImportCommandAsync { get; set; }
+    AsyncRelayCommand ExportCommandAsync { get; set; }
+    RelayCommand FindFirstCommand { get; set; }
+    RelayCommand FindNextCommand { get; set; }
+    RelayCommand FindPreviousCommand { get; set; }
 
     //methods
     void OnAdd();
@@ -50,5 +54,8 @@ namespace TradeSharp.CoreUI.ViewModels
     Task OnImportAsync();
     void OnRefresh();
     Task OnRefreshAsync();
+    void OnFindFirst();
+    void OnFindNext();
+    void OnFindPrevious();
   }
 }

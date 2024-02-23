@@ -26,10 +26,14 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //attributes
     private IInstrumentGroupService m_instrumentGroupService;
+    private IList<ITreeNodeType<Guid, InstrumentGroup>> m_foundNodes;
+    private int m_foundNodeIndex;
 
     //constructors
     public InstrumentGroupViewModel(IInstrumentGroupService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
+      m_foundNodes = new List<ITreeNodeType<Guid, InstrumentGroup>>();
+      m_foundNodeIndex = 0;
       m_instrumentGroupService = (IInstrumentGroupService)m_itemsService;
       m_instrumentGroupService.RefreshEvent += onServiceRefresh;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Editable));
@@ -46,10 +50,7 @@ namespace TradeSharp.CoreUI.ViewModels
       Guid parentId = SelectedNode != null ? SelectedNode.Item.Id : InstrumentGroup.InstrumentGroupRoot;
       InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync(parentId);
       if (newInstrumentGroup != null)
-      {
-        m_itemsService.Add(new InstrumentGroupNodeType((IInstrumentGroupService)m_itemsService, newInstrumentGroup));
-        m_itemsService.Refresh(parentId);
-      }
+        m_itemsService.Add(new InstrumentGroupNodeType((IInstrumentGroupService)m_itemsService, null, newInstrumentGroup, true));   //null since parent is the root node
     }
 
     public override async void OnUpdate()
@@ -81,6 +82,81 @@ namespace TradeSharp.CoreUI.ViewModels
         else
           await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Please select a node to copy");
       });
+    }
+
+    /// <summary>
+    /// Expand all the nodes up to the root from the given node in order to display the node.
+    /// </summary>
+    protected void expandToNode(ITreeNodeType<Guid, InstrumentGroup> node)
+    {
+      ITreeNodeType<Guid, InstrumentGroup>? parentNode = node.Parent;
+      Stack<ITreeNodeType<Guid, InstrumentGroup>> stack = new Stack<ITreeNodeType<Guid, InstrumentGroup>>();
+      while (parentNode != null)
+      {
+        stack.Push(parentNode);
+        parentNode = parentNode.Parent;
+      }
+
+      while (stack.Count > 0)
+      {
+        ITreeNodeType<Guid, InstrumentGroup> nextNode = stack.Pop();
+        nextNode.Expanded = true;
+      }
+    }
+
+    /// <summary>
+    /// Find the first node that matches the find text.
+    /// </summary>
+    public override void OnFindFirst()
+    {
+      m_foundNodes.Clear();
+      findNodes(Nodes);
+      m_foundNodeIndex = 0;
+
+      if (m_foundNodes.Count > 0) 
+      {
+        ITreeNodeType<Guid, InstrumentGroup> firstNode = m_foundNodes[0];
+        expandToNode(firstNode);
+        SelectedNode = firstNode;
+      }      
+    }
+
+    public override void OnFindNext()
+    {
+      if (m_foundNodeIndex < m_foundNodes.Count)
+      {
+        m_foundNodeIndex++;
+        ITreeNodeType<Guid, InstrumentGroup> foundNode = m_foundNodes[m_foundNodeIndex];
+        expandToNode(foundNode);
+        SelectedNode = foundNode;
+      }
+      else
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Search complete", $"Nothing else found for search term \"{FindText}\"");
+    }
+
+    public override void OnFindPrevious()
+    {
+      if (m_foundNodeIndex > 0)
+      {
+        m_foundNodeIndex--;
+        ITreeNodeType<Guid, InstrumentGroup> foundNode = m_foundNodes[m_foundNodeIndex];
+        expandToNode(foundNode);
+        SelectedNode = foundNode;
+      }
+      else
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "First Item", $"First item reached for search term \"{FindText}\"");
+    }
+
+    /// <summary>
+    /// Searches the tree depth first for nodes that match the find text.
+    /// </summary>
+    protected void findNodes(IList<ITreeNodeType<Guid, InstrumentGroup>> nodes)
+    {      
+      foreach (ITreeNodeType<Guid, InstrumentGroup> node in nodes)
+        if (node.Item.Name.ToUpper().Contains(FindText.ToUpper()))
+          m_foundNodes.Add(node);
+
+      foreach (ITreeNodeType<Guid, InstrumentGroup> node in nodes) findNodes(node.Children);
     }
 
     //properties

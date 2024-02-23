@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Services;
 
@@ -20,6 +21,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //attributes
     protected ITreeItemsService<TKey, TItem> m_itemsService;
+    protected string m_findText;
 
     //constructors
     public TreeViewModel(ITreeItemsService<TKey, TItem> itemService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
@@ -29,7 +31,11 @@ namespace TradeSharp.CoreUI.ViewModels
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
-      ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null | SelectedNodes.Count > 0);
+      FindFirstCommand = new RelayCommand(OnFindFirst, () => FindText.Length > 0);
+      FindNextCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
+      FindPreviousCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
+      m_findText = string.Empty;
+      ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null || SelectedNodes.Count > 0);
     }
 
     //finalizers
@@ -40,15 +46,30 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //properties
     /// <summary>
+    /// Find the first/next node in the tree that matches the find text.
+    /// </summary>
+    public RelayCommand FindFirstCommand { get; set; }
+    public RelayCommand FindNextCommand { get; set; }
+    public RelayCommand FindPreviousCommand { get; set; }
+    public virtual string FindText
+    {
+      get => m_findText;
+      set
+      {
+        m_findText = value;
+        OnPropertyChanged();
+        NotifyCanExecuteChanged();
+      }
+    }
+
+    /// <summary>
     /// Get/set single selected node for the view model and associated item service.
     /// </summary>
-    public virtual ITreeNodeType<TKey, TItem>? SelectedNode
-    {
+    public virtual ITreeNodeType<TKey, TItem>? SelectedNode 
+    { 
       get => m_itemsService.SelectedNode;
       set
       {
-        //NOTE: You can not just change this item when it differs from value since the UI calls this method sometimes
-        //      before the toolbar is ready to use and thus you end up with stale command button states.
         m_itemsService.SelectedNode = value;
         OnPropertyChanged();
         NotifyCanExecuteChanged();
@@ -59,12 +80,10 @@ namespace TradeSharp.CoreUI.ViewModels
     /// Get/set selected set of nodes for the view model and associated items service. 
     /// </summary>
     public ObservableCollection<ITreeNodeType<TKey, TItem>> SelectedNodes
-    {
+    { 
       get => m_itemsService.SelectedNodes;
       set
       {
-        //NOTE: You can not just change this item when it differs from value since the UI calls this method sometimes
-        //      before the toolbar is ready to use and thus you end up with stale command button states.
         m_itemsService.SelectedNodes = value;
         OnPropertyChanged();
         NotifyCanExecuteChanged();
@@ -118,11 +137,12 @@ namespace TradeSharp.CoreUI.ViewModels
           count++;
         }
 
-        OnRefresh();
-        SelectedNode = Nodes.FirstOrDefault();
-
         if (count > 0)
+        {
+          RaiseRefreshEvent();
+          SelectedNode = Nodes.FirstOrDefault();
           await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} nodes with it's children");
+        }
         else
           await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Warning, "Failure", $"Deleted {count} nodes");
       });
@@ -140,10 +160,21 @@ namespace TradeSharp.CoreUI.ViewModels
       if (exportSettings != null) _ = Task.Run(() => m_itemsService.Export(exportSettings));
     }
 
+    public abstract void OnFindFirst();
+    public abstract void OnFindNext();
+    public abstract void OnFindPrevious();
+
     ///Generic handler to re-raise the service refresh event as a view model refresh event.
     protected virtual void onServiceRefresh(object? sender, Common.RefreshEventArgs e)
     {
       RaiseRefreshEvent(e);
+    }
+
+    protected override void NotifyCanExecuteChanged()
+    {
+      base.NotifyCanExecuteChanged();
+      FindFirstCommand.NotifyCanExecuteChanged();
+      FindNextCommand.NotifyCanExecuteChanged();
     }
   }
 }

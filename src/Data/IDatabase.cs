@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
 using System.ComponentModel;
+using System.Diagnostics.Metrics;
 
 namespace TradeSharp.Data
 {
@@ -447,10 +448,11 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds) : base(id, attributeSet, tag)
+    public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, IList<string> alternateTickers, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds) : base(id, attributeSet, tag)
     {
       Type = type;
       Ticker = ticker;
+      AlternateTickers = alternateTickers;
       Name = name;
       Description = description;
       InceptionDate = inceptionDate;
@@ -467,6 +469,7 @@ namespace TradeSharp.Data
     //properties
     [ObservableProperty] private InstrumentType m_type;
     [ObservableProperty] private string m_ticker;
+    [ObservableProperty] private IList<string> m_alternateTickers;
     [ObservableProperty] private string m_name;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private DateTime m_inceptionDate;
@@ -480,12 +483,16 @@ namespace TradeSharp.Data
     //methods
     public bool Equals(Instrument? other)
     {
-      return other != null && other.Id == Id;
+      if (other != null && other.Id == Id) return true;
+      if (Ticker == other!.Ticker) return true;
+      if (AlternateTickers.FirstOrDefault(t => t == other.Ticker) != null) return true;
+      if (other!.AlternateTickers.FirstOrDefault(t => t == Ticker) != null) return true;
+      return false;
     }
 
     public object Clone()
     {
-      return new Instrument(Id, AttributeSet, Tag, Type, Ticker, Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, SecondaryExchangeIds);
+      return new Instrument(Id, AttributeSet, Tag, Type, Ticker, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds));
     }
 
     public void Update(Instrument item)
@@ -494,6 +501,7 @@ namespace TradeSharp.Data
       Tag = item.Tag;
       Type = item.Type;
       Ticker = item.Ticker;
+      AlternateTickers = item.AlternateTickers;
       Name = item.Name;
       Description = item.Description;
       InceptionDate = item.InceptionDate;
@@ -519,27 +527,40 @@ namespace TradeSharp.Data
   {
     public static Guid InstrumentGroupRoot = Guid.Empty;
 
-    public InstrumentGroup(Guid id, Attributes attributeSet, string tag, Guid parentId, string name, string description, IList<Guid> instruments): base(id, attributeSet, tag)
+    public InstrumentGroup(Guid id, Attributes attributeSet, string tag, Guid parentId, string name, IList<string> alternateNames, string description, string userId, IList<Guid> instruments): base(id, attributeSet, tag)
     {
       ParentId = parentId;
       Name = name;
+      AlternateNames = alternateNames;
       Description = description;
+      UserId = userId;
       Instruments = instruments;
     }
 
     [ObservableProperty] private Guid m_parentId;
     [ObservableProperty] private string m_name;
+    [ObservableProperty] private IList<string> m_alternateNames;
     [ObservableProperty] private string m_description;
+    [ObservableProperty] private string m_userId;   //specific Id to be used by the user, can be used in data file exports/imports to identify the group
     [ObservableProperty] private IList<Guid> m_instruments;
 
     bool IEquatable<InstrumentGroup>.Equals(InstrumentGroup? other)
-    {
-      return other != null && other.Id == Id;
+    { 
+      //NOTE: We perform case insensitive comparison for the name and alternate names
+      if (other != null)
+      {
+        if (other.Id == Id) return true;
+        if (other.UserId.ToUpper() == UserId.ToUpper()) return true;
+        if (other.Name.ToUpper() == Name.ToUpper()) return true;
+        if (other.AlternateNames.FirstOrDefault(t => t.ToUpper() == Name.ToUpper()) != null) return true;
+        if (AlternateNames.FirstOrDefault(t => t.ToUpper() == other.Name.ToUpper()) != null) return true;
+      }
+      return false;
     }
 
     public object Clone()
     {
-      return new InstrumentGroup(Id, AttributeSet, Tag, ParentId, Name, Description, Instruments);
+      return new InstrumentGroup(Id, AttributeSet, Tag, ParentId, Name, new List<string>(AlternateNames), Description, UserId, new List<Guid>(Instruments));
     }
 
     public void Update(InstrumentGroup item)

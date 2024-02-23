@@ -20,7 +20,7 @@
     public static bool MassInstrumentDataExport = false;     //debugging of mass export instrument bar data 
     public static bool MassInstrumentDataImport = false;     //debugging of mass import instrument bar data
     public static bool MassInstrumentDataImportException = false;     //debugging of mass import instrument bar data exceptions
-    public static bool MassInstrumentDataCopy = true;   //debugging of mass copy instrument bar data 
+    public static bool MassInstrumentDataCopy = false;      //debugging of mass copy instrument bar data 
     public static bool MassInstrumentDataDownload = false;   //debugging of mass download instrument bar data 
 
 

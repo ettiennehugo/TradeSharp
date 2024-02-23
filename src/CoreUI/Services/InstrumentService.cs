@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Repositories;
 using Microsoft.Extensions.Logging;
@@ -28,6 +26,7 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenCsvType = "type";
     private const string tokenCsvId = "id";
     private const string tokenCsvTicker = "ticker";
+    private const string tokenCsvAlternateTickers = "alternateticker";
     private const string tokenCsvName = "name";
     private const string tokenCsvDescription = "description";
     private const string tokenCsvExchange = "exchange";
@@ -45,6 +44,7 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenJsonId = "Id";
     private const string tokenJsonType = "Type";
     private const string tokenJsonTicker = "Ticker";
+    private const string tokenJsonAlternateTickers = "AlternateTickers";
     private const string tokenJsonName = "Name";
     private const string tokenJsonDescription = "Description";
     private const string tokenJsonTag = "Tag";
@@ -229,8 +229,7 @@ namespace TradeSharp.CoreUI.Services
           SortedDictionary<string, Exchange> definedExchanges = new SortedDictionary<string, Exchange>();
           foreach (Exchange exchange in m_database.GetExchanges()) definedExchanges.Add(exchange.Id.ToString(), exchange);
           Exchange? globalExchange = definedExchanges[Exchange.InternationalId.ToString()];
-          SortedDictionary<Guid, Instrument> definedInstruments = new SortedDictionary<Guid, Instrument>();
-          foreach (Instrument instrument in m_database.GetInstruments()) definedInstruments.Add(instrument.Id, instrument);
+          List<Instrument> definedInstruments = new List<Instrument>(m_database.GetInstruments());
 
           JsonArray fileInstrumentsJson = documentNode.AsArray();
           foreach (JsonObject? fileInstrumentJson in fileInstrumentsJson)
@@ -258,6 +257,15 @@ namespace TradeSharp.CoreUI.Services
             if (bigPointValue == -1) bigPointValue = (int)(fileInstrumentJson![tokenJsonBigPointValue3]!.AsValue().Deserialize(typeof(int)))!;
             string? attributesStr = (string?)(fileInstrumentJson[tokenJsonAttributes]!.AsValue().Deserialize(typeof(string)));
             Attributes attributes = attributesStr != null ? (Attributes)Enum.Parse(typeof(Attributes), attributesStr!) : InstrumentGroup.DefaultAttributeSet;
+
+            JsonArray? alternateTickerJson = fileInstrumentJson!.ContainsKey(tokenJsonAlternateTickers) ? fileInstrumentJson[tokenJsonAlternateTickers]!.AsArray() : null;
+            List<string> alternateTickers = new List<string>();
+            if (alternateTickerJson != null)
+              foreach (JsonNode? alternateTicker in alternateTickerJson)
+              {
+                string? alternateTickerStr = (string?)(alternateTicker!.AsValue().Deserialize(typeof(string)));
+                if (alternateTickerStr != null) alternateTickers.Add(alternateTickerStr.Trim().ToUpper());
+              }
 
             Exchange? primaryExchange = definedExchanges[exchangeId!.Value.ToString()];
             if (primaryExchange != null)
@@ -304,7 +312,9 @@ namespace TradeSharp.CoreUI.Services
               }
             }
 
-            if (definedInstruments.TryGetValue(id, out Instrument? definedInstrument))
+            Instrument fileInstrument = new Instrument(id, attributes, tag, type, ticker, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId!.Value, secondaryExchanges);
+            Instrument? definedInstrument = definedInstruments.FirstOrDefault(x => x.Equals(fileInstrument));
+            if (definedInstrument != null)
             {
               switch (importSettings.ReplaceBehavior)
               {
@@ -315,20 +325,21 @@ namespace TradeSharp.CoreUI.Services
                 case ImportReplaceBehavior.Replace:
                   //replacing name, description, tag and all defined instruments
                   if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
-                  m_instrumentRepository.Update(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId!.Value, secondaryExchanges));
+                  m_instrumentRepository.Update(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, Array.Empty<string>(), name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId!.Value, secondaryExchanges));
                   replacedCount++;
                   break;
                 case ImportReplaceBehavior.Update:
                   //updating name, description, tag and merge in defined instruments
+                  //TODO: This needs to rather merge the alternateTickers and secondaryExchanges.
                   if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
-                  m_instrumentRepository.Update(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId!.Value, secondaryExchanges));
+                  m_instrumentRepository.Update(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId!.Value, secondaryExchanges));
                   updatedCount++;
                   break;
               }
             }
             else
             {
-              m_instrumentRepository.Add(new Instrument(id, attributes, tag, type, ticker, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId!.Value, secondaryExchanges));
+              m_instrumentRepository.Add(fileInstrument);
               createdCount++;
             }
           }
@@ -383,6 +394,7 @@ namespace TradeSharp.CoreUI.Services
             InstrumentType type = InstrumentType.None;
             Guid? id = null;
             string ticker = "";
+            IList<string> alternateTickers = new List<string>();
             string name = "";
             string description = "";
             string exchange = "";
@@ -407,6 +419,11 @@ namespace TradeSharp.CoreUI.Services
                   id = Guid.Parse(columnValue!);
                 else if (columnName == tokenCsvTicker)
                   ticker = columnValue!.ToUpper();
+                else if (columnName == tokenCsvAlternateTickers)
+                {
+                  alternateTickers = TradeSharp.Common.Utilities.FromCsv(columnValue!);
+                  for (int i = 0; i < alternateTickers.Count; i++) alternateTickers[i] = alternateTickers[i].Trim().ToUpper();
+                }
                 else if (columnName == tokenCsvName)
                   name = columnValue!;
                 else if (columnName == tokenCsvDescription)
@@ -486,7 +503,7 @@ namespace TradeSharp.CoreUI.Services
               }
             }
 
-            fileInstruments.Add(new Instrument((Guid)id!, attributes, tag, type, ticker, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, new List<Guid>()));
+            fileInstruments.Add(new Instrument((Guid)id!, attributes, tag, type, ticker, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, new List<Guid>()));
           }
 
           long instrumentsProcessed = 0;
@@ -509,7 +526,11 @@ namespace TradeSharp.CoreUI.Services
                 case ImportReplaceBehavior.Update:
                   if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {fileInstrument.Ticker}");
                   fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
-                  fileInstrument.SecondaryExchangeIds = definedInstrument.SecondaryExchangeIds;
+                  foreach (string ticker in definedInstrument.AlternateTickers)
+                    if (!fileInstrument.AlternateTickers.Contains(ticker)) fileInstrument.AlternateTickers.Add(ticker);
+                  foreach (Guid id in definedInstrument.SecondaryExchangeIds)
+                    if (!fileInstrument.SecondaryExchangeIds.Contains(id)) fileInstrument.SecondaryExchangeIds.Add(id);
+
                   m_instrumentRepository.Update(fileInstrument);
                   updatedCount++;
                   break;
