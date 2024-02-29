@@ -525,7 +525,7 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class InstrumentGroup : DataObject, IEquatable<InstrumentGroup>, ICloneable, IUpdateable<InstrumentGroup>
   {
-    public static Guid InstrumentGroupRoot = Guid.Empty;
+    public static Guid InstrumentGroupRoot = Guid.Parse("11111111-1111-1111-1111-111111111111");    //define any non-null Guid to be used as the root group
 
     public InstrumentGroup(Guid id, Attributes attributeSet, string tag, Guid parentId, string name, IList<string> alternateNames, string description, string userId, IList<Guid> instruments): base(id, attributeSet, tag)
     {
@@ -544,7 +544,7 @@ namespace TradeSharp.Data
     [ObservableProperty] private string m_userId;   //specific Id to be used by the user, can be used in data file exports/imports to identify the group
     [ObservableProperty] private IList<Guid> m_instruments;
 
-    bool IEquatable<InstrumentGroup>.Equals(InstrumentGroup? other)
+    public bool Equals(InstrumentGroup? other)
     { 
       //NOTE: We perform case insensitive comparison for the name and alternate names
       if (other != null)

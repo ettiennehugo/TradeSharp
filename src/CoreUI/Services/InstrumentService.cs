@@ -207,7 +207,8 @@ namespace TradeSharp.CoreUI.Services
     public IList<Instrument> Items { get; set; }
 
     //methods
-    private void importJSON(ImportSettings importSettings)
+    ///Method is defined public for testing purposes.
+    public void importJSON(ImportSettings importSettings)
     {
       long skippedCount = 0;
       long updatedCount = 0;
@@ -364,7 +365,8 @@ namespace TradeSharp.CoreUI.Services
     ///   Type, Ticker, Name, Description, Exchange, Inception Date, Tag, Attributes
     /// Uses - https://joshclose.github.io/CsvHelper/examples/reading/get-dynamic-records/
     /// </summary>
-    private void importCSV(ImportSettings importSettings)
+    ///Method is defined public for testing purposes.
+    public void importCSV(ImportSettings importSettings)
     {
       long skippedCount = 0;
       long updatedCount = 0;
@@ -553,7 +555,8 @@ namespace TradeSharp.CoreUI.Services
       RaiseRefreshEvent();  //notify view model of changes
     }
 
-    private void exportJSON(ExportSettings exportSettings)
+    //Method is defined public for testing purposes.
+    public void exportJSON(ExportSettings exportSettings)
     {
       long exportCount = 0;
       string statusMessage = $"Importing instruments fto \"{exportSettings.Filename}\"";
@@ -613,7 +616,8 @@ namespace TradeSharp.CoreUI.Services
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Exported {exportCount} instruments to \"{exportSettings.Filename}\".");
     }
 
-    private void exportCSV(ExportSettings exportSettings)
+    //Method is defined public for testing purposes.
+    public void exportCSV(ExportSettings exportSettings)
     {
       long exportCount = 0;
       string statusMessage = $"Importing instruments fto \"{exportSettings.Filename}\"";
