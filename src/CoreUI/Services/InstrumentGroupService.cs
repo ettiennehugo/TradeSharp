@@ -7,10 +7,8 @@ using System.Globalization;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Diagnostics;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.Common;
-using System.Text.Json.Serialization.Metadata;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -262,7 +260,7 @@ namespace TradeSharp.CoreUI.Services
       if (extension == extensionCSV)
         exportCSV(exportSettings);
       else if (extension == extensionJSON)
-        exportJSON(exportSettings);
+        exportJson(exportSettings);
     }
 
     /// <summary>
@@ -577,17 +575,6 @@ namespace TradeSharp.CoreUI.Services
     }
 
     /// <summary>
-    /// Make string value safe to use as a CSV value.
-    /// </summary>
-    private string makeCsvSafe(string value)
-    {
-      if (value.Contains(",") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
-        return "\"" + value.Replace("\"", "\"\"") + "\"";
-      else
-        return value;
-    }
-
-    /// <summary>
     /// Recurse down branches for each of the leaf nodes of the tree.
     /// </summary>
     private void exportCsvForInstrumentGroupNode(ITreeNodeType<Guid, InstrumentGroup> node, List<string> exportCsvLines, ref int instrumentGroupExportCount, ref bool includeTickersInHeader)
@@ -599,7 +586,7 @@ namespace TradeSharp.CoreUI.Services
       line += ",";
       line += node.Item.Id.ToString();
       line += ",";
-      line += makeCsvSafe(node.Item.Name);
+      line += TradeSharp.Common.Utilities.MakeCsvSafe(node.Item.Name);
       line += ",";
 
       if (node.Item.AlternateNames.Count > 0)
@@ -610,15 +597,15 @@ namespace TradeSharp.CoreUI.Services
           if (alternateNames.Length > 0) alternateNames += ",";
           alternateNames += name;
         }
-        line += makeCsvSafe(alternateNames);
+        line += TradeSharp.Common.Utilities.MakeCsvSafe(alternateNames);
       }
 
       line += ",";
-      line += makeCsvSafe(node.Item.Description);
+      line += TradeSharp.Common.Utilities.MakeCsvSafe(node.Item.Description);
       line += ",";
-      line += makeCsvSafe(node.Item.UserId);
+      line += TradeSharp.Common.Utilities.MakeCsvSafe(node.Item.UserId);
       line += ",";
-      line += makeCsvSafe(node.Item.Tag);
+      line += TradeSharp.Common.Utilities.MakeCsvSafe(node.Item.Tag);
       line += ",";
       int attributeSet = (int)node.Item.AttributeSet;
       line += attributeSet.ToString();
@@ -640,7 +627,7 @@ namespace TradeSharp.CoreUI.Services
           else
             if (Debugging.InstrumentGroupExport) m_logger.LogError($"Failed to find instrument \"{instrumentId.ToString()}\" associated with instrument group \"{node.Item.Name}, {node.Item.Tag}\".");
         }
-        line += makeCsvSafe(tickers);
+        line += TradeSharp.Common.Utilities.MakeCsvSafe(tickers);
       }
 
       //add the line to the set of lines to be output
@@ -866,7 +853,7 @@ namespace TradeSharp.CoreUI.Services
       }
     }
 
-    private void exportJSON(ExportSettings exportSettings)
+    private void exportJson(ExportSettings exportSettings)
     {
       int exportCount = 0;
       string statusMessage = $"Exporting instrument groups to \"{exportSettings.Filename}\"";

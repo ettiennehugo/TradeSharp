@@ -450,12 +450,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       return fullFilename;
     }
 
-    public void cleanupTestFile(string filename)
-    {
-      string fullFilename = Path.Combine(Path.GetTempPath(), filename);
-      File.Delete(fullFilename);
-    }
-
     public void postImport()
     {
       m_allFileInstrumentGroups.AddRange(m_addedInstrumentGroups);
@@ -534,7 +528,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, csvWithNames);
       m_instrumentGroupService.Import(importSettings);
-      cleanupTestFile(filename);
       postImport();
 
       //check that the elements added are correct in terms of number
@@ -555,7 +548,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, csvWithIds);
       m_instrumentGroupService.Import(importSettings);
-      cleanupTestFile(filename);
       postImport();
 
       //check that the elements added are correct in terms of number
@@ -576,7 +568,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, jsonWithNames);
       m_instrumentGroupService.Import(importSettings);
-      cleanupTestFile(filename);
       postImport();
 
       //check that the elements added are correct in terms of number
@@ -597,7 +588,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, jsonWithIds);
       m_instrumentGroupService.Import(importSettings);
-      cleanupTestFile(filename);
       postImport();
 
       //check that the elements added are correct in terms of number
@@ -626,7 +616,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       importSettings.Filename = exportSettings.Filename;
       m_instrumentGroupService.Export(exportSettings);
       m_instrumentGroupService.Import(importSettings);
-      cleanupTestFile(filename);
       postImport();
 
       //check that the elements added are correct in terms of number
@@ -655,7 +644,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       importSettings.Filename = exportSettings.Filename;
       m_instrumentGroupService.Export(exportSettings);
       m_instrumentGroupService.Import(importSettings);
-      cleanupTestFile(filename);
       postImport();
 
       //check that the elements added are correct in terms of number

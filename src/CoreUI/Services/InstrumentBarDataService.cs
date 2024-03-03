@@ -73,13 +73,13 @@ namespace TradeSharp.CoreUI.Services
     public bool Add(IBarData item)
     {
       var result = m_repository.Add(item);
-      Data.Utilities.SortedInsert(item, Items);
+      TradeSharp.Common.Utilities.SortedInsert(item, Items);
       SelectedItem = item;
       SelectedItemChanged?.Invoke(this, SelectedItem);
       return result;
     }
 
-    public bool Copy(IBarData item) => throw new NotImplementedException();  //TODO: Need to figure out how this would occur, maybe override method to support copy to different resolutions and PriceTypes.
+    public bool Copy(IBarData item) => throw new NotImplementedException(); //this is mainly implemented by the IMassCopyInstrumentDataService
 
     public bool Delete(IBarData item)
     {
