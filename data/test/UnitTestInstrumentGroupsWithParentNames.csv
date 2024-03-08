@@ -1,0 +1,12 @@
+parentname,name,alternatenames,description,userid,tag,attributes,tickers
+,MSCI Global Industry Classification Standard,"MSCI GICS, MSCI GICS Standard",MSCI Global Industry Classification Standard,0,,0,
+MSCI GICS,Consumer Discretionary,"Consumer Disc,Con Disc",Consumer Discretionary,25,,0,
+MSCI Global Industry Classification Standard,Communication Services,"Comms Services,Coms",Communication Services,50,,0,
+Con Disc,Automobiles & Components,"Auto & Comp, Auto&Comp",Automobiles & Components,2510,,0,
+Coms,Media & Entertainment,"Media & Ent, Media&Ent",Media & Entertainment,5020,,0,
+Auto & Comp,Automobile Components,"Automotive Components, Automotive",Automobile Components,251010,,0,
+Media&Ent,Entertainment,Entertain,Entertainment,502020,,0,
+Entertainment,Movies & Entertainment,"Movies, Film Entertainment",Movies & Entertainment,50202010,,0,"DISP,NFLX"
+Entertain,Interactive Home Entertainment,"Inter Home Ent, Interactive Entertainment",Interactive Home Entertainment,50202020,,0,"MSFT,AAPL"
+Automotive Components,Automotive Parts & Equipment,"Auto Parts, Auto Parts Suppliers",Automotive Parts & Equipment,25101010,,0,"AUTO,PEP"
+Automotive,Tires & Rubber,Tires & Rubber,Tires,25101020,,0,"GOOD,MICH"

@@ -1,0 +1,125 @@
+[
+{
+  "Name": "MSCI Global Industry Classification Standard",
+  "AlternateNames":["MSCI GICS","MSCI GICS Standard"],
+  "Description": "MSCI Global Industry Classification Standard",
+  "UserId": "0",
+  "Tag": "0",
+  "Attributes": "0",
+  "Instruments": [],
+  "Children": 
+  [
+  {
+      "Name": "Communication Services",
+      "AlternateNames":["Comms Services", "Coms"],
+      "Description": "Communication Services",
+      "UserId": "50",
+      "Tag": "50",
+      "Attributes": "0",
+      "Instruments": [],
+      "Children": 
+      [
+        {
+          "Name": "Media \u0026 Entertainment",
+          "AlternateNames":["Media \u0026 Ent","Media\u0026Ent"],
+          "Description": "Media \u0026 Entertainment",
+          "UserId": "5020",
+          "Tag": "5020",
+          "Attributes": "0",
+          "Instruments": [],
+          "Children":
+          [
+            {
+              "Name": "Entertainment",
+              "AlternateNames":["Entertain"],
+              "Description": "Entertainment",
+              "UserId": "502020",
+              "Tag": "502020",
+              "Attributes": "0",
+              "Instruments": [],
+              "Children": [
+                {
+                  "Name": "Movies \u0026 Entertainment",
+                  "AlternateNames":["Movies","Film Entertainment"],
+                  "Description": "Movies \u0026 Entertainment",
+                  "UserId": "50202010",
+                  "Tag": "50202010",
+                  "Attributes": "0",
+                  "Instruments": ["DISP","NFLX"],
+                  "Children": []
+              },
+              {
+                  "Name": "Interactive Home Entertainment",
+                  "AlternateNames":["Inter Home Ent","Interactive Entertainment"],
+                  "Description": "Interactive Home Entertainment",
+                  "UserId": "50202020",
+                  "Tag": "50202020",
+                  "Attributes": "0",
+                  "Instruments": ["MSFT","AAPL"],
+                  "Children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+      "Name": "Consumer Discretionary",
+      "AlternateNames":["Consumer Disc","Con Disc"],
+      "Description": "Consumer Discretionary",
+      "UserId": "25",
+      "Tag": "25",
+      "Attributes": "0",
+      "Instruments": [],
+      "Children": 
+      [
+        {
+          "Name": "Automobiles \u0026 Components",
+          "AlternateNames":["Auto \u0026 Comp","Auto\u0026Comp"],
+          "Description": "Automobiles \u0026 Components",
+          "UserId": "2510",
+          "Tag": "2510",
+          "Attributes": "0",
+          "Instruments": [],
+          "Children": 
+          [
+            {
+              "Name": "Automobile Components",
+              "AlternateNames":["Automotive Components","Automotive"],
+              "Description": "Automobile Components",
+              "UserId": "251010",
+              "Tag": "251010",
+              "Attributes": "0",
+              "Instruments": [],
+              "Children": 
+              [
+                {
+                  "Name": "Automotive Parts \u0026 Equipment",
+                  "AlternateNames":["Auto Parts","Auto Parts Suppliers"],
+                  "Description": "Automotive Parts \u0026 Equipment",
+                  "UserId": "25101010",
+                  "Tag": "25101010",
+                  "Attributes": "0",
+                  "Instruments": ["AUTO","PEP"],
+                  "Children": []
+                },
+                {
+                  "Name": "Tires \u0026 Rubber",
+                  "AlternateNames":["Tires+Rubber","TiresRubber"],
+                  "Description": "Tires \u0026 Rubber",
+                  "UserId": "25101020",
+                  "Tag": "25101020",
+                  "Attributes": "0",
+                  "Instruments": ["GOOD","MICH"],
+                  "Children": []
+                }
+              ]
+            }
+          ]
+        }  
+      ]
+    }
+  ]
+}
+]
