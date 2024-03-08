@@ -632,19 +632,10 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_allFileInstrumentGroups.AddRange(m_updatedInstrumentGroups);
     }
 
-
-
-    //TODO: See whether these methods can be augmented to include more checks.
-
     public void checkParentIds(List<InstrumentGroup> expectedGroups, List<InstrumentGroup> importedGroups)
     {
       foreach (var instrumentGroup in importedGroups)
         Assert.AreNotEqual(instrumentGroup.ParentId, Guid.Empty, $"ParentId for added {instrumentGroup.Name} is empty.");
-
-
-      //TODO: Check whether in the importedGroups the node points to the associated node in the expectedGroups parent.
-
-
     }
 
     public void checkIds(List<InstrumentGroup> expectedGroups, List<InstrumentGroup> importedGroups, bool checkExpected)
