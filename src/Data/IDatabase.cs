@@ -569,6 +569,7 @@ namespace TradeSharp.Data
       Tag = item.Tag;
       ParentId = item.ParentId;
       Name = item.Name;
+      AlternateNames = item.AlternateNames;
       Description = item.Description;
       Instruments = item.Instruments;
     }

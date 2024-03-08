@@ -242,9 +242,9 @@ namespace TradeSharp.CoreUI.Services
     {
       string extension = Path.GetExtension(importSettings.Filename).ToLower();
       if (extension == extensionCSV)
-        importCSV(importSettings);
+        importCsv(importSettings);
       else if (extension == extensionJSON)
-        importJSON(importSettings);
+        importJson(importSettings);
     }
 
     public override void Export(ExportSettings exportSettings)
@@ -258,7 +258,7 @@ namespace TradeSharp.CoreUI.Services
 
       string extension = Path.GetExtension(exportSettings.Filename).ToLower();
       if (extension == extensionCSV)
-        exportCSV(exportSettings);
+        exportCsv(exportSettings);
       else if (extension == extensionJSON)
         exportJson(exportSettings);
     }
@@ -315,7 +315,7 @@ namespace TradeSharp.CoreUI.Services
     ///   MSCI GICS,Equities,"Stocks,Shares",Equity instruments,admin,,"AAPL,MSFT,GOOG"
     /// </summary>
     /// Method is made public to allow for testing.
-    public void importCSV(ImportSettings importSettings)
+    public void importCsv(ImportSettings importSettings)
     {
       long skippedCount = 0;
       long updatedCount = 0;
@@ -493,7 +493,7 @@ namespace TradeSharp.CoreUI.Services
           }
 
           //update the instrument group based on the replace behavior
-          InstrumentGroup? definedInstrumentGroup = definedInstrumentGroups.FirstOrDefault(x => x.Equals(fileInstrumentGroup));
+          InstrumentGroup? definedInstrumentGroup = definedInstrumentGroups.FirstOrDefault<InstrumentGroup>(x => fileInstrumentGroup.Equals(x));
           if (definedInstrumentGroup != null)
           {
             //update the instrument group based on the replace behavior
@@ -512,6 +512,12 @@ namespace TradeSharp.CoreUI.Services
               case ImportReplaceBehavior.Update:
                 //will update the name and description and keep all the associated instruments                  
                 if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}, {fileInstrumentGroup.Tag}");
+
+                foreach (string alternateName in definedInstrumentGroup.AlternateNames)
+                {
+                  string upperAlternateName = alternateName.ToUpper();
+                  if (fileInstrumentGroup.AlternateNames.FirstOrDefault(x => x.ToUpper() == upperAlternateName) == null) fileInstrumentGroup.AlternateNames.Add(alternateName);
+                }
 
                 foreach (Guid instrumentId in definedInstrumentGroup.Instruments)
                   if (!tickerIds.Contains(instrumentId))
@@ -577,7 +583,7 @@ namespace TradeSharp.CoreUI.Services
     /// <summary>
     /// Recurse down branches for each of the leaf nodes of the tree.
     /// </summary>
-    private void exportCsvForInstrumentGroupNode(ITreeNodeType<Guid, InstrumentGroup> node, List<string> exportCsvLines, ref int instrumentGroupExportCount, ref bool includeTickersInHeader)
+    private void exportCsvForInstrumentGroupNode(ITreeNodeType<Guid, InstrumentGroup> node, List<string> exportCsvLines, ref int instrumentGroupExportCount)
     {
       instrumentGroupExportCount++;
 
@@ -614,7 +620,6 @@ namespace TradeSharp.CoreUI.Services
       line += ",";
       if (node.Item.Instruments.Count > 0)
       {
-        includeTickersInHeader = true;
         string tickers = "";
         foreach (Guid instrumentId in node.Item.Instruments)
         {
@@ -640,7 +645,7 @@ namespace TradeSharp.CoreUI.Services
         if (Debugging.InstrumentGroupExport && node.Item.Instruments.Count > 0) m_logger.LogInformation($"Node \"{node.Item.Id}, {node.Item.Name}, {node.Item.Tag}\" contains both tickers and instrument group children, tickers are skipped - use JSON to retain these relationships");
 
         foreach (ITreeNodeType<Guid, InstrumentGroup> child in node.Children)
-          exportCsvForInstrumentGroupNode(child, exportCsvLines, ref instrumentGroupExportCount, ref includeTickersInHeader);
+          exportCsvForInstrumentGroupNode(child, exportCsvLines, ref instrumentGroupExportCount);
       }
     }
 
@@ -654,11 +659,10 @@ namespace TradeSharp.CoreUI.Services
     ///   - If instrument groups are defined that contain tickers under non-leaf nodes then the JSON format should be used to export the instrument groups.
     ///   - Do NOT output spaces after the commas in the CSV file, it will cause the CSV parser to treat the space as part of the field value and lead to parsing errors.
     /// </summary>
-    private void exportCSV(ExportSettings exportSettings)
+    private void exportCsv(ExportSettings exportSettings)
     {
       try
       {
-        bool includeTickersInHeader = false;
         int instrumentGroupExportCount = 0;
         List<string> exportLines = new List<string>();
         using (StreamWriter file = File.CreateText(exportSettings.Filename))
@@ -667,12 +671,8 @@ namespace TradeSharp.CoreUI.Services
           if (Debugging.InstrumentGroupExport) m_logger.LogInformation(statusMessage);
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
-          //construct the list of lines to be output to the csv file, selected node data vs all root nodes
-          if (SelectedNode != null)
-            exportCsvForInstrumentGroupNode(SelectedNode, exportLines, ref instrumentGroupExportCount, ref includeTickersInHeader);
-          else
-            foreach (ITreeNodeType<Guid, InstrumentGroup> node in Nodes)
-              exportCsvForInstrumentGroupNode(node, exportLines, ref instrumentGroupExportCount, ref includeTickersInHeader);
+          foreach (ITreeNodeType<Guid, InstrumentGroup> node in Nodes)
+            exportCsvForInstrumentGroupNode(node, exportLines, ref instrumentGroupExportCount);
 
           //output the data to the file - in the header we output the parent Id and node Id in order to keep parsing it on import simple
           file.WriteLine($"{tokenCsvParentId},{tokenCsvId},{tokenCsvName},{tokenCsvAlternateNames},{tokenCsvDescription},{tokenCsvUserId},{tokenCsvTag},{tokenCsvAttributes},{tokenCsvTickers}");
@@ -721,7 +721,7 @@ namespace TradeSharp.CoreUI.Services
     ///     "instruments" : [ ticker1, ... , tickerN ]
     ///   }
     /// </summary>
-    private void importJSON(ImportSettings importSettings)
+    private void importJson(ImportSettings importSettings)
     {
       ImportCounts counts = new();
       bool noErrors = true;
@@ -735,9 +735,9 @@ namespace TradeSharp.CoreUI.Services
 
         if (documentNode != null)
         {
-          Dictionary<Guid, InstrumentGroup> definedInstrumentGroups = new Dictionary<Guid, InstrumentGroup>();
+          List<InstrumentGroup> definedInstrumentGroups = new List<InstrumentGroup>();
           IList<InstrumentGroup> instrumentGroups = m_instrumentGroupRepository.GetItems();
-          foreach (InstrumentGroup instrumentGroup in instrumentGroups) definedInstrumentGroups.Add(instrumentGroup.Id, instrumentGroup);
+          foreach (InstrumentGroup instrumentGroup in instrumentGroups) definedInstrumentGroups.Add(instrumentGroup);
 
           Guid parentId = SelectedNode != null ? SelectedNode.Id : InstrumentGroup.InstrumentGroupRoot; //determine which node would be the root node for all the imported nodes, the root nodes in the import data should be associated with the root node Id used for instrument groups
           JsonArray rootNodes = documentNode.AsArray();
@@ -757,7 +757,7 @@ namespace TradeSharp.CoreUI.Services
       RaiseRefreshEvent();
     }
 
-    private void importJsonNode(Guid parentId, JsonObject node, ImportReplaceBehavior importReplaceBehavior, Dictionary<Guid, InstrumentGroup> definedInstrumentGroups, IList<Instrument> definedInstruments, ILogger logger, ref ImportCounts counts)
+    private void importJsonNode(Guid parentId, JsonObject node, ImportReplaceBehavior importReplaceBehavior, IList<InstrumentGroup> definedInstrumentGroups, IList<Instrument> definedInstruments, ILogger logger, ref ImportCounts counts)
     {
       Guid id = Guid.Empty;
       string name = "";
@@ -772,9 +772,9 @@ namespace TradeSharp.CoreUI.Services
         id = node.ContainsKey(tokenJsonId) ? (Guid)(node[tokenJsonId]!.AsValue().Deserialize(typeof(Guid)))! : Guid.NewGuid();
         name = (string)(node[tokenJsonName]!.AsValue().Deserialize(typeof(string)))!;
         description = (string?)(node[tokenJsonDescription]!.AsValue().Deserialize(typeof(string))) ?? name;
-        userId = (string?)(node[tokenJsonUserId]!.AsValue().Deserialize(typeof(string))) ?? name;
-        tag = (string?)(node[tokenJsonTag]!.AsValue().Deserialize(typeof(string))) ?? name;
-        attributesStr = (string?)(node[tokenJsonAttributes]!.AsValue().Deserialize(typeof(string)));
+        userId = node.ContainsKey(tokenJsonUserId) ? (string?)(node[tokenJsonUserId]!.AsValue().Deserialize(typeof(string)))! : name;
+        tag = node.ContainsKey(tokenJsonTag) ? (string?)(node[tokenJsonTag]!.AsValue().Deserialize(typeof(string)))! : name;
+        attributesStr = node.ContainsKey(tokenJsonAttributes) ? (string?)(node[tokenJsonAttributes]!.AsValue().Deserialize(typeof(string)))! : null;
         attributes = InstrumentGroup.DefaultAttributeSet;
 
         if (Enum.TryParse(typeof(Attributes), attributesStr, out object? result))
@@ -808,8 +808,13 @@ namespace TradeSharp.CoreUI.Services
               }
             }
 
-        if (definedInstrumentGroups.TryGetValue(id, out InstrumentGroup? definedInstrumentGroup))
+        //check if the instrument group is already defined and update it based on the replace behavior
+        InstrumentGroup fileInstrumentGroup = new InstrumentGroup(id, attributes, tag, parentId, name, alternateNamesList, description, userId, instrumentList);
+        InstrumentGroup? definedInstrumentGroup = definedInstrumentGroups.FirstOrDefault(x => x.Equals(fileInstrumentGroup));
+        if (definedInstrumentGroup != null)
         {
+          id = fileInstrumentGroup.Id = definedInstrumentGroup.Id;  //id is used to import children if required
+
           switch (importReplaceBehavior)
           {
             case ImportReplaceBehavior.Skip:
@@ -819,17 +824,24 @@ namespace TradeSharp.CoreUI.Services
             case ImportReplaceBehavior.Replace:
               //replacing name, description, tag and all defined instruments
               logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {name}, {description}, {tag}");
-              m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, attributes, tag, parentId, name, alternateNamesList, description, userId, instrumentList));
+              m_instrumentGroupRepository.Update(fileInstrumentGroup);
               counts.Replaced++;
               break;
             case ImportReplaceBehavior.Update:
-              //updating name, description, tag and merge in defined instruments
+              //updating name, description, tag and merge in defined alternate names and instruments
               logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {name}, {description}, {tag}");
+
+              foreach (string alternateName in definedInstrumentGroup.AlternateNames)
+              {
+                string upperAlternateName = alternateName.ToUpper();
+                if (alternateNamesList.FirstOrDefault(x => x.ToUpper() == upperAlternateName) == null) alternateNamesList.Add(alternateName);
+              }
 
               foreach (Guid instrumentId in definedInstrumentGroup.Instruments)
                 if (!instrumentList.Contains(instrumentId)) instrumentList.Add(instrumentId);
+              fileInstrumentGroup.Instruments = instrumentList;
 
-              m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, attributes, tag, parentId, name, alternateNamesList, description, userId, instrumentList));
+              m_instrumentGroupRepository.Update(fileInstrumentGroup);
               counts.Updated++;
               break;
           }

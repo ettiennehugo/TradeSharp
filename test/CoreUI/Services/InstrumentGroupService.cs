@@ -41,6 +41,21 @@ namespace TradeSharp.CoreUI.Testing.Services
       "Automotive,Tires & Rubber,\"Tires+Rubber,TiresRubber\",Tires & Rubber,25101020,25101020,0,\"GOOD,MICH\""
     ];
 
+    static string[] csvWithNamesAndUpdates = [
+      "parentname,name,alternatenames,description,userid,tag,attributes,tickers",
+      ",MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,0,0,,",
+      "MSCI GICS,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,25,0,",
+      "MSCI Global Industry Classification Standard,Communication Services,\"Comms Services,Coms\",Communication Services,50,50,0,",
+      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,2510,0,",
+      "Coms,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,5020,0,",
+      "Auto & Comp,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,251010,0,",
+      "Media&Ent,Entertainment,Entertain,Entertainment,502020,502020,0,,",
+      "Entertainment,Movies & Entertainment,\"Movies, Film Entertainment, Films\",Movies & Entertainment,50202010,50202010,0,\"DISP,NFLX,ROKU\"",
+      "Entertain,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment, Home Entertainment\",Interactive Entertainment,50202020,50202020,0,\"MSFT,AAPL,GOOG\"",
+      "Automotive Components,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers, Car Parts\",Automotive Parts & Equipment,25101010,25101010,0,\"AUTO,PEP,ORLY\"",
+      "Automotive,Tires & Rubber,\"Tires+Rubber,TiresRubber,Automotive Rubber\",Tires & Rubber,25101020,25101020,0,\"GOOD,MICH,FIRE\""
+    ];
+
     static private string[] jsonWithNames =
     [
       "[",
@@ -157,6 +172,135 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"Tag\": \"25101020\",",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"GOOD\",\"MICH\"],",
+      "                  \"Children\": []",
+      "                }",
+      "              ]",
+      "            }",
+      "          ]",
+      "        }  ",
+      "      ]",
+      "    }",
+      "  ]",
+      "}",
+      "]"
+    ];
+
+    static private string[] jsonWithNamesAndUpdates =
+    [
+      "[",
+      "{",
+      "  \"Name\": \"MSCI Global Industry Classification Standard\",",
+      "  \"AlternateNames\":[\"MSCI GICS\",\"MSCI GICS Standard\"],",
+      "  \"Description\": \"MSCI Global Industry Classification Standard\",",
+      "  \"UserId\": \"0\",",
+      "  \"Tag\": \"0\",",
+      "  \"Attributes\": \"0\",",
+      "  \"Instruments\": [],",
+      "  \"Children\": ",
+      "  [",
+      "  {",
+      "      \"Name\": \"Communication Services\",",
+      "      \"AlternateNames\":[\"Comms Services\", \"Coms\"],",
+      "      \"Description\": \"Communication Services\",",
+      "      \"UserId\": \"50\",",
+      "      \"Tag\": \"50\",",
+      "      \"Attributes\": \"0\",",
+      "      \"Instruments\": [],",
+      "      \"Children\": ",
+      "      [",
+      "        {",
+      "          \"Name\": \"Media \u0026 Entertainment\",",
+      "          \"AlternateNames\":[\"Media \u0026 Ent\",\"Media\u0026Ent\"],",
+      "          \"Description\": \"Media \u0026 Entertainment\",",
+      "          \"UserId\": \"5020\",",
+      "          \"Tag\": \"5020\",",
+      "          \"Attributes\": \"0\",",
+      "          \"Instruments\": [],",
+      "          \"Children\":",
+      "          [",
+      "            {",
+      "              \"Name\": \"Entertainment\",",
+      "              \"AlternateNames\":[\"Entertain\"],",
+      "              \"Description\": \"Entertainment\",",
+      "              \"UserId\": \"502020\",",
+      "              \"Tag\": \"502020\",",
+      "              \"Attributes\": \"0\",",
+      "              \"Instruments\": [],",
+      "              \"Children\": [",
+      "                {",
+      "                  \"Name\": \"Movies \u0026 Entertainment\",",
+      "                  \"AlternateNames\":[\"Movies\",\"Film Entertainment\",\"Films\"],",
+      "                  \"Description\": \"Movies \u0026 Entertainment\",",
+      "                  \"UserId\": \"50202010\",",
+      "                  \"Tag\": \"50202010\",",
+      "                  \"Attributes\": \"0\",",
+      "                  \"Instruments\": [\"DISP\",\"NFLX\",\"ROKU\"],",
+      "                  \"Children\": []",
+      "              },",
+      "              {",
+      "                  \"Name\": \"Interactive Home Entertainment\",",
+      "                  \"AlternateNames\":[\"Inter Home Ent\",\"Interactive Entertainment\",\"Home Entertainment\"],",
+      "                  \"Description\": \"Interactive Entertainment\",",
+      "                  \"UserId\": \"50202020\",",
+      "                  \"Tag\": \"50202020\",",
+      "                  \"Attributes\": \"0\",",
+      "                  \"Instruments\": [\"MSFT\",\"AAPL\",\"GOOG\"],",
+      "                  \"Children\": []",
+      "              }",
+      "            ]",
+      "          }",
+      "        ]",
+      "      }",
+      "    ]",
+      "  },",
+      "  {",
+      "      \"Name\": \"Consumer Discretionary\",",
+      "      \"AlternateNames\":[\"Consumer Disc\",\"Con Disc\"],",
+      "      \"Description\": \"Consumer Discretionary\",",
+      "      \"UserId\": \"25\",",
+      "      \"Tag\": \"25\",",
+      "      \"Attributes\": \"0\",",
+      "      \"Instruments\": [],",
+      "      \"Children\": ",
+      "      [",
+      "        {",
+      "          \"Name\": \"Automobiles \u0026 Components\",",
+      "          \"AlternateNames\":[\"Auto \u0026 Comp\",\"Auto\u0026Comp\"],",
+      "          \"Description\": \"Automobiles \u0026 Components\",",
+      "          \"UserId\": \"2510\",",
+      "          \"Tag\": \"2510\",",
+      "          \"Attributes\": \"0\",",
+      "          \"Instruments\": [],",
+      "          \"Children\": ",
+      "          [",
+      "            {",
+      "              \"Name\": \"Automobile Components\",",
+      "              \"AlternateNames\":[\"Automotive Components\",\"Automotive\"],",
+      "              \"Description\": \"Automobile Components\",",
+      "              \"UserId\": \"251010\",",
+      "              \"Tag\": \"251010\",",
+      "              \"Attributes\": \"0\",",
+      "              \"Instruments\": [],",
+      "              \"Children\": ",
+      "              [",
+      "                {",
+      "                  \"Name\": \"Automotive Parts \u0026 Equipment\",",
+      "                  \"AlternateNames\":[\"Auto Parts\",\"Auto Parts Suppliers\",\"Car Parts\"],",
+      "                  \"Description\": \"Automotive Parts \u0026 Equipment\",",
+      "                  \"UserId\": \"25101010\",",
+      "                  \"Tag\": \"25101010\",",
+      "                  \"Attributes\": \"0\",",
+      "                  \"Instruments\": [\"AUTO\",\"PEP\",\"ORLY\"],",
+      "                  \"Children\": []",
+      "                },",
+      "                {",
+      "                  \"Name\": \"Tires \u0026 Rubber\",",
+      "                  \"AlternateNames\":[\"Tires+Rubber\",\"TiresRubber\",\"Automotive Rubber\"],",
+      "                  \"Description\": \"Tires \u0026 Rubber\",",
+      "                  \"UserId\": \"25101020\",",
+      "                  \"Tag\": \"25101020\",",
+      "                  \"Attributes\": \"0\",",
+      "                  \"Instruments\": [\"GOOD\",\"MICH\",\"FIRE\"],",
       "                  \"Children\": []",
       "                }",
       "              ]",
@@ -331,6 +475,30 @@ namespace TradeSharp.CoreUI.Testing.Services
     private TimeZoneInfo m_timeZone;
     private Country m_country;
     private Exchange m_exchange;
+    private Instrument m_msft;
+    private Instrument m_aapl;
+    private Instrument m_goog;
+    private Instrument m_disp;
+    private Instrument m_nflx;
+    private Instrument m_roku;
+    private Instrument m_auto;
+    private Instrument m_pep;
+    private Instrument m_orly;
+    private Instrument m_good;
+    private Instrument m_mich;
+    private Instrument m_fire;
+    private InstrumentGroup m_msciGics;
+    private InstrumentGroup m_communicationServices;
+    private InstrumentGroup m_mediaAndEntertainment;
+    private InstrumentGroup m_entertainment;
+    private InstrumentGroup m_moviesEntertainment;
+    private InstrumentGroup m_interactiveHomeEntertainment;
+    private InstrumentGroup m_consumerDiscretionary;
+    private InstrumentGroup m_automobilesAndComponents;
+    private InstrumentGroup m_automobileComponents;
+    private InstrumentGroup m_automotivePartsAndEquipment;
+    private InstrumentGroup m_tiresAndRubber;
+
 
     //constructors
     public InstrumentGroupService()
@@ -344,53 +512,61 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
 
       //create the test stock instruments and instrument groups
-      var msft = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, "MSFT", Array.Empty<string>(), "Microsoft", "Microsoft Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      var aapl = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, "AAPL", Array.Empty<string>(), "Apple", "Apple Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      var disp = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, "DISP", Array.Empty<string>(), "Disney", "Disney Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      var nflx = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "NFLX", InstrumentType.Stock, "NFLX", Array.Empty<string>(), "Netflix", "Netflix Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      var auto = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "AUTO", InstrumentType.Stock, "AUTO", Array.Empty<string>(), "Autozone", "Autozone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      var pep = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "PEP", InstrumentType.Stock, "PEP", Array.Empty<string>(), "Pep Boys", "Pep Boys Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      var good = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "GOOD", InstrumentType.Stock, "GOOD", Array.Empty<string>(), "Goodyear", "Goodyear Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      var mich = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "MICH", InstrumentType.Stock, "MICH", Array.Empty<string>(), "Michelin", "Michelin Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_msft = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, "MSFT", Array.Empty<string>(), "Microsoft", "Microsoft Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_aapl = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, "AAPL", Array.Empty<string>(), "Apple", "Apple Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_goog = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "GOOG", InstrumentType.Stock, "GOOG", Array.Empty<string>(), "Google", "Google Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_disp = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, "DISP", Array.Empty<string>(), "Disney", "Disney Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_nflx = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "NFLX", InstrumentType.Stock, "NFLX", Array.Empty<string>(), "Netflix", "Netflix Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_roku = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "ROKU", InstrumentType.Stock, "ROKU", Array.Empty<string>(), "Roku", "Roku Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_auto = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "AUTO", InstrumentType.Stock, "AUTO", Array.Empty<string>(), "Autozone", "Autozone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_pep = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "PEP", InstrumentType.Stock, "PEP", Array.Empty<string>(), "Pep Boys", "Pep Boys Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_orly = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "ORLY", InstrumentType.Stock, "ORLY", Array.Empty<string>(), "O'Reiley", "O'Reiley Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_good = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "GOOD", InstrumentType.Stock, "GOOD", Array.Empty<string>(), "Goodyear", "Goodyear Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_mich = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "MICH", InstrumentType.Stock, "MICH", Array.Empty<string>(), "Michelin", "Michelin Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_fire = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "FIRE", InstrumentType.Stock, "FIRE", Array.Empty<string>(), "Firestone", "Firestone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
 
       m_instruments = new List<Instrument>();
       m_instruments =
       [
-        msft,
-        aapl,
-        disp,
-        nflx,
-        auto,
-        pep,
-        good,
-        mich
+        m_msft,
+        m_aapl,
+        m_goog,
+        m_disp,
+        m_nflx,
+        m_roku,
+        m_auto,
+        m_pep,
+        m_orly,
+        m_good,
+        m_mich,
+        m_fire,
       ];
 
-      var msciGics = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "0", InstrumentGroup.InstrumentGroupRoot, "MSCI Global Industry Classification Standard", new List<string> { "MSCI GICS", "MSCI GICS Standard" }, "MSCI Global Industry Classification Standard", "0", Array.Empty<Guid>());
-      var communicationServices = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50", msciGics.Id, "Communication Services", new List<string> { "Coms", "Comms Services" }, "Communication Services", "50", Array.Empty<Guid>());
-      var mediaAndEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "5020", communicationServices.Id, "Media & Entertainment", new List<string> { "Media & Ent", "Media&Ent" }, "Media & Entertainment", "5020", Array.Empty<Guid>());
-      var entertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "502020", mediaAndEntertainment.Id, "Entertainment", new List<string> { "Entertain" }, "Entertainment", "502020", Array.Empty<Guid>());
-      var moviesEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202010", entertainment.Id, "Movies & Entertainment", new List<string> { "Movies", "Film Entertainment" }, "Movies & Entertainment", "50202010", new List<Guid> { disp.Id, nflx.Id });
-      var interactiveHomeEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202020", entertainment.Id, "Interactive Home Entertainment", new List<string> { "Inter Home Ent", "Interactive Entertainment" }, "Interactive Entertainment", "50202020", new List<Guid> { msft.Id, aapl.Id });
-      var consumerDiscretionary = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25", msciGics.Id, "Consumer Discretionary", new List<string> { "Consumer Disc", "Con Disc" }, "Consumer Discretionary", "25", Array.Empty<Guid>());
-      var automobilesAndComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "2510", consumerDiscretionary.Id, "Automobiles & Components", new List<string> { "Auto & Comp", "Auto&Comp" }, "Automobiles & Components", "2510", Array.Empty<Guid>());
-      var automobileComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "251010", automobilesAndComponents.Id, "Automobile Components", new List<string> { "Automotive Components", "Automotive" }, "Automobile Components", "251010", Array.Empty<Guid>());
-      var automotivePartsAndEquipment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101010", automobileComponents.Id, "Automotive Parts & Equipment", new List<string> { "Auto Parts", "Auto Parts Suppliers" }, "Automotive Parts & Equipment", "25101010", new List<Guid> { auto.Id, pep.Id });
-      var tiresAndRubber = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101020", automobileComponents.Id, "Tires & Rubber", new List<string> { "Tires+Rubber", "TiresRubber" }, "Tires & Rubber", "25101020", new List<Guid> { good.Id, mich.Id });
+      m_msciGics = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "0", InstrumentGroup.InstrumentGroupRoot, "MSCI Global Industry Classification Standard", new List<string> { "MSCI GICS", "MSCI GICS Standard" }, "MSCI Global Industry Classification Standard", "0", Array.Empty<Guid>());
+      m_communicationServices = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50", m_msciGics.Id, "Communication Services", new List<string> { "Coms", "Comms Services" }, "Communication Services", "50", Array.Empty<Guid>());
+      m_mediaAndEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "5020", m_communicationServices.Id, "Media & Entertainment", new List<string> { "Media & Ent", "Media&Ent" }, "Media & Entertainment", "5020", Array.Empty<Guid>());
+      m_entertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "502020", m_mediaAndEntertainment.Id, "Entertainment", new List<string> { "Entertain" }, "Entertainment", "502020", Array.Empty<Guid>());
+      m_moviesEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202010", m_entertainment.Id, "Movies & Entertainment", new List<string> { "Movies", "Film Entertainment" }, "Movies & Entertainment", "50202010", new List<Guid> { m_disp.Id, m_nflx.Id });
+      m_interactiveHomeEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202020", m_entertainment.Id, "Interactive Home Entertainment", new List<string> { "Inter Home Ent", "Interactive Entertainment" }, "Interactive Entertainment", "50202020", new List<Guid> { m_msft.Id, m_aapl.Id });
+      m_consumerDiscretionary = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25", m_msciGics.Id, "Consumer Discretionary", new List<string> { "Consumer Disc", "Con Disc" }, "Consumer Discretionary", "25", Array.Empty<Guid>());
+      m_automobilesAndComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "2510", m_consumerDiscretionary.Id, "Automobiles & Components", new List<string> { "Auto & Comp", "Auto&Comp" }, "Automobiles & Components", "2510", Array.Empty<Guid>());
+      m_automobileComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "251010", m_automobilesAndComponents.Id, "Automobile Components", new List<string> { "Automotive Components", "Automotive" }, "Automobile Components", "251010", Array.Empty<Guid>());
+      m_automotivePartsAndEquipment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101010", m_automobileComponents.Id, "Automotive Parts & Equipment", new List<string> { "Auto Parts", "Auto Parts Suppliers" }, "Automotive Parts & Equipment", "25101010", new List<Guid> { m_auto.Id, m_pep.Id });
+      m_tiresAndRubber = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101020", m_automobileComponents.Id, "Tires & Rubber", new List<string> { "Tires+Rubber", "TiresRubber" }, "Tires & Rubber", "25101020", new List<Guid> { m_good.Id, m_mich.Id });
       m_instrumentGroups = new List<InstrumentGroup>();
       m_instrumentGroups =
       [
-        msciGics,
-        communicationServices,
-        consumerDiscretionary,
-        mediaAndEntertainment,
-        entertainment,
-        moviesEntertainment,
-        interactiveHomeEntertainment,
-        automobilesAndComponents,
-        automobileComponents,
-        automotivePartsAndEquipment,
-        tiresAndRubber
+        m_msciGics,
+        m_communicationServices,
+        m_consumerDiscretionary,
+        m_mediaAndEntertainment,
+        m_entertainment,
+        m_moviesEntertainment,
+        m_interactiveHomeEntertainment,
+        m_automobilesAndComponents,
+        m_automobileComponents,
+        m_automotivePartsAndEquipment,
+        m_tiresAndRubber
       ];
 
       m_addedInstrumentGroups = new List<InstrumentGroup>();
@@ -446,45 +622,72 @@ namespace TradeSharp.CoreUI.Testing.Services
     public string outputTestFile(string filename, string[] content)
     {
       string fullFilename = Path.Combine(Path.GetTempPath(), filename);
-      File.WriteAllText(fullFilename, string.Join("\n", content));  
+      File.WriteAllText(fullFilename, string.Join("\n", content));
       return fullFilename;
     }
 
-    public void postImport()
+    public void mergedAddedUpdated()
     {
       m_allFileInstrumentGroups.AddRange(m_addedInstrumentGroups);
       m_allFileInstrumentGroups.AddRange(m_updatedInstrumentGroups);
     }
 
-    public void checkParentIds()
+
+
+    //TODO: See whether these methods can be augmented to include more checks.
+
+    public void checkParentIds(List<InstrumentGroup> expectedGroups, List<InstrumentGroup> importedGroups)
     {
-      foreach (var instrumentGroup in m_addedInstrumentGroups)
+      foreach (var instrumentGroup in importedGroups)
         Assert.AreNotEqual(instrumentGroup.ParentId, Guid.Empty, $"ParentId for added {instrumentGroup.Name} is empty.");
-      foreach (var instrumentGroup in m_updatedInstrumentGroups)
-        Assert.AreNotEqual(instrumentGroup.ParentId, Guid.Empty, $"ParentId for updated {instrumentGroup.Name} is empty.");
+
+
+      //TODO: Check whether in the importedGroups the node points to the associated node in the expectedGroups parent.
+
+
     }
 
-    public void checkIds()
+    public void checkIds(List<InstrumentGroup> expectedGroups, List<InstrumentGroup> importedGroups, bool checkExpected)
     {
-      foreach (var instrumentGroup in m_addedInstrumentGroups)
+      foreach (var instrumentGroup in importedGroups)
+      {
         Assert.AreNotEqual(instrumentGroup.Id, Guid.Empty, $"Id for added {instrumentGroup.Name} is empty.");
-      foreach (var instrumentGroup in m_updatedInstrumentGroups)
-        Assert.AreNotEqual(instrumentGroup.Id, Guid.Empty, $"Id for updated {instrumentGroup.Name} is empty.");
+        if (checkExpected) Assert.IsNotNull(expectedGroups.FirstOrDefault(x => x.Id == instrumentGroup.Id), $"Id {instrumentGroup.Id} for added {instrumentGroup.Name} not found.");
+      }
     }
 
-    public void checkChildParentAssociations()
+    public void checkChildParentAssociations(List<InstrumentGroup> expectedGroups, List<InstrumentGroup> importedGroups)
     {
-      foreach (var instrumentGroup in m_addedInstrumentGroups)
+      foreach (var instrumentGroup in importedGroups)
         Assert.IsTrue(instrumentGroup.ParentId == InstrumentGroup.InstrumentGroupRoot || m_allFileInstrumentGroups.FirstOrDefault(x => x.Id == instrumentGroup.ParentId) != null, $"ParentId {instrumentGroup.ParentId} for added {instrumentGroup.Name} not found.");
-      foreach (var instrumentGroup in m_updatedInstrumentGroups)
-        Assert.IsTrue(instrumentGroup.ParentId == InstrumentGroup.InstrumentGroupRoot || m_allFileInstrumentGroups.FirstOrDefault(x => x.Id == instrumentGroup.ParentId) != null, $"ParentId {instrumentGroup.ParentId} for updated {instrumentGroup.Name} not found.");
     }
 
-    public void checkLoadedInstruments()
+    public void checkLoadedInstruments(List<InstrumentGroup> expectedGroups, List<InstrumentGroup> importedGroups)
     {
-      foreach (var instrumentGroup in m_allFileInstrumentGroups)
-        foreach (var instrument in instrumentGroup.Instruments)        
-          Assert.IsNotNull(m_instruments.FirstOrDefault(x => x.Id == instrument), $"Instrument {instrument} for {instrumentGroup.Name} was not found.");
+      foreach (var instrumentGroup in importedGroups)
+      {
+        var expectedGroup = expectedGroups.FirstOrDefault(x => x.Equals(instrumentGroup));
+        foreach (var instrument in expectedGroup.Instruments)
+          Assert.IsNotNull(instrumentGroup.Instruments.FirstOrDefault(x => x.Equals(instrument)), $"Instrument {instrument} for {instrumentGroup.Name} was not found.");
+      }
+    }
+
+
+    public void checkLoadedInstrumentGroups(List<InstrumentGroup> expectedGroups, List<InstrumentGroup> importedGroups)
+    {
+      Assert.AreEqual(expectedGroups.Count, importedGroups.Count, "Expected and imported instrument group counts are not the same.");
+      foreach (var importedGroup in importedGroups)
+      {
+        var expectedGroup = expectedGroups.FirstOrDefault(x => x.Equals(importedGroup));   //this might not match on the Id but on some of the other fields
+        Assert.IsNotNull(expectedGroup, $"InstrumentGroup {importedGroup.Name} was not found in the static definitions.");
+        Assert.AreEqual(expectedGroup.Name, importedGroup.Name, $"Name for {importedGroup.Name} is not correct.");
+        Assert.IsTrue(listEquals(expectedGroup.AlternateNames, importedGroup.AlternateNames), $"AlternateNames for {importedGroup.Name} is not correct.");
+        Assert.AreEqual(expectedGroup.Description, importedGroup.Description, $"Description for {importedGroup.Name} is not correct.");
+        Assert.AreEqual(expectedGroup.UserId, importedGroup.UserId, $"UserId for {importedGroup.Name} is not correct.");
+        Assert.AreEqual(expectedGroup.Tag, importedGroup.Tag, $"Tag for {importedGroup.Name} is not correct.");
+        Assert.AreEqual(expectedGroup.AttributeSet, importedGroup.AttributeSet, $"Attributes for {importedGroup.Name} is not correct.");
+        Assert.IsTrue(listEquals(expectedGroup.Instruments, importedGroup.Instruments), $"Instruments for {importedGroup.Name} is not correct.");
+      }
     }
 
     public bool listEquals(IList<string> list1, IList<string> list2)
@@ -505,40 +708,25 @@ namespace TradeSharp.CoreUI.Testing.Services
       return true;
     }
 
-    public void checkLoadedInstrumentGroupsAgainstStaticDefinitions()
-    {
-      foreach (var instrumentGroup in m_allFileInstrumentGroups)
-      {
-        var staticInstrumentGroup = m_instrumentGroups.FirstOrDefault(x => x.Equals(instrumentGroup));   //this might not match on the Id but on some of the other fields
-        Assert.IsNotNull(staticInstrumentGroup, $"InstrumentGroup {instrumentGroup.Name} was not found in the static definitions.");
-        Assert.AreEqual(staticInstrumentGroup.Name, instrumentGroup.Name, $"Name for {instrumentGroup.Name} is not correct.");
-        Assert.IsTrue(listEquals(staticInstrumentGroup.AlternateNames, instrumentGroup.AlternateNames), $"AlternateNames for {instrumentGroup.Name} is not correct.");
-        Assert.AreEqual(staticInstrumentGroup.Description, instrumentGroup.Description, $"Description for {instrumentGroup.Name} is not correct.");
-        Assert.AreEqual(staticInstrumentGroup.UserId, instrumentGroup.UserId, $"UserId for {instrumentGroup.Name} is not correct.");
-        Assert.AreEqual(staticInstrumentGroup.Tag, instrumentGroup.Tag, $"Tag for {instrumentGroup.Name} is not correct.");
-        Assert.AreEqual(staticInstrumentGroup.AttributeSet, instrumentGroup.AttributeSet, $"Attributes for {instrumentGroup.Name} is not correct.");
-        Assert.IsTrue(listEquals(staticInstrumentGroup.Instruments, instrumentGroup.Instruments), $"Instruments for {instrumentGroup.Name} is not correct.");
-      }
-    }
-
     [TestMethod]
     public void Import_CsvWithNames_Success()
     {
-      string filename = "testWithNames.csv";      
+      string filename = "testWithNames.csv";
       var importSettings = new ImportSettings();
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
       importSettings.Filename = outputTestFile(filename, csvWithNames);
       m_instrumentGroupService.Import(importSettings);
-      postImport();
+      mergedAddedUpdated();
 
       //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_addedInstrumentGroups.Count + m_updatedInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
+      Assert.AreEqual(m_instrumentGroups.Count, m_allFileInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
 
       //check node consistency
-      checkParentIds();
-      checkIds();
-      checkChildParentAssociations();
-      checkLoadedInstruments();
-      checkLoadedInstrumentGroupsAgainstStaticDefinitions();
+      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, false);
+      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
     }
 
     [TestMethod]
@@ -546,19 +734,42 @@ namespace TradeSharp.CoreUI.Testing.Services
     {
       string filename = "testWithIds.csv";
       var importSettings = new ImportSettings();
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
       importSettings.Filename = outputTestFile(filename, csvWithIds);
       m_instrumentGroupService.Import(importSettings);
-      postImport();
+      mergedAddedUpdated();
 
       //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_addedInstrumentGroups.Count + m_updatedInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
+      Assert.AreEqual(m_instrumentGroups.Count, m_allFileInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
 
       //check node consistency
-      checkParentIds();
-      checkIds();
-      checkChildParentAssociations();
-      checkLoadedInstruments();
-      checkLoadedInstrumentGroupsAgainstStaticDefinitions();
+      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, true);
+      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
+    }
+
+    [TestMethod]
+    public void Import_CsvUpdateInstruments_Success()
+    {
+      string filename = "testWithNames.csv";
+      var importSettings = new ImportSettings();
+      importSettings.Filename = outputTestFile(filename, csvWithNamesAndUpdates);
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Update;
+      m_instrumentGroupService.Import(importSettings);
+
+      m_moviesEntertainment.AlternateNames.Add("Films");
+      m_moviesEntertainment.Instruments = new List<Guid> { m_disp.Id, m_nflx.Id, m_roku.Id };
+      m_interactiveHomeEntertainment.AlternateNames.Add("Home Entertainment");
+      m_interactiveHomeEntertainment.Instruments = new List<Guid> { m_msft.Id, m_aapl.Id, m_goog.Id };
+      m_automotivePartsAndEquipment.AlternateNames.Add("Car Parts");
+      m_automotivePartsAndEquipment.Instruments = new List<Guid> { m_auto.Id, m_pep.Id, m_orly.Id };
+      m_tiresAndRubber.AlternateNames.Add("Automotive Rubber");
+      m_tiresAndRubber.Instruments = new List<Guid> { m_good.Id, m_mich.Id, m_fire.Id };
+
+      checkLoadedInstrumentGroups(m_instrumentGroups, m_updatedInstrumentGroups);
+      checkLoadedInstruments(m_instrumentGroups, m_updatedInstrumentGroups);
     }
 
     [TestMethod]
@@ -566,19 +777,20 @@ namespace TradeSharp.CoreUI.Testing.Services
     {
       string filename = "testWithNames.json";
       var importSettings = new ImportSettings();
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
       importSettings.Filename = outputTestFile(filename, jsonWithNames);
       m_instrumentGroupService.Import(importSettings);
-      postImport();
+      mergedAddedUpdated();
 
       //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_addedInstrumentGroups.Count + m_updatedInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
+      Assert.AreEqual(m_instrumentGroups.Count, m_allFileInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
 
       //check node consistency
-      checkParentIds();
-      checkIds();
-      checkChildParentAssociations();
-      checkLoadedInstruments();
-      checkLoadedInstrumentGroupsAgainstStaticDefinitions();
+      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, false);
+      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
     }
 
     [TestMethod]
@@ -586,20 +798,45 @@ namespace TradeSharp.CoreUI.Testing.Services
     {
       string filename = "testWithIds.json";
       var importSettings = new ImportSettings();
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
       importSettings.Filename = outputTestFile(filename, jsonWithIds);
       m_instrumentGroupService.Import(importSettings);
-      postImport();
+      mergedAddedUpdated();
 
       //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_addedInstrumentGroups.Count + m_updatedInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
+      Assert.AreEqual(m_instrumentGroups.Count, m_allFileInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
 
       //check node consistency
-      checkParentIds();
-      checkIds();
-      checkChildParentAssociations();
-      checkLoadedInstruments();
-      checkLoadedInstrumentGroupsAgainstStaticDefinitions();
+      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, true);
+      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
     }
+
+
+    [TestMethod]
+    public void Import_JsonUpdateInstruments_Success()
+    {
+      string filename = "testWithNames.json";
+      var importSettings = new ImportSettings();
+      importSettings.Filename = outputTestFile(filename, jsonWithNamesAndUpdates);
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Update;
+      m_instrumentGroupService.Import(importSettings);
+
+      m_moviesEntertainment.AlternateNames.Add("Films");
+      m_moviesEntertainment.Instruments = new List<Guid> { m_disp.Id, m_nflx.Id, m_roku.Id };
+      m_interactiveHomeEntertainment.AlternateNames.Add("Home Entertainment");
+      m_interactiveHomeEntertainment.Instruments = new List<Guid> { m_msft.Id, m_aapl.Id, m_goog.Id };
+      m_automotivePartsAndEquipment.AlternateNames.Add("Car Parts");
+      m_automotivePartsAndEquipment.Instruments = new List<Guid> { m_auto.Id, m_pep.Id, m_orly.Id };
+      m_tiresAndRubber.AlternateNames.Add("Automotive Rubber");
+      m_tiresAndRubber.Instruments = new List<Guid> { m_good.Id, m_mich.Id, m_fire.Id };
+
+      checkLoadedInstrumentGroups(m_instrumentGroups, m_updatedInstrumentGroups);
+      checkLoadedInstruments(m_instrumentGroups, m_updatedInstrumentGroups);
+    }
+
 
     [TestMethod]
     public void Export_Csv_Success()
@@ -616,17 +853,17 @@ namespace TradeSharp.CoreUI.Testing.Services
       importSettings.Filename = exportSettings.Filename;
       m_instrumentGroupService.Export(exportSettings);
       m_instrumentGroupService.Import(importSettings);
-      postImport();
+      mergedAddedUpdated();
 
       //check that the elements added are correct in terms of number
       Assert.AreEqual(m_instrumentGroups.Count, m_addedInstrumentGroups.Count + m_updatedInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
 
       //check node consistency
-      checkParentIds();
-      checkIds();
-      checkChildParentAssociations();
-      checkLoadedInstruments();
-      checkLoadedInstrumentGroupsAgainstStaticDefinitions();
+      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, true);
+      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
     }
 
     [TestMethod]
@@ -644,17 +881,17 @@ namespace TradeSharp.CoreUI.Testing.Services
       importSettings.Filename = exportSettings.Filename;
       m_instrumentGroupService.Export(exportSettings);
       m_instrumentGroupService.Import(importSettings);
-      postImport();
+      mergedAddedUpdated();
 
       //check that the elements added are correct in terms of number
       Assert.AreEqual(m_instrumentGroups.Count, m_addedInstrumentGroups.Count + m_updatedInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
 
       //check node consistency
-      checkParentIds();
-      checkIds();
-      checkChildParentAssociations();
-      checkLoadedInstruments();
-      checkLoadedInstrumentGroupsAgainstStaticDefinitions();
+      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, true);
+      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
+      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
     }
   }
 }

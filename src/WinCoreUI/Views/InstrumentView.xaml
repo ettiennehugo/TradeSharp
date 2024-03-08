@@ -3,7 +3,6 @@
     x:Class="TradeSharp.WinCoreUI.Views.InstrumentView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:TradeSharp.WinCoreUI.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wincoreuicommon="using:TradeSharp.WinCoreUI.Common"  
@@ -14,13 +13,15 @@
     <wincoreuicommon:EnumValueConverter x:Key="EnumValueConverter"/>
     <wincoreuicommon:ExchangeToIdConverter x:Key="ExchangeToIdConverter"/>
     <wincoreuicommon:DateTimeToDateTimeOffsetConverter x:Key="DateTimeOffsetToDateTimeConverter"/>
+    <wincoreuicommon:StringListToStringConverter x:Key="StringListToStringConverter"/>
   </Page.Resources>
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="150"/>
-      <ColumnDefinition Width="250"/>
+      <ColumnDefinition Width="300"/>
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
@@ -34,23 +35,25 @@
     </Grid.RowDefinitions>
     <TextBlock x:Name="m_typeLabel" Text="Type" Grid.Column="0" Grid.Row="0"/>
     <TextBlock x:Name="m_tickerLabel" Text="Ticker" Grid.Column="0" Grid.Row="1"/>
-    <TextBlock x:Name="m_nameLabel" Text="Name" Grid.Column="0" Grid.Row="2"/>
-    <TextBlock x:Name="m_descriptionLabel" Text="Description" Grid.Column="0" Grid.Row="3"/>
-    <TextBlock x:Name="m_inceptionDateLabel" Text="Inception Date" Grid.Column="0" Grid.Row="4"/>
-    <TextBlock x:Name="m_primaryExchangeLabel" Text="Primary Exchange" Grid.Column="0" Grid.Row="5"/>
-    <TextBlock x:Name="m_priceDecimalsLabel" Text="Price Decimals" Grid.Column="0" Grid.Row="6"/>
-    <TextBlock x:Name="m_minimumMovementLabel" Text="Minimum Movement" Grid.Column="0" Grid.Row="7"/>
-    <TextBlock x:Name="m_bigPointValueLabel" Text="Big Point Value" Grid.Column="0" Grid.Row="8"/>
-    <TextBlock x:Name="m_tagLabel" Text="Tag" Grid.Column="0" Grid.Row="9"/>
+    <TextBlock x:Name="m_tickerAlternateLabel" Text="Alternate Tickers" Grid.Column="0" Grid.Row="2"/>
+    <TextBlock x:Name="m_nameLabel" Text="Name" Grid.Column="0" Grid.Row="3"/>
+    <TextBlock x:Name="m_descriptionLabel" Text="Description" Grid.Column="0" Grid.Row="4"/>
+    <TextBlock x:Name="m_inceptionDateLabel" Text="Inception Date" Grid.Column="0" Grid.Row="5"/>
+    <TextBlock x:Name="m_primaryExchangeLabel" Text="Primary Exchange" Grid.Column="0" Grid.Row="6"/>
+    <TextBlock x:Name="m_priceDecimalsLabel" Text="Price Decimals" Grid.Column="0" Grid.Row="7"/>
+    <TextBlock x:Name="m_minimumMovementLabel" Text="Minimum Movement" Grid.Column="0" Grid.Row="8"/>
+    <TextBlock x:Name="m_bigPointValueLabel" Text="Big Point Value" Grid.Column="0" Grid.Row="9"/>
+    <TextBlock x:Name="m_tagLabel" Text="Tag" Grid.Column="0" Grid.Row="10"/>
     <ComboBox x:Name="m_type" SelectedIndex="{x:Bind Instrument.Type, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="0"/>
     <TextBox x:Name="m_ticker" Text="{x:Bind Instrument.Ticker, Mode=TwoWay}" PlaceholderText="TICKER" CharacterCasing="Upper" Grid.Column="1" Grid.Row="1"/>
-    <TextBox x:Name="m_name" Text="{x:Bind Instrument.Name, Mode=TwoWay}" PlaceholderText="New instrument name" Grid.Column="1" Grid.Row="2"/>
-    <TextBox x:Name="m_description" Text="{x:Bind Instrument.Description, Mode=TwoWay}" PlaceholderText="New instrument description" Grid.Column="1" Grid.Row="3"/>
-    <CalendarDatePicker x:Name="m_inceptionDate" PlaceholderText="Pick a date" Date="{x:Bind Instrument.InceptionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" Grid.Column="1" Grid.Row="4"/>
-    <ComboBox x:Name="m_primaryExchange" SelectedItem="{x:Bind Instrument.PrimaryExchangeId, Mode=TwoWay, Converter={StaticResource ExchangeToIdConverter}}" ItemsSource="{x:Bind Exchanges, Mode=OneTime}" DisplayMemberPath="Name" Grid.Column="1" Grid.Row="5"/>
-    <NumberBox x:Name="m_priceDecimals" Text="{x:Bind Instrument.PriceDecimals, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="1" Minimum="0" Maximum="10" Grid.Column="1" Grid.Row="6"/>
-    <NumberBox x:Name="m_minimumMovement" Text="{x:Bind Instrument.MinimumMovement, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Maximum="100" Grid.Column="1" Grid.Row="7"/>
-    <NumberBox x:Name="m_bigPointValue" Text="{x:Bind Instrument.BigPointValue, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Grid.Column="1" Grid.Row="8"/>
-    <TextBox x:Name="m_tag" Text="{x:Bind Instrument.Tag, Mode=TwoWay}" PlaceholderText="Tag value" Grid.Column="1" Grid.Row="9"/>
+    <TextBox x:Name="m_alternateTicker" Text="{x:Bind Instrument.AlternateTickers, Mode=TwoWay, Converter={StaticResource StringListToStringConverter}}" PlaceholderText="TICKERS" CharacterCasing="Upper" Grid.Column="1" Grid.Row="2"/>
+    <TextBox x:Name="m_name" Text="{x:Bind Instrument.Name, Mode=TwoWay}" PlaceholderText="New instrument name" Grid.Column="1" Grid.Row="3"/>
+    <TextBox x:Name="m_description" Text="{x:Bind Instrument.Description, Mode=TwoWay}" PlaceholderText="New instrument description" Grid.Column="1" Grid.Row="4"/>
+    <CalendarDatePicker x:Name="m_inceptionDate" PlaceholderText="Pick a date" Date="{x:Bind Instrument.InceptionDate, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" Grid.Column="1" Grid.Row="5"/>
+    <ComboBox x:Name="m_primaryExchange" SelectedItem="{x:Bind Instrument.PrimaryExchangeId, Mode=TwoWay, Converter={StaticResource ExchangeToIdConverter}}" ItemsSource="{x:Bind Exchanges, Mode=OneTime}" DisplayMemberPath="Name" Grid.Column="1" Grid.Row="6"/>
+    <NumberBox x:Name="m_priceDecimals" Text="{x:Bind Instrument.PriceDecimals, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="1" Minimum="0" Maximum="10" Grid.Column="1" Grid.Row="7"/>
+    <NumberBox x:Name="m_minimumMovement" Text="{x:Bind Instrument.MinimumMovement, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Maximum="100" Grid.Column="1" Grid.Row="8"/>
+    <NumberBox x:Name="m_bigPointValue" Text="{x:Bind Instrument.BigPointValue, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Grid.Column="1" Grid.Row="9"/>
+    <TextBox x:Name="m_tag" Text="{x:Bind Instrument.Tag, Mode=TwoWay}" PlaceholderText="Tag value" Grid.Column="1" Grid.Row="10"/>
   </Grid>
 </Page>

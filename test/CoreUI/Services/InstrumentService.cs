@@ -308,6 +308,7 @@ namespace TradeSharp.CoreUI.Testing.Services
     private List<Instrument> m_updatedInstruments;
     private List<Instrument> m_allFileInstruments;
     private List<Instrument> m_instruments;
+    private List<Instrument> m_emptyInstruments;
     private CoreUI.Services.InstrumentService m_instrumentService;
     private TimeZoneInfo m_timeZone;
     private Country m_country;
@@ -343,6 +344,7 @@ namespace TradeSharp.CoreUI.Testing.Services
 
       m_exchanges = new List<Exchange>{ m_global, m_nyse, m_nasdaq, m_lse };
       m_instruments = new List<Instrument>{ msft, aapl, disp, nflx, auto, pep, good, mich };
+      m_emptyInstruments = new List<Instrument>();
 
       m_addedInstruments = new List<Instrument>();
       m_updatedInstruments = new List<Instrument>();
@@ -373,9 +375,9 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_dialogService = new Mock<IDialogService>();
 
       m_database.Setup(x => x.GetExchanges()).Returns(m_exchanges);
-      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
+      m_database.Setup(x => x.GetInstruments()).Returns(m_emptyInstruments);
       m_dialogService.Setup(x => x.ShowStatusMessageAsync(It.IsAny<IDialogService.StatusMessageSeverity>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
-      m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
+      m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_emptyInstruments);
       m_instrumentRepository.Setup(x => x.Update(It.IsAny<Instrument>())).Callback((Instrument x) => m_updatedInstruments.Add(x));
       m_instrumentRepository.Setup(x => x.Add(It.IsAny<Instrument>())).Callback((Instrument x) => m_addedInstruments.Add(x));
 
@@ -426,83 +428,107 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_allFileInstruments.AddRange(m_updatedInstruments);
     }
 
-    public void checkImportedInstruments()
+    public void checkImportedInstruments(List<Instrument> expectedInstruments, List<Instrument> importedInstruments, bool checkIds)
     {
-      Assert.AreEqual(m_instruments.Count, m_allFileInstruments.Count, "Loaded instrument counts are not correct");
-      foreach (var instrument in m_allFileInstruments)
+      Assert.AreEqual(expectedInstruments.Count, importedInstruments.Count, "Loaded instrument counts are not correct");
+      foreach (var instrument in importedInstruments)
       {
-        var definedInstrument = m_instruments.Find(x => x.Id == instrument.Id || x.Ticker == instrument.Ticker);
-        if (definedInstrument == null)
+        var expectedInstrument = expectedInstruments.Find(x => x.Id == instrument.Id || x.Ticker == instrument.Ticker);
+        if (expectedInstrument == null)
           Assert.Fail($"Instrument {instrument.Ticker} not found in the database");
         else
         {
-          Assert.AreEqual(instrument.Id, definedInstrument.Id, "Id is not correct");
-          Assert.AreEqual(instrument.Ticker, definedInstrument.Ticker, "Ticker is not correct");
-          Assert.AreEqual(instrument.Name, definedInstrument.Name, "Name is not correct");
-          Assert.AreEqual(instrument.Description, definedInstrument.Description, "Description is not correct");
-          Assert.AreEqual(instrument.PrimaryExchangeId, definedInstrument.PrimaryExchangeId, "PrimaryExchangeId is not correct");
-          Assert.AreEqual(instrument.InceptionDate, definedInstrument.InceptionDate, "InceptionDate is not correct");
-          Assert.AreEqual(instrument.PriceDecimals, definedInstrument.PriceDecimals, "PriceDecimals is not correct");
-          Assert.AreEqual(instrument.MinimumMovement, definedInstrument.MinimumMovement, "MinimumMovement");
-          Assert.AreEqual(instrument.BigPointValue, definedInstrument.BigPointValue, "BigPointValue is not correct");
-          Assert.AreEqual(instrument.Tag, definedInstrument.Tag, "Tag is not correct");
-          Assert.AreEqual(instrument.AttributeSet, definedInstrument.AttributeSet, "AttributesSet is not correct");
-          Assert.IsTrue(listEquals(instrument.SecondaryExchangeIds, definedInstrument.SecondaryExchangeIds), "SecondaryExchangeIds is not correct");
+          if (checkIds) Assert.AreEqual(instrument.Id, expectedInstrument.Id, "Id is not correct");
+          Assert.AreEqual(instrument.Ticker, expectedInstrument.Ticker, "Ticker is not correct");
+          Assert.AreEqual(instrument.Name, expectedInstrument.Name, "Name is not correct");
+          Assert.AreEqual(instrument.Description, expectedInstrument.Description, "Description is not correct");
+          Assert.AreEqual(instrument.PrimaryExchangeId, expectedInstrument.PrimaryExchangeId, "PrimaryExchangeId is not correct");
+          Assert.AreEqual(instrument.InceptionDate, expectedInstrument.InceptionDate, "InceptionDate is not correct");
+          Assert.AreEqual(instrument.PriceDecimals, expectedInstrument.PriceDecimals, "PriceDecimals is not correct");
+          Assert.AreEqual(instrument.MinimumMovement, expectedInstrument.MinimumMovement, "MinimumMovement");
+          Assert.AreEqual(instrument.BigPointValue, expectedInstrument.BigPointValue, "BigPointValue is not correct");
+          Assert.AreEqual(instrument.Tag, expectedInstrument.Tag, "Tag is not correct");
+          Assert.AreEqual(instrument.AttributeSet, expectedInstrument.AttributeSet, "AttributesSet is not correct");
+          Assert.IsTrue(listEquals(instrument.SecondaryExchangeIds, expectedInstrument.SecondaryExchangeIds), "SecondaryExchangeIds is not correct");
         }
       }
     }
 
     [TestMethod]
-    public void Import_CsvWithoutIds_Success()
+    public void Import_CsvWithoutIdsCreated_Success()
     {
       string filename = "testInstrumentsWithoutIds.csv";
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, csvWithoutIds);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
       m_instrumentService.Import(importSettings);
-      postImport();
-      checkImportedInstruments();
+      checkImportedInstruments(m_instruments, m_addedInstruments, false);
     }
 
     [TestMethod]
-    public void Import_CsvWithIds_Success()
+    public void Import_CsvWithIdsCreated_Success()
     {
       string filename = "testInstrumentsWithIds.csv";
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, csvWithIds);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
       m_instrumentService.Import(importSettings);
-      postImport();
-      checkImportedInstruments();
+      checkImportedInstruments(m_instruments, m_addedInstruments, true);
     }
 
     [TestMethod]
-    public void Import_JsonWithoutIds_Success()
+    public void Import_JsonWithoutIdsCreated_Success()
     {
       string filename = "testInstrumentsWithoutIds.json";
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, jsonWithoutIds);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
       m_instrumentService.Import(importSettings);
-      postImport();
-      checkImportedInstruments();
+      checkImportedInstruments(m_instruments, m_addedInstruments, false);
     }
 
     [TestMethod]
-    public void Import_JsonWithIds_Success()
+    public void Import_JsonWithIdsCreated_Success()
     {
       string filename = "testInstrumentsWithIds.json";
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, jsonWithIds);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
       m_instrumentService.Import(importSettings);
-      postImport();
-      checkImportedInstruments();
+      checkImportedInstruments(m_instruments, m_addedInstruments, true);
     }
 
     [TestMethod]
-    public void Export_Csv_Success()
+    public void Import_CsvWithIdsUpdated_Success()
     {
+      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
+      m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
+      string filename = "testInstrumentsWithIds.csv";
+      var importSettings = new ImportSettings();
+      importSettings.Filename = outputTestFile(filename, csvWithIds);
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Update; //force call to our dummy repository
+      m_instrumentService.Import(importSettings);
+      checkImportedInstruments(m_instruments, m_updatedInstruments, true);
+    }
+
+    [TestMethod]
+    public void Import_JsonWithIdsUpdated_Success()
+    {
+      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
+      m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
+      string filename = "testInstrumentsWithIds.json";
+      var importSettings = new ImportSettings();
+      importSettings.Filename = outputTestFile(filename, jsonWithIds);
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Update; //force call to our dummy repository
+      m_instrumentService.Import(importSettings);
+      checkImportedInstruments(m_instruments, m_updatedInstruments, true);
+    }
+
+    [TestMethod]
+    public void Export_CsvCreated_Success()
+    {
+      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
+      m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
       m_instrumentService.Refresh(); //load the data from the mock repository
 
       string filename = "testExportWithoutIds.csv";
@@ -515,12 +541,14 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_instrumentService.Export(exportSettings);
       m_instrumentService.Import(importSettings);
       postImport();
-      checkImportedInstruments();
+      checkImportedInstruments(m_instruments, m_updatedInstruments, true);
     }
 
     [TestMethod]
-    public void Export_Json_Success()
+    public void Export_JsonCreated_Success()
     {
+      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
+      m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
       m_instrumentService.Refresh(); //load the data from the mock repository
 
       string filename = "testExportWithoutIds.json";
@@ -533,7 +561,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_instrumentService.Export(exportSettings);
       m_instrumentService.Import(importSettings);
       postImport();
-      checkImportedInstruments();
+      checkImportedInstruments(m_instruments, m_updatedInstruments, true);
     }
   }
 }
