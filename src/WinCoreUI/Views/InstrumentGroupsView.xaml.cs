@@ -56,8 +56,15 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_findInstrumentGroupFilter_TextChanged(object sender, TextChangedEventArgs e)
     {
-      ViewModel.FindText = m_findInstrumentGroupFilter.Text;    //for some reason the binding is not working
-      if (ViewModel.FindFirstCommand.CanExecute(null)) ViewModel.FindFirstCommand.Execute(null);
+      ViewModel.FindText = m_findInstrumentGroupFilter.Text;
+    }
+
+    private void m_findInstrumentGroupFilter_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+      if (e.Key == Windows.System.VirtualKey.Enter)
+      {
+        if (ViewModel.FindFirstCommand.CanExecute(null)) ViewModel.FindFirstCommand.Execute(null);
+      }
     }
   }
 }

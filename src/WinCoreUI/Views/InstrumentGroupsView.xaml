@@ -41,7 +41,7 @@
         <AppBarElementContainer x:Name="m_filterContainer">
           <StackPanel Orientation="Horizontal">
             <TextBlock x:Name="m_findInstrumentGroupLabel" Text="Search by" Margin="0, 8, 8, 8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-            <TextBox x:Name="m_findInstrumentGroupFilter" Width="300" PlaceholderText="expression" Margin="0, 8" HorizontalAlignment="Left" VerticalAlignment="Center" TextChanged="m_findInstrumentGroupFilter_TextChanged"/>
+            <TextBox x:Name="m_findInstrumentGroupFilter" Width="300" PlaceholderText="expression" Margin="0, 8" HorizontalAlignment="Left" VerticalAlignment="Center" TextChanged="m_findInstrumentGroupFilter_TextChanged" KeyDown="m_findInstrumentGroupFilter_KeyDown"/>
           </StackPanel>
         </AppBarElementContainer>
         <AppBarButton Command="{x:Bind ViewModel.FindPreviousCommand}" ToolTipService.ToolTip="Find previous" IsCompact="True" Width="50">

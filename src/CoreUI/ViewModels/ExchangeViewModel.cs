@@ -56,8 +56,14 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         var updatedExchange = await m_dialogService.ShowUpdateExchangeAsync(SelectedItem);
         if (updatedExchange != null)
+        {
           m_itemsService.Update(updatedExchange);
-        //TBD: Might have to update the item in the items list to make it reflect changes.
+          Exchange? exchange = GetItem(updatedExchange.Id);
+          if (exchange != null)
+          {
+            exchange.Update(updatedExchange);
+          }
+        }
       }
     }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 using System.Collections.ObjectModel;
+using static System.Net.WebRequestMethods;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -152,10 +153,45 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     protected void findNodes(IList<ITreeNodeType<Guid, InstrumentGroup>> nodes)
     {      
+      //try to match the node
       foreach (ITreeNodeType<Guid, InstrumentGroup> node in nodes)
-        if (node.Item.Name.ToUpper().Contains(FindText.ToUpper()))
-          m_foundNodes.Add(node);
+      {
+        bool nodeAdded = false;
 
+        if (node.Item.Name.ToUpper().Contains(FindText.ToUpper()))
+        {
+          m_foundNodes.Add(node);
+          nodeAdded = true;
+        }
+
+        if (!nodeAdded)
+        {
+          foreach (string alternateName in node.Item.AlternateNames)
+            if (alternateName.ToUpper().Contains(FindText.ToUpper()))
+            {
+              m_foundNodes.Add(node);
+              nodeAdded = true;
+              break;
+            }
+        }
+        if (!nodeAdded)
+        {
+
+
+          //TODO: Load the symbols into the Instrument Groups when the node is expanded.
+          //https://stackoverflow.com/questions/23316932/invoke-command-when-treeviewitem-is-expanded
+
+          foreach (string symbol in node.Item.Symbols)
+            if (symbol.ToUpper().Contains(FindText.ToUpper()))
+            {
+              m_foundNodes.Add(node);
+              nodeAdded = true;
+              break;
+            }
+        }
+      }
+
+      //recurse to the node children
       foreach (ITreeNodeType<Guid, InstrumentGroup> node in nodes) findNodes(node.Children);
     }
 
