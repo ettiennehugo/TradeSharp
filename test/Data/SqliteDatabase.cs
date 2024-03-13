@@ -81,7 +81,6 @@ namespace TradeSharp.Data.Testing
     //finalizers
     ~SqliteDatabase()
     {
-      m_database.EndTransaction(true);  //end any open transactions
       m_database.DropSchema(); //erase test database
       m_database.Dispose();
     }
@@ -2176,6 +2175,100 @@ namespace TradeSharp.Data.Testing
       Assert.IsNotNull(retrievedStock, "Data store did not return the stock.");
       Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == secondExchange.Id).Single());
       Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == thirdExchange.Id).Single());
+    }
+
+    [TestMethod]
+    public void TickerFromId_FromCreate_Success()
+    {
+      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+
+      m_database.CreateInstrument(stock);
+
+      string? ticker = m_database.TickerFromId(stock.Id);
+      Assert.AreEqual(stock.Ticker, ticker);
+    }
+
+    [TestMethod]
+    public void TickersFromId_FromCreate_Success()
+    {
+      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", new List<string>() { "STCK", "STK" }, "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+
+      m_database.CreateInstrument(stock);
+
+      IList<string>? tickers = m_database.TickersFromId(stock.Id);
+      Assert.IsNotNull(tickers, "Tickers not found for the stock");
+      Assert.IsNotNull(tickers.FirstOrDefault(x => x == stock.Ticker), "Could not find main stock ticker");
+      foreach (var ticker in stock.AlternateTickers)
+        Assert.IsNotNull(tickers.FirstOrDefault(x => x == ticker), "Could not find alternate stock ticker");
+    }
+
+    [TestMethod]
+    public void IdFromTicker_FromCreate_Success()
+    {
+      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", new List<string>() { "STCK", "STK" }, "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+
+      m_database.CreateInstrument(stock);
+
+      Guid? id = m_database.IdFromTicker(stock.Ticker);
+      Assert.AreEqual(stock.Id, id, "Could not map to main ticker");
+      id = m_database.IdFromTicker(stock.AlternateTickers[0]);
+      Assert.AreEqual(stock.Id, id, "Could not map to alternate ticker 0.");
+      id = m_database.IdFromTicker(stock.AlternateTickers[1]);
+      Assert.AreEqual(stock.Id, id, "Could not map to alternate ticker 1.");
+    }
+
+    [TestMethod]
+    public void GetInstrumentIdTicker_ReturnPersistedData_Success()
+    {
+      Instrument stock1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK1", new List<string>() { "STCK1", "STK1" }, "Stock1", "StockDescription1", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", new List<string>() { "STCK2", "STK2" }, "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+
+      m_database.CreateInstrument(stock1);
+      m_database.CreateInstrument(stock2);
+
+      IDictionary<Guid, string> idTicker = m_database.GetInstrumentIdTicker();
+      Assert.AreEqual(2, idTicker.Count, "Returned id-ticker count is not correct.");
+      Assert.AreEqual(stock1.Ticker, idTicker[stock1.Id], "Returned ticker for stock 1 is not correct.");
+      Assert.AreEqual(stock2.Ticker, idTicker[stock2.Id], "Returned ticker for stock 2 is not correct.");
+    }
+
+    [TestMethod]
+    public void GetInstrumentIdTickers_ReturnPersistedData_Success()
+    {
+      Instrument stock1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK1", new List<string>() { "STCK1", "STK1" }, "Stock1", "StockDescription1", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", new List<string>() { "STCK2", "STK2" }, "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+
+      m_database.CreateInstrument(stock1);
+      m_database.CreateInstrument(stock2);
+
+      IDictionary<Guid, IList<string>> idTickers = m_database.GetInstrumentIdTickers();
+      Assert.AreEqual(2, idTickers.Count, "Returned id-tickers count is not correct.");
+      Assert.AreEqual(stock1.Ticker, idTickers[stock1.Id][0], "Returned stock 1 ticker is not correct.");
+      Assert.AreEqual(stock1.AlternateTickers[0], idTickers[stock1.Id][1], "Returned stock 1 alternate ticker 0 is not correct.");
+      Assert.AreEqual(stock1.AlternateTickers[1], idTickers[stock1.Id][2], "Returned stock 1 alternate ticker 1 is not correct.");
+      Assert.AreEqual(stock2.Ticker, idTickers[stock2.Id][0], "Returned stock 2 ticker is not correct.");
+      Assert.AreEqual(stock2.AlternateTickers[0], idTickers[stock2.Id][1], "Returned stock 2 alternate ticker 0 is not correct.");
+      Assert.AreEqual(stock2.AlternateTickers[1], idTickers[stock2.Id][2], "Returned stock 2 alternate ticker 1 is not correct.");
+    }
+
+    [TestMethod]
+    public void GetTickerInstrumentId_ReturnPersistedData_Success()
+    {
+      Instrument stock1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK1", new List<string>() { "STCK1", "STK1" }, "Stock1", "StockDescription1", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", new List<string>() { "STCK2", "STK2" }, "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+
+      m_database.CreateInstrument(stock1);
+      m_database.CreateInstrument(stock2);
+
+      IDictionary<string, Guid> tickerId = m_database.GetTickerInstrumentId();
+
+      Assert.AreEqual(6, tickerId.Count, "Returned ticker-id count is not correct.");
+      Assert.AreEqual(stock1.Id, tickerId["STOCK1"], "Stock 1 main ticker does not match id");
+      Assert.AreEqual(stock1.Id, tickerId["STCK1"], "Stock 1 alternate ticker 0 does not match id");
+      Assert.AreEqual(stock1.Id, tickerId["STK1"], "Stock 1 alternate ticker 1 does not match id");
+      Assert.AreEqual(stock2.Id, tickerId["STOCK2"], "Stock 2 main ticker does not match id");
+      Assert.AreEqual(stock2.Id, tickerId["STCK2"], "Stock 2 alternate ticker 0 does not match id");
+      Assert.AreEqual(stock2.Id, tickerId["STK2"], "Stock 2 alternate ticker 1 does not match id");
     }
 
     [TestMethod]

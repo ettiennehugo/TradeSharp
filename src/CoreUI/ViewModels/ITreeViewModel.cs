@@ -39,6 +39,8 @@ namespace TradeSharp.CoreUI.ViewModels
     AsyncRelayCommand<object?> CopyCommandAsync { get; set; }
     AsyncRelayCommand ImportCommandAsync { get; set; }
     AsyncRelayCommand ExportCommandAsync { get; set; }
+    RelayCommand<object?> ExpandNodeCommand { get; set; }
+    RelayCommand<object?> CollapseNodeCommand { get; set; }
     RelayCommand FindFirstCommand { get; set; }
     RelayCommand FindNextCommand { get; set; }
     RelayCommand FindPreviousCommand { get; set; }

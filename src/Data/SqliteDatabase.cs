@@ -574,7 +574,7 @@ namespace TradeSharp.Data
               $"{instrument.PriceDecimals}, " +
               $"{instrument.MinimumMovement}, " +
               $"{instrument.BigPointValue}," +
-              $"'{ToSqlSafeString(Common.Utilities.ToCsv(instrument.AlternateTickers))}'" +
+              $"'{ToSqlSafeString(string.Join(',',instrument.AlternateTickers))}'" +
             $")"
         );
 
@@ -1226,7 +1226,7 @@ namespace TradeSharp.Data
 
     public Instrument? GetInstrument(string ticker)
     {
-      string normalizedTicker = ticker.ToUpper();
+      string normalizedTicker = ticker.Trim().ToUpper();
       normalizedTicker = normalizedTicker.Trim();
       using (var reader = ExecuteReader($"SELECT * FROM {c_TableInstrument} WHERE Ticker = '{normalizedTicker}'"))
         if (reader.Read())
@@ -1241,11 +1241,78 @@ namespace TradeSharp.Data
       return null;
     }
 
+    public string? TickerFromId(Guid id)
+    {
+      using (var reader = ExecuteReader($"SELECT Ticker FROM {c_TableInstrument} WHERE Id = '{id.ToString()}'"))
+        if (reader.Read())
+          return reader.GetString(0);
+      return null;
+    }
+
+    public IList<string>? TickersFromId(Guid id)
+    {
+      using (var reader = ExecuteReader($"SELECT Ticker, AlternateTickers FROM {c_TableInstrument} WHERE Id = '{id.ToString()}'"))
+        if (reader.Read())
+        {
+          List<string> tickers = new List<string>();
+          tickers.Add(reader.GetString(0));
+          tickers.AddRange(Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(1))));
+          return tickers;
+        }
+
+      return null;
+    }
+
+    public Guid? IdFromTicker(string ticker)
+    {
+      string normalizedTicker = ticker.Trim().ToUpper();
+      using (var reader = ExecuteReader($"SELECT Id FROM {c_TableInstrument} WHERE Ticker = '{normalizedTicker}' OR AlternateTickers LIKE '%{normalizedTicker}%'"))
+        if (reader.Read())
+          return reader.GetGuid(0);
+
+      return null;
+    }
+
+    public IDictionary<Guid, string> GetInstrumentIdTicker()
+    {
+      var result = new Dictionary<Guid, string>();
+      using (var reader = ExecuteReader($"SELECT Id, Ticker FROM {c_TableInstrument}"))
+        while (reader.Read())
+          result.Add(reader.GetGuid(0), reader.GetString(1));
+      return result;
+    }
+
+    public IDictionary<Guid, IList<string>> GetInstrumentIdTickers()
+    {
+      var result = new Dictionary<Guid, IList<string>>();
+      using (var reader = ExecuteReader($"SELECT Id, Ticker, AlternateTickers FROM {c_TableInstrument}"))
+        while (reader.Read())
+        {
+          var tickerList = new List<string>();
+          result.Add(reader.GetGuid(0), tickerList);
+          tickerList.Add(reader.GetString(1));
+          tickerList.AddRange(FromSqlSafeString(reader.GetString(2)).Split(','));
+        }
+      return result;
+    }
+
+    public IDictionary<string, Guid> GetTickerInstrumentId()
+    {
+      var result = new Dictionary<string, Guid>();
+      using (var reader = ExecuteReader($"SELECT Id, Ticker, AlternateTickers FROM {c_TableInstrument}"))
+        while (reader.Read())
+        {
+          Guid id = reader.GetGuid(0);
+          result.Add(reader.GetString(1), id);
+          foreach (string alternateTicker in FromSqlSafeString(reader.GetString(2)).Split(',')) result.Add(alternateTicker, id);
+        }
+      return result;
+    }
+
     public void UpdateInstrument(Instrument instrument)
     {
       lock (this)
       {
-        string alternateTickersStr = Common.Utilities.ToCsv(instrument.AlternateTickers);
         ExecuteCommand(
           $"UPDATE OR FAIL {c_TableInstrument} " +
             $"SET Ticker = '{instrument.Ticker}', " +
@@ -1258,7 +1325,7 @@ namespace TradeSharp.Data
                 $"PriceDecimals = {instrument.PriceDecimals}, " +
                 $"MinimumMovement = {instrument.MinimumMovement}, " +
                 $"BigPointValue = {instrument.BigPointValue}, " +
-                $"AlternateTickers = '{ToSqlSafeString(alternateTickersStr)}' " +
+                $"AlternateTickers = '{ToSqlSafeString(string.Join(',', instrument.AlternateTickers))}' " +
             $"WHERE Id = '{instrument.Id.ToString()}'"
         );
       }

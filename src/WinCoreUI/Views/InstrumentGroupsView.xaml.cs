@@ -66,5 +66,15 @@ namespace TradeSharp.WinCoreUI.Views
         if (ViewModel.FindFirstCommand.CanExecute(null)) ViewModel.FindFirstCommand.Execute(null);
       }
     }
+
+    private void m_instrumentGroups_Expanding(TreeView sender, TreeViewExpandingEventArgs args)
+    {
+      ViewModel.ExpandNodeCommand.Execute(args.Item);
+    }
+
+    private void m_instrumentGroups_Collapsed(TreeView sender, TreeViewCollapsedEventArgs args)
+    {
+      ViewModel.CollapseNodeCommand.Execute(args.Item);
+    }
   }
 }

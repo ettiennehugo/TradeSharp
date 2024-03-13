@@ -233,6 +233,29 @@ namespace TradeSharp.CoreUI.Services
       parentNode.Refresh();
     }
 
+    public void RefreshAssociatedTickers(InstrumentGroup instrumentGroup, bool force)
+    {
+      if (instrumentGroup.SearchTickers.Count == 0 || force)
+      {
+        instrumentGroup.Tickers.Clear();        //list of main tickers associated with the instrument group
+        instrumentGroup.SearchTickers.Clear();  //list of main tickers and alternate tickers associated with the instrument group for more complete search
+        foreach (Guid instrumentId in instrumentGroup.Instruments)
+        {
+          string? ticker = m_instrumentService.TickerFromId(instrumentId);
+          IList<string>? tickers = m_instrumentService.TickersFromId(instrumentId);
+
+          if (ticker != null)
+            instrumentGroup.Tickers.Add(ticker);
+
+          if (tickers != null)
+            foreach (var allTicker in tickers) instrumentGroup.SearchTickers.Add(allTicker);
+        }
+
+        TradeSharp.Common.Utilities.Sort(instrumentGroup.Tickers);
+        TradeSharp.Common.Utilities.Sort(instrumentGroup.SearchTickers);
+      }
+    }
+
     public bool Update(ITreeNodeType<Guid, InstrumentGroup> node)
     {
       return m_instrumentGroupRepository.Update(node.Item);

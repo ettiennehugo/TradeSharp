@@ -19,6 +19,9 @@ namespace TradeSharp.CoreUI.Repositories
 
     //attributes
     protected IDatabase m_database;
+    protected SortedList<string, Guid> m_tickerToId;
+    protected SortedList<Guid, string> m_idToTicker;
+    protected SortedList<Guid, IList<string>> m_idToTickers;
 
     //constructors
     public InstrumentRepository(IDatabase database)
@@ -100,6 +103,37 @@ namespace TradeSharp.CoreUI.Repositories
     public IList<Instrument> GetPage(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize)
     {
       return m_database.GetInstrumentsPage(instrumentType, tickerFilter, nameFilter, descriptionFilter, pageIndex, pageSize);
+    }
+
+    public string? TickerFromId(Guid id)
+    {
+      m_idToTicker.TryGetValue(id, out string? ticker);
+      return ticker;
+    }
+
+    public IList<string>? TickersFromId(Guid id)
+    {
+      return m_database.TickersFromId(id);
+    }
+
+    public Guid? IdFromTicker(string ticker)
+    {
+      return m_database.IdFromTicker(ticker);
+    }
+
+    public IDictionary<Guid, string> GetInstrumentIdTicker()
+    {
+      return m_database.GetInstrumentIdTicker();
+    }
+
+    public IDictionary<Guid, IList<string>> GetInstrumentIdTickers()
+    {
+      return m_database.GetInstrumentIdTickers();
+    }
+
+    public IDictionary<string, Guid> GetTickerInstrumentId()
+    {
+      return m_database.GetTickerInstrumentId();
     }
 
     //properties

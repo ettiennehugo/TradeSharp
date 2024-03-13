@@ -13,6 +13,7 @@
     //Instrument Group debugging switches
     public static bool InstrumentGroupImport = true;   //log messages for instrument group import
     public static bool InstrumentGroupExport = true;   //log messages for instrument group export
+    public static bool InstrumentGroupService = true;  //log messages for instrument group service
 
     // Instrument Bar Data debugging switches
     public static bool InstrumentBarDataLoadAsync = false;   //debugging for instrument bar data LoadAsync

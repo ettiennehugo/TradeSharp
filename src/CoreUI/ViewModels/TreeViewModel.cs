@@ -31,6 +31,8 @@ namespace TradeSharp.CoreUI.ViewModels
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null);
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
+      ExpandNodeCommand = new RelayCommand<object?>(OnExpandNode);
+      CollapseNodeCommand = new RelayCommand<object?>(OnCollapseNode);
       FindFirstCommand = new RelayCommand(OnFindFirst, () => FindText.Length > 0);
       FindNextCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
       FindPreviousCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
@@ -45,6 +47,12 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
+    /// <summary>
+    /// Commands to fire when a node is expanded or collapsed.
+    /// </summary>
+    public RelayCommand<object?> ExpandNodeCommand { get; set; }
+    public RelayCommand<object?> CollapseNodeCommand { get; set; }
+
     /// <summary>
     /// Find the first/next node in the tree that matches the find text.
     /// </summary>
@@ -160,9 +168,18 @@ namespace TradeSharp.CoreUI.ViewModels
       if (exportSettings != null) _ = Task.Run(() => m_itemsService.Export(exportSettings));
     }
 
+    /// <summary>
+    /// Abstract definitions for search commands.
+    /// </summary>
     public abstract void OnFindFirst();
     public abstract void OnFindNext();
     public abstract void OnFindPrevious();
+
+    /// <summary>
+    /// Default implementations for the expand and collapse node commands.
+    /// </summary>
+    public virtual void OnExpandNode(object? node) { }
+    public virtual void OnCollapseNode(object? node) { }
 
     ///Generic handler to re-raise the service refresh event as a view model refresh event.
     protected virtual void onServiceRefresh(object? sender, Common.RefreshEventArgs e)

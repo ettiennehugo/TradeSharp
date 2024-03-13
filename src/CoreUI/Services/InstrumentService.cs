@@ -74,6 +74,9 @@ namespace TradeSharp.CoreUI.Services
     private IInstrumentRepository m_instrumentRepository;
     private IDatabase m_database;
     private Instrument? m_selectedItem;
+    protected SortedList<string, Guid> m_tickerToId;
+    protected SortedList<Guid, string> m_idToTicker;
+    protected SortedList<Guid, IList<string>> m_idToTickers;
 
     //constructors
     public InstrumentService(ILogger<InstrumentService> logger, IDatabase database, IInstrumentRepository instrumentRepository, IDialogService dialogService) : base(dialogService)
@@ -83,6 +86,9 @@ namespace TradeSharp.CoreUI.Services
       m_database = database;
       m_selectedItem = null;
       Items = new ObservableCollection<Instrument>();
+      m_tickerToId = new SortedList<string, Guid>();
+      m_idToTicker = new SortedList<Guid, string>();
+      m_idToTickers = new SortedList<Guid, IList<string>>();
     }
 
     //finalizers
@@ -128,12 +134,15 @@ namespace TradeSharp.CoreUI.Services
       Items.Clear();
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
+      refreshInstrumentLookups();
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
     public bool Update(Instrument item)
     {
+      removeInstrumentFromLookups(item);
       var result = m_instrumentRepository.Update(item);
+      addInstrumentToLookups(item);
       Data.Utilities.UpdateItem(item, Items);
       return result;
     }
@@ -145,6 +154,7 @@ namespace TradeSharp.CoreUI.Services
         importCSV(importSettings);
       else if (extension == extensionJSON)
         importJson(importSettings);
+      //NOTE: We do not update the lookup for ticker to id mappings here as the refresh should be called by the view model after the import is complete.
     }
 
     public override void Export(ExportSettings exportSettings)
@@ -196,6 +206,57 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentRepository.GetItems(instrumentType, tickerFilter, nameFilter, descriptionFilter, offset, count);
     }
 
+    /// <summary>
+    /// Returns the main ticker associated with the instrument.
+    /// </summary>
+    public string? TickerFromId(Guid id)
+    {
+      m_idToTicker.TryGetValue(id, out string? ticker);
+      return ticker;
+    }
+
+    /// <summary>
+    /// Returns all the tickers associated with the instrument.
+    /// </summary>
+    public IList<string>? TickersFromId(Guid id)
+    {
+      m_idToTickers.TryGetValue(id, out IList<string>? tickers);
+      return tickers;
+    }
+
+    /// <summary>
+    /// Returns the id associated with the ticker.
+    /// </summary>
+    public Guid? IdFromTicker(string ticker)
+    {
+      m_tickerToId.TryGetValue(ticker, out Guid id);
+      return id;
+    }
+
+    /// <summary>
+    /// Get the full map of instrument id to ticker.
+    /// </summary>
+    public IDictionary<Guid, string> GetInstrumentIdTicker()
+    {
+      return m_idToTicker;
+    }
+
+    /// <summary>
+    /// Get the full map of instrument id to tickers mapping that includes alternate tickers
+    /// </summary>
+    public IDictionary<Guid, IList<string>> GetInstrumentIdTickers()
+    {
+      return m_idToTickers;
+    }
+
+    /// <summary>
+    /// Get the full map of ticker to instrument id.
+    /// </summary>
+    public IDictionary<string, Guid> GetTickerInstrumentId()  
+    {
+      return m_tickerToId;
+    }
+
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
 
@@ -209,6 +270,42 @@ namespace TradeSharp.CoreUI.Services
     public IList<Instrument> Items { get; set; }
 
     //methods
+    /// <summary>
+    /// Refresh to instrument ticker to id mapping data.
+    /// </summary>
+    public void refreshInstrumentLookups()
+    {
+      m_idToTicker.Clear();
+      m_idToTickers.Clear();
+      m_tickerToId.Clear();
+      foreach (Instrument instrument in Items)
+        addInstrumentToLookups(instrument);
+    }
+
+    /// <summary>
+    /// Add the instrument ticker to id mapping data to the lookups.
+    /// </summary>
+    public void addInstrumentToLookups(Instrument instrument)
+    {
+      List<string> tickers = new List<string>(instrument.AlternateTickers);
+      tickers.Prepend(instrument.Ticker);
+      m_idToTicker.Add(instrument.Id, instrument.Ticker);
+      m_idToTickers.Add(instrument.Id, tickers);
+      m_tickerToId.Add(instrument.Ticker, instrument.Id);
+      foreach (string alternateTicker in instrument.AlternateTickers) m_tickerToId.Add(alternateTicker, instrument.Id);
+    }
+
+    /// <summary>
+    /// Remove the instrument ticker to id mapping data.
+    /// </summary>
+    public void removeInstrumentFromLookups(Instrument instrument)
+    {
+      m_idToTicker.Remove(instrument.Id);
+      m_idToTickers.Remove(instrument.Id);
+      m_tickerToId.Remove(instrument.Ticker);
+      foreach (string alternateTicker in instrument.AlternateTickers) m_tickerToId.Remove(alternateTicker);
+    }
+
     ///Method is defined public for testing purposes.
     public void importJson(ImportSettings importSettings)
     {

@@ -535,6 +535,8 @@ namespace TradeSharp.Data
       Description = description;
       UserId = userId;
       Instruments = instruments;
+      Tickers = new List<string>();         //this gets lazy loaded when needed - see RefreshAssociatedTickers
+      SearchTickers = new List<string>();   //this gets lazy loaded when needed - see RefreshAssociatedTickers
     }
 
     [ObservableProperty] private Guid m_parentId;
@@ -542,7 +544,9 @@ namespace TradeSharp.Data
     [ObservableProperty] private IList<string> m_alternateNames;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private string m_userId;   //specific Id to be used by the user, can be used in data file exports/imports to identify the group
-    [ObservableProperty] private IList<Guid> m_instruments;
+    [ObservableProperty] private IList<Guid> m_instruments; //instruments associated with the group
+    [ObservableProperty] private IList<string> m_tickers;   //set of tickers associated with the group
+    [ObservableProperty] private IList<string> m_searchTickers;   //set of tickers and alternate associated with the group
 
     public bool Equals(InstrumentGroup? other)
     { 
@@ -897,6 +901,12 @@ namespace TradeSharp.Data
     IList<Instrument> GetInstrumentsPage(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize);  //paged loading of instruments
     Instrument? GetInstrument(Guid id);
     Instrument? GetInstrument(string ticker);
+    string? TickerFromId(Guid id);           //returns the main ticker associated with the instrument
+    IList<string>? TickersFromId(Guid id);   //returns all the tickers associated with the instrument
+    Guid? IdFromTicker(string ticker);       //returns the id associated with the ticker
+    IDictionary<Guid, string> GetInstrumentIdTicker();  //get the full map of instrument id to ticker
+    IDictionary<Guid, IList<string>> GetInstrumentIdTickers();  //get the full map of instrument id to tickers mapping that includes alternate tickers
+    IDictionary<string, Guid> GetTickerInstrumentId();  //get the full map of ticker to instrument id
     void UpdateInstrument(Instrument instrument);
     int DeleteInstrument(Instrument instrument);
     int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId);

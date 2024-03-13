@@ -63,6 +63,7 @@ namespace TradeSharp.CoreUI.ViewModels
         {
           SelectedNode.Item.Update(updatedInstrumentGroup);
           m_itemsService.Update(SelectedNode!);
+          m_instrumentGroupService.RefreshAssociatedTickers(SelectedNode.Item, true);   //force refresh the item tickers to make sure we always have the latest data on modified instrument groups (search will not work right if we do not do this)
         }
       }
       else
@@ -83,6 +84,16 @@ namespace TradeSharp.CoreUI.ViewModels
         else
           await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Please select a node to copy");
       });
+    }
+
+    /// <summary>
+    /// Lazy load the tickers of the instrument group when the node is node is expanded. 
+    /// </summary>
+    public override void OnExpandNode(object? node)
+    {
+      base.OnExpandNode(node);
+      if (node != null && node is ITreeNodeType<Guid, InstrumentGroup>)
+        foreach (var childNode in ((ITreeNodeType<Guid, InstrumentGroup>)node).Children) m_instrumentGroupService.RefreshAssociatedTickers(childNode.Item);
     }
 
     /// <summary>
@@ -154,11 +165,12 @@ namespace TradeSharp.CoreUI.ViewModels
     protected void findNodes(IList<ITreeNodeType<Guid, InstrumentGroup>> nodes)
     {      
       //try to match the node
+      string findText = FindText.ToUpper();
       foreach (ITreeNodeType<Guid, InstrumentGroup> node in nodes)
       {
         bool nodeAdded = false;
 
-        if (node.Item.Name.ToUpper().Contains(FindText.ToUpper()))
+        if (node.Item.Name.ToUpper().Contains(findText))
         {
           m_foundNodes.Add(node);
           nodeAdded = true;
@@ -167,22 +179,20 @@ namespace TradeSharp.CoreUI.ViewModels
         if (!nodeAdded)
         {
           foreach (string alternateName in node.Item.AlternateNames)
-            if (alternateName.ToUpper().Contains(FindText.ToUpper()))
+            if (alternateName.ToUpper().Contains(findText))
             {
               m_foundNodes.Add(node);
               nodeAdded = true;
               break;
             }
         }
+
         if (!nodeAdded)
         {
-
-
-          //TODO: Load the symbols into the Instrument Groups when the node is expanded.
           //https://stackoverflow.com/questions/23316932/invoke-command-when-treeviewitem-is-expanded
-
-          foreach (string symbol in node.Item.Symbols)
-            if (symbol.ToUpper().Contains(FindText.ToUpper()))
+          m_instrumentGroupService.RefreshAssociatedTickers(node.Item);
+          foreach (var ticker in node.Item.SearchTickers)
+            if (ticker.Contains(findText))
             {
               m_foundNodes.Add(node);
               nodeAdded = true;
