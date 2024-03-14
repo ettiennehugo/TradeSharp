@@ -70,7 +70,7 @@ namespace TradeSharp.Data.Testing
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
       m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       m_instrumentInceptionDate = DateTime.Now.ToUniversalTime();
-      m_instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST", Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", m_instrumentInceptionDate, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
+      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", m_instrumentInceptionDate, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
 
       //create some test data for the instrument
       m_testBarData = new Dictionary<Resolution, DataCacheBars>();
@@ -111,7 +111,7 @@ namespace TradeSharp.Data.Testing
       m_level1TestData.Last = new List<double>(m_level1TestData.Count); price = 500.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Last.Add(price); price += 1.0; }
       m_level1TestData.LastSize = new List<long>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
 
-      m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, m_level1TestData);
+      m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Ticker, m_level1TestData);
 
       //data feed would reverse the data according to date/time so we need to reverse it here to match
       m_level1TestDataReversed = new DataCacheLevel1(0);
@@ -158,7 +158,7 @@ namespace TradeSharp.Data.Testing
         barData.Volume = new List<long>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1; }
 
         m_toDateTime = m_fromDateTime.AddMonths(count); //just use the longest resolution for the to-date time
-        m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+        m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Ticker, resolution, barData);
         m_testBarData.Add(resolution, barData);
 
         //data feed would reverse the data according to date/time so we need to reverse it here to match

@@ -200,7 +200,7 @@ namespace TradeSharp.Data
     //methods
     protected void refreshDataCache()
     {
-      DataCache dataCache = m_database.GetDataCache(m_dataProvider.Name, Instrument.Id, Instrument.Ticker, Resolution, From, To);
+      DataCache dataCache = m_database.GetDataCache(m_dataProvider.Name, Instrument.Ticker, Resolution, From, To);
       IConfigurationService.TimeZone timeZone = (IConfigurationService.TimeZone)m_configuration.General[IConfigurationService.GeneralConfiguration.TimeZone];
 
       Exchange? exchange = null;

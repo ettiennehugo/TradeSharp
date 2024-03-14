@@ -46,7 +46,7 @@ namespace TradeSharp.CoreUI.Repositories
 
     public Instrument? GetItem(Guid id)
     {
-      return m_database.GetInstrument(id);
+      throw new NotImplementedException("GetItem for repository not supported, use Ticker to retrieve an instrument.");
     }
 
     public Instrument? GetItem(string ticker)
@@ -103,37 +103,6 @@ namespace TradeSharp.CoreUI.Repositories
     public IList<Instrument> GetPage(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize)
     {
       return m_database.GetInstrumentsPage(instrumentType, tickerFilter, nameFilter, descriptionFilter, pageIndex, pageSize);
-    }
-
-    public string? TickerFromId(Guid id)
-    {
-      m_idToTicker.TryGetValue(id, out string? ticker);
-      return ticker;
-    }
-
-    public IList<string>? TickersFromId(Guid id)
-    {
-      return m_database.TickersFromId(id);
-    }
-
-    public Guid? IdFromTicker(string ticker)
-    {
-      return m_database.IdFromTicker(ticker);
-    }
-
-    public IDictionary<Guid, string> GetInstrumentIdTicker()
-    {
-      return m_database.GetInstrumentIdTicker();
-    }
-
-    public IDictionary<Guid, IList<string>> GetInstrumentIdTickers()
-    {
-      return m_database.GetInstrumentIdTickers();
-    }
-
-    public IDictionary<string, Guid> GetTickerInstrumentId()
-    {
-      return m_database.GetTickerInstrumentId();
     }
 
     //properties

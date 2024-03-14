@@ -63,7 +63,6 @@ namespace TradeSharp.CoreUI.ViewModels
         {
           SelectedNode.Item.Update(updatedInstrumentGroup);
           m_itemsService.Update(SelectedNode!);
-          m_instrumentGroupService.RefreshAssociatedTickers(SelectedNode.Item, true);   //force refresh the item tickers to make sure we always have the latest data on modified instrument groups (search will not work right if we do not do this)
         }
       }
       else
@@ -84,16 +83,6 @@ namespace TradeSharp.CoreUI.ViewModels
         else
           await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Please select a node to copy");
       });
-    }
-
-    /// <summary>
-    /// Lazy load the tickers of the instrument group when the node is node is expanded. 
-    /// </summary>
-    public override void OnExpandNode(object? node)
-    {
-      base.OnExpandNode(node);
-      if (node != null && node is ITreeNodeType<Guid, InstrumentGroup>)
-        foreach (var childNode in ((ITreeNodeType<Guid, InstrumentGroup>)node).Children) m_instrumentGroupService.RefreshAssociatedTickers(childNode.Item);
     }
 
     /// <summary>
@@ -190,7 +179,6 @@ namespace TradeSharp.CoreUI.ViewModels
         if (!nodeAdded)
         {
           //https://stackoverflow.com/questions/23316932/invoke-command-when-treeviewitem-is-expanded
-          m_instrumentGroupService.RefreshAssociatedTickers(node.Item);
           foreach (var ticker in node.Item.SearchTickers)
             if (ticker.Contains(findText))
             {

@@ -40,63 +40,63 @@ namespace TradeSharp.CoreUI.Repositories
     public int GetCount()
     {
       throwIfNotKeyed();
-      return m_database.GetDataCount(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution);
+      return m_database.GetDataCount(DataProvider, Instrument!.Ticker, Resolution);
     }
 
     public int GetCount(DateTime from, DateTime to)
     {
       throwIfNotKeyed();
-      return m_database.GetDataCount(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, from, to);
+      return m_database.GetDataCount(DataProvider, Instrument!.Ticker, Resolution, from, to);
     }
 
     public IBarData? GetItem(DateTime id)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, id);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, id);
     }
 
     public IList<IBarData> GetItems()
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue);
     }
 
     public IList<IBarData> GetItems(DateTime start, DateTime end)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, start, end);
     }
 
     public IList<IBarData> GetItems(int index, int count)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, index, count);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, index, count);
     }
 
     public IList<IBarData> GetItems(DateTime start, DateTime end, int index, int count)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, start, end, index, count);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, start, end, index, count);
     }
 
     public bool Add(IBarData item)
     {
       throwIfNotKeyed();
-      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume);
+      m_database.UpdateData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume);
       return true; 
     }
 
     public bool Update(IBarData item)
     {
       throwIfNotKeyed();
-      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume);
+      m_database.UpdateData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume);
       return true;
     }
 
     public int Update(IList<IBarData> items)
     {
       throwIfNotKeyed();
-      m_database.UpdateData(DataProvider, Instrument!.Id, Instrument.Ticker, Resolution, items);
+      m_database.UpdateData(DataProvider, Instrument!.Ticker, Resolution, items);
       return items.Count;
     }
 

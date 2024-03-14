@@ -31,7 +31,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       ",MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,0,0,,",
       "MSCI GICS,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,25,0,",
       "MSCI Global Industry Classification Standard,Communication Services,\"Comms Services,Coms\",Communication Services,50,50,0,",
-      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,2510,0,'",
+      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,2510,0,",
       "Coms,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,5020,0,",
       "Auto & Comp,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,251010,0,",
       "Media&Ent,Entertainment,Entertain,Entertainment,502020,502020,0,,",
@@ -512,18 +512,18 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
 
       //create the test stock instruments and instrument groups
-      m_msft = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, "MSFT", Array.Empty<string>(), "Microsoft", "Microsoft Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_aapl = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, "AAPL", Array.Empty<string>(), "Apple", "Apple Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_goog = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "GOOG", InstrumentType.Stock, "GOOG", Array.Empty<string>(), "Google", "Google Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_disp = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, "DISP", Array.Empty<string>(), "Disney", "Disney Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_nflx = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "NFLX", InstrumentType.Stock, "NFLX", Array.Empty<string>(), "Netflix", "Netflix Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_roku = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "ROKU", InstrumentType.Stock, "ROKU", Array.Empty<string>(), "Roku", "Roku Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_auto = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "AUTO", InstrumentType.Stock, "AUTO", Array.Empty<string>(), "Autozone", "Autozone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_pep = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "PEP", InstrumentType.Stock, "PEP", Array.Empty<string>(), "Pep Boys", "Pep Boys Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_orly = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "ORLY", InstrumentType.Stock, "ORLY", Array.Empty<string>(), "O'Reiley", "O'Reiley Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_good = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "GOOD", InstrumentType.Stock, "GOOD", Array.Empty<string>(), "Goodyear", "Goodyear Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_mich = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "MICH", InstrumentType.Stock, "MICH", Array.Empty<string>(), "Michelin", "Michelin Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      m_fire = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "FIRE", InstrumentType.Stock, "FIRE", Array.Empty<string>(), "Firestone", "Firestone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_msft = new Instrument("MSFT", Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, Array.Empty<string>(), "Microsoft", "Microsoft Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_aapl = new Instrument("AAPL", Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, Array.Empty<string>(), "Apple", "Apple Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_goog = new Instrument("GOOG", Instrument.DefaultAttributeSet, "GOOG", InstrumentType.Stock, Array.Empty<string>(), "Google", "Google Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_disp = new Instrument("DISP", Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, Array.Empty<string>(), "Disney", "Disney Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_nflx = new Instrument("NFLX", Instrument.DefaultAttributeSet, "NFLX", InstrumentType.Stock, Array.Empty<string>(), "Netflix", "Netflix Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_roku = new Instrument("ROKU", Instrument.DefaultAttributeSet, "ROKU", InstrumentType.Stock, Array.Empty<string>(), "Roku", "Roku Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_auto = new Instrument("AUTO", Instrument.DefaultAttributeSet, "AUTO", InstrumentType.Stock, Array.Empty<string>(), "Autozone", "Autozone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_pep = new Instrument("PEP", Instrument.DefaultAttributeSet, "PEP", InstrumentType.Stock, Array.Empty<string>(), "Pep Boys", "Pep Boys Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_orly = new Instrument("ORLY", Instrument.DefaultAttributeSet, "ORLY", InstrumentType.Stock, Array.Empty<string>(), "O'Reiley", "O'Reiley Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_good = new Instrument("GOOD", Instrument.DefaultAttributeSet, "GOOD", InstrumentType.Stock, Array.Empty<string>(), "Goodyear", "Goodyear Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_mich = new Instrument("MICH", Instrument.DefaultAttributeSet, "MICH", InstrumentType.Stock, Array.Empty<string>(), "Michelin", "Michelin Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      m_fire = new Instrument("FIRE", Instrument.DefaultAttributeSet, "FIRE", InstrumentType.Stock, Array.Empty<string>(), "Firestone", "Firestone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
 
       m_instruments = new List<Instrument>();
       m_instruments =
@@ -542,17 +542,17 @@ namespace TradeSharp.CoreUI.Testing.Services
         m_fire,
       ];
 
-      m_msciGics = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "0", InstrumentGroup.InstrumentGroupRoot, "MSCI Global Industry Classification Standard", new List<string> { "MSCI GICS", "MSCI GICS Standard" }, "MSCI Global Industry Classification Standard", "0", Array.Empty<Guid>());
-      m_communicationServices = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50", m_msciGics.Id, "Communication Services", new List<string> { "Coms", "Comms Services" }, "Communication Services", "50", Array.Empty<Guid>());
-      m_mediaAndEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "5020", m_communicationServices.Id, "Media & Entertainment", new List<string> { "Media & Ent", "Media&Ent" }, "Media & Entertainment", "5020", Array.Empty<Guid>());
-      m_entertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "502020", m_mediaAndEntertainment.Id, "Entertainment", new List<string> { "Entertain" }, "Entertainment", "502020", Array.Empty<Guid>());
-      m_moviesEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202010", m_entertainment.Id, "Movies & Entertainment", new List<string> { "Movies", "Film Entertainment" }, "Movies & Entertainment", "50202010", new List<Guid> { m_disp.Id, m_nflx.Id });
-      m_interactiveHomeEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202020", m_entertainment.Id, "Interactive Home Entertainment", new List<string> { "Inter Home Ent", "Interactive Entertainment" }, "Interactive Entertainment", "50202020", new List<Guid> { m_msft.Id, m_aapl.Id });
-      m_consumerDiscretionary = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25", m_msciGics.Id, "Consumer Discretionary", new List<string> { "Consumer Disc", "Con Disc" }, "Consumer Discretionary", "25", Array.Empty<Guid>());
-      m_automobilesAndComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "2510", m_consumerDiscretionary.Id, "Automobiles & Components", new List<string> { "Auto & Comp", "Auto&Comp" }, "Automobiles & Components", "2510", Array.Empty<Guid>());
-      m_automobileComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "251010", m_automobilesAndComponents.Id, "Automobile Components", new List<string> { "Automotive Components", "Automotive" }, "Automobile Components", "251010", Array.Empty<Guid>());
-      m_automotivePartsAndEquipment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101010", m_automobileComponents.Id, "Automotive Parts & Equipment", new List<string> { "Auto Parts", "Auto Parts Suppliers" }, "Automotive Parts & Equipment", "25101010", new List<Guid> { m_auto.Id, m_pep.Id });
-      m_tiresAndRubber = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101020", m_automobileComponents.Id, "Tires & Rubber", new List<string> { "Tires+Rubber", "TiresRubber" }, "Tires & Rubber", "25101020", new List<Guid> { m_good.Id, m_mich.Id });
+      m_msciGics = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "0", InstrumentGroup.InstrumentGroupRoot, "MSCI Global Industry Classification Standard", new List<string> { "MSCI GICS", "MSCI GICS Standard" }, "MSCI Global Industry Classification Standard", "0", Array.Empty<string>());
+      m_communicationServices = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50", m_msciGics.Id, "Communication Services", new List<string> { "Coms", "Comms Services" }, "Communication Services", "50", Array.Empty<string>());
+      m_mediaAndEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "5020", m_communicationServices.Id, "Media & Entertainment", new List<string> { "Media & Ent", "Media&Ent" }, "Media & Entertainment", "5020", Array.Empty<string>());
+      m_entertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "502020", m_mediaAndEntertainment.Id, "Entertainment", new List<string> { "Entertain" }, "Entertainment", "502020", Array.Empty<string>());
+      m_moviesEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202010", m_entertainment.Id, "Movies & Entertainment", new List<string> { "Movies", "Film Entertainment" }, "Movies & Entertainment", "50202010", new List<string> { m_disp.Ticker, m_nflx.Ticker });
+      m_interactiveHomeEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202020", m_entertainment.Id, "Interactive Home Entertainment", new List<string> { "Inter Home Ent", "Interactive Entertainment" }, "Interactive Entertainment", "50202020", new List<string> { m_msft.Ticker, m_aapl.Ticker });
+      m_consumerDiscretionary = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25", m_msciGics.Id, "Consumer Discretionary", new List<string> { "Consumer Disc", "Con Disc" }, "Consumer Discretionary", "25", Array.Empty<string>());
+      m_automobilesAndComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "2510", m_consumerDiscretionary.Id, "Automobiles & Components", new List<string> { "Auto & Comp", "Auto&Comp" }, "Automobiles & Components", "2510", Array.Empty<string>());
+      m_automobileComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "251010", m_automobilesAndComponents.Id, "Automobile Components", new List<string> { "Automotive Components", "Automotive" }, "Automobile Components", "251010", Array.Empty<string>());
+      m_automotivePartsAndEquipment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101010", m_automobileComponents.Id, "Automotive Parts & Equipment", new List<string> { "Auto Parts", "Auto Parts Suppliers" }, "Automotive Parts & Equipment", "25101010", new List<string> { m_auto.Ticker, m_pep.Ticker });
+      m_tiresAndRubber = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101020", m_automobileComponents.Id, "Tires & Rubber", new List<string> { "Tires+Rubber", "TiresRubber" }, "Tires & Rubber", "25101020", new List<string> { m_good.Ticker, m_mich.Ticker });
       m_instrumentGroups = new List<InstrumentGroup>();
       m_instrumentGroups =
       [
@@ -751,13 +751,13 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_instrumentGroupService.Import(importSettings);
 
       m_moviesEntertainment.AlternateNames.Add("Films");
-      m_moviesEntertainment.Instruments = new List<Guid> { m_disp.Id, m_nflx.Id, m_roku.Id };
+      m_moviesEntertainment.Instruments = new List<string> { m_disp.Ticker, m_nflx.Ticker, m_roku.Ticker };
       m_interactiveHomeEntertainment.AlternateNames.Add("Home Entertainment");
-      m_interactiveHomeEntertainment.Instruments = new List<Guid> { m_msft.Id, m_aapl.Id, m_goog.Id };
+      m_interactiveHomeEntertainment.Instruments = new List<string> { m_msft.Ticker, m_aapl.Ticker, m_goog.Ticker };
       m_automotivePartsAndEquipment.AlternateNames.Add("Car Parts");
-      m_automotivePartsAndEquipment.Instruments = new List<Guid> { m_auto.Id, m_pep.Id, m_orly.Id };
+      m_automotivePartsAndEquipment.Instruments = new List<string> { m_auto.Ticker, m_pep.Ticker, m_orly.Ticker };
       m_tiresAndRubber.AlternateNames.Add("Automotive Rubber");
-      m_tiresAndRubber.Instruments = new List<Guid> { m_good.Id, m_mich.Id, m_fire.Id };
+      m_tiresAndRubber.Instruments = new List<string> { m_good.Ticker, m_mich.Ticker, m_fire.Ticker };
 
       checkLoadedInstrumentGroups(m_instrumentGroups, m_updatedInstrumentGroups);
       checkLoadedInstruments(m_instrumentGroups, m_updatedInstrumentGroups);
@@ -816,13 +816,13 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_instrumentGroupService.Import(importSettings);
 
       m_moviesEntertainment.AlternateNames.Add("Films");
-      m_moviesEntertainment.Instruments = new List<Guid> { m_disp.Id, m_nflx.Id, m_roku.Id };
+      m_moviesEntertainment.Instruments = new List<string> { m_disp.Ticker, m_nflx.Ticker, m_roku.Ticker };
       m_interactiveHomeEntertainment.AlternateNames.Add("Home Entertainment");
-      m_interactiveHomeEntertainment.Instruments = new List<Guid> { m_msft.Id, m_aapl.Id, m_goog.Id };
+      m_interactiveHomeEntertainment.Instruments = new List<string> { m_msft.Ticker, m_aapl.Ticker, m_goog.Ticker };
       m_automotivePartsAndEquipment.AlternateNames.Add("Car Parts");
-      m_automotivePartsAndEquipment.Instruments = new List<Guid> { m_auto.Id, m_pep.Id, m_orly.Id };
+      m_automotivePartsAndEquipment.Instruments = new List<string> { m_auto.Ticker, m_pep.Ticker, m_orly.Ticker };
       m_tiresAndRubber.AlternateNames.Add("Automotive Rubber");
-      m_tiresAndRubber.Instruments = new List<Guid> { m_good.Id, m_mich.Id, m_fire.Id };
+      m_tiresAndRubber.Instruments = new List<string> { m_good.Ticker, m_mich.Ticker, m_fire.Ticker };
 
       checkLoadedInstrumentGroups(m_instrumentGroups, m_updatedInstrumentGroups);
       checkLoadedInstruments(m_instrumentGroups, m_updatedInstrumentGroups);

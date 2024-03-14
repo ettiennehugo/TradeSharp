@@ -11,7 +11,7 @@ namespace TradeSharp.CoreUI.Testing.Services
   public class InstrumentService
   {
     //constants
-    string[] csvWithoutIds = [
+    string[] csv = [
       "type,ticker,alternatetickers,name,description,exchange,inception date,price decimals,minimum movement,big point value,tag,attributes,secondary exchanges",
       "Stock,MSFT,\"MSFT^C,MSFT-C\",Microsoft,Microsoft Corporation,NYSE,2021-01-01T00:00:00,2,1,1,MSFT,3,\"Nasdaq,LSE\"",
       "3,AAPL,\"AAPL^C,AAPL~C\",Apple,Apple Corporation,NYSE,2021-01-01T00:00:00,2,1,1,AAPL,3,\"Nasdaq\",",
@@ -23,19 +23,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "3,MICH,\"MICH~C,MICH^C\",Michelin,Michelin Corporation,NYSE,2021-01-01T00:00:00,2,1,1,MICH,3,\"LSE\","
     ];
 
-    string[] csvWithIds = [
-      "type,id,ticker,alternatetickers,name,description,exchange,inception date,price decimals,minimum movement,big point value,tag,attributes,secondary exchanges",
-      "Stock,00000000-0000-0000-0000-000000000001,MSFT,\"MSFT^C,MSFT-C\",Microsoft,Microsoft Corporation,NYSE,2021-01-01T00:00:00,2,1,1,MSFT,3,\"Nasdaq,LSE\"",
-      "3,00000000-0000-0000-0000-000000000002,AAPL,\"AAPL^C,AAPL~C\",Apple,Apple Corporation,NYSE,2021-01-01T00:00:00,2,1,1,AAPL,3,\"Nasdaq\"",
-      "Stock,00000000-0000-0000-0000-000000000003,DISP,\"DISP^C,DISP-C\",Disney,Disney Corporation,NYSE,2021-01-01T00:00:00,2,1,1,DISP,3,\"Nasdaq,LSE\"",
-      "3,00000000-0000-0000-0000-000000000004,NFLX,\"NFLX^C,NFLX~C\",Netflix,Netflix Corporation,NYSE,2021-01-01T00:00:00,2,1,1,NFLX,3,\"Nasdaq\"",
-      "Stock,00000000-0000-0000-0000-000000000005,AUTO,\"AUTO^C,AUTO@C\",Autozone,Autozone Corporation,NYSE,2021-01-01T00:00:00,2,1,1,AUTO,3,\"Nasdaq,LSE\"",
-      "3,00000000-0000-0000-0000-000000000006,PEP,\"PEP~C,PEP@C\",Pep Boys,Pep Boys Corporation,NYSE,2021-01-01T00:00:00,2,1,1,PEP,3,\"LSE\"",
-      "Stock,00000000-0000-0000-0000-000000000007,GOOD,\"GOOD_C,GOOD-C\",Goodyear,Goodyear Corporation,NYSE,2021-01-01T00:00:00,2,1,1,GOOD,3,\"Nasdaq\"",
-      "3,00000000-0000-0000-0000-000000000008,MICH,\"MICH~C,MICH^C\",Michelin,Michelin Corporation,NYSE,2021-01-01T00:00:00,2,1,1,MICH,3,\"LSE\""
-    ];
-
-    string[] jsonWithoutIds = [
+    string[] json = [
       "[",
       "  {",
       "    \"Type\": \"Stock\",",
@@ -160,139 +148,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       "]"
     ];
 
-    string[] jsonWithIds = [
-      "[",
-      "  {",
-      "    \"Type\": \"Stock\",",
-      "    \"Id\": \"00000000-0000-0000-0000-000000000001\",",
-      "    \"Ticker\": \"MSFT\",",
-      "    \"AlternateTickers\": [\"MSFT^C\",\"MSFT-C\"],",
-      "    \"Name\": \"Microsoft\",",
-      "    \"Description\": \"Microsoft Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"Tag\": \"MSFT\",",
-      "    \"Attributes\": \"3\",",
-      "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"Stock\",",
-      "    \"Id\": \"00000000-0000-0000-0000-000000000002\",",
-      "    \"Ticker\": \"AAPL\",",
-      "    \"AlternateTickers\": [\"AAPL^C\",\",AAPL~C\"],",
-      "    \"Name\": \"Apple\",",
-      "    \"Description\": \"Apple Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"Tag\": \"AAPL\",",
-      "    \"Attributes\": 3,",
-      "    \"SecondaryExchanges\": [\"Nasdaq\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"Stock\",",
-      "    \"Id\": \"00000000-0000-0000-0000-000000000003\",",
-      "    \"Ticker\": \"DISP\",",
-      "    \"AlternateTickers\": [\"DISP^C\",\"DISP-C\"],",
-      "    \"Name\": \"Disney\",",
-      "    \"Description\": \"Disney Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"Tag\": \"DISP\",",
-      "    \"Attributes\": 3,",
-      "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
-      "  },",
-      "  {",
-      "      \"Type\": \"3\",",
-      "      \"Id\": \"00000000-0000-0000-0000-000000000004\",",
-      "      \"Ticker\": \"NFLX\",",
-      "      \"AlternateTickers\": [\"NFLX^C\",\"NFLX~C\"],",
-      "      \"Name\": \"Netflix\",",
-      "      \"Description\": \"Netflix Corporation\",",
-      "      \"Exchange\": \"NYSE\",",
-      "      \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "      \"PriceDecimals\": 2,",
-      "      \"MinimumMovement\": 1,",
-      "      \"BigPointValue\": 1,",
-      "      \"Tag\": \"NFLX\",",
-      "      \"Attributes\": \"3\",",
-      "      \"SecondaryExchanges\": [\"Nasdaq\"]",
-      "    },",
-      "    {",
-      "      \"Type\": \"Stock\",",
-      "      \"Id\": \"00000000-0000-0000-0000-000000000005\",",
-      "      \"Ticker\": \"AUTO\",",
-      "      \"AlternateTickers\": [\"AUTO^C\",\"AUTO@C\"],",
-      "      \"Name\": \"Autozone\",",
-      "      \"Description\": \"Autozone Corporation\",",
-      "      \"Exchange\": \"NYSE\",",
-      "      \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "      \"PriceDecimals\": 2,",
-      "      \"MinimumMovement\": 1,",
-      "      \"BigPointValue\": 1,",
-      "      \"Tag\": \"AUTO\",",
-      "      \"Attributes\": \"3\",",
-      "      \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
-      "    },",
-      "    {",
-      "      \"Type\": \"3\",",
-      "      \"Id\": \"00000000-0000-0000-0000-000000000006\",",
-      "      \"Ticker\": \"PEP\",",
-      "      \"AlternateTickers\": [\"PEP~C\",\"PEP@C\"],",
-      "      \"Name\": \"Pep Boys\",",
-      "      \"Description\": \"Pep Boys Corporation\",",
-      "      \"Exchange\": \"NYSE\",",
-      "      \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "      \"PriceDecimals\": 2,",
-      "      \"MinimumMovement\": 1,",
-      "      \"BigPointValue\": 1,",
-      "      \"Tag\": \"PEP\",",
-      "      \"Attributes\": \"3\",",
-      "      \"SecondaryExchanges\": [\"LSE\"]",
-      "    },",
-      "    {",
-      "      \"Type\": \"Stock\",",
-      "      \"Id\": \"00000000-0000-0000-0000-000000000007\",",
-      "      \"Ticker\": \"GOOD\",",
-      "      \"AlternateTickers\": [\"GOOD_C\",\"GOOD-C\"],",
-      "      \"Name\": \"Goodyear\",",
-      "      \"Description\": \"Goodyear Corporation\",",
-      "      \"Exchange\": \"NYSE\",",
-      "      \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "      \"PriceDecimals\": 2,",
-      "      \"MinimumMovement\": 1,",
-      "      \"BigPointValue\": 1,",
-      "      \"Tag\": \"GOOD\",",
-      "      \"Attributes\": \"3\",",
-      "      \"SecondaryExchanges\": [\"Nasdaq\"]",
-      "    },",
-      "    {",
-      "      \"Type\": \"3\",",
-      "      \"Id\": \"00000000-0000-0000-0000-000000000008\",",
-      "      \"Ticker\": \"MICH\",",
-      "      \"AlternateTickers\": [\"MICH~C\",\"MICH^C\"],",
-      "      \"Name\": \"Michelin\",",
-      "      \"Description\": \"Michelin Corporation\",",
-      "      \"Exchange\": \"NYSE\",",
-      "      \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "      \"PriceDecimals\": 2,",
-      "      \"MinimumMovement\": 1,",
-      "      \"BigPointValue\": 1,",
-      "      \"Tag\": \"MICH\",",
-      "      \"Attributes\": 3,",
-      "      \"SecondaryExchanges\": [\"LSE\"]",
-      "    }",
-      "]"
-    ];
-
     //enums
 
 
@@ -333,14 +188,14 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_lse = new Exchange(Guid.Parse("10000000-0000-0000-0000-000000000003"), Exchange.DefaultAttributeSet, "LSE", m_country.Id, "London Stock Exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
 
       //create the test stock instruments and instrument groups
-      var msft = new Instrument(Guid.Parse("00000000-0000-0000-0000-000000000001"), Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, "MSFT", new List<string> { "MSFT^C", "MSFT-C" }, "Microsoft", "Microsoft Corporation", new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id, m_lse.Id });
-      var aapl = new Instrument(Guid.Parse("00000000-0000-0000-0000-000000000002"), Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, "AAPL", new List<string> { "AAPL^C", "AAPL~C" }, "Apple", "Apple Corporation", new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id });
-      var disp = new Instrument(Guid.Parse("00000000-0000-0000-0000-000000000003"), Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, "DISP", new List<string> { "DISP^C", "DISP-C" }, "Disney", "Disney Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id, m_lse.Id });
-      var nflx = new Instrument(Guid.Parse("00000000-0000-0000-0000-000000000004"), Instrument.DefaultAttributeSet, "NFLX", InstrumentType.Stock, "NFLX", new List<string> { "NFLX^C", "NFLX~C" }, "Netflix", "Netflix Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id });
-      var auto = new Instrument(Guid.Parse("00000000-0000-0000-0000-000000000005"), Instrument.DefaultAttributeSet, "AUTO", InstrumentType.Stock, "AUTO", new List<string> { "AUTO^C", "AUTO@C" }, "Autozone", "Autozone Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id, m_lse.Id });
-      var pep = new Instrument(Guid.Parse("00000000-0000-0000-0000-000000000006"), Instrument.DefaultAttributeSet, "PEP", InstrumentType.Stock, "PEP", new List<string> { "PEP~C", "PEP@C" }, "Pep Boys", "Pep Boys Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_lse.Id });
-      var good = new Instrument(Guid.Parse("00000000-0000-0000-0000-000000000007"), Instrument.DefaultAttributeSet, "GOOD", InstrumentType.Stock, "GOOD", new List<string> { "GOOD_C", "GOOD-C" }, "Goodyear", "Goodyear Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id });
-      var mich = new Instrument(Guid.Parse("00000000-0000-0000-0000-000000000008"), Instrument.DefaultAttributeSet, "MICH", InstrumentType.Stock, "MICH", new List<string> { "MICH~C", "MICH^C" }, "Michelin", "Michelin Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_lse.Id });
+      var msft = new Instrument("MSFT", Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, new List<string> { "MSFT^C", "MSFT-C" }, "Microsoft", "Microsoft Corporation", new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id, m_lse.Id });
+      var aapl = new Instrument("AAPL", Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, new List<string> { "AAPL^C", "AAPL~C" }, "Apple", "Apple Corporation", new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id });
+      var disp = new Instrument("DISP", Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, new List<string> { "DISP^C", "DISP-C" }, "Disney", "Disney Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id, m_lse.Id });
+      var nflx = new Instrument("NFLX", Instrument.DefaultAttributeSet, "NFLX", InstrumentType.Stock, new List<string> { "NFLX^C", "NFLX~C" }, "Netflix", "Netflix Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id });
+      var auto = new Instrument("AUTO", Instrument.DefaultAttributeSet, "AUTO", InstrumentType.Stock, new List<string> { "AUTO^C", "AUTO@C" }, "Autozone", "Autozone Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id, m_lse.Id });
+      var pep = new Instrument("PEP", Instrument.DefaultAttributeSet, "PEP", InstrumentType.Stock, new List<string> { "PEP~C", "PEP@C" }, "Pep Boys", "Pep Boys Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_lse.Id });
+      var good = new Instrument("GOOD", Instrument.DefaultAttributeSet, "GOOD", InstrumentType.Stock, new List<string> { "GOOD_C", "GOOD-C" }, "Goodyear", "Goodyear Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id });
+      var mich = new Instrument("MICH", Instrument.DefaultAttributeSet, "MICH", InstrumentType.Stock, new List<string> { "MICH~C", "MICH^C" }, "Michelin", "Michelin Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_lse.Id });
 
       m_exchanges = new List<Exchange>{ m_global, m_nyse, m_nasdaq, m_lse };
       m_instruments = new List<Instrument>{ msft, aapl, disp, nflx, auto, pep, good, mich };
@@ -428,17 +283,16 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_allFileInstruments.AddRange(m_updatedInstruments);
     }
 
-    public void checkImportedInstruments(List<Instrument> expectedInstruments, List<Instrument> importedInstruments, bool checkIds)
+    public void checkImportedInstruments(List<Instrument> expectedInstruments, List<Instrument> importedInstruments)
     {
       Assert.AreEqual(expectedInstruments.Count, importedInstruments.Count, "Loaded instrument counts are not correct");
       foreach (var instrument in importedInstruments)
       {
-        var expectedInstrument = expectedInstruments.Find(x => x.Id == instrument.Id || x.Ticker == instrument.Ticker);
+        var expectedInstrument = expectedInstruments.Find(x => x.Ticker == instrument.Ticker);
         if (expectedInstrument == null)
           Assert.Fail($"Instrument {instrument.Ticker} not found in the database");
         else
         {
-          if (checkIds) Assert.AreEqual(instrument.Id, expectedInstrument.Id, "Id is not correct");
           Assert.AreEqual(instrument.Ticker, expectedInstrument.Ticker, "Ticker is not correct");
           Assert.AreEqual(instrument.Name, expectedInstrument.Name, "Name is not correct");
           Assert.AreEqual(instrument.Description, expectedInstrument.Description, "Description is not correct");
@@ -455,73 +309,51 @@ namespace TradeSharp.CoreUI.Testing.Services
     }
 
     [TestMethod]
-    public void Import_CsvWithoutIdsCreated_Success()
+    public void Import_CsvCreated_Success()
     {
       string filename = "testInstrumentsWithoutIds.csv";
       var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, csvWithoutIds);
+      importSettings.Filename = outputTestFile(filename, csv);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
       m_instrumentService.Import(importSettings);
-      checkImportedInstruments(m_instruments, m_addedInstruments, false);
+      checkImportedInstruments(m_instruments, m_addedInstruments);
     }
 
     [TestMethod]
-    public void Import_CsvWithIdsCreated_Success()
-    {
-      string filename = "testInstrumentsWithIds.csv";
-      var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, csvWithIds);
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
-      m_instrumentService.Import(importSettings);
-      checkImportedInstruments(m_instruments, m_addedInstruments, true);
-    }
-
-    [TestMethod]
-    public void Import_JsonWithoutIdsCreated_Success()
+    public void Import_JsonCreated_Success()
     {
       string filename = "testInstrumentsWithoutIds.json";
       var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, jsonWithoutIds);
+      importSettings.Filename = outputTestFile(filename, json);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
       m_instrumentService.Import(importSettings);
-      checkImportedInstruments(m_instruments, m_addedInstruments, false);
+      checkImportedInstruments(m_instruments, m_addedInstruments);
     }
 
     [TestMethod]
-    public void Import_JsonWithIdsCreated_Success()
-    {
-      string filename = "testInstrumentsWithIds.json";
-      var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, jsonWithIds);
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
-      m_instrumentService.Import(importSettings);
-      checkImportedInstruments(m_instruments, m_addedInstruments, true);
-    }
-
-    [TestMethod]
-    public void Import_CsvWithIdsUpdated_Success()
+    public void Import_CsvUpdated_Success()
     {
       m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
       string filename = "testInstrumentsWithIds.csv";
       var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, csvWithIds);
+      importSettings.Filename = outputTestFile(filename, csv);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Update; //force call to our dummy repository
       m_instrumentService.Import(importSettings);
-      checkImportedInstruments(m_instruments, m_updatedInstruments, true);
+      checkImportedInstruments(m_instruments, m_updatedInstruments);
     }
 
     [TestMethod]
-    public void Import_JsonWithIdsUpdated_Success()
+    public void Import_JsonUpdated_Success()
     {
       m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
       string filename = "testInstrumentsWithIds.json";
       var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, jsonWithIds);
+      importSettings.Filename = outputTestFile(filename, json);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Update; //force call to our dummy repository
       m_instrumentService.Import(importSettings);
-      checkImportedInstruments(m_instruments, m_updatedInstruments, true);
+      checkImportedInstruments(m_instruments, m_updatedInstruments);
     }
 
     [TestMethod]
@@ -534,14 +366,14 @@ namespace TradeSharp.CoreUI.Testing.Services
       string filename = "testExportWithoutIds.csv";
       var exportSettings = new ExportSettings();
       exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-      exportSettings.Filename = outputTestFile(filename, csvWithoutIds);
+      exportSettings.Filename = outputTestFile(filename, csv);
       var importSettings = new ImportSettings();
       importSettings.Filename = exportSettings.Filename;
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
       m_instrumentService.Export(exportSettings);
       m_instrumentService.Import(importSettings);
       postImport();
-      checkImportedInstruments(m_instruments, m_updatedInstruments, true);
+      checkImportedInstruments(m_instruments, m_updatedInstruments);
     }
 
     [TestMethod]
@@ -554,14 +386,14 @@ namespace TradeSharp.CoreUI.Testing.Services
       string filename = "testExportWithoutIds.json";
       var exportSettings = new ExportSettings();
       exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-      exportSettings.Filename = outputTestFile(filename, jsonWithoutIds);
+      exportSettings.Filename = outputTestFile(filename, json);
       var importSettings = new ImportSettings();
       importSettings.Filename = exportSettings.Filename;
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
       m_instrumentService.Export(exportSettings);
       m_instrumentService.Import(importSettings);
       postImport();
-      checkImportedInstruments(m_instruments, m_updatedInstruments, true);
+      checkImportedInstruments(m_instruments, m_updatedInstruments);
     }
   }
 }

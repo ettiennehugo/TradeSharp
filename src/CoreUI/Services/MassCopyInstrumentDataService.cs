@@ -111,7 +111,7 @@ namespace TradeSharp.CoreUI.Services
 
           if (Settings.ResolutionHour)
             foreach (Instrument instrument in m_instrumentService.Items)
-              if (m_database.GetDataCount(DataProvider, instrument.Id, instrument.Ticker, Resolution.Minute, Settings.FromDateTime, Settings.ToDateTime) > 0)
+              if (m_database.GetDataCount(DataProvider, instrument.Ticker, Resolution.Minute, Settings.FromDateTime, Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
                 copyInstrument.Resolution = Resolution.Minute;
@@ -122,7 +122,7 @@ namespace TradeSharp.CoreUI.Services
           if (Settings.ResolutionDay)
             foreach (Instrument instrument in m_instrumentService.Items)
               if (minuteToHourList.FirstOrDefault(x => x.Instrument == instrument) != null ||    //going to construct the hourly bars from the minute bars
-                  m_database.GetDataCount(DataProvider, instrument.Id, instrument.Ticker, Resolution.Hour, Settings.FromDateTime, Settings.ToDateTime) > 0)
+                  m_database.GetDataCount(DataProvider, instrument.Ticker, Resolution.Hour, Settings.FromDateTime, Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
                 copyInstrument.Resolution = Resolution.Hour;
@@ -133,7 +133,7 @@ namespace TradeSharp.CoreUI.Services
           if (Settings.ResolutionWeek)
             foreach (Instrument instrument in m_instrumentService.Items)
               if (hourToDayList.FirstOrDefault(x => x.Instrument == instrument) != null ||    //going to construct the daily bars from the hourly bars
-                  m_database.GetDataCount(DataProvider, instrument.Id, instrument.Ticker, Resolution.Day, Settings.FromDateTime, Settings.ToDateTime) > 0)
+                  m_database.GetDataCount(DataProvider, instrument.Ticker, Resolution.Day, Settings.FromDateTime, Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
                 copyInstrument.Resolution = Resolution.Day;
@@ -144,7 +144,7 @@ namespace TradeSharp.CoreUI.Services
           if (Settings.ResolutionMonth)
             foreach (Instrument instrument in m_instrumentService.Items)
               if (dayToWeekList.FirstOrDefault(x => x.Instrument == instrument) != null ||   //going to construct the weekly bars from the daily bars
-                  m_database.GetDataCount(DataProvider, instrument.Id, instrument.Ticker, Resolution.Week, Settings.FromDateTime, Settings.ToDateTime) > 0)
+                  m_database.GetDataCount(DataProvider, instrument.Ticker, Resolution.Week, Settings.FromDateTime, Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
                 copyInstrument.Resolution = Resolution.Week;

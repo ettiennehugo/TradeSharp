@@ -75,13 +75,12 @@ namespace TradeSharp.Data.Testing
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
       m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       IList<string> alternateTickers = new List<string> { "ATEST1", "ATEST2" };
-      m_instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST", alternateTickers, "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
+      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, alternateTickers, "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
     }
 
     //finalizers
     ~SqliteDatabase()
     {
-      m_database.DropSchema(); //erase test database
       m_database.Dispose();
     }
 
@@ -271,14 +270,14 @@ namespace TradeSharp.Data.Testing
     {
       Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestFundamental", "TestFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
 
-      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental);
       instrumentFundamental.AssociationId = instrumentFundamental.AssociationId;
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalAssociations),
         $"Id = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND FundamentalId = '{instrumentFundamental.FundamentalId.ToString()}' " +
-        $"AND InstrumentId = '{instrumentFundamental.InstrumentId.ToString()}'")
+        $"AND InstrumentTicker = '{instrumentFundamental.InstrumentTicker}'")
       , "Instrument fundamental association not persisted to database.");
     }
 
@@ -286,7 +285,7 @@ namespace TradeSharp.Data.Testing
     public void CreateInstrumentGroup_PersistData_Success()
     {
       IList<string> alternateNames = new List<string> { "AlternateName1", "AlternateName2" };
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", alternateNames, "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<Guid> { m_instrument.Id });
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", alternateNames, "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<string> { m_instrument.Ticker });
 
       m_database.CreateInstrumentGroup(instrumentGroup);
 
@@ -297,11 +296,11 @@ namespace TradeSharp.Data.Testing
         $"AND Name = '{instrumentGroup.Name}' " +
         $"AND Description = '{instrumentGroup.Description}' " +
         $"AND UserId = '{instrumentGroup.UserId}' " +
-        $"AND AlternateNames = '{Common.Utilities.ToCsv(instrumentGroup.AlternateNames)}'")
+        $"AND AlternateNames = '{string.Join(',',instrumentGroup.AlternateNames)}'")
       , "Instrument group not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
-        $"AND InstrumentId = '{m_instrument.Id.ToString()}'")
+        $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group and instrument association not persisted to database.");
     }
 
@@ -311,13 +310,12 @@ namespace TradeSharp.Data.Testing
       m_database.CreateInstrument(m_instrument);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Tag = '{m_instrument.Tag}' " +
         $"AND Type = {(int)m_instrument.Type} " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
-        $"AND AlternateTickers = '{Common.Utilities.ToCsv(m_instrument.AlternateTickers)}'")
+        $"AND AlternateTickers = '{string.Join(',',m_instrument.AlternateTickers)}'")
       , "Instrument not persisted to database.");
     }
 
@@ -325,10 +323,10 @@ namespace TradeSharp.Data.Testing
     public void CreateInstrument_AdditionalExchangePersistData_Success()
     {
       Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "SecondaryTestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      m_database.AddInstrumentToExchange(m_instrument.Id, exchange.Id);
+      m_database.AddInstrumentToExchange(m_instrument.Ticker, exchange.Id);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentSecondaryExchange,
-        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
+        $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{exchange.Id.ToString()}' ")
       , "Secondary exchange not persisted.");
     }
@@ -446,13 +444,12 @@ namespace TradeSharp.Data.Testing
       m_database.UpdateInstrument(m_instrument);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Tag = '{m_instrument.Tag}' " +
         $"AND Type = {(int)m_instrument.Type} " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
-        $"AND AlternateTickers = '{Common.Utilities.ToCsv(m_instrument.AlternateTickers)}'")
+        $"AND AlternateTickers = '{string.Join(',',m_instrument.AlternateTickers)}'")
       , "New alternate tickers were not reflected in the database.");
     }
 
@@ -468,7 +465,6 @@ namespace TradeSharp.Data.Testing
       Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
 
-      m_instrument.Ticker = "NEW";
       m_instrument.Tag = "NewTagValue";
       m_instrument.PrimaryExchangeId = exchange.Id;
       m_instrument.InceptionDate = dateTime;
@@ -477,19 +473,18 @@ namespace TradeSharp.Data.Testing
       m_database.UpdateInstrument(m_instrument);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Tag = '{m_instrument.Tag}' " +
         $"AND Type = {(int)m_instrument.Type} " +
-        $"AND Ticker = 'NEW' " +
         $"AND PrimaryExchangeId = '{exchange.Id.ToString()}' " +
         $"AND InceptionDate = {dateTime.ToUniversalTime().ToBinary()}")
       , "Instrument not updated in database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentSecondaryExchange,
-        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
+        $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{secondExchange.Id.ToString()}'")
       , "Instrument not associated with exchange 2.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentSecondaryExchange,
-        $"InstrumentId = '{m_instrument.Id.ToString()}' " +
+        $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{thirdExchange.Id.ToString()}'")
       , "Instrument not associated with exchange 3.");
     }
@@ -520,12 +515,12 @@ namespace TradeSharp.Data.Testing
       Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_database.CreateFundamental(fundamental);
 
-      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental);
 
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double value = 1.0;
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, fundamental.Id, m_instrument.Id, dateTime, value);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, fundamental.Id, m_instrument.Ticker, dateTime, value);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
@@ -549,7 +544,7 @@ namespace TradeSharp.Data.Testing
       double close = 4.0;
       long volume = 5;
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
@@ -574,7 +569,7 @@ namespace TradeSharp.Data.Testing
       double last = 5.0;
       long lastSize = 6;
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, dateTime, bid, bidSize, ask, askSize, last, lastSize);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, dateTime, bid, bidSize, ask, askSize, last, lastSize);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Level1),
         $"Ticker = '{m_instrument.Ticker}' " +
@@ -603,7 +598,7 @@ namespace TradeSharp.Data.Testing
       double close = 4.0;
       long volume = 5;
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
@@ -617,7 +612,7 @@ namespace TradeSharp.Data.Testing
 
       //update same bar again with different values
       close = 9.0;
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
@@ -647,7 +642,7 @@ namespace TradeSharp.Data.Testing
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155 };
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
       for (int index = 0; index < barData.Count; index++)
       {
@@ -680,7 +675,7 @@ namespace TradeSharp.Data.Testing
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155 };
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
       for (int index = 0; index < barData.Count; index++)
       {
@@ -703,7 +698,7 @@ namespace TradeSharp.Data.Testing
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 244.0, 154.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 555 };
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
       for (int index = 0; index < barData.Count; index++)
       {
@@ -788,8 +783,7 @@ namespace TradeSharp.Data.Testing
         $"AND EndTime = '{session.End.Ticks}' ")
       , "Session not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}'")
       , "Instrument not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalAssociations),
@@ -839,8 +833,7 @@ namespace TradeSharp.Data.Testing
         $"AND EndTime = '{session.End.Ticks}' ")
       , "Session not deleted from database.");
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}'")
       , "Instrument not deleted from database.");
       Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalAssociations),
@@ -912,8 +905,7 @@ namespace TradeSharp.Data.Testing
         $"AND EndTime = '{session.End.Ticks}' ")
       , "Session not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}'")
       , "Instrument not persisted to database.");
 
@@ -942,8 +934,7 @@ namespace TradeSharp.Data.Testing
         $"AND EndTime = '{session.End.Ticks}' ")
       , "Session not deleted from database.");
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}'")
       , "Instrument not deleted from database.");
     }
@@ -1126,16 +1117,16 @@ namespace TradeSharp.Data.Testing
       Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental2", "TestInstrumentFundamentalDescription2", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_database.CreateFundamental(fundamental2);
 
-      InstrumentFundamental instrumentFundamental1 = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental1.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental1 = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental1.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental1);
 
-      InstrumentFundamental instrumentFundamental2 = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental2.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental2 = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental2.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental2);
 
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double value = 1.0;
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental1.FundamentalId, instrumentFundamental1.InstrumentId, dateTime, value);
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental2.FundamentalId, instrumentFundamental2.InstrumentId, dateTime, value);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental1.FundamentalId, instrumentFundamental1.InstrumentTicker, dateTime, value);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental2.FundamentalId, instrumentFundamental2.InstrumentTicker, dateTime, value);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental1.AssociationId.ToString()}' " +
@@ -1148,7 +1139,7 @@ namespace TradeSharp.Data.Testing
         $"AND Value = {value.ToString()}")
       , "Instrument fundamental value2 not persisted to database.");
 
-      m_database.DeleteInstrumentFundamental(m_dataProvider1.Object.Name, fundamental1.Id, m_instrument.Id);
+      m_database.DeleteInstrumentFundamental(m_dataProvider1.Object.Name, fundamental1.Id, m_instrument.Ticker);
 
       Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental1.AssociationId.ToString()}' " +
@@ -1169,7 +1160,7 @@ namespace TradeSharp.Data.Testing
       Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_database.CreateFundamental(fundamental);
 
-      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental);
 
       DateTime dateTime1 = DateTime.Now.ToUniversalTime();
@@ -1177,8 +1168,8 @@ namespace TradeSharp.Data.Testing
       DateTime dateTime2 = DateTime.Now.AddDays(1).ToUniversalTime();
       double value2 = 2.0;
 
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime1, value1);
-      m_database.UpdateInstrumentFundamental(m_dataProvider2.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime2, value2);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime1, value1);
+      m_database.UpdateInstrumentFundamental(m_dataProvider2.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime2, value2);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
@@ -1214,13 +1205,13 @@ namespace TradeSharp.Data.Testing
       Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_database.CreateFundamental(fundamental);
 
-      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental);
 
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double value = 1.0;
 
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime, value);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime, value);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
@@ -1297,18 +1288,18 @@ namespace TradeSharp.Data.Testing
       Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_database.CreateFundamental(fundamental);
 
-      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental);
 
       DateTime dateTime1 = DateTime.Now.ToUniversalTime();
       double value1 = 1.0;
 
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime1, value1);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime1, value1);
 
       DateTime dateTime2 = DateTime.Now.ToUniversalTime();
       double value2 = 2.0;
 
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime2, value2);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime2, value2);
 
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
@@ -1323,7 +1314,7 @@ namespace TradeSharp.Data.Testing
       , "Instrument fundamental value 1 not persisted to database.");
 
       //delete the countryFundamental
-      Assert.AreEqual(1, m_database.DeleteInstrumentFundamentalValue(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime1), "DeleteInstrument did not return the correct number of rows removed");
+      Assert.AreEqual(1, m_database.DeleteInstrumentFundamentalValue(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime1), "DeleteInstrument did not return the correct number of rows removed");
 
       //check that countryFundamental data value1 is removed
       //first value1 must be removed
@@ -1344,8 +1335,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateInstrumentGroup_ChangeParent_Success()
     {
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "UserId1", Array.Empty<Guid>());
-      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName2", Array.Empty<string>(), "TestInstrumentGroupDescription2", "UserId2", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "UserId1", Array.Empty<string>());
+      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName2", Array.Empty<string>(), "TestInstrumentGroupDescription2", "UserId2", Array.Empty<string>());
 
       m_database.CreateInstrumentGroup(instrumentGroup1);
       m_database.CreateInstrumentGroup(instrumentGroup2);
@@ -1380,7 +1371,7 @@ namespace TradeSharp.Data.Testing
     public void UpdateInstrumentGroup_ChangeUserIdAndAlternateNames_Success()
     {
       IList<string> alternateNames = new List<string> { "AlternateName1", "AlternateName2" };
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", alternateNames, "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<Guid> { m_instrument.Id });
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", alternateNames, "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<string> { m_instrument.Ticker });
 
       m_database.CreateInstrumentGroup(instrumentGroup);
 
@@ -1396,59 +1387,59 @@ namespace TradeSharp.Data.Testing
         $"AND Name = '{instrumentGroup.Name}' " +
         $"AND Description = '{instrumentGroup.Description}' " +
         $"AND UserId = '{instrumentGroup.UserId}' " +
-        $"AND AlternateNames = '{Common.Utilities.ToCsv(instrumentGroup.AlternateNames)}'")
+        $"AND AlternateNames = '{string.Join(',',instrumentGroup.AlternateNames)}'")
       , "Instrument group updated in the database.");
     }
 
     [TestMethod]
     public void UpdateInstrumentGroup_ChangeInstruments_Success()
     {
-      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", Array.Empty<string>(), "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK3", Array.Empty<string>(), "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument("STOCK2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock3 = new Instrument("STOCK3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
 
-      Instrument forex1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX1", Array.Empty<string>(), "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX2", Array.Empty<string>(), "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex1 = new Instrument("FOREX1", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex2 = new Instrument("FOREX2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
 
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "TestInstrumentGroupUserId", new List<Guid> { stock2.Id, stock3.Id });
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "TestInstrumentGroupUserId", new List<string> { stock2.Ticker, stock3.Ticker });
 
       m_database.CreateInstrumentGroup(instrumentGroup1);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
-        $"AND InstrumentId = '{stock2.Id.ToString()}'")
+        $"AND InstrumentTicker = '{stock2.Ticker}'")
       , "Stock 2 not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
-        $"AND InstrumentId = '{stock3.Id.ToString()}'")
+        $"AND InstrumentTicker = '{stock3.Ticker}'")
       , "Stock 3 not persisted to database.");
 
-      instrumentGroup1.Instruments = new List<Guid> { forex1.Id, forex2.Id };
+      instrumentGroup1.Instruments = new List<string> { forex1.Ticker, forex2.Ticker };
 
       m_database.UpdateInstrumentGroup(instrumentGroup1);
 
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
-        $"AND InstrumentId = '{stock2.Id.ToString()}'")
+        $"AND InstrumentTicker = '{stock2.Ticker}'")
       , "Stock 2 not removed from database.");
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
-        $"AND InstrumentId = '{stock3.Id.ToString()}'")
+        $"AND InstrumentTicker = '{stock3.Ticker}'")
       , "Stock 3 not removed from database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
-        $"AND InstrumentId = '{forex1.Id.ToString()}'")
+        $"AND InstrumentTicker = '{forex1.Ticker}'")
       , "Forex 1 not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
-        $"AND InstrumentId = '{forex2.Id.ToString()}'")
+        $"AND InstrumentTicker = '{forex2.Ticker}'")
       , "Forex 2 not persisted to database.");
     }
 
     [TestMethod]
     public void DeleteInstrumentGroup_DeleteAndPersist_Success()
     {
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "TestInstrumentGroupUserId1", Array.Empty<Guid>());
-      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", instrumentGroup1.Id, "TestInstrumentGroupName2", Array.Empty<string>(), "TestInstrumentGroupDescription2", "TestInstrumentGroupUserId2", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "TestInstrumentGroupUserId1", Array.Empty<string>());
+      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", instrumentGroup1.Id, "TestInstrumentGroupName2", Array.Empty<string>(), "TestInstrumentGroupDescription2", "TestInstrumentGroupUserId2", Array.Empty<string>());
 
       m_database.CreateInstrumentGroup(instrumentGroup1);
       m_database.CreateInstrumentGroup(instrumentGroup2);
@@ -1463,7 +1454,7 @@ namespace TradeSharp.Data.Testing
       , "Instrument group 1 not persisted to database.");
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
-        $"AND InstrumentId = '{m_instrument.Id.ToString()}'")
+        $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group 1 and instrument association not removed from database.");
 
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
@@ -1474,15 +1465,15 @@ namespace TradeSharp.Data.Testing
       , "Instrument group 2 not persisted to database.");
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup2.Id.ToString()}' " +
-        $"AND InstrumentId = '{m_instrument.Id.ToString()}'")
+        $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group 2 and instrument association not removed from database.");
     }
 
     [TestMethod]
     public void DeleteInstumentGroupChild_Update_Success()
     {
-      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "TestInstrumentGroupUserId1", Array.Empty<Guid>());
-      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", instrumentGroup1.Id, "TestInstrumentGroupName2", Array.Empty<string>(), "TestInstrumentGroupDescription2", "TestInstrumentGroupUserId2", Array.Empty<Guid>());
+      InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "TestInstrumentGroupUserId1", Array.Empty<string>());
+      InstrumentGroup instrumentGroup2 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", instrumentGroup1.Id, "TestInstrumentGroupName2", Array.Empty<string>(), "TestInstrumentGroupDescription2", "TestInstrumentGroupUserId2", Array.Empty<string>());
 
       m_database.CreateInstrumentGroup(instrumentGroup1);
       m_database.CreateInstrumentGroup(instrumentGroup2);
@@ -1510,9 +1501,8 @@ namespace TradeSharp.Data.Testing
       m_database.CreateInstrument(m_instrument);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Type = {(int)m_instrument.Type} " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not persisted to database.");
@@ -1520,9 +1510,8 @@ namespace TradeSharp.Data.Testing
       m_database.DeleteInstrument(m_instrument);
 
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Type = {(int)m_instrument.Type} " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not deleted from database.");
@@ -1540,26 +1529,25 @@ namespace TradeSharp.Data.Testing
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
 
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", Array.Empty<string>(), "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<Guid> { m_instrument.Id });
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", Array.Empty<string>(), "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<string> { m_instrument.Ticker });
 
       m_database.CreateInstrumentGroup(instrumentGroup);
       m_database.CreateInstrument(m_instrument);
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, Resolution.Day, barData);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, Resolution.Day, barData);
 
       Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_database.CreateFundamental(fundamental);
 
-      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental);
 
       double value = 1.0;
 
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime, value);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime, value);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Type = {(int)m_instrument.Type} " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not persisted to database.");
@@ -1568,11 +1556,11 @@ namespace TradeSharp.Data.Testing
       , "Actual bar values from list not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
-        $"AND InstrumentId = '{m_instrument.Id.ToString()}'")
+        $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group and instrument association not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalAssociations),
         $"Id = '{instrumentFundamental.AssociationId.ToString()}' " +
-        $"AND InstrumentId = '{instrumentFundamental.InstrumentId.ToString()}'")
+        $"AND InstrumentTicker = '{instrumentFundamental.InstrumentTicker}'")
       , "Instrument fundamental association not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
@@ -1583,9 +1571,8 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(14, m_database.DeleteInstrument(m_instrument), "Delete instrument returned the incorrect number of rows removed");
 
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
-        $"Id = '{m_instrument.Id.ToString()}' " +
+        $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Type = {(int)m_instrument.Type} " +
-        $"AND Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not deleted from database.");
@@ -1594,11 +1581,11 @@ namespace TradeSharp.Data.Testing
       , "Actual bar values from list not deleted from database.");
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
-        $"AND InstrumentId = '{m_instrument.Id.ToString()}'")
+        $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group and instrument association not deleted from database.");
       Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalAssociations),
         $"Id = '{instrumentFundamental.AssociationId.ToString()}' " +
-        $"AND InstrumentId = '{instrumentFundamental.InstrumentId.ToString()}'")
+        $"AND InstrumentTicker = '{instrumentFundamental.InstrumentTicker}'")
       , "Instrument fundamental association not persisted to database.");
       Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
@@ -1852,7 +1839,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstrumentGroupInstruments_ReturnPersistedData_Success()
     {
-      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", Array.Empty<string>(), "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<Guid> { m_instrument.Id });
+      InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", Array.Empty<string>(), "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<string> { m_instrument.Ticker });
       m_database.CreateInstrumentGroup(instrumentGroup);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
@@ -1862,16 +1849,16 @@ namespace TradeSharp.Data.Testing
         $"AND Description = '{instrumentGroup.Description}'")
       , "Instrument group not persisted to database.");
 
-      IList<Guid> instrumentIds = m_database.GetInstrumentGroupInstruments(instrumentGroup.Id);
+      IList<string> instrumentIds = m_database.GetInstrumentGroupInstruments(instrumentGroup.Id);
       Assert.AreEqual(1, instrumentIds.Count, "Number of returned instrument id's are incorrect.");
-      Assert.IsNotNull(instrumentIds.Where(x => x == m_instrument.Id).Single(), "m_instrument not returned as child of instrument group.");
+      Assert.IsNotNull(instrumentIds.Where(x => x == m_instrument.Ticker).Single(), "m_instrument not returned as child of instrument group.");
     }
 
     [TestMethod]
     public void GetInstruments_ReturnPersistedData_Success()
     {
-      Instrument instrumentTest2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST2", Array.Empty<string>(), "TestInstrument2", "TestInstrumentDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument instrumentTest3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST3", Array.Empty<string>(), "TestInstrument3", "TestInstrumentDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument instrumentTest2 = new Instrument("TEST2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument2", "TestInstrumentDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument instrumentTest3 = new Instrument("TEST3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument3", "TestInstrumentDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
       m_database.CreateInstrument(m_instrument);
       m_database.CreateInstrument(instrumentTest2);
       m_database.CreateInstrument(instrumentTest3);
@@ -1879,9 +1866,9 @@ namespace TradeSharp.Data.Testing
       IList<Instrument> instruments = m_database.GetInstruments();
 
       Assert.AreEqual(3, instruments.Count, "Returned instrument count is not correct.");
-      Assert.IsNotNull(instruments.Where(x => x.Id == m_instrument.Id && x.Type == m_instrument.Type && x.Ticker == m_instrument.Ticker && x.Name == m_instrument.Name && x.Description == m_instrument.Description && x.InceptionDate == m_instrument.InceptionDate).Single(), "m_instrument not found");
-      Assert.IsNotNull(instruments.Where(x => x.Id == instrumentTest2.Id && x.Type == instrumentTest2.Type && x.Ticker == instrumentTest2.Ticker && x.Name == instrumentTest2.Name && x.Description == instrumentTest2.Description && x.InceptionDate == instrumentTest2.InceptionDate).Single(), "instrumentTest2 not found");
-      Assert.IsNotNull(instruments.Where(x => x.Id == instrumentTest3.Id && x.Type == instrumentTest3.Type && x.Ticker == instrumentTest3.Ticker && x.Name == instrumentTest3.Name && x.Description == instrumentTest3.Description && x.InceptionDate == instrumentTest3.InceptionDate).Single(), "instrumentTest3 not found");
+      Assert.IsNotNull(instruments.Where(x => x.Type == m_instrument.Type && x.Ticker == m_instrument.Ticker && x.Name == m_instrument.Name && x.Description == m_instrument.Description && x.InceptionDate == m_instrument.InceptionDate).Single(), "m_instrument not found");
+      Assert.IsNotNull(instruments.Where(x => x.Type == instrumentTest2.Type && x.Ticker == instrumentTest2.Ticker && x.Name == instrumentTest2.Name && x.Description == instrumentTest2.Description && x.InceptionDate == instrumentTest2.InceptionDate).Single(), "instrumentTest2 not found");
+      Assert.IsNotNull(instruments.Where(x => x.Type == instrumentTest3.Type && x.Ticker == instrumentTest3.Ticker && x.Name == instrumentTest3.Name && x.Description == instrumentTest3.Description && x.InceptionDate == instrumentTest3.InceptionDate).Single(), "instrumentTest3 not found");
     }
 
     [TestMethod]
@@ -1889,13 +1876,13 @@ namespace TradeSharp.Data.Testing
     {
       Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      m_instrument = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "TEST", Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
+      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
       m_database.CreateInstrument(m_instrument);
 
       IList<Instrument> instruments = m_database.GetInstruments();
       Assert.AreEqual(1, instruments.Count, "Returned instrument count is not correct.");
       Assert.AreEqual(2, instruments.ElementAt(0).SecondaryExchangeIds.Count, "Returned secondary exchanges count is not correct.");
-      Assert.IsNotNull(instruments.Where(x => x.Id == m_instrument.Id && x.Type == m_instrument.Type && x.Ticker == m_instrument.Ticker).Single(), "m_instrument not found");
+      Assert.IsNotNull(instruments.Where(x => x.Type == m_instrument.Type && x.Ticker == m_instrument.Ticker).Single(), "m_instrument not found");
       Assert.IsNotNull(instruments.ElementAt(0).SecondaryExchangeIds.Where(x => x == secondExchange.Id).Single(), "secondExchange not returned as secondary exchange for instrument.");
       Assert.IsNotNull(instruments.ElementAt(0).SecondaryExchangeIds.Where(x => x == thirdExchange.Id).Single(), "thirdExchange not returned as secondary exhange for instrument.");
     }
@@ -1903,13 +1890,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstruments_ByInstrumentType_Success()
     {
-      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", Array.Empty<string>(), "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK3", Array.Empty<string>(), "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument("STOCK2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock3 = new Instrument("STOCK3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
 
-      Instrument forex1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX1", Array.Empty<string>(), "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX2", Array.Empty<string>(), "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex3 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX3", Array.Empty<string>(), "Forex3", "ForexDescription3", DateTime.Now.ToUniversalTime().AddDays(3), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex4 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, "FOREX4", Array.Empty<string>(), "Forex4", "ForexDescription4", DateTime.Now.ToUniversalTime().AddDays(4), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex1 = new Instrument("FOREX1", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex2 = new Instrument("FOREX2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex3 = new Instrument("FOREX3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex3", "ForexDescription3", DateTime.Now.ToUniversalTime().AddDays(3), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex4 = new Instrument("FOREX4", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex4", "ForexDescription4", DateTime.Now.ToUniversalTime().AddDays(4), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
 
       m_database.CreateInstrument(m_instrument);
       m_database.CreateInstrument(stock2);
@@ -1923,16 +1910,16 @@ namespace TradeSharp.Data.Testing
       IList<Instrument> stocks = m_database.GetInstruments(InstrumentType.Stock);
 
       Assert.AreEqual(3, stocks.Count, "Returned stock count is not correct.");
-      Assert.IsNotNull(stocks.Where(x => x.Id == m_instrument.Id && x.Type == m_instrument.Type && x.Ticker == m_instrument.Ticker && x.Name == m_instrument.Name && x.Description == m_instrument.Description && x.InceptionDate == m_instrument.InceptionDate).Single(), "m_instrument not found");
-      Assert.IsNotNull(stocks.Where(x => x.Id == stock2.Id && x.Type == stock2.Type && x.Ticker == stock2.Ticker && x.Name == stock2.Name && x.Description == stock2.Description && x.InceptionDate == stock2.InceptionDate).Single(), "stockTest2 not found");
-      Assert.IsNotNull(stocks.Where(x => x.Id == stock3.Id && x.Type == stock3.Type && x.Ticker == stock3.Ticker && x.Name == stock3.Name && x.Description == stock3.Description && x.InceptionDate == stock3.InceptionDate).Single(), "stockTest3 not found");
+      Assert.IsNotNull(stocks.Where(x => x.Type == m_instrument.Type && x.Ticker == m_instrument.Ticker && x.Name == m_instrument.Name && x.Description == m_instrument.Description && x.InceptionDate == m_instrument.InceptionDate).Single(), "m_instrument not found");
+      Assert.IsNotNull(stocks.Where(x => x.Type == stock2.Type && x.Ticker == stock2.Ticker && x.Name == stock2.Name && x.Description == stock2.Description && x.InceptionDate == stock2.InceptionDate).Single(), "stockTest2 not found");
+      Assert.IsNotNull(stocks.Where(x => x.Type == stock3.Type && x.Ticker == stock3.Ticker && x.Name == stock3.Name && x.Description == stock3.Description && x.InceptionDate == stock3.InceptionDate).Single(), "stockTest3 not found");
 
       IList<Instrument> forex = m_database.GetInstruments(InstrumentType.Forex);
       Assert.AreEqual(4, forex.Count, "Returned forex count is not correct.");
-      Assert.IsNotNull(forex.Where(x => x.Id == forex1.Id && x.Type == forex1.Type && x.Ticker == forex1.Ticker && x.Name == forex1.Name && x.Description == forex1.Description && x.InceptionDate == forex1.InceptionDate).Single(), "forex1 not found");
-      Assert.IsNotNull(forex.Where(x => x.Id == forex2.Id && x.Type == forex2.Type && x.Ticker == forex2.Ticker && x.Name == forex2.Name && x.Description == forex2.Description && x.InceptionDate == forex2.InceptionDate).Single(), "forex2 not found");
-      Assert.IsNotNull(forex.Where(x => x.Id == forex3.Id && x.Type == forex3.Type && x.Ticker == forex3.Ticker && x.Name == forex3.Name && x.Description == forex3.Description && x.InceptionDate == forex3.InceptionDate).Single(), "forex3 not found");
-      Assert.IsNotNull(forex.Where(x => x.Id == forex4.Id && x.Type == forex4.Type && x.Ticker == forex4.Ticker && x.Name == forex4.Name && x.Description == forex4.Description && x.InceptionDate == forex4.InceptionDate).Single(), "forex4 not found");
+      Assert.IsNotNull(forex.Where(x => x.Type == forex1.Type && x.Ticker == forex1.Ticker && x.Name == forex1.Name && x.Description == forex1.Description && x.InceptionDate == forex1.InceptionDate).Single(), "forex1 not found");
+      Assert.IsNotNull(forex.Where(x => x.Type == forex2.Type && x.Ticker == forex2.Ticker && x.Name == forex2.Name && x.Description == forex2.Description && x.InceptionDate == forex2.InceptionDate).Single(), "forex2 not found");
+      Assert.IsNotNull(forex.Where(x => x.Type == forex3.Type && x.Ticker == forex3.Ticker && x.Name == forex3.Name && x.Description == forex3.Description && x.InceptionDate == forex3.InceptionDate).Single(), "forex3 not found");
+      Assert.IsNotNull(forex.Where(x => x.Type == forex4.Type && x.Ticker == forex4.Ticker && x.Name == forex4.Name && x.Description == forex4.Description && x.InceptionDate == forex4.InceptionDate).Single(), "forex4 not found");
     }
 
     private static string wildCardToRegex(string value)
@@ -1948,22 +1935,22 @@ namespace TradeSharp.Data.Testing
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"STOCK{formattedNumber}", InstrumentType.Stock, $"STOCK{formattedNumber}", Array.Empty<string>(), $"Stock Name {formattedNumber}", $"Stock Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Instrument($"STOCK{formattedNumber}", Instrument.DefaultAttributeSet, $"STOCK{formattedNumber}", InstrumentType.Stock, Array.Empty<string>(), $"Stock Name {formattedNumber}", $"Stock Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
       }
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"FOREX{formattedNumber}", InstrumentType.Forex, $"FOREX{formattedNumber}", Array.Empty<string>(), $"Forex Name {formattedNumber}", $"Forex Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Instrument($"FOREX{formattedNumber}", Instrument.DefaultAttributeSet, $"FOREX{formattedNumber}", InstrumentType.Forex, Array.Empty<string>(), $"Forex Name {formattedNumber}", $"Forex Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
       }
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"FUTURE{formattedNumber}", InstrumentType.Future, $"FUTURE{formattedNumber}", Array.Empty<string>(), $"Future Name {formattedNumber}", $"Future Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Instrument($"FUTURE{formattedNumber}", Instrument.DefaultAttributeSet, $"FUTURE{formattedNumber}", InstrumentType.Future, Array.Empty<string>(), $"Future Name {formattedNumber}", $"Future Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
       }
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, $"CRYPTO{formattedNumber}", InstrumentType.Crypto, $"CRYPTO{formattedNumber}", Array.Empty<string>(), $"Crypto Name {formattedNumber}", $"Crypto Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Instrument($"CRYPTO{formattedNumber}", Instrument.DefaultAttributeSet, $"CRYPTO{formattedNumber}", InstrumentType.Crypto, Array.Empty<string>(), $"Crypto Name {formattedNumber}", $"Crypto Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
       }
     }
 
@@ -2146,27 +2133,11 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    public void GetInstrument_ById_Success()
-    {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
-
-      m_database.CreateInstrument(stock);
-
-      Instrument? retrievedStock = m_database.GetInstrument(stock.Id);
-
-      Assert.IsNotNull(retrievedStock, "Data store did not return the stock.");
-      Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == secondExchange.Id).Single());
-      Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == thirdExchange.Id).Single());
-    }
-
-    [TestMethod]
     public void GetInstrument_ByTicker_Success()
     {
       Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
+      Instrument stock = new Instrument("STOCK", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
 
       m_database.CreateInstrument(stock);
 
@@ -2175,100 +2146,6 @@ namespace TradeSharp.Data.Testing
       Assert.IsNotNull(retrievedStock, "Data store did not return the stock.");
       Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == secondExchange.Id).Single());
       Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == thirdExchange.Id).Single());
-    }
-
-    [TestMethod]
-    public void TickerFromId_FromCreate_Success()
-    {
-      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-
-      m_database.CreateInstrument(stock);
-
-      string? ticker = m_database.TickerFromId(stock.Id);
-      Assert.AreEqual(stock.Ticker, ticker);
-    }
-
-    [TestMethod]
-    public void TickersFromId_FromCreate_Success()
-    {
-      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", new List<string>() { "STCK", "STK" }, "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-
-      m_database.CreateInstrument(stock);
-
-      IList<string>? tickers = m_database.TickersFromId(stock.Id);
-      Assert.IsNotNull(tickers, "Tickers not found for the stock");
-      Assert.IsNotNull(tickers.FirstOrDefault(x => x == stock.Ticker), "Could not find main stock ticker");
-      foreach (var ticker in stock.AlternateTickers)
-        Assert.IsNotNull(tickers.FirstOrDefault(x => x == ticker), "Could not find alternate stock ticker");
-    }
-
-    [TestMethod]
-    public void IdFromTicker_FromCreate_Success()
-    {
-      Instrument stock = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK", new List<string>() { "STCK", "STK" }, "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-
-      m_database.CreateInstrument(stock);
-
-      Guid? id = m_database.IdFromTicker(stock.Ticker);
-      Assert.AreEqual(stock.Id, id, "Could not map to main ticker");
-      id = m_database.IdFromTicker(stock.AlternateTickers[0]);
-      Assert.AreEqual(stock.Id, id, "Could not map to alternate ticker 0.");
-      id = m_database.IdFromTicker(stock.AlternateTickers[1]);
-      Assert.AreEqual(stock.Id, id, "Could not map to alternate ticker 1.");
-    }
-
-    [TestMethod]
-    public void GetInstrumentIdTicker_ReturnPersistedData_Success()
-    {
-      Instrument stock1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK1", new List<string>() { "STCK1", "STK1" }, "Stock1", "StockDescription1", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", new List<string>() { "STCK2", "STK2" }, "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-
-      m_database.CreateInstrument(stock1);
-      m_database.CreateInstrument(stock2);
-
-      IDictionary<Guid, string> idTicker = m_database.GetInstrumentIdTicker();
-      Assert.AreEqual(2, idTicker.Count, "Returned id-ticker count is not correct.");
-      Assert.AreEqual(stock1.Ticker, idTicker[stock1.Id], "Returned ticker for stock 1 is not correct.");
-      Assert.AreEqual(stock2.Ticker, idTicker[stock2.Id], "Returned ticker for stock 2 is not correct.");
-    }
-
-    [TestMethod]
-    public void GetInstrumentIdTickers_ReturnPersistedData_Success()
-    {
-      Instrument stock1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK1", new List<string>() { "STCK1", "STK1" }, "Stock1", "StockDescription1", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", new List<string>() { "STCK2", "STK2" }, "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-
-      m_database.CreateInstrument(stock1);
-      m_database.CreateInstrument(stock2);
-
-      IDictionary<Guid, IList<string>> idTickers = m_database.GetInstrumentIdTickers();
-      Assert.AreEqual(2, idTickers.Count, "Returned id-tickers count is not correct.");
-      Assert.AreEqual(stock1.Ticker, idTickers[stock1.Id][0], "Returned stock 1 ticker is not correct.");
-      Assert.AreEqual(stock1.AlternateTickers[0], idTickers[stock1.Id][1], "Returned stock 1 alternate ticker 0 is not correct.");
-      Assert.AreEqual(stock1.AlternateTickers[1], idTickers[stock1.Id][2], "Returned stock 1 alternate ticker 1 is not correct.");
-      Assert.AreEqual(stock2.Ticker, idTickers[stock2.Id][0], "Returned stock 2 ticker is not correct.");
-      Assert.AreEqual(stock2.AlternateTickers[0], idTickers[stock2.Id][1], "Returned stock 2 alternate ticker 0 is not correct.");
-      Assert.AreEqual(stock2.AlternateTickers[1], idTickers[stock2.Id][2], "Returned stock 2 alternate ticker 1 is not correct.");
-    }
-
-    [TestMethod]
-    public void GetTickerInstrumentId_ReturnPersistedData_Success()
-    {
-      Instrument stock1 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK1", new List<string>() { "STCK1", "STK1" }, "Stock1", "StockDescription1", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock2 = new Instrument(Guid.NewGuid(), Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, "STOCK2", new List<string>() { "STCK2", "STK2" }, "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-
-      m_database.CreateInstrument(stock1);
-      m_database.CreateInstrument(stock2);
-
-      IDictionary<string, Guid> tickerId = m_database.GetTickerInstrumentId();
-
-      Assert.AreEqual(6, tickerId.Count, "Returned ticker-id count is not correct.");
-      Assert.AreEqual(stock1.Id, tickerId["STOCK1"], "Stock 1 main ticker does not match id");
-      Assert.AreEqual(stock1.Id, tickerId["STCK1"], "Stock 1 alternate ticker 0 does not match id");
-      Assert.AreEqual(stock1.Id, tickerId["STK1"], "Stock 1 alternate ticker 1 does not match id");
-      Assert.AreEqual(stock2.Id, tickerId["STOCK2"], "Stock 2 main ticker does not match id");
-      Assert.AreEqual(stock2.Id, tickerId["STCK2"], "Stock 2 alternate ticker 0 does not match id");
-      Assert.AreEqual(stock2.Id, tickerId["STK2"], "Stock 2 alternate ticker 1 does not match id");
     }
 
     [TestMethod]
@@ -2313,7 +2190,7 @@ namespace TradeSharp.Data.Testing
       double value = 1.0;
 
       Fundamental fundamental2 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInsrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
-      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental2.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental2.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental);
 
       DateTime instrumentDateTime = DateTime.Now.ToUniversalTime().AddDays(10);
@@ -2325,9 +2202,9 @@ namespace TradeSharp.Data.Testing
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental.FundamentalId, countryFundamental.CountryId, dateTime.AddDays(2), value + 2.0);
 
       m_database.CreateFundamental(fundamental2);
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, instrumentDateTime, instrumentValue);
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, instrumentDateTime.AddDays(1), instrumentValue + 1.0);
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, instrumentDateTime.AddDays(2), instrumentValue + 2.0);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, instrumentDateTime, instrumentValue);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, instrumentDateTime.AddDays(1), instrumentValue + 1.0);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, instrumentDateTime.AddDays(2), instrumentValue + 2.0);
 
       IList<CountryFundamental> countryFundamentalValues = m_database.GetCountryFundamentals(m_dataProvider1.Object.Name);
       Assert.AreEqual(1, countryFundamentalValues.Count, "Returned country fundamental value count is not correct.");
@@ -2341,7 +2218,7 @@ namespace TradeSharp.Data.Testing
     public void GetInstrumentFundmentals_ReturnPersistedData_Success()
     {
       Fundamental fundamental1 = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInsrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
-      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental1.Id, m_instrument.Id);
+      InstrumentFundamental instrumentFundamental = new InstrumentFundamental(m_dataProvider1.Object.Name, Guid.NewGuid(), fundamental1.Id, m_instrument.Ticker);
       m_database.CreateInstrumentFundamental(instrumentFundamental);
 
       DateTime dateTime = DateTime.Now.ToUniversalTime();
@@ -2356,9 +2233,9 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateFundamental(fundamental1);
 
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime, value);
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime.AddDays(1), value + 1.0);
-      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentId, dateTime.AddDays(2), value + 2.0);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime, value);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime.AddDays(1), value + 1.0);
+      m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime.AddDays(2), value + 2.0);
 
       m_database.CreateFundamental(fundamental2);
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental.FundamentalId, countryFundamental.CountryId, countryDateTime, countryValue);
@@ -2414,7 +2291,7 @@ namespace TradeSharp.Data.Testing
           dateTime = dateTime.Add(dateTimeDelta!.Value);
         }
 
-        m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, data);
+        m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, data);
       }
       else
       {
@@ -2427,7 +2304,7 @@ namespace TradeSharp.Data.Testing
           dateTime = dateTime.Add(dateTimeDelta!.Value);
         }
 
-        m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, data);
+        m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, data);
       }
     }
 
@@ -2441,7 +2318,7 @@ namespace TradeSharp.Data.Testing
     public void GetDataCount_AnyResolution_Success(Resolution resolution, int expectedCount)
     {
       generateDataBars(resolution, 500);
-      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution));
+      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution));
     }
 
     [TestMethod]
@@ -2450,7 +2327,7 @@ namespace TradeSharp.Data.Testing
     public void GetBarDataCount_NoDateFilter_Success(Resolution resolution, int expectedCount)
     {
       generateDataBars(resolution, 500);
-      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution));
+      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution));
     }
 
     [TestMethod]
@@ -2462,7 +2339,7 @@ namespace TradeSharp.Data.Testing
       DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
       DateTime to = DateTime.Parse(toDate).ToUniversalTime();
       generateDataBars(resolution, 500, generatedFromDate);
-      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to));
+      Assert.AreEqual(expectedCount, m_database.GetDataCount(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, from, to));
     }
 
     [TestMethod]
@@ -2481,9 +2358,9 @@ namespace TradeSharp.Data.Testing
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
-      IList<IBarData> dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10));
+      IList<IBarData> dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10));
       Assert.AreEqual(barData.Count, dataResult.Count, "GetBarData did not return the correct number of bars.");
 
       for (int index = 0; index < dataResult.Count; index++)
@@ -2499,7 +2376,7 @@ namespace TradeSharp.Data.Testing
       DateTime to = DateTime.Parse(toDate).ToUniversalTime();
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       generateDataBars(resolution, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, from, to);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
 
       for (int i = 0; i < expectedCount; i++)
@@ -2523,7 +2400,7 @@ namespace TradeSharp.Data.Testing
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       generateDataBars(resolution, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, index, count);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, index, count);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
       Assert.AreEqual(DateTime.Parse(expectedFromDate).ToUniversalTime(), barData[0].DateTime, "Expected from date was not returned.");
     }
@@ -2547,7 +2424,7 @@ namespace TradeSharp.Data.Testing
       DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
       DateTime to = DateTime.Parse(toDate).ToUniversalTime();
       generateDataBars(resolution, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, from, to, index, count);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, from, to, index, count);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
       Assert.AreEqual(DateTime.Parse(expectedFromDate).ToUniversalTime(), barData[0].DateTime, "Expected from date was not returned.");
     }
@@ -2568,9 +2445,9 @@ namespace TradeSharp.Data.Testing
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
       barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
 
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, barData);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
-      DataCache dataResult = m_database.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Id, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10));
+      DataCache dataResult = m_database.GetDataCache(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10));
       Assert.AreEqual(barData.Count, dataResult.Count, "GetDataCache did not return the correct number of bars.");
 
       DataCacheBars dataResultDetails = (DataCacheBars)dataResult.Data;

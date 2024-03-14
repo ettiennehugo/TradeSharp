@@ -448,7 +448,7 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public Instrument(Guid id, Attributes attributeSet, string tag, InstrumentType type, string ticker, IList<string> alternateTickers, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds) : base(id, attributeSet, tag)
+    public Instrument(string ticker, Attributes attributeSet, string tag, InstrumentType type, IList<string> alternateTickers, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds) : base(Guid.Empty, attributeSet, tag)
     {
       Type = type;
       Ticker = ticker;
@@ -467,6 +467,7 @@ namespace TradeSharp.Data
 
 
     //properties
+    public new Guid Id { get => throw new NotImplementedException("Id not supported, use Ticker as key"); set => throw new NotImplementedException("Id not supported, use Ticker as key"); }   //hide the base class Id property, instruments uses the ticker as key
     [ObservableProperty] private InstrumentType m_type;
     [ObservableProperty] private string m_ticker;
     [ObservableProperty] private IList<string> m_alternateTickers;
@@ -483,7 +484,6 @@ namespace TradeSharp.Data
     //methods
     public bool Equals(Instrument? other)
     {
-      if (other != null && other.Id == Id) return true;
       if (Ticker == other!.Ticker) return true;
       if (AlternateTickers.FirstOrDefault(t => t == other.Ticker) != null) return true;
       if (other!.AlternateTickers.FirstOrDefault(t => t == Ticker) != null) return true;
@@ -492,7 +492,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Instrument(Id, AttributeSet, Tag, Type, Ticker, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds));
+      return new Instrument(Ticker, AttributeSet, Tag, Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds));
     }
 
     public void Update(Instrument item)
@@ -527,7 +527,7 @@ namespace TradeSharp.Data
   {
     public static Guid InstrumentGroupRoot = Guid.Parse("11111111-1111-1111-1111-111111111111");    //define any non-null Guid to be used as the root group
 
-    public InstrumentGroup(Guid id, Attributes attributeSet, string tag, Guid parentId, string name, IList<string> alternateNames, string description, string userId, IList<Guid> instruments): base(id, attributeSet, tag)
+    public InstrumentGroup(Guid id, Attributes attributeSet, string tag, Guid parentId, string name, IList<string> alternateNames, string description, string userId, IList<string> instruments): base(id, attributeSet, tag)
     {
       ParentId = parentId;
       Name = name;
@@ -535,7 +535,6 @@ namespace TradeSharp.Data
       Description = description;
       UserId = userId;
       Instruments = instruments;
-      Tickers = new List<string>();         //this gets lazy loaded when needed - see RefreshAssociatedTickers
       SearchTickers = new List<string>();   //this gets lazy loaded when needed - see RefreshAssociatedTickers
     }
 
@@ -544,8 +543,7 @@ namespace TradeSharp.Data
     [ObservableProperty] private IList<string> m_alternateNames;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private string m_userId;   //specific Id to be used by the user, can be used in data file exports/imports to identify the group
-    [ObservableProperty] private IList<Guid> m_instruments; //instruments associated with the group
-    [ObservableProperty] private IList<string> m_tickers;   //set of tickers associated with the group
+    [ObservableProperty] private IList<string> m_instruments; //instruments associated with the group
     [ObservableProperty] private IList<string> m_searchTickers;   //set of tickers and alternate associated with the group
 
     public bool Equals(InstrumentGroup? other)
@@ -564,7 +562,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new InstrumentGroup(Id, AttributeSet, Tag, ParentId, Name, new List<string>(AlternateNames), Description, UserId, new List<Guid>(Instruments));
+      return new InstrumentGroup(Id, AttributeSet, Tag, ParentId, Name, new List<string>(AlternateNames), Description, UserId, new List<string>(Instruments));
     }
 
     public void Update(InstrumentGroup item)
@@ -663,19 +661,19 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class InstrumentFundamental : ObservableObject, IEquatable<InstrumentFundamental>, ICloneable, IUpdateable<InstrumentFundamental>
   {
-    public InstrumentFundamental(string dataProviderName, Guid associationId, Guid fundamentalId, Guid instrumentId)
+    public InstrumentFundamental(string dataProviderName, Guid associationId, Guid fundamentalId, string instrumentTicker)
     {
       DataProviderName = dataProviderName;
       AssociationId = associationId;
       FundamentalId = fundamentalId;
-      InstrumentId = instrumentId;
+      InstrumentTicker = instrumentTicker;
       Values = new List<Tuple<DateTime, double>>();
     }
 
     [ObservableProperty] private string m_DataProviderName;
     [ObservableProperty] private Guid m_AssociationId;
     [ObservableProperty] private Guid m_FundamentalId;
-    [ObservableProperty] private Guid m_InstrumentId;
+    [ObservableProperty] private string m_InstrumentTicker;
     [ObservableProperty] private IList<Tuple<DateTime, double>> m_values;
 
     public void AddValue(DateTime dateTime, double value) { Values.Add(new Tuple<DateTime, double>(dateTime, value)); }
@@ -687,14 +685,14 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new InstrumentFundamental(DataProviderName, AssociationId, FundamentalId, InstrumentId);
+      return new InstrumentFundamental(DataProviderName, AssociationId, FundamentalId, InstrumentTicker);
     }
 
     public void Update(InstrumentFundamental item)
     {
       DataProviderName = item.DataProviderName;
       FundamentalId = item.FundamentalId;
-      InstrumentId = item.InstrumentId;
+      InstrumentTicker = item.InstrumentTicker;
     }
   }
 
@@ -760,10 +758,10 @@ namespace TradeSharp.Data
   /// </summary>
   public class DataCache
   {
-    public DataCache(string dataProviderName, Guid instrumentId, Resolution resolution, DateTime from, DateTime to, int count)
+    public DataCache(string dataProviderName, string instrumentTicker, Resolution resolution, DateTime from, DateTime to, int count)
     {
       DataProviderName = dataProviderName;
-      InstrumentId = instrumentId;
+      InstrumentTicker = instrumentTicker;
       Resolution = resolution;
       From = from;
       To = to;
@@ -789,7 +787,7 @@ namespace TradeSharp.Data
     }
 
     public string DataProviderName { get; }
-    public Guid InstrumentId { get; }
+    public string InstrumentTicker { get; }
     public Resolution Resolution { get; }
     public DateTime From { get; }
     public DateTime To { get; }
@@ -873,20 +871,20 @@ namespace TradeSharp.Data
     /// Instrument group definition interface.
     /// </summary>
     void CreateInstrumentGroup(InstrumentGroup instrumentGroup);
-    void CreateInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
+    void CreateInstrumentGroupInstrument(Guid instrumentGroupId, string instrumentTicker);
     InstrumentGroup? GetInstrumentGroup(Guid id);
     IList<InstrumentGroup> GetInstrumentGroups();
-    IList<Guid> GetInstrumentGroupInstruments(Guid instrumentGroupId);
+    IList<string> GetInstrumentGroupInstruments(Guid instrumentGroupId);
     void UpdateInstrumentGroup(InstrumentGroup instrumentGroup);
     int DeleteInstrumentGroup(Guid id);
     int DeleteInstrumentGroupChild(Guid parentId, Guid childId);
-    int DeleteInstrumentGroupInstrument(Guid instrumentGroupId, Guid instrumentId);
+    int DeleteInstrumentGroupInstrument(Guid instrumentGroupId, string instrumentTicker);
 
     /// <summary>
     /// Instrument definition interface.
     /// </summary>
     void CreateInstrument(Instrument instrument);
-    void AddInstrumentToExchange(Guid instrument, Guid exchange);
+    void AddInstrumentToExchange(string instrumentTicker, Guid exchange);
     int GetInstrumentCount();
     int GetInstrumentCount(InstrumentType instrumentType);
     int GetInstrumentCount(string tickerFilter, string nameFilter, string descriptionFilter); //no filter if filters are blank, filters should support wildcards * and ?
@@ -899,17 +897,10 @@ namespace TradeSharp.Data
     IList<Instrument> GetInstrumentsOffset(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count);  //paged loading of instruments
     IList<Instrument> GetInstrumentsPage(string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize);  //paged loading of instruments
     IList<Instrument> GetInstrumentsPage(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int pageIndex, int pageSize);  //paged loading of instruments
-    Instrument? GetInstrument(Guid id);
     Instrument? GetInstrument(string ticker);
-    string? TickerFromId(Guid id);           //returns the main ticker associated with the instrument
-    IList<string>? TickersFromId(Guid id);   //returns all the tickers associated with the instrument
-    Guid? IdFromTicker(string ticker);       //returns the id associated with the ticker
-    IDictionary<Guid, string> GetInstrumentIdTicker();  //get the full map of instrument id to ticker
-    IDictionary<Guid, IList<string>> GetInstrumentIdTickers();  //get the full map of instrument id to tickers mapping that includes alternate tickers
-    IDictionary<string, Guid> GetTickerInstrumentId();  //get the full map of ticker to instrument id
     void UpdateInstrument(Instrument instrument);
     int DeleteInstrument(Instrument instrument);
-    int DeleteInstrumentFromExchange(Guid instrumentId, Guid exchangeId);
+    int DeleteInstrumentFromExchange(string instrumentTicker, Guid exchangeId);
 
     /// <summary>
     /// Fundamental definition interface.
@@ -931,33 +922,33 @@ namespace TradeSharp.Data
 
     void CreateInstrumentFundamental(InstrumentFundamental fundamental);
     IList<InstrumentFundamental> GetInstrumentFundamentals(string dataProviderName);
-    void UpdateInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime, double value);
-    int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, Guid instrumentId);
-    int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, Guid instrumentId, DateTime dateTime);
+    void UpdateInstrumentFundamental(string dataProviderName, Guid fundamentalId, string instrumentTicker, DateTime dateTime, double value);
+    int DeleteInstrumentFundamental(string dataProviderName, Guid fundamentalId, string instrumentTicker);
+    int DeleteInstrumentFundamentalValue(string dataProviderName, Guid fundamentalId, string instrumentTicker, DateTime dateTime);
 
     /// <summary>
     /// Create/update price data from a given DataProvider for a given instrument. Paged functions are provided to allow incremental loading of large amounts of data.
     /// </summary>
-    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume);
-    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize);
-    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DataCacheBars bars);
-    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<IBarData> bars);
-    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, IList<ILevel1Data> bars);
-    void UpdateData(string dataProviderName, Guid instrumentId, string ticker, DataCacheLevel1 bars);
+    void UpdateData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume);
+    void UpdateData(string dataProviderName, string ticker, DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize);
+    void UpdateData(string dataProviderName, string ticker, Resolution resolution, DataCacheBars bars);
+    void UpdateData(string dataProviderName, string ticker, Resolution resolution, IList<IBarData> bars);
+    void UpdateData(string dataProviderName, string ticker, Resolution resolution, IList<ILevel1Data> bars);
+    void UpdateData(string dataProviderName, string ticker, DataCacheLevel1 bars);
 
     int DeleteData(string dataProviderName, string ticker, Resolution? resolution, DateTime dateTime);
     int DeleteData(string dataProviderName, string ticker, Resolution? resolution = null, DateTime? from = null, DateTime? to = null);
 
-    int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution);
-    int GetDataCount(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to);
-    IBarData? GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime dateTime);
-    IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to);
-    IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, int index, int count);
-    IList<IBarData> GetBarData(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to, int index, int count);
+    int GetDataCount(string dataProviderName, string ticker, Resolution resolution);
+    int GetDataCount(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to);
+    IBarData? GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime);
+    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to);
+    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, int index, int count);
+    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to, int index, int count);
 
-    ILevel1Data? GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime dateTime);
+    ILevel1Data? GetLevel1Data(string dataProviderName, string ticker, DateTime dateTime);
     //TODO: Add Level1 paging functions similar to the GetBarData ones above.
-    IList<ILevel1Data> GetLevel1Data(string dataProviderName, Guid instrumentId, string ticker, DateTime from, DateTime to);
-    DataCache GetDataCache(string dataProviderName, Guid instrumentId, string ticker, Resolution resolution, DateTime from, DateTime to);
+    IList<ILevel1Data> GetLevel1Data(string dataProviderName, string ticker, DateTime from, DateTime to);
+    DataCache GetDataCache(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to);
   }
 }

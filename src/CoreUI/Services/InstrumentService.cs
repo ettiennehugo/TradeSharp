@@ -24,7 +24,6 @@ namespace TradeSharp.CoreUI.Services
     private const string extensionCSV = ".csv";
     private const string extensionJSON = ".json";
     private const string tokenCsvType = "type";
-    private const string tokenCsvId = "id";
     private const string tokenCsvTicker = "ticker";
     private const string tokenCsvAlternateTickers = "alternatetickers";
     private const string tokenCsvName = "name";
@@ -43,7 +42,6 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenCsvSecondaryExchanges1 = "secondaryexchanges";
     private const string tokenCsvSecondaryExchanges2 = "secondary exchanges";
     private const string tokenCsvAttributes = "attributes";
-    private const string tokenJsonId = "Id";
     private const string tokenJsonType = "Type";
     private const string tokenJsonTicker = "Ticker";
     private const string tokenJsonAlternateTickers = "AlternateTickers";
@@ -74,9 +72,6 @@ namespace TradeSharp.CoreUI.Services
     private IInstrumentRepository m_instrumentRepository;
     private IDatabase m_database;
     private Instrument? m_selectedItem;
-    protected SortedList<string, Guid> m_tickerToId;
-    protected SortedList<Guid, string> m_idToTicker;
-    protected SortedList<Guid, IList<string>> m_idToTickers;
 
     //constructors
     public InstrumentService(ILogger<InstrumentService> logger, IDatabase database, IInstrumentRepository instrumentRepository, IDialogService dialogService) : base(dialogService)
@@ -86,9 +81,6 @@ namespace TradeSharp.CoreUI.Services
       m_database = database;
       m_selectedItem = null;
       Items = new ObservableCollection<Instrument>();
-      m_tickerToId = new SortedList<string, Guid>();
-      m_idToTicker = new SortedList<Guid, string>();
-      m_idToTickers = new SortedList<Guid, IList<string>>();
     }
 
     //finalizers
@@ -134,15 +126,12 @@ namespace TradeSharp.CoreUI.Services
       Items.Clear();
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
-      refreshInstrumentLookups();
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
     }
 
     public bool Update(Instrument item)
     {
-      removeInstrumentFromLookups(item);
       var result = m_instrumentRepository.Update(item);
-      addInstrumentToLookups(item);
       Data.Utilities.UpdateItem(item, Items);
       return result;
     }
@@ -206,57 +195,6 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentRepository.GetItems(instrumentType, tickerFilter, nameFilter, descriptionFilter, offset, count);
     }
 
-    /// <summary>
-    /// Returns the main ticker associated with the instrument.
-    /// </summary>
-    public string? TickerFromId(Guid id)
-    {
-      m_idToTicker.TryGetValue(id, out string? ticker);
-      return ticker;
-    }
-
-    /// <summary>
-    /// Returns all the tickers associated with the instrument.
-    /// </summary>
-    public IList<string>? TickersFromId(Guid id)
-    {
-      m_idToTickers.TryGetValue(id, out IList<string>? tickers);
-      return tickers;
-    }
-
-    /// <summary>
-    /// Returns the id associated with the ticker.
-    /// </summary>
-    public Guid? IdFromTicker(string ticker)
-    {
-      m_tickerToId.TryGetValue(ticker, out Guid id);
-      return id;
-    }
-
-    /// <summary>
-    /// Get the full map of instrument id to ticker.
-    /// </summary>
-    public IDictionary<Guid, string> GetInstrumentIdTicker()
-    {
-      return m_idToTicker;
-    }
-
-    /// <summary>
-    /// Get the full map of instrument id to tickers mapping that includes alternate tickers
-    /// </summary>
-    public IDictionary<Guid, IList<string>> GetInstrumentIdTickers()
-    {
-      return m_idToTickers;
-    }
-
-    /// <summary>
-    /// Get the full map of ticker to instrument id.
-    /// </summary>
-    public IDictionary<string, Guid> GetTickerInstrumentId()  
-    {
-      return m_tickerToId;
-    }
-
     //properties
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
 
@@ -268,43 +206,6 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public IList<Instrument> Items { get; set; }
-
-    //methods
-    /// <summary>
-    /// Refresh to instrument ticker to id mapping data.
-    /// </summary>
-    public void refreshInstrumentLookups()
-    {
-      m_idToTicker.Clear();
-      m_idToTickers.Clear();
-      m_tickerToId.Clear();
-      foreach (Instrument instrument in Items)
-        addInstrumentToLookups(instrument);
-    }
-
-    /// <summary>
-    /// Add the instrument ticker to id mapping data to the lookups.
-    /// </summary>
-    public void addInstrumentToLookups(Instrument instrument)
-    {
-      List<string> tickers = new List<string>(instrument.AlternateTickers);
-      tickers.Prepend(instrument.Ticker);
-      m_idToTicker.Add(instrument.Id, instrument.Ticker);
-      m_idToTickers.Add(instrument.Id, tickers);
-      m_tickerToId.Add(instrument.Ticker, instrument.Id);
-      foreach (string alternateTicker in instrument.AlternateTickers) m_tickerToId.Add(alternateTicker, instrument.Id);
-    }
-
-    /// <summary>
-    /// Remove the instrument ticker to id mapping data.
-    /// </summary>
-    public void removeInstrumentFromLookups(Instrument instrument)
-    {
-      m_idToTicker.Remove(instrument.Id);
-      m_idToTickers.Remove(instrument.Id);
-      m_tickerToId.Remove(instrument.Ticker);
-      foreach (string alternateTicker in instrument.AlternateTickers) m_tickerToId.Remove(alternateTicker);
-    }
 
     ///Method is defined public for testing purposes.
     public void importJson(ImportSettings importSettings)
@@ -334,10 +235,8 @@ namespace TradeSharp.CoreUI.Services
           {
             try
             {
-              string? idStr = fileInstrumentJson!.ContainsKey(tokenJsonId) ? (string)(fileInstrumentJson![tokenJsonId]!.AsValue().Deserialize(typeof(string)))! : null;
-              Guid id = Guid.NewGuid();
-              if (idStr != null) Guid.TryParse(idStr, out id);
               string ticker = (string)(fileInstrumentJson![tokenJsonTicker]!.AsValue().Deserialize(typeof(string)))!;
+              ticker = ticker.Trim().ToUpper();
               string name = (string?)(fileInstrumentJson![tokenJsonName]!.AsValue().Deserialize(typeof(string))) ?? ticker;
               string description = (string?)(fileInstrumentJson![tokenJsonDescription]!.AsValue().Deserialize(typeof(string))) ?? name;
               InstrumentType type = InstrumentType.None;
@@ -433,7 +332,7 @@ namespace TradeSharp.CoreUI.Services
               }
 
               //create or update the instrument as required
-              Instrument fileInstrument = new Instrument(id, attributes, tag, type, ticker, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges);
+              Instrument fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges);
               Instrument? definedInstrument = definedInstruments.FirstOrDefault(x => x.Equals(fileInstrument));
               if (definedInstrument != null)
               {
@@ -446,7 +345,7 @@ namespace TradeSharp.CoreUI.Services
                   case ImportReplaceBehavior.Replace:
                     //replacing name, description, tag and all data from the input file
                     if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
-                    m_instrumentRepository.Update(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, Array.Empty<string>(), name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges));
+                    m_instrumentRepository.Update(new Instrument(ticker, attributes, tag, type, Array.Empty<string>(), name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges));
                     replacedCount++;
                     break;
                   case ImportReplaceBehavior.Update:
@@ -454,7 +353,7 @@ namespace TradeSharp.CoreUI.Services
                     if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
                     alternateTickers = alternateTickers.Union(definedInstrument.AlternateTickers).ToList();
                     secondaryExchanges = secondaryExchanges.Union(definedInstrument.SecondaryExchangeIds).ToList();
-                    m_instrumentRepository.Update(new Instrument(definedInstrument.Id, attributes, tag, type, ticker, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges));
+                    m_instrumentRepository.Update(new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges));
                     updatedCount++;
                     break;
                 }
@@ -522,7 +421,6 @@ namespace TradeSharp.CoreUI.Services
           while (csv.Read() && !parseError)
           {
             InstrumentType type = InstrumentType.None;
-            Guid? id = null;
             string ticker = "";
             IList<string> alternateTickers = new List<string>();
             string name = "";
@@ -546,13 +444,6 @@ namespace TradeSharp.CoreUI.Services
                 string columnName = csv.HeaderRecord[columnIndex].ToLower();
                 if (columnName == tokenCsvType)
                   type = (InstrumentType)Enum.Parse(typeof(InstrumentType), columnValue!);
-                else if (columnName == tokenCsvId)
-                {
-                  if (Guid.TryParse(columnValue!, out Guid guid))
-                    id = guid;
-                  else
-                    if (Debugging.ImportExport) m_logger.LogError($"Failed to parse instrument Id at line {lineNo}, a new Id will be generated.");
-                }
                 else if (columnName == tokenCsvTicker)
                   ticker = columnValue!.Trim().ToUpper();
                 else if (columnName == tokenCsvAlternateTickers)
@@ -602,7 +493,6 @@ namespace TradeSharp.CoreUI.Services
               }
             }
 
-            if (id == null) id = Guid.NewGuid();    //generate new instrument Id if no Id present in the CSV file
             if (description == "") description = name;
             if (tag == "") tag = ticker;
 
@@ -661,7 +551,7 @@ namespace TradeSharp.CoreUI.Services
                 if (Debugging.ImportExport) m_logger.LogWarning($"No secondary Exchange with Guid/Name \"{secondaryExchange}\" for instrument \"{ticker}\" found, discarding it.");
             }
 
-            fileInstruments.Add(new Instrument((Guid)id!, attributes, tag, type, ticker, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, secondaryExchangeIds));
+            fileInstruments.Add(new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, secondaryExchangeIds));
           }
 
           long instrumentsProcessed = 0;
@@ -677,13 +567,11 @@ namespace TradeSharp.CoreUI.Services
                   break;
                 case ImportReplaceBehavior.Replace:
                   if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {fileInstrument.Ticker}");
-                  fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
                   m_instrumentRepository.Update(fileInstrument);
                   replacedCount++;
                   break;
                 case ImportReplaceBehavior.Update:
                   if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {fileInstrument.Ticker}");
-                  fileInstrument.Id = definedInstrument.Id; //make sure we replace the existing instrument
                   foreach (string ticker in definedInstrument.AlternateTickers)
                     if (!fileInstrument.AlternateTickers.Contains(ticker)) fileInstrument.AlternateTickers.Add(ticker);
                   foreach (Guid id in definedInstrument.SecondaryExchangeIds)
@@ -746,7 +634,6 @@ namespace TradeSharp.CoreUI.Services
 
           JsonObject instrumentJson = new JsonObject
           {
-            [tokenJsonId] = instrument.Id.ToString(),
             [tokenJsonType] = ((int)instrument.Type).ToString(),   //need to first cast to an integer otherwise it renders the tokens/words of the attribute set
             [tokenJsonTicker] = instrument.Ticker,
             [tokenJsonAlternateTickers] = new JsonArray(),
@@ -815,7 +702,7 @@ namespace TradeSharp.CoreUI.Services
       using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         IList<Instrument> instruments = m_database.GetInstruments();
-        file.WriteLine($"{tokenCsvType},{tokenCsvId},{tokenCsvTicker},{tokenCsvAlternateTickers},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate1},{tokenCsvPriceDecimals1},{tokenCsvMinimumMovement1},{tokenCsvBigPointValue1},{tokenCsvTag},{tokenCsvSecondaryExchanges1},{tokenCsvAttributes}");
+        file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvAlternateTickers},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate1},{tokenCsvPriceDecimals1},{tokenCsvMinimumMovement1},{tokenCsvBigPointValue1},{tokenCsvTag},{tokenCsvSecondaryExchanges1},{tokenCsvAttributes}");
 
         foreach (Instrument instrument in instruments)
         {
@@ -827,8 +714,6 @@ namespace TradeSharp.CoreUI.Services
           }
 
           string instrumentDefinition = ((int)instrument.Type).ToString();
-          instrumentDefinition += ",";
-          instrumentDefinition += instrument.Id.ToString();
           instrumentDefinition += ",";
           instrumentDefinition += instrument.Ticker.ToUpper();
           instrumentDefinition += ",";

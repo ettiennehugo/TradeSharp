@@ -31,12 +31,5 @@ namespace TradeSharp.CoreUI.Repositories
     Instrument? GetItem(string ticker);
     IList<Instrument> GetItems(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count);  //paged loading of instruments
     IList<Instrument> GetItems(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count);  //paged loading of instruments
-
-    string? TickerFromId(Guid id);           //returns the main ticker associated with the instrument
-    IList<string>? TickersFromId(Guid id);   //returns all the tickers associated with the instrument
-    Guid? IdFromTicker(string ticker);       //returns the id associated with the ticker
-    IDictionary<Guid, string> GetInstrumentIdTicker();  //get the full map of instrument id to ticker
-    IDictionary<Guid, IList<string>> GetInstrumentIdTickers();  //get the full map of instrument id to tickers mapping that includes alternate tickers
-    IDictionary<string, Guid> GetTickerInstrumentId();  //get the full map of ticker to instrument id
   }
 }

@@ -233,29 +233,6 @@ namespace TradeSharp.CoreUI.Services
       parentNode.Refresh();
     }
 
-    public void RefreshAssociatedTickers(InstrumentGroup instrumentGroup, bool force)
-    {
-      if (instrumentGroup.SearchTickers.Count == 0 || force)
-      {
-        instrumentGroup.Tickers.Clear();        //list of main tickers associated with the instrument group
-        instrumentGroup.SearchTickers.Clear();  //list of main tickers and alternate tickers associated with the instrument group for more complete search
-        foreach (Guid instrumentId in instrumentGroup.Instruments)
-        {
-          string? ticker = m_instrumentService.TickerFromId(instrumentId);
-          IList<string>? tickers = m_instrumentService.TickersFromId(instrumentId);
-
-          if (ticker != null)
-            instrumentGroup.Tickers.Add(ticker);
-
-          if (tickers != null)
-            foreach (var allTicker in tickers) instrumentGroup.SearchTickers.Add(allTicker);
-        }
-
-        TradeSharp.Common.Utilities.Sort(instrumentGroup.Tickers);
-        TradeSharp.Common.Utilities.Sort(instrumentGroup.SearchTickers);
-      }
-    }
-
     public bool Update(ITreeNodeType<Guid, InstrumentGroup> node)
     {
       return m_instrumentGroupRepository.Update(node.Item);
@@ -504,15 +481,12 @@ namespace TradeSharp.CoreUI.Services
         //update/create instrument groups in the repository
         foreach (InstrumentGroupRecord fileInstrumentGroup in fileInstrumentGroups)
         {
-          //construct the list of instruments associated with the instrument group in the file
-          List<Guid> tickerIds = new List<Guid>();
+          //validate the list of instruments associated with the instrument group in the file
           foreach (string ticker in fileInstrumentGroup.Tickers)
           {
             Instrument? instrument = m_instrumentService.Items.FirstOrDefault(x => x.Ticker == ticker || x.AlternateTickers.Contains(ticker));
-            if (instrument != null)
-              tickerIds.Add(instrument.Id);
-            else
-              if (Debugging.InstrumentGroupImport) m_logger.LogError($"Instrument with ticker \"{ticker}\" not defined, association with instrument group \"{fileInstrumentGroup.Name}\" not created - define instruments first before importing instrument groups.");
+            if (instrument == null && Debugging.InstrumentGroupImport)
+              m_logger.LogError($"Instrument with ticker \"{ticker}\" not defined, association with instrument group \"{fileInstrumentGroup.Name}\" not created - define instruments first before importing instrument groups.");
           }
 
           //update the instrument group based on the replace behavior
@@ -529,7 +503,7 @@ namespace TradeSharp.CoreUI.Services
               case ImportReplaceBehavior.Replace:
                 //will update the name, description and tag and remove instrument associations
                 if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}, {fileInstrumentGroup.Tag}");
-                m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Attributes, fileInstrumentGroup.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Name, fileInstrumentGroup.AlternateNames, fileInstrumentGroup.Description, fileInstrumentGroup.UserId, tickerIds));
+                m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Attributes, fileInstrumentGroup.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Name, fileInstrumentGroup.AlternateNames, fileInstrumentGroup.Description, fileInstrumentGroup.UserId, fileInstrumentGroup.Tickers));
                 replacedCount++;
                 break;
               case ImportReplaceBehavior.Update:
@@ -542,11 +516,11 @@ namespace TradeSharp.CoreUI.Services
                   if (fileInstrumentGroup.AlternateNames.FirstOrDefault(x => x.ToUpper() == upperAlternateName) == null) fileInstrumentGroup.AlternateNames.Add(alternateName);
                 }
 
-                foreach (Guid instrumentId in definedInstrumentGroup.Instruments)
-                  if (!tickerIds.Contains(instrumentId))
-                    tickerIds.Add(instrumentId);
+                foreach (string instrumentTicker in definedInstrumentGroup.Instruments)
+                  if (!fileInstrumentGroup.Tickers.Contains(instrumentTicker))
+                    fileInstrumentGroup.Tickers.Add(instrumentTicker);
 
-                m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Attributes, fileInstrumentGroup.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Name, fileInstrumentGroup.AlternateNames, fileInstrumentGroup.Description, fileInstrumentGroup.UserId, tickerIds));
+                m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Attributes, fileInstrumentGroup.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Name, fileInstrumentGroup.AlternateNames, fileInstrumentGroup.Description, fileInstrumentGroup.UserId, fileInstrumentGroup.Tickers));
                 updatedCount++;
                 break;
             }
@@ -554,7 +528,7 @@ namespace TradeSharp.CoreUI.Services
           else
           {
             if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Creating - {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}, {fileInstrumentGroup.Tag}");
-            m_instrumentGroupRepository.Add(new InstrumentGroup(fileInstrumentGroup.Id, fileInstrumentGroup.Attributes, fileInstrumentGroup.Tag, fileInstrumentGroup.ParentId, fileInstrumentGroup.Name, fileInstrumentGroup.AlternateNames, fileInstrumentGroup.Description, fileInstrumentGroup.UserId, tickerIds));
+            m_instrumentGroupRepository.Add(new InstrumentGroup(fileInstrumentGroup.Id, fileInstrumentGroup.Attributes, fileInstrumentGroup.Tag, fileInstrumentGroup.ParentId, fileInstrumentGroup.Name, fileInstrumentGroup.AlternateNames, fileInstrumentGroup.Description, fileInstrumentGroup.UserId, fileInstrumentGroup.Tickers));
             createdCount++;
           }
         }
@@ -644,16 +618,10 @@ namespace TradeSharp.CoreUI.Services
       if (node.Item.Instruments.Count > 0)
       {
         string tickers = "";
-        foreach (Guid instrumentId in node.Item.Instruments)
+        foreach (string instrumentTicker in node.Item.Instruments)
         {
-          Instrument? instrument = m_instrumentService.Items.FirstOrDefault(x => x.Id == instrumentId);
-          if (instrument != null)
-          {
-            if (tickers.Length > 0) tickers += ",";            
-            tickers += instrument.Ticker;
-          }
-          else
-            if (Debugging.InstrumentGroupExport) m_logger.LogError($"Failed to find instrument \"{instrumentId.ToString()}\" associated with instrument group \"{node.Item.Name}, {node.Item.Tag}\".");
+          if (tickers.Length > 0) tickers += ",";
+          tickers += instrumentTicker;
         }
         line += TradeSharp.Common.Utilities.MakeCsvSafe(tickers);
       }
@@ -815,7 +783,7 @@ namespace TradeSharp.CoreUI.Services
             if (alternateNameNode != null)
               alternateNamesList.Add((string)alternateNameNode.Deserialize(typeof(string))!);
 
-        List<Guid> instrumentList = new List<Guid>();
+        List<string> instrumentTickers = new List<string>();
         if (instruments != null)
           foreach (JsonNode? instrumentNode in instruments!)
             if (instrumentNode != null)
@@ -823,7 +791,7 @@ namespace TradeSharp.CoreUI.Services
               string instrumentTicker = (string)instrumentNode.Deserialize(typeof(string))!;
               Instrument? value = definedInstruments.FirstOrDefault(x => x.Ticker == instrumentTicker || x.AlternateTickers.Contains(instrumentTicker));
               if (value != null)
-                instrumentList.Add(value.Id);
+                instrumentTickers.Add(value.Ticker);
               else
               {
                 if (Debugging.InstrumentGroupImport) m_logger.LogError($"Instrument with ticker \"{instrumentTicker}\" not defined, association with instrument group \"{name}\" not created - define instruments first before importing instrument groups.");
@@ -832,7 +800,7 @@ namespace TradeSharp.CoreUI.Services
             }
 
         //check if the instrument group is already defined and update it based on the replace behavior
-        InstrumentGroup fileInstrumentGroup = new InstrumentGroup(id, attributes, tag, parentId, name, alternateNamesList, description, userId, instrumentList);
+        InstrumentGroup fileInstrumentGroup = new InstrumentGroup(id, attributes, tag, parentId, name, alternateNamesList, description, userId, instrumentTickers);
         InstrumentGroup? definedInstrumentGroup = definedInstrumentGroups.FirstOrDefault(x => x.Equals(fileInstrumentGroup));
         if (definedInstrumentGroup != null)
         {
@@ -860,9 +828,9 @@ namespace TradeSharp.CoreUI.Services
                 if (alternateNamesList.FirstOrDefault(x => x.ToUpper() == upperAlternateName) == null) alternateNamesList.Add(alternateName);
               }
 
-              foreach (Guid instrumentId in definedInstrumentGroup.Instruments)
-                if (!instrumentList.Contains(instrumentId)) instrumentList.Add(instrumentId);
-              fileInstrumentGroup.Instruments = instrumentList;
+              foreach (string instrumentTicker in definedInstrumentGroup.Instruments)
+                if (!instrumentTickers.Contains(instrumentTicker)) instrumentTickers.Add(instrumentTicker);
+              fileInstrumentGroup.Instruments = instrumentTickers;
 
               m_instrumentGroupRepository.Update(fileInstrumentGroup);
               counts.Updated++;
@@ -871,7 +839,7 @@ namespace TradeSharp.CoreUI.Services
         }
         else
         {
-          m_instrumentGroupRepository.Add(new InstrumentGroup(id, attributes, tag, parentId, name, alternateNamesList, description, userId, instrumentList));
+          m_instrumentGroupRepository.Add(new InstrumentGroup(id, attributes, tag, parentId, name, alternateNamesList, description, userId, instrumentTickers));
           counts.Created++;
         }
 
@@ -956,17 +924,8 @@ namespace TradeSharp.CoreUI.Services
       if (instrumentGroup.Instruments.Count > 0)
       {
         JsonArray instruments = node[tokenJsonInstruments]!.AsArray();
-        foreach (Guid instrumentId in instrumentGroup.Instruments)
-        {
-          Instrument? instrument = m_instrumentService.Items.FirstOrDefault(x => x.Id == instrumentId);
-          if (instrument == null && Debugging.InstrumentGroupExport)
-          {
-            m_logger.LogInformation($"Failed to find instrument with Id \"{instrumentId}\"");
-            continue;
-          }
-
-          instruments.Add(instrument!.Ticker);
-        }
+        foreach (string instrumentTicker in instrumentGroup.Instruments)
+          instruments.Add(instrumentTicker);
       }
 
       JsonArray children = node[tokenJsonChildren]!.AsArray();

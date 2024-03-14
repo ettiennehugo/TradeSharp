@@ -1,9 +1,0 @@
-type,ticker,alternatetickers,name,description,exchange,inception date,price decimals,minimum movement,big point value,tag,attributes,secondary exchanges
-Stock,MSFT,"MSFT^C,MSFT-C",Microsoft,Microsoft Corporation,NYSE,2021-01-01T00:00:00,2,1,1,MSFT,3,"Nasdaq,LSE"
-3,AAPL,"AAPL^C,AAPL~C",Apple,Apple Corporation,NYSE,2021-01-01T00:00:00,2,1,1,AAPL,3,"Nasdaq",
-Stock,DISP,"DISP^C,DISP-C",Disney,Disney Corporation,NYSE,2021-01-01T00:00:00,2,1,1,DISP,3,"Nasdaq,LSE"
-3,NFLX,"NFLX^C,NFLX~C",Netflix,Netflix Corporation,NYSE,2021-01-01T00:00:00,2,1,1,NFLX,3,"Nasdaq",
-Stock,AUTO,"AUTO^C,AUTO@C",Autozone,Autozone Corporation,NYSE,2021-01-01T00:00:00,2,1,1,AUTO,3,"Nasdaq,LSE"
-3,PEP,"PEP~C,PEP@C",Pep Boys,Pep Boys Corporation,NYSE,2021-01-01T00:00:00,2,1,1,PEP,3,"LSE",
-Stock,GOOD,"GOOD_C,GOOD-C",Goodyear,Goodyear Corporation,NYSE,2021-01-01T00:00:00,2,1,1,GOOD,3,"Nasdaq",
-3,MICH,"MICH~C,MICH^C",Michelin,Michelin Corporation,NYSE,2021-01-01T00:00:00,2,1,1,MICH,3,"LSE",
