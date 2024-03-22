@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace TradeSharp.Common
 {
@@ -27,9 +22,20 @@ namespace TradeSharp.Common
 
 
     //properties
+    /// <summary>
+    /// Name of the plugin.
+    /// </summary>
     string Name { get; set; }
+
+    /// <summary>
+    /// Assembly to load for the plugin.
+    /// </summary>
     string Assembly { get; set; }
-    IList<IPluginConfigurationProfile> Profiles { get; set; }
+
+    /// <summary>
+    /// Dictionary of the key/value pairs in the profile for this configuration.
+    /// </summary>
+    IDictionary<string, object> Configuration { get; }
 
     //methods
 

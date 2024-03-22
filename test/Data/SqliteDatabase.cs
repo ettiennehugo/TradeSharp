@@ -21,9 +21,9 @@ namespace TradeSharp.Data.Testing
     private Mock<IConfigurationService> m_configuration;
     private ILoggerFactory m_loggerFactory;
     private Dictionary<string, object> m_generalConfiguration;
-    private Mock<IDataProvider> m_dataProvider1;
-    private Mock<IDataProvider> m_dataProvider2;
-    private IList<IDataProvider> m_dataProviders;
+    private Mock<IDataProviderPlugin> m_dataProvider1;
+    private Mock<IDataProviderPlugin> m_dataProvider2;
+    private IList<IDataProviderPlugin> m_dataProviders;
     private CultureInfo m_cultureEnglish;
     private RegionInfo m_regionInfo;
     private Data.SqliteDatabase m_database;
@@ -42,10 +42,10 @@ namespace TradeSharp.Data.Testing
       m_configuration = new Mock<IConfigurationService>(MockBehavior.Strict);
       m_configuration.Setup(x => x.CultureInfo).Returns(m_cultureEnglish);
       m_configuration.Setup(x => x.RegionInfo).Returns(m_regionInfo);
-      Type testDataProviderType = typeof(TradeSharp.Data.Testing.TestDataProvider);
+      Type testDataProviderType = typeof(TradeSharp.Data.Testing.TestDataProviderPlugin);
       m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, IPluginConfiguration>() {
-        { "TestDataProvider1", new PluginConfiguration("TestDataProvider1", "", new List<IPluginConfigurationProfile>()) },
-        { "TestDataProvider2", new PluginConfiguration("TestDataProvider2", "", new List<IPluginConfigurationProfile>()) }
+        { "TestDataProvider1", new PluginConfiguration("TestDataProvider1", "", new Dictionary<string, object>()) },
+        { "TestDataProvider2", new PluginConfiguration("TestDataProvider2", "", new Dictionary<string, object>()) }
       });
 
       m_generalConfiguration = new Dictionary<string, object>() {
@@ -55,11 +55,11 @@ namespace TradeSharp.Data.Testing
 
       m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);
 
-      m_dataProvider1 = new Mock<IDataProvider>().SetupAllProperties();
+      m_dataProvider1 = new Mock<IDataProviderPlugin>().SetupAllProperties();
       m_dataProvider1.SetupGet(x => x.Name).Returns("TestDataProvider1");
-      m_dataProvider2 = new Mock<IDataProvider>().SetupAllProperties();
+      m_dataProvider2 = new Mock<IDataProviderPlugin>().SetupAllProperties();
       m_dataProvider2.SetupGet(x => x.Name).Returns("TestDataProvider2");
-      m_dataProviders = new List<IDataProvider>();
+      m_dataProviders = new List<IDataProviderPlugin>();
       m_dataProviders.Add(m_dataProvider1.Object);
       m_dataProviders.Add(m_dataProvider2.Object);
 
@@ -75,7 +75,7 @@ namespace TradeSharp.Data.Testing
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
       m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       IList<string> alternateTickers = new List<string> { "ATEST1", "ATEST2" };
-      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, alternateTickers, "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
+      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, alternateTickers, "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty); //database layer stores dates in UTC
     }
 
     //finalizers
@@ -1394,11 +1394,11 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateInstrumentGroup_ChangeInstruments_Success()
     {
-      Instrument stock2 = new Instrument("STOCK2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock3 = new Instrument("STOCK3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument("STOCK2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      Instrument stock3 = new Instrument("STOCK3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
 
-      Instrument forex1 = new Instrument("FOREX1", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex2 = new Instrument("FOREX2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex1 = new Instrument("FOREX1", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      Instrument forex2 = new Instrument("FOREX2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
 
       InstrumentGroup instrumentGroup1 = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName1", Array.Empty<string>(), "TestInstrumentGroupDescription1", "TestInstrumentGroupUserId", new List<string> { stock2.Ticker, stock3.Ticker });
 
@@ -1857,8 +1857,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstruments_ReturnPersistedData_Success()
     {
-      Instrument instrumentTest2 = new Instrument("TEST2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument2", "TestInstrumentDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument instrumentTest3 = new Instrument("TEST3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument3", "TestInstrumentDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument instrumentTest2 = new Instrument("TEST2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument2", "TestInstrumentDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      Instrument instrumentTest3 = new Instrument("TEST3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument3", "TestInstrumentDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
       m_database.CreateInstrument(m_instrument);
       m_database.CreateInstrument(instrumentTest2);
       m_database.CreateInstrument(instrumentTest3);
@@ -1876,7 +1876,7 @@ namespace TradeSharp.Data.Testing
     {
       Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
+      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id }, string.Empty);
       m_database.CreateInstrument(m_instrument);
 
       IList<Instrument> instruments = m_database.GetInstruments();
@@ -1890,13 +1890,13 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstruments_ByInstrumentType_Success()
     {
-      Instrument stock2 = new Instrument("STOCK2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument stock3 = new Instrument("STOCK3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument stock2 = new Instrument("STOCK2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock2", "StockDescription2", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      Instrument stock3 = new Instrument("STOCK3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock3", "StockDescription3", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
 
-      Instrument forex1 = new Instrument("FOREX1", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex2 = new Instrument("FOREX2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex3 = new Instrument("FOREX3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex3", "ForexDescription3", DateTime.Now.ToUniversalTime().AddDays(3), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
-      Instrument forex4 = new Instrument("FOREX4", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex4", "ForexDescription4", DateTime.Now.ToUniversalTime().AddDays(4), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>());
+      Instrument forex1 = new Instrument("FOREX1", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex1", "ForexDescription1", DateTime.Now.ToUniversalTime().AddDays(1), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      Instrument forex2 = new Instrument("FOREX2", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex2", "ForexDescription2", DateTime.Now.ToUniversalTime().AddDays(2), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      Instrument forex3 = new Instrument("FOREX3", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex3", "ForexDescription3", DateTime.Now.ToUniversalTime().AddDays(3), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      Instrument forex4 = new Instrument("FOREX4", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Forex, Array.Empty<string>(), "Forex4", "ForexDescription4", DateTime.Now.ToUniversalTime().AddDays(4), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
 
       m_database.CreateInstrument(m_instrument);
       m_database.CreateInstrument(stock2);
@@ -1935,22 +1935,22 @@ namespace TradeSharp.Data.Testing
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument($"STOCK{formattedNumber}", Instrument.DefaultAttributeSet, $"STOCK{formattedNumber}", InstrumentType.Stock, Array.Empty<string>(), $"Stock Name {formattedNumber}", $"Stock Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Instrument($"STOCK{formattedNumber}", Instrument.DefaultAttributeSet, $"STOCK{formattedNumber}", InstrumentType.Stock, Array.Empty<string>(), $"Stock Name {formattedNumber}", $"Stock Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty));  //database layer stores dates in UTC
       }
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument($"FOREX{formattedNumber}", Instrument.DefaultAttributeSet, $"FOREX{formattedNumber}", InstrumentType.Forex, Array.Empty<string>(), $"Forex Name {formattedNumber}", $"Forex Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Instrument($"FOREX{formattedNumber}", Instrument.DefaultAttributeSet, $"FOREX{formattedNumber}", InstrumentType.Forex, Array.Empty<string>(), $"Forex Name {formattedNumber}", $"Forex Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty));  //database layer stores dates in UTC
       }
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument($"FUTURE{formattedNumber}", Instrument.DefaultAttributeSet, $"FUTURE{formattedNumber}", InstrumentType.Future, Array.Empty<string>(), $"Future Name {formattedNumber}", $"Future Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Instrument($"FUTURE{formattedNumber}", Instrument.DefaultAttributeSet, $"FUTURE{formattedNumber}", InstrumentType.Future, Array.Empty<string>(), $"Future Name {formattedNumber}", $"Future Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty));  //database layer stores dates in UTC
       }
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument($"CRYPTO{formattedNumber}", Instrument.DefaultAttributeSet, $"CRYPTO{formattedNumber}", InstrumentType.Crypto, Array.Empty<string>(), $"Crypto Name {formattedNumber}", $"Crypto Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Instrument($"CRYPTO{formattedNumber}", Instrument.DefaultAttributeSet, $"CRYPTO{formattedNumber}", InstrumentType.Crypto, Array.Empty<string>(), $"Crypto Name {formattedNumber}", $"Crypto Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty));  //database layer stores dates in UTC
       }
     }
 
@@ -2137,7 +2137,7 @@ namespace TradeSharp.Data.Testing
     {
       Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Instrument stock = new Instrument("STOCK", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id });
+      Instrument stock = new Instrument("STOCK", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id }, string.Empty);
 
       m_database.CreateInstrument(stock);
 

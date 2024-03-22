@@ -28,7 +28,6 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
-      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
     }
 
     //finalizers
@@ -51,6 +50,14 @@ namespace TradeSharp.CoreUI.ViewModels
           OnRefresh();
         }
       }
+    }
+
+    public override void OnDelete(object? target)
+    {
+      if (SelectedItem != null)
+        m_itemsService.Delete(SelectedItem);
+      else
+        m_dialogService.ShowPopupMessageAsync("No country selected to delete.");
     }
 
     public override void OnUpdate()

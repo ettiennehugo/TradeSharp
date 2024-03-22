@@ -43,7 +43,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
-    public IDataProvider DataProvider { get; set; }
+    public IDataProviderPlugin DataProvider { get; set; }
     public ILogger Logger { get; set; }
     public MassDownloadSettings Settings { get; set; }
     [ObservableProperty] public bool m_isRunning;

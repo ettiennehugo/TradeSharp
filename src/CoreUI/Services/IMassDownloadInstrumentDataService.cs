@@ -22,7 +22,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
-    IDataProvider DataProvider { get; set; }
+    IDataProviderPlugin DataProvider { get; set; }
     ILogger? Logger { get; set; }
     MassDownloadSettings Settings { get; set; }
     public bool IsRunning { get; }

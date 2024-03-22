@@ -22,7 +22,7 @@ namespace TradeSharp.Data.Testing
     private Dictionary<string, object> m_generalConfiguration;
     private CultureInfo m_cultureEnglish;
     private RegionInfo m_regionInfo;
-    private Mock<IDataProvider> m_dataProvider;
+    private Mock<IDataProviderPlugin> m_dataProvider;
     private TradeSharp.Data.SqliteDatabase m_database;
     private Country m_country;
     private TimeZoneInfo m_timeZone;
@@ -42,14 +42,14 @@ namespace TradeSharp.Data.Testing
       m_cultureEnglish = CultureInfo.GetCultureInfo("en-US");
       m_regionInfo = new RegionInfo(m_cultureEnglish.LCID);
 
-      m_dataProvider = new Mock<IDataProvider>().SetupAllProperties();
+      m_dataProvider = new Mock<IDataProviderPlugin>().SetupAllProperties();
       m_dataProvider.SetupGet(x => x.Name).Returns("TestDataProvider");
 
       m_configuration = new Mock<IConfigurationService>(MockBehavior.Strict);
       m_configuration.Setup(x => x.CultureInfo).Returns(m_cultureEnglish);
       m_configuration.Setup(x => x.RegionInfo).Returns(m_regionInfo);
-      Type testDataProviderType = typeof(TestDataProvider);
-      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, IPluginConfiguration>() { { "TestDataProvider", new PluginConfiguration(testDataProviderType.AssemblyQualifiedName!, "", new List<IPluginConfigurationProfile>()) } });
+      Type testDataProviderType = typeof(TestDataProviderPlugin);
+      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, IPluginConfiguration>() { { "TestDataProvider", new PluginConfiguration(testDataProviderType.AssemblyQualifiedName!, "", new Dictionary<string, object>()) } });
 
       m_generalConfiguration = new Dictionary<string, object>() {
           { IConfigurationService.GeneralConfiguration.TimeZone, (object)IConfigurationService.TimeZone.Local },
@@ -70,7 +70,7 @@ namespace TradeSharp.Data.Testing
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
       m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       m_instrumentInceptionDate = DateTime.Now.ToUniversalTime();
-      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", m_instrumentInceptionDate, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>()); //database layer stores dates in UTC
+      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", m_instrumentInceptionDate, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty); //database layer stores dates in UTC
 
       //create some test data for the instrument
       m_testBarData = new Dictionary<Resolution, DataCacheBars>();

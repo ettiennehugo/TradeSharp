@@ -18,14 +18,8 @@ namespace TradeSharp.Common
     public const string c_tokenExtensions = "extensions";
 
     //tokens for the data store type
-    public const string c_tokenDataStoreAssembly = "assembly";
+    public const string c_tokenAssembly = "assembly";
     public const string c_tokenDataStoreConnectionString = "connectionstring";
-
-    //tokens for the data provider plugins
-    public const string c_tokenDataProviderName = "name";
-    public const string c_tokenDataProviderAssembly = "assembly";
-    public const string c_tokenDataProviderProfileName = "name";
-    public const string c_tokenDataProviderProfileDescription = "description";
 
     //types
 
@@ -38,11 +32,11 @@ namespace TradeSharp.Common
     public RegionInfo RegionInfo { get; internal set; }
     public IDictionary<string, object> General { get; internal set; }
     public IDictionary<string, IPluginConfiguration> DataProviders { get; internal set; }
-    public IDictionary<string, string> Brokers { get; internal set; }
-    public IDictionary<string, string> Extensions { get; internal set; }
+    public IDictionary<string, IPluginConfiguration> Brokers { get; internal set; }
+    public IDictionary<string, IPluginConfiguration> Extensions { get; internal set; }
 
     //constructors
-    #nullable disable
+#nullable disable
     public ConfigurationService()
     {
       string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
@@ -50,7 +44,7 @@ namespace TradeSharp.Common
       init(jsonFile);
     }
 
-    #nullable disable
+#nullable disable
     public ConfigurationService(string jsonFile)
     {
       init(jsonFile);
@@ -64,8 +58,8 @@ namespace TradeSharp.Common
       RegionInfo = new RegionInfo(CultureInfo.LCID);
       General = new Dictionary<string, object>();
       DataProviders = new Dictionary<string, IPluginConfiguration>();
-      Brokers = new Dictionary<string, string>();
-      Extensions = new Dictionary<string, string>();
+      Brokers = new Dictionary<string, IPluginConfiguration>();
+      Extensions = new Dictionary<string, IPluginConfiguration>();
       setDefaults();
       loadConfiguration();
     }
@@ -97,9 +91,12 @@ namespace TradeSharp.Common
     protected void loadConfiguration()
     {
       loadGeneral();
-      loadDataProviders();
-      loadBrokers();
-      loadExtensions();
+      loadSection(c_tokenDataProviders, DataProviders);
+      loadSection(c_tokenBrokers, Brokers);
+
+      //load optional sections
+      try { loadSection(c_tokenExtensions, Extensions); } catch { }
+
     }
 
     protected void loadGeneral()
@@ -120,7 +117,7 @@ namespace TradeSharp.Common
               foreach (IConfigurationSection subSetting in generalSetting.GetChildren())
                 switch (subSetting.Key.ToLower())
                 {
-                  case c_tokenDataStoreAssembly:
+                  case c_tokenAssembly:
                     setting.Assembly = subSetting.Value!;
                     break;
                   case c_tokenDataStoreConnectionString:
@@ -134,67 +131,33 @@ namespace TradeSharp.Common
       }
     }
 
-    protected void loadDataProviders()
+    protected void loadSection(string sectionName, IDictionary<string, IPluginConfiguration> configuration)
     {
-      IConfigurationSection dataProvidersSection = m_configuration.GetRequiredSection(c_tokenDataProviders);
-      if (dataProvidersSection != null)
-        //parse data provider definitions
-        foreach (var dataProvider in dataProvidersSection.GetChildren())
+      IConfigurationSection section = m_configuration.GetRequiredSection(sectionName);
+      if (section != null)
+        foreach (var subSection in section.GetChildren())
         {
           string assembly = "";
-          List<IPluginConfigurationProfile> configurationProfiles = new List<IPluginConfigurationProfile>();
+          Dictionary<string, object> settings = new Dictionary<string, object>();
 
           //parse data provider profile definitions
-          foreach (var dataProviderSetting in dataProvider.GetChildren())
+          foreach (var subSectionSetting in subSection.GetChildren())
           {
-            switch (dataProviderSetting.Key.ToLower())
+            switch (subSectionSetting.Key.ToLower())
             {
-              case c_tokenDataProviderAssembly:
-                assembly = dataProviderSetting.Value!;
+              case c_tokenAssembly:
+                assembly = subSectionSetting.Value!;
                 break;
               default:
-                string description = dataProviderSetting.Key; //default description to the name of the profile
-                Dictionary<string, object> configuration = new Dictionary<string, object>();
-
-                //parse data provider profile parameters
-                foreach (var dataProviderProfile in dataProviderSetting.GetChildren())
-                {
-                  switch (dataProviderProfile.Key.ToLower())
-                  {
-                    case c_tokenDataProviderProfileDescription:
-                      description = dataProviderProfile.Value!;
-                      break;
-                    default:
-                      //ENHANCEMENT: We only store the string values for each key, the API does allow for the return of other key types such as
-                      //             numbers, dates or even arrays.
-                      configuration.Add(dataProviderProfile.Key, dataProviderProfile.Value);
-                      break;
-                  }
-                }
-
-                configurationProfiles.Add(new PluginConfigurationProfile(dataProvider.Key, dataProviderSetting.Key, description, configuration));
+                //ENHANCEMENT: We only store the string values for each key, the API does allow for the return of other key types such as
+                //             numbers, dates or even arrays.
+                settings.Add(subSectionSetting.Key, subSectionSetting.Value);
                 break;
             }
           }
 
-          DataProviders[dataProvider.Key] = new PluginConfiguration(dataProvider.Key, assembly, configurationProfiles);
-      }
-    }
-
-    private void loadExtensions()
-    {
-      IConfigurationSection brokersSection = m_configuration.GetSection(c_tokenBrokers);
-      if (brokersSection != null)
-        foreach (var broker in brokersSection.GetChildren())
-          Brokers[broker.Key] = broker.Value!;
-    }
-
-    private void loadBrokers()
-    {
-      IConfigurationSection extensionsSection = m_configuration.GetSection(c_tokenExtensions);
-      if (extensionsSection != null)
-        foreach (var extension in extensionsSection.GetChildren())
-          Extensions[extension.Key] = extension.Value!;
+          configuration[subSection.Key] = new PluginConfiguration(subSection.Key, assembly, settings);
+        }
     }
   }
 }

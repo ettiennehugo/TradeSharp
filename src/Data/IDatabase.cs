@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
 using System.ComponentModel;
-using System.Diagnostics.Metrics;
 
 namespace TradeSharp.Data
 {
@@ -141,14 +140,22 @@ namespace TradeSharp.Data
 
     [ObservableProperty] private string m_isoCode;
     public CountryInfo? CountryInfo { get; internal set; }
-    bool IEquatable<Country>.Equals(Country? country)
+
+    public override bool Equals(object? obj)
+    {
+      if (obj is Country country)
+        return IsoCode == country.IsoCode;
+      return false;
+    }
+
+    public bool Equals(Country? country)
     {
       return country != null && IsoCode == country.IsoCode;
     }
 
     public override int GetHashCode()
     {
-      return HashCode.Combine(Id, IsoCode);
+      return IsoCode.GetHashCode();
     }
   }
 
@@ -429,11 +436,14 @@ namespace TradeSharp.Data
   }
 
   /// <summary>
-  /// Storage base class for instrument data.
+  /// Storage base class for instrument data, specializations will extend this and use extended properties to save additional field data into the database.
   /// </summary>
   public partial class Instrument : DataObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>, IComparable
   {
     //constants
+    /// <summary>
+    /// Defaults for basic instrument price movements.
+    /// </summary>
     public const int DefaultPriceDecimals = 2;
     public const int DefaultMinimumMovement = 1;
     public const int DefaultBigPointValue = 1;
@@ -448,7 +458,7 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public Instrument(string ticker, Attributes attributeSet, string tag, InstrumentType type, IList<string> alternateTickers, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds) : base(Guid.Empty, attributeSet, tag)
+    public Instrument(string ticker, Attributes attributeSet, string tag, InstrumentType type, IList<string> alternateTickers, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds, string extendedProperties) : base(Guid.Empty, attributeSet, tag)
     {
       Type = type;
       Ticker = ticker;
@@ -461,6 +471,7 @@ namespace TradeSharp.Data
       BigPointValue = bigPointValue;
       PrimaryExchangeId = primaryExhangeId;
       SecondaryExchangeIds = secondaryExchangeIds;
+      m_extendedProperties = extendedProperties;    //JSON data for extended properties
     }
 
     //finalizers
@@ -479,6 +490,7 @@ namespace TradeSharp.Data
     [ObservableProperty] private int m_minimumMovement;
     [ObservableProperty] private int m_bigPointValue;
     [ObservableProperty] private Guid m_primaryExchangeId;
+    [ObservableProperty] private string m_extendedProperties;
     [ObservableProperty] private IList<Guid> m_secondaryExchangeIds;
 
     //methods
@@ -492,7 +504,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Instrument(Ticker, AttributeSet, Tag, Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds));
+      return new Instrument(Ticker, AttributeSet, Tag, Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds), ExtendedProperties);
     }
 
     public void Update(Instrument item)
@@ -510,6 +522,7 @@ namespace TradeSharp.Data
       BigPointValue = item.BigPointValue;
       PrimaryExchangeId = item.PrimaryExchangeId;
       SecondaryExchangeIds = item.SecondaryExchangeIds;
+      ExtendedProperties = item.ExtendedProperties;
     }
 
     public int CompareTo(object? o)
@@ -518,6 +531,66 @@ namespace TradeSharp.Data
       Instrument instrument = (Instrument)o;
       return Ticker.CompareTo(instrument.Ticker);
     }
+  }
+
+  /// <summary>
+  /// Stock instrument implementation to add additional stock specific properties.
+  /// </summary>
+  public partial class Stock : Instrument {
+    //constants
+    public double MarketCapInvalid = -1;
+    public double FiftyTwoWeekHighInvalid = -1;
+    public double FiftyTwoWeekLowInvalid = -1;
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+    protected double m_marketCap;
+    protected double m_fiftyTwoWeekHigh;
+    protected double m_fiftyTwoWeekLow;
+
+    //constructors
+    public Stock(string ticker, Attributes attributeSet, string tag, InstrumentType type, IList<string> alternateTickers, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds, string extendedProperties): base(ticker, attributeSet, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExhangeId, secondaryExchangeIds, extendedProperties) 
+    {
+      m_marketCap = MarketCapInvalid;
+      m_fiftyTwoWeekHigh = FiftyTwoWeekHighInvalid;
+      m_fiftyTwoWeekLow = FiftyTwoWeekLowInvalid;
+    }
+
+    //finalizers
+
+
+    //interface implementations
+
+
+    //properties
+
+    // Check which of these fields can be integrated into the extended properties.
+    //https://ibkrcampus.com/ibkr-api-page/cpapi/#market-data-fields
+
+    public double MarketCap 
+    {
+      get { return m_marketCap; } 
+      set { SetProperty(ref m_marketCap, value); } 
+    }
+
+    //methods
+
+
+
+    //TODO
+    // - Need to extend interface to support stock specific properties
+    // - Update SqliteDatabase to create Stock instances instead of Instrument instances when the type is set to that.
+    // - Add unit tests to verify that lazy loading of get set properties actually works and that database is updated when required.
+    // - Extend the InstrumentService to support stock specific properties in import/export and add unit tests to verify that it works.
+    //   - Remember to extend unit tests to cover these new properties.
+
+
+
   }
 
   /// <summary>
@@ -554,6 +627,7 @@ namespace TradeSharp.Data
         if (other.Id == Id) return true;
         if (other.UserId.ToUpper() == UserId.ToUpper()) return true;
         if (other.Name.ToUpper() == Name.ToUpper()) return true;
+        //perform two way comparison for alternate names
         if (other.AlternateNames.FirstOrDefault(t => t.ToUpper() == Name.ToUpper()) != null) return true;
         if (AlternateNames.FirstOrDefault(t => t.ToUpper() == other.Name.ToUpper()) != null) return true;
       }

@@ -7,11 +7,22 @@
     }
   },
   "DataProviders": {
-    "StockDataOrg": "",
-    "PolygonIO": "",
-    "DTNIQFeed": "",
-    "InteractiveBrokers": "",
+    "StockDataOrg": { },
+    "PolygonIO": { },
+    "DTNIQFeed": { },
+    "InteractiveBrokers": {
+      "Assembly": "TradeSharp.InteractiveBrokers.DataProvider,TradeSharp.InteractiveBrokers.dll",
+      "IP": "127.0.0.1",
+      "Port": "7496"
+    }
   },
-  "Brokers": { },
+  "Brokers": {
+    "InteractiveBrokers": {
+      "Assembly": "TradeSharp.InteractiveBrokers.BrokerPlugin,TradeSharp.InteractiveBrokers.dll",
+      "IP": "127.0.0.1",
+      "Port": "7496",
+      "Cache": "InteractiveBrokers.db"
+    }
+  },
   "Extensions": { }
 }

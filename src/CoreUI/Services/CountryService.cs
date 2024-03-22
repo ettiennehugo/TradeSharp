@@ -47,10 +47,11 @@ namespace TradeSharp.CoreUI.Services
     public bool Delete(Country item)
     {
       bool result = m_countryRepository.Delete(item);
+      if (result)  Items.Remove(item);
       if (item == SelectedItem)
       {
+        SelectedItem = Items.FirstOrDefault();
         SelectedItemChanged?.Invoke(this, SelectedItem);
-        SelectedItem = null;
       }
       return result;
     }

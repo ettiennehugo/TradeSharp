@@ -40,7 +40,7 @@ namespace TradeSharp.Common
     public RegionInfo RegionInfo { get; }
     public IDictionary<string, object> General { get; }
     public IDictionary<string, IPluginConfiguration> DataProviders { get; }
-    public IDictionary<string, string> Brokers { get; }
-    public IDictionary<string, string> Extensions { get; }
+    public IDictionary<string, IPluginConfiguration> Brokers { get; }
+    public IDictionary<string, IPluginConfiguration> Extensions { get; }
   }
 }

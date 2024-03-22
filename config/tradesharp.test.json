@@ -7,35 +7,23 @@
     }
   },
   "DataProviders": {
-    "TestDataProvider1": {
-      "Assembly": "TestDataProvider1Assembly",
-      "Profile1": {
-        "Description" :  "Profile1Description",
-        "TestDataProvider1Profile1Key1": "TestDataProvider1Profile1Value1",
-        "TestDataProvider1Profile1Key2": "TestDataProvider1Profile1Value2",
-      },
-      "Profile2": {
-        "Description": "Profile2Description",
-        "TestDataProvider1Profile2Key1": "TestDataProvider1Profile2Value1",
-        "TestDataProvider1Profile2Key2": "TestDataProvider1Profile2Value2",
-        "TestDataProvider1Profile2Key3": "TestDataProvider1Profile2Value3"
-      }
-    },
-    "TestDataProvider2": {
-      "Assembly": "TestDataProvider2Assembly",
-      "Profile1": {
-        "Description": "Profile1Description",
-        "TestDataProvider2Profile1Key1": "TestDataProvider2Profile1Value1",
-      },
-      "Profile2": {
-        "Description": "Profile2Description",
-        "TestDataProvider2Profile2Key1": "TestDataProvider2Profile2Value1",
-        "TestDataProvider2Profile2Key2": "TestDataProvider2Profile2Value2",
-        "TestDataProvider2Profile2Key3": "TestDataProvider2Profile2Value3",
-        "TestDataProvider2Profile2Key4": "TestDataProvider2Profile2Value4",
-      }
+     "TestDataProvider1": {
+       "Assembly": "TestDataProvider1Assembly",
+       "Provider1Key1": "Provider1Value1",
+       "Provider1Key2": "Provider1Value2"
+     },
+     "TestDataProvider2": {
+       "Assembly": "TestDataProvider2Assembly",
+       "Provider2Key1": "Provider2Value1",
+       "Provider2Key2": "Provider2Value2"
+     }
+  },
+  "Brokers": {
+    "TestBroker1": {
+      "Assembly": "TestBroker1Assembly",
+      "Broker1Key1": "Broker1Value1",
+      "Broker1Key2": "Broker1Value2"
     }
   },
-  "Brokers": {},
   "Extensions": {}
 }

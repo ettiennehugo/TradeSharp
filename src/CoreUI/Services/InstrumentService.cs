@@ -332,7 +332,7 @@ namespace TradeSharp.CoreUI.Services
               }
 
               //create or update the instrument as required
-              Instrument fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges);
+              Instrument fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty);
               Instrument? definedInstrument = definedInstruments.FirstOrDefault(x => x.Equals(fileInstrument));
               if (definedInstrument != null)
               {
@@ -345,7 +345,7 @@ namespace TradeSharp.CoreUI.Services
                   case ImportReplaceBehavior.Replace:
                     //replacing name, description, tag and all data from the input file
                     if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
-                    m_instrumentRepository.Update(new Instrument(ticker, attributes, tag, type, Array.Empty<string>(), name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges));
+                    m_instrumentRepository.Update(new Instrument(ticker, attributes, tag, type, Array.Empty<string>(), name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty));
                     replacedCount++;
                     break;
                   case ImportReplaceBehavior.Update:
@@ -353,7 +353,7 @@ namespace TradeSharp.CoreUI.Services
                     if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
                     alternateTickers = alternateTickers.Union(definedInstrument.AlternateTickers).ToList();
                     secondaryExchanges = secondaryExchanges.Union(definedInstrument.SecondaryExchangeIds).ToList();
-                    m_instrumentRepository.Update(new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges));
+                    m_instrumentRepository.Update(new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty));
                     updatedCount++;
                     break;
                 }
@@ -551,7 +551,7 @@ namespace TradeSharp.CoreUI.Services
                 if (Debugging.ImportExport) m_logger.LogWarning($"No secondary Exchange with Guid/Name \"{secondaryExchange}\" for instrument \"{ticker}\" found, discarding it.");
             }
 
-            fileInstruments.Add(new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, secondaryExchangeIds));
+            fileInstruments.Add(new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, secondaryExchangeIds, string.Empty));
           }
 
           long instrumentsProcessed = 0;

@@ -33,7 +33,7 @@ namespace TradeSharp.Data
 
     //attributes
     protected IConfigurationService m_configuration;
-    protected IDataProvider m_dataProvider;
+    protected IDataProviderPlugin m_dataProvider;
     protected IDatabase m_database;
     protected DataStream<DateTime> m_dateTime;
     protected DateTime[] m_dateTimeData;
@@ -61,7 +61,7 @@ namespace TradeSharp.Data
     protected long[] m_lastVolumeData;
 
     //constructors
-    public DataFeed(IConfigurationService configuration, IDatabase database, IDataProvider dataProvider, Instrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode) : base()
+    public DataFeed(IConfigurationService configuration, IDatabase database, IDataProviderPlugin dataProvider, Instrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode) : base()
     {
       if (interval == 0) throw new ArgumentOutOfRangeException(nameof(interval), "Interval must be greater than zero.");
       if (from > to) throw new ArgumentOutOfRangeException(nameof(from), "From must be less than or equal to To.");

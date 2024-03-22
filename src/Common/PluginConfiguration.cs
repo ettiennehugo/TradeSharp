@@ -1,7 +1,7 @@
 ﻿namespace TradeSharp.Common
 {
   /// <summary>
-  /// Store for data provider plugins and their associated configuration profiles used to configure them.
+  /// Store for general configuration of a plugin. A plugin can be anything from a data base, data provider, broker or general extension.
   /// </summary>
   public class PluginConfiguration : IPluginConfiguration
   {
@@ -19,11 +19,11 @@
 
 
     //constructors
-    public PluginConfiguration(string name, string assembly, IList<IPluginConfigurationProfile> profiles)
+    public PluginConfiguration(string name, string assembly, IDictionary<string, object> configuration)
     {
       Name = name;
       Assembly = assembly;
-      Profiles = profiles;
+      Configuration = configuration;
     }
 
     //finalizers
@@ -38,6 +38,6 @@
     //methods
     public string Name { get; set; }
     public string Assembly { get; set; }
-    public IList<IPluginConfigurationProfile> Profiles { get; set; }
+    public IDictionary<string, object> Configuration { get; set; }
   }
 }

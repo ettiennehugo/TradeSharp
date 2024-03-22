@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data
@@ -13,9 +14,8 @@ namespace TradeSharp.Data
   /// </summary>
   [ComVisible(true)]
   [Guid("A7396674-D60B-489C-83C2-39BD6466C0FC")]
-  public interface IDataProvider
+  public interface IDataProviderPlugin: IPlugin
   {
-
     //constants
 
 
@@ -29,17 +29,19 @@ namespace TradeSharp.Data
 
 
     //properties
-    string Name { get; }    //name of the data provider
-    IList<string> Tickers { get; }  //set of tickers supported by the data provider
-    int ConnectionCountMax { get; } //maximum number of concurrent connections allowed to the data provider
-    IPluginConfigurationProfile ConfigurationProfile { get; set; }
+
 
     //methods
-    void Connect();
-    void Disconnect();
-    void Create(string config);
-    void Destroy();
-    void Request(string ticker, DateTime start, DateTime end);
+    /// <summary>
+    /// Request the data for a specific ticker with a given resolution and time range.
+    /// </summary>
+    object Request(string ticker, Resolution resolution, DateTime start, DateTime end);
+
+
+
+    //TODO: How would you get instrument definitions information etc.
+
+
 
   }
 }
