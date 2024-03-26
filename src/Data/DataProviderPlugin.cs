@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using TradeSharp.Common;
@@ -33,7 +34,7 @@ namespace TradeSharp.Data
       s_nameRegEx = new Regex(@"^[a-zA-Z][a-zA-Z0-9_\s,]*$");
     }
 
-    public DataProviderPlugin(string name) : base(name)
+    public DataProviderPlugin(string name, IHost serviceHost) : base(name, serviceHost)
     {
       if (!s_nameRegEx.IsMatch(name)) throw new ArgumentException(string.Format("DataProvider name \"{0}\" is invalid, must be only alphanumeric characters and start with alphabetical character.", name));
     }

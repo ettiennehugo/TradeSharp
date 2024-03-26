@@ -1,10 +1,13 @@
 ﻿using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace TradeSharp.Data
 {
   /// <summary>
   /// Complex order type that can consist of multiple simple orders that can have specific relationships.
   /// </summary>
+  [ComVisible(true)]
+  [Guid("70A8C5EE-0A95-4193-BA07-D3F3B84BF3DB")]
   public abstract class ComplexOrder : Order
   {
     //constants
@@ -40,7 +43,7 @@ namespace TradeSharp.Data
 
 
     //properties
-
+    public OrderType Type { get; protected set; }
 
     //methods
 

@@ -1,16 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
-using Tradesharp.InteractiveBrokers;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using TradeSharp.Data;
 
-
-namespace InteractiveBrokers
+namespace TradeSharp.InteractiveBrokers
 {
   public class DataProviderPlugin : TradeSharp.Data.DataProviderPlugin
   {
     //constants
-    public string IpKey = "IP";
-    public string PortKey = "Port";
-    public string CacheKey = "Cache";
+
 
     //enums
 
@@ -24,7 +21,7 @@ namespace InteractiveBrokers
     protected int m_port;
 
     //constructors
-    public DataProviderPlugin() : base("InteractiveBrokers") { }
+    public DataProviderPlugin(IHost serviceHost) : base("InteractiveBrokers", serviceHost) { }
 
     //finalizers
 
@@ -40,9 +37,9 @@ namespace InteractiveBrokers
     public override void Create(ILogger logger)
     {
       base.Create(logger);
-      m_clientResponseHandler = IBApiAdapter.GetInstance(m_logger);
-      m_ip = (string)m_configuration!.Configuration[IpKey];
-      m_port = (int)m_configuration!.Configuration[PortKey];
+      m_clientResponseHandler = IBApiAdapter.GetInstance(m_logger, m_serviceHost, Configuration);
+      m_ip = (string)m_configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
+      m_port = (int)m_configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey];
     }
 
     public override object Request(string ticker, Resolution resolution, DateTime start, DateTime end)

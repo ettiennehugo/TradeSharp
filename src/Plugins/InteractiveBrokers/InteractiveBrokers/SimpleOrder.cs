@@ -1,4 +1,4 @@
-﻿namespace InteractiveBrokers
+﻿namespace TradeSharp.InteractiveBrokers
 {
   /// <summary>
   /// Simple order class for Interactive Brokers.
@@ -27,7 +27,7 @@
 
 
     //properties
-
+    public long OrderId { get; protected set; }
 
     //methods
     public override void Send()

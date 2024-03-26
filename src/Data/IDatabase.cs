@@ -9,8 +9,10 @@ namespace TradeSharp.Data
   /// </summary>
   public enum InstrumentType
   {
-    None = 0,   //only used for initialization
-    Index,
+    None = 0,       //only used for initialization
+    Unknown,
+    NotSupported,   //instrument type not supported
+    Index,          //non-tradeable index
     [Description("Exchange Traded Fund")]
     ETF,
     Stock,
@@ -18,6 +20,7 @@ namespace TradeSharp.Data
     Crypto,
     Future,
     Option,
+    MutualFund,
   }
 
   /// <summary>

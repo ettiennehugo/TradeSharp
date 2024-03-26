@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,6 +10,8 @@ namespace TradeSharp.Data
   /// <summary>
   /// Base class for broker accounts.
   /// </summary>
+  [ComVisible(true)]
+  [Guid("9EA66DAD-3B05-4C14-8635-138ED999A80C")]
   public abstract class Account
   {
     //constants
@@ -31,6 +34,7 @@ namespace TradeSharp.Data
       m_name = name;
       m_positions = new List<Position>();
       m_orders = new List<Order>();
+      CustomProperties = new Dictionary<string, CustomProperty>();
     }
 
     //finalizers
@@ -41,9 +45,19 @@ namespace TradeSharp.Data
 
     //properties
     public string Name { get => m_name; }
-    public bool Default { get; set; }   //if multiple accounts are present this flag will be set for the default account
-    IList<Position> Positions { get => m_positions; }
-    IList<Order> Orders { get => m_orders; }
+    public bool Default { get; protected set; }              //if multiple accounts are present this flag will be set for the default account
+    public string BaseCurrency { get; protected set; }       //bae currency of the account
+    public IList<Position> Positions { get => m_positions; }
+    public IList<Order> Orders { get => m_orders; }
+    public double NetLiquidation { get; protected set; }     //all cash and securities in the account
+    public double SettledCash { get; protected set; }        //cash recognised as settled
+    public double BuyingPower { get; protected set; }        //currency available to trade securities
+    public double MaintenanceMargin { get; protected set; }  //margin require for whole account
+    public double PositionsValue { get; protected set; }     //currency value of all poisitions held
+    public double AvailableFunds { get; protected set; }     //cash available for trading
+    public double ExcessLiquidity { get; protected set; }    //cash available for trading after considering margin requirements
+    public DateTime LastSyncDateTime { get; protected set; } //last time the account was synced with the broker
+    public IDictionary<string, CustomProperty> CustomProperties { get; protected set; }  //other properties supported by the broker
 
     //methods
     /// <summary>

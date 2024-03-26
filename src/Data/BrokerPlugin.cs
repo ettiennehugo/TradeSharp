@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using TradeSharp.Common;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 
 namespace TradeSharp.Data
 {
@@ -21,13 +21,10 @@ namespace TradeSharp.Data
 
 
     //attributes
-    protected List<Account> m_accounts;
+
 
     //constructors
-    public BrokerPlugin(string name): base(name) 
-    {
-      m_accounts = new List<Account>();    
-    }
+    public BrokerPlugin(string name, IHost serviceHost): base(name, serviceHost)  { }
 
     //finalizers
 
@@ -36,7 +33,7 @@ namespace TradeSharp.Data
 
 
     //properties
-    public IList<Account> Accounts { get => m_accounts; }
+    public abstract IList<Account> Accounts { get; }
 
     //methods
 

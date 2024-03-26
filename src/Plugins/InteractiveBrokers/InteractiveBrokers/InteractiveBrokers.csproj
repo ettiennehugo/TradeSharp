@@ -8,11 +8,15 @@
 
   <ItemGroup>
     <PackageReference Include="InteractiveBrokers.TwsClient" Version="1.0.755" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\CoreUI\CoreUI.csproj" />
     <ProjectReference Include="..\..\..\Data\Data.csproj" />
   </ItemGroup>
 

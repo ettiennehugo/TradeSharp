@@ -1,6 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Globalization;
-using Tradesharp.InteractiveBrokers;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using TradeSharp.Data;
 
 namespace TradeSharp.InteractiveBrokers
@@ -11,9 +10,7 @@ namespace TradeSharp.InteractiveBrokers
   public class BrokerPlugin : TradeSharp.Data.BrokerPlugin
   {
     //constants
-    public string IpKey = "IP";
-    public string PortKey = "Port";
-    public string CacheKey = "Cache";
+
 
     //enums
 
@@ -28,7 +25,7 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //constructors
-    public BrokerPlugin() : base("InteractiveBrokers") { }
+    public BrokerPlugin(IHost serviceHost) : base("InteractiveBrokers", serviceHost) { }
 
     //finalizers
 
@@ -37,9 +34,9 @@ namespace TradeSharp.InteractiveBrokers
     public override void Create(ILogger logger)
     {
       base.Create(logger);
-      m_clientResponseHandler = IBApiAdapter.GetInstance(logger);
-      m_ip = (string)m_configuration!.Configuration[IpKey];
-      m_port = (int)m_configuration!.Configuration[PortKey];
+      m_ip = (string)m_configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
+      m_port = (int)m_configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey];
+      m_clientResponseHandler = IBApiAdapter.GetInstance(logger, m_serviceHost, Configuration);
     }
 
     public override void Connect()
@@ -50,6 +47,7 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //properties
+    public override IList<TradeSharp.Data.Account> Accounts { get => (IList<TradeSharp.Data.Account>)m_clientResponseHandler.Accounts; }
     public IBApiAdapter ClientResponseHandler { get => m_clientResponseHandler; }
 
     //methods

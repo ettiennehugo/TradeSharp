@@ -94,7 +94,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateDefaultObjects_InternationalCountry_Success()
     {
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableCountry,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableCountry,
         $"Id = '{Country.InternationalId.ToString()}'")
       , "International country default object not created.");
     }
@@ -102,35 +102,35 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateDefaultObjects_InternationalExchange_Success()
     {
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{Exchange.InternationalId.ToString()}'")
       , "International exchange default object not created.");
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Monday}")
       , "International exchange default Monday session object not created.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Tuesday}")
       , "International exchange default Tuesday session object not created.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Wednesday}")
       , "International exchange default Wednesday session object not created.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Thursday}")
       , "International exchange default Thursday session object not created.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Friday}")
       , "International exchange default Friday session object not created.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Saturday}")
       , "International exchange default Saturday session object not created.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"ExchangeId = '{Exchange.InternationalId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Sunday}")
       , "International exchange default Sunday session object not created.");
@@ -143,7 +143,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateHoliday(holiday);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
         $"AND Tag = '{holiday.Tag}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
@@ -164,7 +164,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateHoliday(holiday);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
         $"AND Tag = '{holiday.Tag}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
@@ -182,7 +182,7 @@ namespace TradeSharp.Data.Testing
     {
       m_database.CreateExchange(m_exchange);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND CountryId = '{m_country.Id.ToString()}' " +
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
@@ -196,7 +196,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateHoliday(holiday);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
         $"AND Tag = '{holiday.Tag}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
@@ -217,7 +217,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateHoliday(holiday);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
         $"AND Tag = '{holiday.Tag}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
@@ -239,7 +239,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateSession(session);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
         $"AND Tag = '{session.Tag}' " +
         $"AND ExchangeId = '{session.ExchangeId.ToString()}' " +
@@ -258,7 +258,7 @@ namespace TradeSharp.Data.Testing
       m_database.CreateCountryFundamental(countryFundamental);
       countryFundamental.AssociationId = countryFundamental.AssociationId;
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalAssociations),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalAssociations),
         $"Id = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND FundamentalId = '{countryFundamental.FundamentalId.ToString()}' " +
         $"AND CountryId = '{countryFundamental.CountryId.ToString()}'")
@@ -274,7 +274,7 @@ namespace TradeSharp.Data.Testing
       m_database.CreateInstrumentFundamental(instrumentFundamental);
       instrumentFundamental.AssociationId = instrumentFundamental.AssociationId;
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalAssociations),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalAssociations),
         $"Id = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND FundamentalId = '{instrumentFundamental.FundamentalId.ToString()}' " +
         $"AND InstrumentTicker = '{instrumentFundamental.InstrumentTicker}'")
@@ -289,7 +289,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateInstrumentGroup(instrumentGroup);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup.Id.ToString()}' " +
         $"AND Tag = '{instrumentGroup.Tag}' " +
         $"AND ParentId = '{instrumentGroup.ParentId.ToString()}' " +
@@ -298,7 +298,7 @@ namespace TradeSharp.Data.Testing
         $"AND UserId = '{instrumentGroup.UserId}' " +
         $"AND AlternateNames = '{string.Join(',',instrumentGroup.AlternateNames)}'")
       , "Instrument group not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
         $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group and instrument association not persisted to database.");
@@ -309,7 +309,7 @@ namespace TradeSharp.Data.Testing
     {
       m_database.CreateInstrument(m_instrument);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Tag = '{m_instrument.Tag}' " +
         $"AND Type = {(int)m_instrument.Type} " +
@@ -325,7 +325,7 @@ namespace TradeSharp.Data.Testing
       Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "SecondaryTestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       m_database.AddInstrumentToExchange(m_instrument.Ticker, exchange.Id);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentSecondaryExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentSecondaryExchange,
         $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{exchange.Id.ToString()}' ")
       , "Secondary exchange not persisted.");
@@ -338,7 +338,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateFundamental(fundamental);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableFundamentals,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableFundamentals,
         $"Id = '{fundamental.Id.ToString()}' " +
         $"AND Tag = '{fundamental.Tag}' " +
         $"AND Category = {(int)fundamental.Category} " +
@@ -380,7 +380,7 @@ namespace TradeSharp.Data.Testing
     {
       m_database.CreateExchange(m_exchange);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND CountryId = '{m_country.Id.ToString()}' " +
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
@@ -396,7 +396,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateExchange(m_exchange);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND Tag = '{m_exchange.Tag}' " +
         $"AND Name = '{m_exchange.Name}' " +
@@ -422,7 +422,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateSession(session);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
         $"AND Tag = '{m_database.ToSqlSafeString(session.Tag)}' " +
         $"AND Name = '{m_database.ToSqlSafeString(session.Name)}' " +
@@ -443,7 +443,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateInstrument(m_instrument);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Tag = '{m_instrument.Tag}' " +
         $"AND Type = {(int)m_instrument.Type} " +
@@ -472,18 +472,18 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateInstrument(m_instrument);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Tag = '{m_instrument.Tag}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{exchange.Id.ToString()}' " +
         $"AND InceptionDate = {dateTime.ToUniversalTime().ToBinary()}")
       , "Instrument not updated in database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentSecondaryExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentSecondaryExchange,
         $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{secondExchange.Id.ToString()}'")
       , "Instrument not associated with exchange 2.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentSecondaryExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentSecondaryExchange,
         $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{thirdExchange.Id.ToString()}'")
       , "Instrument not associated with exchange 3.");
@@ -502,7 +502,7 @@ namespace TradeSharp.Data.Testing
       double value = 1.0;
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental.FundamentalId, countryFundamental.CountryId, dateTime, value);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -522,7 +522,7 @@ namespace TradeSharp.Data.Testing
       double value = 1.0;
       m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, fundamental.Id, m_instrument.Ticker, dateTime, value);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -546,7 +546,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Open = {open.ToString()} " +
@@ -571,7 +571,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, dateTime, bid, bidSize, ask, askSize, last, lastSize);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Level1),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, Resolution.Level1),
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Bid = {bid.ToString()} " +
@@ -600,7 +600,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Open = {open.ToString()} " +
@@ -614,7 +614,7 @@ namespace TradeSharp.Data.Testing
       close = 9.0;
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, resolution),
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Open = {open.ToString()} " +
@@ -646,7 +646,7 @@ namespace TradeSharp.Data.Testing
 
       for (int index = 0; index < barData.Count; index++)
       {
-        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
+        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, resolution),
           $"Ticker = '{m_instrument.Ticker}' " +
           $"AND DateTime = {barData.DateTime[index].ToBinary()} " +
           $"AND Open = {barData.Open[index].ToString()} " +
@@ -679,7 +679,7 @@ namespace TradeSharp.Data.Testing
 
       for (int index = 0; index < barData.Count; index++)
       {
-        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
+        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, resolution),
           $"Ticker = '{m_instrument.Ticker}' " +
           $"AND DateTime = {barData.DateTime[index].ToBinary()} " +
           $"AND Open = {barData.Open[index].ToString()} " +
@@ -702,7 +702,7 @@ namespace TradeSharp.Data.Testing
 
       for (int index = 0; index < barData.Count; index++)
       {
-        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, resolution),
+        Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, resolution),
           $"Ticker = '{m_instrument.Ticker}' " +
           $"AND DateTime = {barData.DateTime[index].ToBinary()} " +
           $"AND Open = {barData.Open[index].ToString()} " +
@@ -718,9 +718,9 @@ namespace TradeSharp.Data.Testing
     public void DeleteCountry_DataRemoved_Success()
     {
       m_database.CreateCountry(m_country);
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableCountry, $"Id = '{m_country.Id}' AND IsoCode = '{m_country.IsoCode}'"), "Country data not persisted to database.");
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableCountry, $"Id = '{m_country.Id}' AND IsoCode = '{m_country.IsoCode}'"), "Country data not persisted to database.");
       Assert.AreEqual(1, m_database.DeleteCountry(m_country.Id), "DeleteCountry did not return the correct number of rows removed");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableCountry, $"Id = '{m_country.Id}' AND IsoCode = '{m_country.IsoCode}'"), "Country data not persisted to database.");
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableCountry, $"Id = '{m_country.Id}' AND IsoCode = '{m_country.IsoCode}'"), "Country data not persisted to database.");
     }
 
     [TestMethod]
@@ -751,8 +751,8 @@ namespace TradeSharp.Data.Testing
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental.FundamentalId, countryFundamental.CountryId, dateTime, value);
 
       //confirm that data was correctly persisted
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableCountry, $"Id = '{m_country.Id}' AND IsoCode = '{m_country.IsoCode}'"), "Country data not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableCountry, $"Id = '{m_country.Id}' AND IsoCode = '{m_country.IsoCode}'"), "Country data not persisted to database.");
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{countryHolidayDayOfMonth.Id.ToString()}' " +
         $"AND ParentId = '{countryHolidayDayOfMonth.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)countryHolidayDayOfMonth.Type} " +
@@ -761,12 +761,12 @@ namespace TradeSharp.Data.Testing
         $"AND DayOfWeek = {(int)countryHolidayDayOfMonth.DayOfWeek} " +
         $"AND MoveWeekendHoliday = {(int)countryHolidayDayOfMonth.MoveWeekendHoliday}")
       , "Country holiday for day of month not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND CountryId = '{m_country.Id.ToString()}' " +
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
       , "Exchange not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{exchangeHolidayDayOfMonth.Id.ToString()}' " +
         $"AND ParentId = '{exchangeHolidayDayOfMonth.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)exchangeHolidayDayOfMonth.Type} " +
@@ -775,23 +775,23 @@ namespace TradeSharp.Data.Testing
         $"AND DayOfWeek = {(int)exchangeHolidayDayOfMonth.DayOfWeek} " +
         $"AND MoveWeekendHoliday = {(int)exchangeHolidayDayOfMonth.MoveWeekendHoliday}")
       , "Exchange holiday for day of month not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
         $"AND ExchangeId = '{m_exchange.Id.ToString()}' " +
         $"AND DayOfWeek = {(int)session.DayOfWeek} " +
         $"AND StartTime = '{session.Start.Ticks}' " +
         $"AND EndTime = '{session.End.Ticks}' ")
       , "Session not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}'")
       , "Instrument not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalAssociations),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalAssociations),
         $"Id = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND FundamentalId = '{countryFundamental.FundamentalId.ToString()}' " +
         $"AND CountryId = '{countryFundamental.CountryId.ToString()}'")
       , "Country fundamental association not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -801,8 +801,8 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(8, m_database.DeleteCountry(m_country.Id), "DeleteCountry did not return the correct number of rows removed");
 
       //check that country and all it's related data was removed
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableCountry, $"Id = '{m_country.Id}' AND IsoCode = '{m_country.IsoCode}'"), "Country data not persisted to database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableCountry, $"Id = '{m_country.Id}' AND IsoCode = '{m_country.IsoCode}'"), "Country data not persisted to database.");
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{countryHolidayDayOfMonth.Id.ToString()}' " +
         $"AND ParentId = '{countryHolidayDayOfMonth.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)countryHolidayDayOfMonth.Type} " +
@@ -811,12 +811,12 @@ namespace TradeSharp.Data.Testing
         $"AND DayOfWeek = {(int)countryHolidayDayOfMonth.DayOfWeek} " +
         $"AND MoveWeekendHoliday = {(int)countryHolidayDayOfMonth.MoveWeekendHoliday}")
       , "Country holiday for day of month not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND countryId = '{m_country.Id.ToString()}' " +
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
       , "Exchange not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{exchangeHolidayDayOfMonth.Id.ToString()}' " +
         $"AND ParentId = '{exchangeHolidayDayOfMonth.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)exchangeHolidayDayOfMonth.Type} " +
@@ -825,23 +825,23 @@ namespace TradeSharp.Data.Testing
         $"AND DayOfWeek = {(int)exchangeHolidayDayOfMonth.DayOfWeek} " +
         $"AND MoveWeekendHoliday = {(int)exchangeHolidayDayOfMonth.MoveWeekendHoliday}")
       , "Exchange holiday for day of month not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
         $"AND ExchangeId = '{m_exchange.Id.ToString()}' " +
         $"AND DayOfWeek = {(int)session.DayOfWeek} " +
         $"AND StartTime = '{session.Start.Ticks}' " +
         $"AND EndTime = '{session.End.Ticks}' ")
       , "Session not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}'")
       , "Instrument not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalAssociations),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalAssociations),
         $"Id = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND FundamentalId = '{countryFundamental.FundamentalId.ToString()}' " +
         $"AND CountryId = '{countryFundamental.CountryId.ToString()}'")
       , "Country fundamental association not persisted to database.");
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -853,7 +853,7 @@ namespace TradeSharp.Data.Testing
     {
       m_database.CreateExchange(m_exchange);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND countryId = '{m_country.Id.ToString()}' " +
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
@@ -861,7 +861,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.DeleteExchange(m_exchange.Id), "DeleteExchange did not return the correct number of rows removed");
 
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND countryId = '{m_country.Id.ToString()}' " +
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
@@ -884,12 +884,12 @@ namespace TradeSharp.Data.Testing
       m_database.CreateInstrument(m_instrument);
 
       //check that data was properly persisted
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND countryId = '{m_country.Id.ToString()}' " +
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
       , "Exchange not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{exchangeHolidayDayOfMonth.Id.ToString()}' " +
         $"AND ParentId = '{m_exchange.Id.ToString()}' " +
         $"AND HolidayType = {(int)HolidayType.DayOfMonth} " +
@@ -897,14 +897,14 @@ namespace TradeSharp.Data.Testing
         $"AND DayOfMonth = {1} " +
         $"AND MoveWeekendHoliday = {(int)MoveWeekendHoliday.DontAdjust}")
       , "Exchange holiday for day of month not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
         $"AND ExchangeId = '{m_exchange.Id.ToString()}' " +
         $"AND DayOfWeek = {(int)session.DayOfWeek} " +
         $"AND StartTime = '{session.Start.Ticks}' " +
         $"AND EndTime = '{session.End.Ticks}' ")
       , "Session not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}'")
       , "Instrument not persisted to database.");
@@ -913,12 +913,12 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(4, m_database.DeleteExchange(m_exchange.Id), "DeleteExchange did not return the correct number of rows removed");
 
       //check that exchange data and all related objects were removed
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableExchange,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
         $"AND countryId = '{m_country.Id.ToString()}' " +
         $"AND TimeZone = '{m_timeZone.ToSerializedString()}'")
       , "Exchange not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableHoliday,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{exchangeHolidayDayOfMonth.Id.ToString()}' " +
         $"AND ParentId = '{m_exchange.Id.ToString()}' " +
         $"AND HolidayType = {(int)HolidayType.DayOfMonth} " +
@@ -926,14 +926,14 @@ namespace TradeSharp.Data.Testing
         $"AND DayOfMonth = {1} " +
         $"AND MoveWeekendHoliday = {(int)MoveWeekendHoliday.DontAdjust}")
       , "Exchange holiday for day of month not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
         $"AND ExchangeId = '{m_exchange.Id.ToString()}' " +
         $"AND DayOfWeek = {(int)session.DayOfWeek} " +
         $"AND StartTime = '{session.Start.Ticks}' " +
         $"AND EndTime = '{session.End.Ticks}' ")
       , "Session not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}'")
       , "Instrument not deleted from database.");
@@ -948,7 +948,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateSession(session);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
         $"AND ExchangeId = '{m_exchange.Id.ToString()}' " +
         $"AND DayOfWeek = {(int)session.DayOfWeek} " +
@@ -958,7 +958,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.DeleteSession(session.Id), "DeleteSession did not return the correct number of rows removed");
 
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableSession,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
         $"AND ExchangeId = '{m_exchange.Id.ToString()}' " +
         $"AND DayOfWeek = {(int)session.DayOfWeek} " +
@@ -974,7 +974,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateFundamental(fundamental);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableFundamentals,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableFundamentals,
         $"Id = '{fundamental.Id.ToString()}' " +
         $"AND Category = {(int)fundamental.Category} " +
         $"AND ReleaseInterval = {(int)fundamental.ReleaseInterval}")
@@ -982,7 +982,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.DeleteFundamental(fundamental.Id), "DeleteFundamental did not return the correct number of rows removed");
 
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableFundamentals,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableFundamentals,
         $"Id = '{fundamental.Id.ToString()}' " +
         $"AND Category = {(int)fundamental.Category} " +
         $"AND ReleaseInterval = {(int)fundamental.ReleaseInterval}")
@@ -1003,7 +1003,7 @@ namespace TradeSharp.Data.Testing
       double value = 1.0;
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental.FundamentalId, countryFundamental.CountryId, dateTime, value);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1013,7 +1013,7 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(2, m_database.DeleteFundamental(fundamental.Id), "DeleteFundamental did not return the correct number of rows removed");
 
       //check that countryFundamental data values are removed as well
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1039,12 +1039,12 @@ namespace TradeSharp.Data.Testing
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental1.FundamentalId, countryFundamental1.CountryId, dateTime, value);
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental2.FundamentalId, countryFundamental2.CountryId, dateTime, value);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental1.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
       , "Country fundamental value1 not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental2.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1052,12 +1052,12 @@ namespace TradeSharp.Data.Testing
 
       m_database.DeleteCountryFundamental(m_dataProvider1.Object.Name, fundamental1.Id, m_country.Id);
 
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental1.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
       , "Country fundamental value1 not removed from database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental2.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1082,12 +1082,12 @@ namespace TradeSharp.Data.Testing
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental.FundamentalId, countryFundamental.CountryId, dateTime1, value1);
       m_database.UpdateCountryFundamental(m_dataProvider2.Object.Name, countryFundamental.FundamentalId, countryFundamental.CountryId, dateTime2, value2);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime1.ToBinary()} " +
         $"AND Value = {value1.ToString()}")
       , "Country fundamental value1 not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider2.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider2.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
@@ -1097,12 +1097,12 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(1, m_database.DeleteFundamentalValues(m_dataProvider1.Object.Name, fundamental.Id), "DeleteFundamental did not return the correct number of rows removed");
 
       //check that countryFundamental data values are removed for data provider 1 but that data provider 2's data is still present
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime1.ToBinary()} " +
         $"AND Value = {value1.ToString()}")
       , "Country fundamental value not removed from database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider2.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider2.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
@@ -1128,12 +1128,12 @@ namespace TradeSharp.Data.Testing
       m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental1.FundamentalId, instrumentFundamental1.InstrumentTicker, dateTime, value);
       m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental2.FundamentalId, instrumentFundamental2.InstrumentTicker, dateTime, value);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental1.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
       , "Instrument fundamental value1 not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental2.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1141,12 +1141,12 @@ namespace TradeSharp.Data.Testing
 
       m_database.DeleteInstrumentFundamental(m_dataProvider1.Object.Name, fundamental1.Id, m_instrument.Ticker);
 
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental1.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
       , "Instrument fundamental value1 not removed from database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental2.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1171,12 +1171,12 @@ namespace TradeSharp.Data.Testing
       m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime1, value1);
       m_database.UpdateInstrumentFundamental(m_dataProvider2.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime2, value2);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime1.ToBinary()} " +
         $"AND Value = {value1.ToString()}")
       , "Instrument fundamental value1 not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider2.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider2.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
@@ -1186,12 +1186,12 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(1, m_database.DeleteFundamentalValues(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId), "DeleteFundamental did not return the correct number of rows removed");
 
       //check that countryFundamental data values are removed for data provider 1 but not data provider 2
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime1.ToBinary()} " +
         $"AND Value = {value1.ToString()}")
       , "Instrument fundamental value not removed from database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider2.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider2.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
@@ -1213,7 +1213,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime, value);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1223,7 +1223,7 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(1, m_database.DeleteFundamentalValues(instrumentFundamental.FundamentalId), "DeleteFundamental did not return the correct number of rows removed");
 
       //check that countryFundamental data values are removed as well
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1250,13 +1250,13 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateCountryFundamental(m_dataProvider1.Object.Name, countryFundamental.FundamentalId, countryFundamental.CountryId, dateTime2, value2);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime1.ToBinary()} " +
         $"AND Value = {value1.ToString()}")
       , "Country fundamental value 1 not persisted to database.");
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
@@ -1267,14 +1267,14 @@ namespace TradeSharp.Data.Testing
 
       //check that countryFundamental data value1 are removed
       //first value1 must be removed
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime1.ToBinary()} " +
         $"AND Value = {value1.ToString()}")
       , "Country fundamental value not removed from database.");
 
       //second value1 must be present
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableCountryFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableCountryFundamentalValues),
         $"AssociationId = '{countryFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
@@ -1301,13 +1301,13 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime2, value2);
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime1.ToBinary()} " +
         $"AND Value = {value1.ToString()}")
       , "Instrument fundamental value 1 not persisted to database.");
 
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
@@ -1318,14 +1318,14 @@ namespace TradeSharp.Data.Testing
 
       //check that countryFundamental data value1 is removed
       //first value1 must be removed
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime1.ToBinary()} " +
         $"AND Value = {value1.ToString()}")
       , "Instrument fundamental value 1 not removed from database.");
 
       //second value1 must be present
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime2.ToBinary()} " +
         $"AND Value = {value2.ToString()}")
@@ -1341,13 +1341,13 @@ namespace TradeSharp.Data.Testing
       m_database.CreateInstrumentGroup(instrumentGroup1);
       m_database.CreateInstrumentGroup(instrumentGroup2);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup1.Id.ToString()}' " +
         $"AND ParentId = '{instrumentGroup1.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup1.Name}' " +
         $"AND Description = '{instrumentGroup1.Description}'")
       , "Instrument group 1 not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup2.Id.ToString()}' " +
         $"AND ParentId = '{instrumentGroup2.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup2.Name}' " +
@@ -1359,7 +1359,7 @@ namespace TradeSharp.Data.Testing
       instrumentGroup1.Description = "New Group1 Description";
       m_database.UpdateInstrumentGroup(instrumentGroup1);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup1.Id.ToString()}' " +
         $"AND ParentId = '{instrumentGroup2.Id.ToString()}' " +
         $"AND Name = '{instrumentGroup1.Name}' " +
@@ -1380,7 +1380,7 @@ namespace TradeSharp.Data.Testing
 
      m_database.UpdateInstrumentGroup(instrumentGroup);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup.Id.ToString()}' " +
         $"AND Tag = '{instrumentGroup.Tag}' " +
         $"AND ParentId = '{instrumentGroup.ParentId.ToString()}' " +
@@ -1404,11 +1404,11 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateInstrumentGroup(instrumentGroup1);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
         $"AND InstrumentTicker = '{stock2.Ticker}'")
       , "Stock 2 not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
         $"AND InstrumentTicker = '{stock3.Ticker}'")
       , "Stock 3 not persisted to database.");
@@ -1417,19 +1417,19 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateInstrumentGroup(instrumentGroup1);
 
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
         $"AND InstrumentTicker = '{stock2.Ticker}'")
       , "Stock 2 not removed from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
         $"AND InstrumentTicker = '{stock3.Ticker}'")
       , "Stock 3 not removed from database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
         $"AND InstrumentTicker = '{forex1.Ticker}'")
       , "Forex 1 not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
         $"AND InstrumentTicker = '{forex2.Ticker}'")
       , "Forex 2 not persisted to database.");
@@ -1446,24 +1446,24 @@ namespace TradeSharp.Data.Testing
 
       m_database.DeleteInstrumentGroup(instrumentGroup1.Id);
 
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup1.Id.ToString()}' " +
         $"AND ParentId = '{instrumentGroup1.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup1.Name}' " +
         $"AND Description = '{instrumentGroup1.Description}'")
       , "Instrument group 1 not persisted to database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup1.Id.ToString()}' " +
         $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group 1 and instrument association not removed from database.");
 
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup2.Id.ToString()}' " +
         $"AND ParentId = '{instrumentGroup2.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup2.Name}' " +
         $"AND Description = '{instrumentGroup2.Description}'")
       , "Instrument group 2 not persisted to database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup2.Id.ToString()}' " +
         $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group 2 and instrument association not removed from database.");
@@ -1478,7 +1478,7 @@ namespace TradeSharp.Data.Testing
       m_database.CreateInstrumentGroup(instrumentGroup1);
       m_database.CreateInstrumentGroup(instrumentGroup2);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup2.Id.ToString()}' " +
         $"AND ParentId = '{instrumentGroup2.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup2.Name}' " +
@@ -1487,7 +1487,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.DeleteInstrumentGroupChild(instrumentGroup1.Id, instrumentGroup2.Id);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup2.Id.ToString()}' " +
         $"AND ParentId = '{InstrumentGroup.InstrumentGroupRoot.ToString()}' " +
         $"AND Name = '{instrumentGroup2.Name}' " +
@@ -1500,7 +1500,7 @@ namespace TradeSharp.Data.Testing
     {
       m_database.CreateInstrument(m_instrument);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
@@ -1509,7 +1509,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.DeleteInstrument(m_instrument);
 
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
@@ -1545,24 +1545,24 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateInstrumentFundamental(m_dataProvider1.Object.Name, instrumentFundamental.FundamentalId, instrumentFundamental.InstrumentTicker, dateTime, value);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not persisted to database.");
-      Assert.AreEqual(10, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Day),
+      Assert.AreEqual(10, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, Resolution.Day),
         $"Ticker = '{m_instrument.Ticker}'")
       , "Actual bar values from list not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
         $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group and instrument association not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalAssociations),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalAssociations),
         $"Id = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND InstrumentTicker = '{instrumentFundamental.InstrumentTicker}'")
       , "Instrument fundamental association not persisted to database.");
-      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(1, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1570,24 +1570,24 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(14, m_database.DeleteInstrument(m_instrument), "Delete instrument returned the incorrect number of rows removed");
 
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentData, Resolution.Day),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, Resolution.Day),
         $"Ticker = '{m_instrument.Ticker}'")
       , "Actual bar values from list not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroupInstrument,
+      Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
         $"AND InstrumentTicker = '{m_instrument.Ticker}'")
       , "Instrument group and instrument association not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalAssociations),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalAssociations),
         $"Id = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND InstrumentTicker = '{instrumentFundamental.InstrumentTicker}'")
       , "Instrument fundamental association not persisted to database.");
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.c_TableInstrumentFundamentalValues),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentFundamentalValues),
         $"AssociationId = '{instrumentFundamental.AssociationId.ToString()}' " +
         $"AND DateTime = {dateTime.ToBinary()} " +
         $"AND Value = {value.ToString()}")
@@ -1842,7 +1842,7 @@ namespace TradeSharp.Data.Testing
       InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", Array.Empty<string>(), "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<string> { m_instrument.Ticker });
       m_database.CreateInstrumentGroup(instrumentGroup);
 
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.c_TableInstrumentGroup,
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup.Id.ToString()}' " +
         $"AND ParentId = '{instrumentGroup.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup.Name}' " +

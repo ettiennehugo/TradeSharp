@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TradeSharp.Common;
 
@@ -23,13 +24,15 @@ namespace TradeSharp.Data
     //attributes
     protected string m_name;
     protected IPluginConfiguration? m_configuration;
+    protected IHost m_serviceHost;
     protected ILogger m_logger;
 
     //constructors
-    public Plugin(string name)
+    public Plugin(string name, IHost serviceHost)
     {
       m_name = name;
       m_configuration = null;
+      m_serviceHost = serviceHost;
     }
 
     //finalizers
