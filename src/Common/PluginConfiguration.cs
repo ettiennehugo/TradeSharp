@@ -19,10 +19,11 @@
 
 
     //constructors
-    public PluginConfiguration(string name, string assembly, IDictionary<string, object> configuration)
+    public PluginConfiguration(string name, string assembly, string type, IDictionary<string, object> configuration)
     {
       Name = name;
       Assembly = assembly;
+      Type = type;
       Configuration = configuration;
     }
 
@@ -38,6 +39,7 @@
     //methods
     public string Name { get; set; }
     public string Assembly { get; set; }
+    public string Type { get; set; }
     public IDictionary<string, object> Configuration { get; set; }
   }
 }

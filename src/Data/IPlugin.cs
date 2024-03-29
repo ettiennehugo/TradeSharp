@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using TradeSharp.Common;
 
@@ -25,6 +26,7 @@ namespace TradeSharp.Data
 
     //properties
     string Name { get; }                                //name of the broker plugin
+    IHost ServiceHost { get; set; }                     //service host for TradeSharp
     IPluginConfiguration Configuration { get; set; }    //configuration profile for the broker plugin
     bool IsConnected { get; }                           //is the plugin connected to the remote service (returns true is no connection is used)
 
@@ -40,6 +42,5 @@ namespace TradeSharp.Data
     /// </summary>
     void Connect();
     void Disconnect();
-
   }
 }

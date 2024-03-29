@@ -1,9 +1,16 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TradeSharp.Data;
+using System.Runtime.InteropServices;
+
 
 namespace TradeSharp.InteractiveBrokers
 {
+  /// <summary>
+  /// Data provider plugin implementation for Interactive Brokers.
+  /// </summary>
+  [ComVisible(true)]
+  [Guid("D6BF3AE3-F358-4066-B177-D9763F927D67")]
   public class DataProviderPlugin : TradeSharp.Data.DataProviderPlugin
   {
     //constants
@@ -21,7 +28,7 @@ namespace TradeSharp.InteractiveBrokers
     protected int m_port;
 
     //constructors
-    public DataProviderPlugin(IHost serviceHost) : base("InteractiveBrokers", serviceHost) { }
+    public DataProviderPlugin() : base("InteractiveBrokers") { }
 
     //finalizers
 
@@ -37,9 +44,9 @@ namespace TradeSharp.InteractiveBrokers
     public override void Create(ILogger logger)
     {
       base.Create(logger);
-      m_clientResponseHandler = IBApiAdapter.GetInstance(m_logger, m_serviceHost, Configuration);
-      m_ip = (string)m_configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
-      m_port = (int)m_configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey];
+      m_ip = (string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
+      m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
+      m_clientResponseHandler = IBApiAdapter.GetInstance(m_logger, ServiceHost, Configuration);
     }
 
     public override object Request(string ticker, Resolution resolution, DateTime start, DateTime end)
@@ -48,6 +55,7 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //properties
+    public override int ConnectionCountMax => 1;  //IB limits the number of connections to 1 and it's also limited by the number of calls
     public IBApiAdapter ClientResponseHandler { get => m_clientResponseHandler; }
 
     //methods

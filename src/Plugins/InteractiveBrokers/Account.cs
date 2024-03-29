@@ -41,6 +41,14 @@ namespace TradeSharp.InteractiveBrokers
 
     }
 
+    public override void CancelOrder(Order order)
+    {
+
+      throw new NotImplementedException();
+
+    }
+
+
     //properties
 
 

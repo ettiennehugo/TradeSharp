@@ -49,11 +49,11 @@ namespace TradeSharp.Data.Testing
       m_configuration.Setup(x => x.CultureInfo).Returns(m_cultureEnglish);
       m_configuration.Setup(x => x.RegionInfo).Returns(m_regionInfo);
       Type testDataProviderType = typeof(TestDataProviderPlugin);
-      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, IPluginConfiguration>() { { "TestDataProvider", new PluginConfiguration(testDataProviderType.AssemblyQualifiedName!, "", new Dictionary<string, object>()) } });
+      m_configuration.Setup(x => x.DataProviders).Returns(new Dictionary<string, IPluginConfiguration>() { { "TestDataProvider", new PluginConfiguration("TestDataProvider", testDataProviderType.Assembly.FullName!, testDataProviderType.Name, new Dictionary<string, object>()) } });
 
       m_generalConfiguration = new Dictionary<string, object>() {
           { IConfigurationService.GeneralConfiguration.TimeZone, (object)IConfigurationService.TimeZone.Local },
-          { IConfigurationService.GeneralConfiguration.Database, new DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDatabase).ToString(), "TradeSharpTest.db") }
+          { IConfigurationService.GeneralConfiguration.Database, new DataStoreConfiguration(typeof(TradeSharp.Data.SqliteDatabase).ToString(),"TradeSharp.Data.SqliteDatabase", "TradeSharpTest.db") }
       };
 
       m_configuration.Setup(x => x.General).Returns(m_generalConfiguration);

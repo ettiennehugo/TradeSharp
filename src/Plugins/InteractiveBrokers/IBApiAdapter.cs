@@ -136,7 +136,7 @@ namespace TradeSharp.InteractiveBrokers
       m_instrumentGroupService = m_serviceHost.Services.GetRequiredService<IInstrumentGroupService>();
       m_instrumentService = m_serviceHost.Services.GetRequiredService<IInstrumentService>();
       string tradeSharpHome = Environment.GetEnvironmentVariable(TradeSharp.Common.Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{TradeSharp.Common.Constants.TradeSharpHome}\" not defined.");
-      m_databaseFile = Path.Combine(tradeSharpHome, TradeSharp.Common.Constants.ConfigurationDir, (string)configuration.Configuration[TradeSharp.InteractiveBrokers.Constants.CacheKey]);
+      m_databaseFile = Path.Combine(tradeSharpHome, TradeSharp.Common.Constants.ConfigurationDir, configuration.Configuration[TradeSharp.InteractiveBrokers.Constants.CacheKey]!.ToString());
 
       //setup database connection
       m_connectionString = new SqliteConnectionStringBuilder()
@@ -336,7 +336,7 @@ namespace TradeSharp.InteractiveBrokers
         OrderTypes TEXT,
         MarketName TEXT,
         ValidExchanges TEXT,
-        Notes TEXT,
+        Notes TEXT
       ");
     }
 

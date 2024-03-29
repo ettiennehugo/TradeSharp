@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data.Testing
@@ -47,6 +48,7 @@ namespace TradeSharp.Data.Testing
     public IList<string> Tickers => m_tickers;
     public int ConnectionCountMax => Environment.ProcessorCount;
     public IPluginConfiguration Configuration { get; set; }
+    public IHost ServiceHost { get; set; }
     public bool IsConnected { get; internal set; }
 
     //methods

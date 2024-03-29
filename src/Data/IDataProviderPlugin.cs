@@ -29,18 +29,16 @@ namespace TradeSharp.Data
 
 
     //properties
-
+    /// <summary>
+    /// Set of tickers supported by the data provider.
+    /// </summary>
+    IList<string> Tickers { get; }
 
     //methods
     /// <summary>
     /// Request the data for a specific ticker with a given resolution and time range.
     /// </summary>
     object Request(string ticker, Resolution resolution, DateTime start, DateTime end);
-
-
-
-    //TODO: How would you get instrument definitions information etc.
-
 
 
   }

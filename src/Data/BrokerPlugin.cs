@@ -24,7 +24,7 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public BrokerPlugin(string name, IHost serviceHost): base(name, serviceHost)  { }
+    public BrokerPlugin(string name): base(name)  { }
 
     //finalizers
 

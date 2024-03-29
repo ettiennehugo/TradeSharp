@@ -28,9 +28,10 @@ namespace TradeSharp.Common
     string Name { get; set; }
 
     /// <summary>
-    /// Assembly to load for the plugin.
+    /// Assembly and type to load for the plugin.
     /// </summary>
     string Assembly { get; set; }
+    string Type { get; set; }
 
     /// <summary>
     /// Dictionary of the key/value pairs in the profile for this configuration.

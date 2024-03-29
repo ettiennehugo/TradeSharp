@@ -24,6 +24,12 @@ namespace TradeSharp.Data
     //properties
     IList<Account> Accounts { get; }
 
+    //events
+
+
+    //TODO:: Add events for account changes - order, position, balance changes.
+
+
     //methods
 
 

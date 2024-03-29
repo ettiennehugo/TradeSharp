@@ -16,9 +16,12 @@ namespace TradeSharp.Common
     public const string c_tokenDataStores = "datastores";
     public const string c_tokenBrokers = "brokers";
     public const string c_tokenExtensions = "extensions";
+  
+    //tokens for the plugins
+    public const string c_tokenAssembly = "assembly";
+    public const string c_tokenType = "type";
 
     //tokens for the data store type
-    public const string c_tokenAssembly = "assembly";
     public const string c_tokenDataStoreConnectionString = "connectionstring";
 
     //types
@@ -120,6 +123,9 @@ namespace TradeSharp.Common
                   case c_tokenAssembly:
                     setting.Assembly = subSetting.Value!;
                     break;
+                  case c_tokenType:
+                    setting.Type = subSetting.Value!;
+                    break;
                   case c_tokenDataStoreConnectionString:
                     setting.ConnectionString = subSetting.Value!;
                     break;
@@ -138,6 +144,7 @@ namespace TradeSharp.Common
         foreach (var subSection in section.GetChildren())
         {
           string assembly = "";
+          string type = "";
           Dictionary<string, object> settings = new Dictionary<string, object>();
 
           //parse data provider profile definitions
@@ -148,6 +155,9 @@ namespace TradeSharp.Common
               case c_tokenAssembly:
                 assembly = subSectionSetting.Value!;
                 break;
+              case c_tokenType:
+                type = subSectionSetting.Value!;
+                break;
               default:
                 //ENHANCEMENT: We only store the string values for each key, the API does allow for the return of other key types such as
                 //             numbers, dates or even arrays.
@@ -156,7 +166,7 @@ namespace TradeSharp.Common
             }
           }
 
-          configuration[subSection.Key] = new PluginConfiguration(subSection.Key, assembly, settings);
+          configuration[subSection.Key] = new PluginConfiguration(subSection.Key, assembly, type, settings);
         }
     }
   }

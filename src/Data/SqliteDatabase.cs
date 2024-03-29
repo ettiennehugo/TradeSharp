@@ -2,7 +2,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data
@@ -37,7 +36,7 @@ namespace TradeSharp.Data
     public const string TableInstrumentDataSuffixMonthly = "M";
     public const string TableInstrumentDataSuffixLevel1 = "L1";
 
-    //TODO: Add L2 table if required.
+    //TODO: Add L2 tables if required - to store the order book would require a lot of space.
 
     public static readonly Resolution[] s_SupportedResolutions = { Resolution.Minute, Resolution.Hour, Resolution.Day, Resolution.Week, Resolution.Month, Resolution.Level1 };
 
@@ -78,7 +77,7 @@ namespace TradeSharp.Data
 
       //validate database type and setup the database connection
       IDataStoreConfiguration dataStoreConfiguration = (IDataStoreConfiguration)m_configurationService.General[IConfigurationService.GeneralConfiguration.Database];
-      Trace.Assert(dataStoreConfiguration.Assembly != this.GetType().Name, $"Incorrect data store \"{this.GetType().Name}\" instatiated against data store configuration \"{dataStoreConfiguration.Assembly}\"");
+      Trace.Assert(dataStoreConfiguration.Type != this.GetType().Name, $"Incorrect data store \"{this.GetType().Name}\" instatiated against data store configuration \"{dataStoreConfiguration.Type}\"");
       string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
       m_databaseFile = string.Format("{0}\\{1}\\{2}", tradeSharpHome, Constants.DataDir, dataStoreConfiguration.ConnectionString);
 

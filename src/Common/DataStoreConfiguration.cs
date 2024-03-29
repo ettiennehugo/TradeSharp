@@ -27,12 +27,14 @@ namespace TradeSharp.Common
     public DataStoreConfiguration()
     {
       Assembly = string.Empty;
+      Type = string.Empty;
       ConnectionString = string.Empty;
     }
 
-    public DataStoreConfiguration(string typename, string connectionString)
+    public DataStoreConfiguration(string assembly, string type, string connectionString)
     {
-      Assembly = typename;
+      Assembly = assembly;
+      Type = type;
       ConnectionString = connectionString;
     }
 
@@ -47,6 +49,7 @@ namespace TradeSharp.Common
 
     //methods
     public string Assembly { get; set; }
+    public string Type { get; set; }
     public string ConnectionString { get; set; }
   }
 }

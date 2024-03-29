@@ -7,8 +7,6 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls"/>
-        <ResourceDictionary Source="WinCoreUI/Styles/ColorStyles.xaml"/>
-        <ResourceDictionary Source="WinCoreUI/Templates/ControlTemplates.xaml"/>
       </ResourceDictionary.MergedDictionaries>
       <!-- Other app resources here -->
     </ResourceDictionary>

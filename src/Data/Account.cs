@@ -66,5 +66,6 @@ namespace TradeSharp.Data
     /// </summary>
     public abstract SimpleOrder CreateOrder(string symbol, SimpleOrder.OrderType type, double quantity, double price);
     public abstract ComplexOrder CreateOrder(string symbol, ComplexOrder.OrderType type, double quantity);
+    public abstract void CancelOrder(Order order);
   }
 }

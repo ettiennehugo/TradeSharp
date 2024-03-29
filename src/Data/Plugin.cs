@@ -22,17 +22,12 @@ namespace TradeSharp.Data
 
 
     //attributes
-    protected string m_name;
-    protected IPluginConfiguration? m_configuration;
-    protected IHost m_serviceHost;
     protected ILogger m_logger;
 
     //constructors
-    public Plugin(string name, IHost serviceHost)
+    public Plugin(string name)
     {
-      m_name = name;
-      m_configuration = null;
-      m_serviceHost = serviceHost;
+      Name = name;
     }
 
     //finalizers
@@ -49,8 +44,9 @@ namespace TradeSharp.Data
     public virtual void Disconnect() { }
 
     //properties
-    public string Name => m_name;
-    public IPluginConfiguration Configuration { get => m_configuration!; set => m_configuration = value; }
+    public string Name { get; internal set; }
+    public IHost ServiceHost { get; set; }
+    public IPluginConfiguration Configuration { get; set; }
     public bool IsConnected { get; protected set; }
 
     //methods
