@@ -28,6 +28,7 @@
     <None Remove="Views\ExchangesView.xaml" />
     <None Remove="Views\ExchangeView.xaml" />
     <None Remove="Views\ExportView.xaml" />
+    <None Remove="Views\ExtensionsView.xaml" />
     <None Remove="Views\HolidaysView.xaml" />
     <None Remove="Views\ImportView.xaml" />
     <None Remove="Views\InstrumentBarDataView.xaml" />
@@ -41,6 +42,7 @@
     <None Remove="Views\MassDownloadInstrumentDataView.xaml" />
     <None Remove="Views\MassExportInstrumentDataView.xaml" />
     <None Remove="Views\MassImportInstrumentDataView.xaml" />
+    <None Remove="Views\PluginsView.xaml" />
     <None Remove="Views\ProgressDialogView.xaml" />
     <None Remove="Views\SessionsView.xaml" />
     <None Remove="Views\SessionView.xaml" />
@@ -189,6 +191,16 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Remove="Views\ExportView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\PluginsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\ExtensionsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\MassCopyInstrumentDataView.xaml">

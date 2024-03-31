@@ -6,7 +6,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Service to manage plugins used to extend TradeSharp.
   /// </summary>
-  public interface IPluginService
+  public interface IPluginsService: IListService<IPlugin>
   {
     //constants
 
@@ -21,9 +21,9 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
-    IList<IPlugin> Plugins { get; }
+    IHost Host { get; set; }
 
     //methods
-    void LoadPlugins(IHost host);
+
   }
 }

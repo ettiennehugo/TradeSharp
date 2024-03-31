@@ -25,6 +25,11 @@
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE705;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
+        <NavigationViewItem x:Name="m_extensions" Content="Extensions" Tag="DataManager.Extensions">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE81E;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
         <NavigationViewItemHeader x:Name="m_model" Content="Model"/>
         <NavigationViewItem x:Name="m_countries" Content="Countries" Tag="DataManager.Countries">
           <NavigationViewItem.Icon>

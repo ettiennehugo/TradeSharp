@@ -32,8 +32,9 @@ namespace TradeSharp.WinDataManager.ViewModels
     /// </summary>
     private readonly Dictionary<string, Type> m_pages = new Dictionary<string, Type>()
     {
-      { INavigationService.DataManager.Brokers, typeof(WinCoreUI.Views.BrokersView) },
+      { INavigationService.DataManager.Brokers, typeof(WinCoreUI.Views.PluginsView) },
       { INavigationService.DataManager.DataProviders, typeof(WinCoreUI.Views.DataProvidersView) },
+      { INavigationService.DataManager.Extensions, typeof(WinCoreUI.Views.ExtensionsView) },
       { INavigationService.DataManager.Countries, typeof(WinCoreUI.Views.CountriesView) },
       { INavigationService.DataManager.Exchanges, typeof(WinCoreUI.Views.ExchangesView) },
       //{ INavigationService.DataManager.Fundamentals, typeof(BlankView) },
@@ -75,6 +76,9 @@ namespace TradeSharp.WinDataManager.ViewModels
             m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
             break;
           case INavigationService.DataManager.DataProviders:
+            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
+            break;
+          case INavigationService.DataManager.Extensions:
             m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
             break;
           case INavigationService.DataManager.Countries:

@@ -6,13 +6,14 @@ using System;
 using System.Reflection;
 using System.Runtime.Remoting;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
 {
   /// <summary>
   /// Service used to host the plugins used to extend TradeSharp.
   /// </summary>
-  public class PluginService : ServiceBase, IPluginService
+  public class PluginsService : ServiceBase, IPluginsService
   {
     //constants
 
@@ -25,49 +26,69 @@ namespace TradeSharp.CoreUI.Services
 
     //attributes
     protected IConfigurationService m_configurationService;
-    protected ILogger<PluginService> m_logger;
-    protected IHost m_host;
+    protected ILogger<PluginsService> m_logger;
+    private IPlugin? m_selectedItem;
 
     //constructors
-    public PluginService(IDialogService dialogService, ILogger<PluginService> logger, IConfigurationService configurationService): base(dialogService) 
+    public PluginsService(IDialogService dialogService, ILogger<PluginsService> logger, IConfigurationService configurationService): base(dialogService) 
     {
       m_configurationService = configurationService;
       m_logger = logger;
+      m_selectedItem = null;
     }
 
     //finalizers
 
 
     //interface implementations
+    public bool Add(IPlugin item)
+    {
+      throw new NotImplementedException("Add plugin via configuration");
+    }
 
+    public bool Copy(IPlugin item)
+    {
+      throw new NotImplementedException("Copy of plugin's not supported");
+    }
+
+    public bool Delete(IPlugin item)
+    {
+      throw new NotImplementedException("Delete plugin in configuration");
+    }
 
     //properties
-    public IList<IPlugin> Plugins { get; internal set; }
+    public IHost Host { get; set; }
+    public IList<IPlugin> Items { get; set; }
+    public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } } //plugin's do not have a parent
+    public IPlugin SelectedItem 
+    {
+      get => m_selectedItem;
+      set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
+    }
+
+    public event EventHandler<IPlugin> SelectedItemChanged;
 
     //methods
     //TBD: If this method of getting and instantiating plugins are too slow a lazy loading mechanism can be implemented that
     //     only lists the available plugins and instantiates them when they are needed.
-    public void LoadPlugins(IHost host) 
+    public void Refresh()
     {
-      m_host = host;
-      Plugins = new List<IPlugin>();
+      Items = new List<IPlugin>();
 
       //InteractiveBrokers
       IPlugin plugin = (IPlugin)new TradeSharp.InteractiveBrokers.DataProviderPlugin();
-      plugin.ServiceHost = host;
+      plugin.ServiceHost = Host;
       plugin.Configuration = m_configurationService.DataProviders[plugin.Name];
       plugin.Create(m_logger);
-      Plugins.Add(plugin);
+      Items.Add(plugin);
 
       plugin = (IPlugin)new TradeSharp.InteractiveBrokers.BrokerPlugin();
-      plugin.ServiceHost = host;
+      plugin.ServiceHost = Host;
       plugin.Configuration = m_configurationService.DataProviders[plugin.Name];
       plugin.Create(m_logger);
-      Plugins.Add(plugin);
-
+      Items.Add(plugin);
 
       //TODO: Currently no extension plugins are implemented, but the following code should be used to load them.
-
 
       //TODO: Currently the plugins are loaded but you need to setup a static reference to the project that defines the plugin. This is not correct,
       //      and the plugins should be loaded dynamically without a static reference to the project. The following code is somewhat of what it should
@@ -162,6 +183,11 @@ namespace TradeSharp.CoreUI.Services
       //    m_logger.LogError(ex, $"Error loading extension plugin {extensionPluginConfig.Key}");
       //  }
       //}
+    }
+
+    public bool Update(IPlugin item)
+    {
+      throw new NotImplementedException();
     }
   }
 }

@@ -70,7 +70,7 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<IConfigurationService, ConfigurationService>();
           services.AddSingleton<IDatabase, SqliteDatabase>();    //Sqlite is currently the only supported data store, if this changes we need to base this off configuration and add the services dynamically
           services.AddSingleton<IDialogService, DialogService>();
-          services.AddSingleton<IPluginService, PluginService>();
+          services.AddSingleton<IPluginsService, PluginsService>();
           services.AddSingleton<INavigationService, NavigationService>();
           services.AddSingleton<InitNavigationService>();
           services.AddSingleton<MainWindowViewModel>();
@@ -87,6 +87,7 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<ISessionService, SessionService>();
           services.AddSingleton<IInstrumentService, InstrumentService>();
           services.AddSingleton<IInstrumentGroupService, InstrumentGroupService>();
+          services.AddSingleton<IPluginsViewModel, PluginsViewModel>();
           services.AddSingleton<ICountryViewModel, CountryViewModel>();
           services.AddSingleton<IHolidayViewModel, HolidayViewModel>();
           services.AddSingleton<IExchangeViewModel, ExchangeViewModel>();
@@ -113,7 +114,9 @@ namespace TradeSharp.WinDataManager
         .Build();
       
       //initialize the plugins with access to the service host - TBD not sure how good this is and whether there is a better way to do this since it breaks the DI pattern
-      m_host.Services.GetService<IPluginService>().LoadPlugins(m_host);
+      IPluginsService pluginsService = m_host.Services.GetService<IPluginsService>();
+      pluginsService.Host = m_host;
+      pluginsService.Refresh();   //this is the only refresh that should be called since during run-time these services are not expected to change
     }
 
     private void loadCachedData()

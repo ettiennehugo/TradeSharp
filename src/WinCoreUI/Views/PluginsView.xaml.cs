@@ -10,20 +10,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.ViewModels;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-
-
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
-  /// An empty page that can be used on its own or navigated to within a Frame.
+  /// Generic view to work with plugins.
   /// </summary>
-  public sealed partial class BrokersView : Page
+  public sealed partial class PluginsView : Page
   {
 
     //constants
@@ -36,11 +32,12 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    
+
 
     //constructors
-    public BrokersView()
+    public PluginsView()
     {
+      ViewModel = (PluginsViewModel)IApplication.Current.Services.GetService(typeof(IPluginsViewModel));
       this.InitializeComponent();
     }
 
@@ -51,6 +48,7 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //properties
+    public IPluginsViewModel ViewModel { get; internal set; }
 
 
     //methods

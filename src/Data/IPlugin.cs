@@ -28,7 +28,7 @@ namespace TradeSharp.Data
     string Name { get; }                                //name of the broker plugin
     IHost ServiceHost { get; set; }                     //service host for TradeSharp
     IPluginConfiguration Configuration { get; set; }    //configuration profile for the broker plugin
-    bool IsConnected { get; }                           //is the plugin connected to the remote service (returns true is no connection is used)
+    bool IsConnected { get; }                           //is the plugin connected to the remote service (returns true if no connection is used)
 
     //methods
     /// <summary>

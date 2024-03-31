@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
-using TradeSharp.Common;
+﻿using System.Runtime.InteropServices;
 
 namespace TradeSharp.Data
 {
@@ -39,7 +37,5 @@ namespace TradeSharp.Data
     /// Request the data for a specific ticker with a given resolution and time range.
     /// </summary>
     object Request(string ticker, Resolution resolution, DateTime start, DateTime end);
-
-
   }
 }

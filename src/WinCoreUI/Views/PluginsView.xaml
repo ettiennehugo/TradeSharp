@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="TradeSharp.WinCoreUI.Views.PluginsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TradeSharp.WinCoreUI.Views"
+    xmlns:tsdata="using:TradeSharp.Data"
+    xmlns:winui="using:CommunityToolkit.WinUI.UI.Controls"  
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+  <Grid x:Name="m_main" RowDefinitions="Auto, *">
+    <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
+      <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
+        <AppBarButton Command="{x:Bind ViewModel.ConnectCommand`}" ToolTipService.ToolTip="Connect plugin to remote services" IsCompact="True">
+          <AppBarButton.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8CE;"/>
+          </AppBarButton.Icon>
+        </AppBarButton>
+        <AppBarButton Command="{x:Bind ViewModel.DisconnectCommand`}" ToolTipService.ToolTip="Disconnect plugin from remote services" IsCompact="True">
+          <AppBarButton.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8CD;"/>
+          </AppBarButton.Icon>
+        </AppBarButton>
+        <AppBarSeparator/>
+        <AppBarButton Command="{x:Bind ViewModel.SettingsCommand}" ToolTipService.ToolTip="View/edit plugin settings" IsCompact="True">
+          <AppBarButton.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE713;"/>
+          </AppBarButton.Icon>
+        </AppBarButton>
+      </CommandBar>
+    </StackPanel>
+    <winui:DataGrid x:Name="m_plugins" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Grid.Row="2" Grid.Column="0">
+      <winui:DataGrid.Columns>
+        <winui:DataGridTextColumn x:Name="m_columnName" Width="300" Header="Name" Binding="{Binding Name, Mode=OneWay}" IsReadOnly="True"/>
+      </winui:DataGrid.Columns>
+    </winui:DataGrid>
+  </Grid>
+</Page>

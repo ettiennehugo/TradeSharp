@@ -19,6 +19,7 @@
     {
       public const string Brokers = "DataManager.Brokers";
       public const string DataProviders = "DataManager.DataProviders";
+      public const string Extensions = "DataManager.Extensions";
       public const string Countries = "DataManager.Countries";
       public const string Exchanges = "DataManager.Exchanges";
       public const string Fundamentals = "DataManager.Fundamentals";
