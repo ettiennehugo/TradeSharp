@@ -22,34 +22,49 @@ namespace TradeSharp.CoreUI.ViewModels
     //constructors
     public PluginsViewModel(IPluginsService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) 
     {
-      ConnectCommand = new RelayCommand(OnConnect, () => SelectedItem != null && !SelectedItem.IsConnected);
-      DisconnectCommand = new RelayCommand(OnConnect, () => SelectedItem != null && SelectedItem.IsConnected);
-      SettingsCommand = new RelayCommand(OnConnect, () => SelectedItem != null);
+      ConnectCommandAsync = new AsyncRelayCommand(OnConnectAsync, () => SelectedItem != null && !SelectedItem.IsConnected);
+      DisconnectCommandAsync = new AsyncRelayCommand(OnDisconnectAsync, () => SelectedItem != null && SelectedItem.IsConnected);
+      SettingsCommandAsync = new AsyncRelayCommand(OnSettingsAsync, () => SelectedItem != null && SelectedItem.HasSettings);
     }
 
-    public RelayCommand ConnectCommand { get; set; }
-    public RelayCommand DisconnectCommand { get; set; }
-    public RelayCommand SettingsCommand { get; set; }
+    public AsyncRelayCommand ConnectCommandAsync { get; set; }
+    public AsyncRelayCommand DisconnectCommandAsync { get; set; }
+    public AsyncRelayCommand SettingsCommandAsync { get; set; }
 
     //finalizers
 
 
     //interface implementations
-    public void OnConnect()
+    public override Task OnRefreshAsync()
     {
-      SelectedItem?.Connect();
+      return Task.Run(() => m_itemsService.Refresh());
     }
 
-    public void OnDisconnect()
+    public Task OnConnectAsync()
     {
-      SelectedItem?.Disconnect();
+      return Task.Run(() =>
+      {
+        SelectedItem?.Connect();
+        NotifyCanExecuteChanged();    //major commands require re-evaluation of states for other buttons
+      });
     }
 
-    public void OnSettings()
+    public Task OnDisconnectAsync()
     {
-      //TODO: Develop a generic way to update the settings of the Plugin???
-      //  This might be just to update the IPluginConfiguration object.
-      throw new NotImplementedException("TODO: Implement way to configure settings/IPluginConfiguration");
+      return Task.Run(() =>
+      {
+        SelectedItem?.Disconnect();
+        NotifyCanExecuteChanged();    //major commands require re-evaluation of states for other buttons
+      });
+    }
+
+    public Task OnSettingsAsync()
+    {
+    return Task.Run(() =>
+         {
+        SelectedItem?.ShowSettings();
+        NotifyCanExecuteChanged();    //major commands require re-evaluation of states for other buttons
+      });
     }
 
     public override void OnAdd()
@@ -65,9 +80,14 @@ namespace TradeSharp.CoreUI.ViewModels
     protected override void NotifyCanExecuteChanged()
     {
       base.NotifyCanExecuteChanged();
-      ConnectCommand.NotifyCanExecuteChanged();
-      DisconnectCommand.NotifyCanExecuteChanged();
-      SettingsCommand.NotifyCanExecuteChanged();
+      ConnectCommandAsync.NotifyCanExecuteChanged();
+      DisconnectCommandAsync.NotifyCanExecuteChanged();
+      SettingsCommandAsync.NotifyCanExecuteChanged();
+
+      //allow update of selected item's custom commands
+      if (SelectedItem != null)
+        foreach (var command in SelectedItem.CustomCommands)
+          if (command.Command != null) command.Command.NotifyCanExecuteChanged();
     }
 
     //properties

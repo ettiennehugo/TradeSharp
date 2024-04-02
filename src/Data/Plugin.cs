@@ -28,6 +28,8 @@ namespace TradeSharp.Data
     public Plugin(string name)
     {
       Name = name;
+      HasSettings = false;
+      CustomCommands = new List<CustomCommand>();
     }
 
     //finalizers
@@ -42,12 +44,15 @@ namespace TradeSharp.Data
     public virtual void Destroy() { }
     public virtual void Connect() { }
     public virtual void Disconnect() { }
+    public virtual void ShowSettings() { }
 
     //properties
     public string Name { get; internal set; }
     public IHost ServiceHost { get; set; }
     public IPluginConfiguration Configuration { get; set; }
-    public bool IsConnected { get; protected set; }
+    public virtual bool IsConnected { get; protected set; }
+    public virtual bool HasSettings { get; protected set; }
+    public IList<CustomCommand> CustomCommands { get; protected set; }
 
     //methods
 

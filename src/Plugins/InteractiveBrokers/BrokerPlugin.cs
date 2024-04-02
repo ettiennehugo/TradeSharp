@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using TradeSharp.Data;
+using TradeSharp.CoreUI.Services;
 using System.Runtime.InteropServices;
 
 namespace TradeSharp.InteractiveBrokers
@@ -22,6 +23,7 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //attributes
+    protected IDialogService m_dialogService;
     protected IBApiAdapter m_clientResponseHandler;
     protected string m_ip;
     protected int m_port;
@@ -31,17 +33,12 @@ namespace TradeSharp.InteractiveBrokers
     public BrokerPlugin() : base("InteractiveBrokers") { }
 
     //finalizers
-
-
-    //interface implementations
-    public override void Create(ILogger logger)
+    ~BrokerPlugin()
     {
-      base.Create(logger);
-      m_ip = (string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
-      m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
-      m_clientResponseHandler = IBApiAdapter.GetInstance(logger, ServiceHost, Configuration);
+      IBApiAdapter.ReleaseInstance(); //when instance count reaches zero, the client socket will be disconnected
     }
 
+    //interface implementations
     public override void Connect()
     {
       base.Connect();
@@ -49,7 +46,32 @@ namespace TradeSharp.InteractiveBrokers
       m_clientResponseHandler.RunAsync();
     }
 
+    public override void Disconnect()
+    {
+      base.Disconnect();
+      m_clientResponseHandler.m_clientSocket.eDisconnect();
+    }
+
+    public override void Create(ILogger logger)
+    {
+      base.Create(logger);
+      m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
+      m_ip = (string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
+      m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
+      m_clientResponseHandler = IBApiAdapter.GetInstance(logger, ServiceHost, Configuration);
+      CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Download contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnDownloadContractsAsync, () => IsConnected) } );
+    }
+
+    public Task OnDownloadContractsAsync()
+    {
+      return Task.Run(() => {
+        var progress = m_dialogService.ShowProgressDialog("Downloading Interactive Brokers Contracts");
+        m_clientResponseHandler.DownloadContracts(progress);
+      });
+    }
+
     //properties
+    public override bool IsConnected { get => m_clientResponseHandler.IsConnected; }
     public override IList<TradeSharp.Data.Account> Accounts { get => (IList<TradeSharp.Data.Account>)m_clientResponseHandler.Accounts; }
     public IBApiAdapter ClientResponseHandler { get => m_clientResponseHandler; }
 

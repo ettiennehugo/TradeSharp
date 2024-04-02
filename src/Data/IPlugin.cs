@@ -1,10 +1,23 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using CommunityToolkit.Mvvm.Input;
 using System.Runtime.InteropServices;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data
 {
+  /// <summary>
+  /// Custom commands supported by the plugins.
+  /// </summary>
+  public class CustomCommand 
+  {
+    public const string Separator = "-----";    //set name to this value to create a separator
+    public string Name;
+    public string Tooltip;
+    public string Icon;                             // Segoe font assets icon code
+    public IRelayCommand? Command;
+  }
+
   /// <summary>
   /// Base interface to be supported by all plugins.
   /// </summary>
@@ -29,6 +42,8 @@ namespace TradeSharp.Data
     IHost ServiceHost { get; set; }                     //service host for TradeSharp
     IPluginConfiguration Configuration { get; set; }    //configuration profile for the broker plugin
     bool IsConnected { get; }                           //is the plugin connected to the remote service (returns true if no connection is used)
+    bool HasSettings { get; }                           //does the plugin have settings to show
+    IList<CustomCommand> CustomCommands { get; }        //custom commands supported by the plugin
 
     //methods
     /// <summary>
@@ -42,5 +57,10 @@ namespace TradeSharp.Data
     /// </summary>
     void Connect();
     void Disconnect();
+
+    /// <summary>
+    /// Shows specific settings for the plugin if HasSettings returns true.
+    /// </summary>
+    void ShowSettings();
   }
 }

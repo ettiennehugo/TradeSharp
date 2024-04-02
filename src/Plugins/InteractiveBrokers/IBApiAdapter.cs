@@ -7,6 +7,7 @@ using System.Reflection;
 using TradeSharp.Common;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -108,6 +109,7 @@ namespace TradeSharp.InteractiveBrokers
     protected IInstrumentService m_instrumentService;
     protected string m_databaseFile;
     protected IPluginConfiguration m_configuration;
+    protected int m_instanceCount;
     private SqliteConnection m_connection;
     private string m_connectionString;
 
@@ -115,7 +117,20 @@ namespace TradeSharp.InteractiveBrokers
     static public IBApiAdapter GetInstance(ILogger logger, IHost serviceHost, IPluginConfiguration configuration)
     {
       if (m_instance == null) m_instance = new IBApiAdapter(logger, serviceHost, configuration);
+      m_instance.m_instanceCount++;
       return m_instance;
+    }
+
+    static public void ReleaseInstance()
+    {
+      if (m_instance == null) return;
+
+      m_instance.m_instanceCount--;
+      if (m_instance.m_instanceCount == 0)
+      {
+        m_instance.m_responseReaderThread = null;
+        m_instance = null;
+      }
     }
 
     protected IBApiAdapter(ILogger logger, IHost serviceHost, IPluginConfiguration configuration)
@@ -180,6 +195,8 @@ namespace TradeSharp.InteractiveBrokers
         m_ip = ip;
         m_port = port;
         m_clientSocket.eConnect(m_ip, m_port, 0);
+        if (!m_clientSocket.IsConnected())
+          m_logger.LogError($"Connection to IP {m_ip} and port {m_port} failed - check that IB Gateway under Settings and set it in TradeSharp config file.");
       }
       else
         if (m_ip != ip || m_port != port) m_logger.LogWarning($"Attempting to connect to a different IP and port than the current connection. (ConnectedIP - {m_ip}, RequestedIP - {ip}, ConnectedPort - {m_port}, RequestedPort - {port})");
@@ -194,6 +211,79 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_responseReaderThread = new Thread(Run);
         m_responseReaderThread.Start();
+      }
+    }
+
+    public void DownloadContracts(IProgressDialog? progressDialog)
+    {
+      //only start the download if it's not already running
+      if (Monitor.TryEnter(this, 0))
+      {
+        try
+        {
+          //setup progress for donloading the contract headers
+          if (progressDialog != null)
+          {
+            progressDialog.ShowAsync();
+            progressDialog.Complete = false;
+            progressDialog.Progress = 0;
+            progressDialog.StatusMessage = "Downloading contract headers";
+            progressDialog.Maximum = SpecialTickerPatterns.Count + 26;
+          }
+
+          //request basic contract information for all contracts
+          foreach (string pattern in SpecialTickerPatterns)
+          {
+            m_clientSocket.reqMatchingSymbols(NextRequestId, pattern);
+            if (progressDialog != null) progressDialog.Progress += 1;
+            Thread.Sleep(ContractMatchRequestSleepTime);
+          }
+
+          for (char pattern = 'A'; pattern <= 'Z'; pattern++)
+          {
+            m_clientSocket.reqMatchingSymbols(NextRequestId, pattern.ToString());
+            if (progressDialog != null) progressDialog.Progress += 1;
+            Thread.Sleep(ContractMatchRequestSleepTime);
+          }
+
+          //setup progress for downloading the contract details
+          if (progressDialog != null)
+          {
+            progressDialog.Progress = 0;
+            progressDialog.StatusMessage = "Downloading contract details";
+            progressDialog.Maximum = GetRowCount(TableContracts, $"SecType = '{ContractTypeStock}'");   //NOTE: Currently only stocks are supported.
+          }
+
+          //request contract details for all stock type contracts (we only support stocks at this time)
+          //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#contract-details
+          using (var reader = ExecuteReader($"SELECT * FROM {TableContracts} WHERE SecType = '{ContractTypeStock}'"))
+            while (reader.Read())
+            {
+              m_clientSocket.reqContractDetails(NextRequestId, new IBApi.Contract { ConId = reader.GetInt32(0), Symbol = reader.GetString(0), SecType = reader.GetString(0), Exchange = reader.GetString(0), Currency = reader.GetString(0) });
+              if (progressDialog != null) progressDialog.Progress += 1;
+              Thread.Sleep(ContractDetailsRequestSleepTime);
+            }
+
+          //complete progress after download
+          if (progressDialog != null)
+          {
+            progressDialog.Complete = true;
+            progressDialog.Close(false);
+          }
+        }
+        finally
+        {
+          Monitor.Exit(this);
+        }
+      }
+      else
+      {
+        if (progressDialog != null)
+        {
+          progressDialog.Complete = false;
+          progressDialog.Close(true);
+        }
+        m_logger.LogWarning("DownloadContracts - Download already in progress.");
       }
     }
 
@@ -338,38 +428,6 @@ namespace TradeSharp.InteractiveBrokers
         ValidExchanges TEXT,
         Notes TEXT
       ");
-    }
-
-    // Async method to download the list of contracts supported from the TWS API.
-    // NOTE: There does not seem to be an easy way to get the list of all contracts supported by the TWS API so
-    //       we need to load the contracts based on ticker matches.
-    // https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#stock-symbol-search
-    protected void LoadContractsAsync()
-    {
-      var workerThread = new Thread(() =>
-      {
-        //request basic contract information for all contracts
-        foreach (string pattern in SpecialTickerPatterns)
-        {
-          m_clientSocket.reqMatchingSymbols(NextRequestId, pattern);
-          Thread.Sleep(ContractMatchRequestSleepTime);
-        }
-
-        for (char pattern = 'A'; pattern <= 'Z'; pattern++)
-        {
-          m_clientSocket.reqMatchingSymbols(NextRequestId, pattern.ToString());
-          Thread.Sleep(ContractMatchRequestSleepTime);
-        }
-
-        //request contract details for all stock type contracts (we only support stocks at this time)
-        //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#contract-details
-        using (var reader = ExecuteReader($"SELECT * FROM {TableContracts} WHERE SecType = '{ContractTypeStock}'"))
-          while (reader.Read())
-          {
-            m_clientSocket.reqContractDetails(NextRequestId, new IBApi.Contract { ConId = reader.GetInt32(0), Symbol = reader.GetString(0), SecType = reader.GetString(0), Exchange = reader.GetString(0), Currency = reader.GetString(0) });
-            Thread.Sleep(ContractDetailsRequestSleepTime);
-          }
-      });
     }
 
     public Contract? ContractForInstrument(string ticker, string exchange)

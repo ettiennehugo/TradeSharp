@@ -55,6 +55,7 @@ namespace TradeSharp.WinDataManager
       loadCachedData();
       m_window = new MainWindow();
       m_window.Activate();
+      UnhandledException += OnAppUnhandledException;
     }
 
     //properties
@@ -113,10 +114,8 @@ namespace TradeSharp.WinDataManager
         })
         .Build();
       
-      //initialize the plugins with access to the service host - TBD not sure how good this is and whether there is a better way to do this since it breaks the DI pattern
-      IPluginsService pluginsService = m_host.Services.GetService<IPluginsService>();
-      pluginsService.Host = m_host;
-      pluginsService.Refresh();   //this is the only refresh that should be called since during run-time these services are not expected to change
+      //run the service host for whatever reason!!!
+      m_host.RunAsync();
     }
 
     private void loadCachedData()
@@ -124,6 +123,28 @@ namespace TradeSharp.WinDataManager
       //start caching the instrument data
       var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       instrumentViewModel.RefreshCommandAsync.Execute(null);
+
+      //setup plugin service host and start caching plugins
+      var pluginsService = m_host.Services.GetService<IPluginsService>();
+      pluginsService.Host = m_host;
+      var pluginsViewModel = m_host.Services.GetService<IPluginsViewModel>();
+      pluginsViewModel.RefreshCommandAsync.ExecuteAsync(null);    //this is the only refresh that should be called since during run-time these services are not expected to change
     }
+
+    /// <summary>
+    /// Generic exception handler for application - investigate exceptions raised since it might indicate a deeper issue.
+    /// https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.unhandledexceptioneventhandler?view=windows-app-sdk-1.5
+    /// </summary>
+    protected void OnAppUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+      //log the exception
+      var logger = m_host.Services.GetService<ILogger<App>>();
+      logger.LogError(e.Exception, "Unhandled exception occurred in the application.");
+
+      //display the exception to the user
+      var dialogService = m_host.Services.GetService<IDialogService>();
+      dialogService.ShowPopupMessageAsync($"An unhandled exception occurred in the application - {e.Message}");
+    }
+
   }
 }

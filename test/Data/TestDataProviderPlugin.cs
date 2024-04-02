@@ -25,6 +25,7 @@ namespace TradeSharp.Data.Testing
     {
       m_name = "";
       m_tickers = new List<string>();
+      CustomCommands = new List<CustomCommand>();
     }
 
     //finalizers
@@ -34,12 +35,15 @@ namespace TradeSharp.Data.Testing
     public void Create(ILogger logger)
     {
       m_name = "TestDataProvider";
+      HasSettings = false;
+      CustomCommands = new List<CustomCommand>();
     }
 
     public void Destroy() { IsConnected = false; }
 
     public void Connect() { IsConnected = true; }
     public void Disconnect() { IsConnected = false; }
+    public void ShowSettings() { }
 
     public object Request(string ticker, Resolution resolution, DateTime start, DateTime end) { return new List<BarData>(); }   //just return empty list
 
@@ -50,6 +54,8 @@ namespace TradeSharp.Data.Testing
     public IPluginConfiguration Configuration { get; set; }
     public IHost ServiceHost { get; set; }
     public bool IsConnected { get; internal set; }
+    public bool HasSettings { get; internal set; }
+    public IList<CustomCommand> CustomCommands { get; internal set; }
 
     //methods
 

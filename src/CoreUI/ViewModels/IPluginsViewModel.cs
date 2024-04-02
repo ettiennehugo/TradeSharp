@@ -21,13 +21,13 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
 		//properties
-		public RelayCommand ConnectCommand { get; set; }
-		public RelayCommand DisconnectCommand { get; set; }
-		public RelayCommand SettingsCommand { get; set; }
+		public AsyncRelayCommand ConnectCommandAsync { get; set; }
+		public AsyncRelayCommand DisconnectCommandAsync { get; set; }
+		public AsyncRelayCommand SettingsCommandAsync { get; set; }
 
 		//methods
-		void OnConnect();
-		void OnDisconnect();
-		void OnSettings();
+		Task OnConnectAsync();
+		Task OnDisconnectAsync();
+		Task OnSettingsAsync();
 	}
 }

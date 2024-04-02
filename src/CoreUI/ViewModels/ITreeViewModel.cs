@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 
@@ -8,7 +9,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// Interface for view models that allow tree type access. 
   /// </summary>
-  public interface ITreeViewModel<TKey, TItem>: IRefreshable where TItem : class
+  public interface ITreeViewModel<TKey, TItem>: INotifyPropertyChanged, INotifyPropertyChanging, IRefreshable where TItem : class
   {
 
     //constants
