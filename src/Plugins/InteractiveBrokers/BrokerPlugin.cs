@@ -24,32 +24,29 @@ namespace TradeSharp.InteractiveBrokers
 
     //attributes
     protected IDialogService m_dialogService;
-    protected IBApiAdapter m_clientResponseHandler;
+    protected IBClient m_clientResponseHandler;
     protected string m_ip;
     protected int m_port;
-
 
     //constructors
     public BrokerPlugin() : base("InteractiveBrokers") { }
 
     //finalizers
-    ~BrokerPlugin()
-    {
-      IBApiAdapter.ReleaseInstance(); //when instance count reaches zero, the client socket will be disconnected
-    }
+
 
     //interface implementations
     public override void Connect()
     {
       base.Connect();
       m_clientResponseHandler.Connect(m_ip, m_port);
-      m_clientResponseHandler.RunAsync();
+      while (m_clientResponseHandler.NextOrderId <= 0) { }
+      m_clientResponseHandler.SyncAccounts();
     }
 
     public override void Disconnect()
     {
+      m_clientResponseHandler.Disconnect();
       base.Disconnect();
-      m_clientResponseHandler.m_clientSocket.eDisconnect();
     }
 
     public override void Create(ILogger logger)
@@ -58,22 +55,25 @@ namespace TradeSharp.InteractiveBrokers
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
       m_ip = (string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
       m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
-      m_clientResponseHandler = IBApiAdapter.GetInstance(logger, ServiceHost, Configuration);
+      m_clientResponseHandler = IBClient.GetInstance(logger, ServiceHost, Configuration);
       CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Download contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnDownloadContractsAsync, () => IsConnected) } );
     }
 
     public Task OnDownloadContractsAsync()
     {
       return Task.Run(() => {
-        var progress = m_dialogService.ShowProgressDialog("Downloading Interactive Brokers Contracts");
-        m_clientResponseHandler.DownloadContracts(progress);
+
+        //TODO: This breaks since it's coming from a background thread.
+
+        //var progress = m_dialogService.ShowProgressDialog("Downloading Interactive Brokers Contracts");
+        m_clientResponseHandler.DownloadContracts(null);
       });
     }
 
     //properties
     public override bool IsConnected { get => m_clientResponseHandler.IsConnected; }
     public override IList<TradeSharp.Data.Account> Accounts { get => (IList<TradeSharp.Data.Account>)m_clientResponseHandler.Accounts; }
-    public IBApiAdapter ClientResponseHandler { get => m_clientResponseHandler; }
+    public IBClient ClientResponseHandler { get => m_clientResponseHandler; }
 
     //methods
     public void defineCustomProperties(Order order)

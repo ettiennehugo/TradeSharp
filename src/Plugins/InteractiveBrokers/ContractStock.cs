@@ -3,7 +3,7 @@
   /// <summary>
   /// Interactive Brokers contract for stock instruments.
   /// </summary>
-  public class ContractStock : Contract
+  public class ContractStock : IBApi.Contract
   {
     //constants
 

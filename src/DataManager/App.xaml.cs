@@ -111,6 +111,9 @@ namespace TradeSharp.WinDataManager
           logging.AddDebug();
           logging.AddEventSourceLogger();
           if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) logging.AddEventLog();
+#if DEBUG
+          logging.SetMinimumLevel(LogLevel.Trace);  //enable full logging in debug mode
+#endif
         })
         .Build();
       
@@ -120,9 +123,15 @@ namespace TradeSharp.WinDataManager
 
     private void loadCachedData()
     {
-      //start caching the instrument data
+      //start caching crucial data
+      var countryViewModel = (ICountryViewModel)IApplication.Current.Services.GetService(typeof(ICountryViewModel));
+      countryViewModel.RefreshCommandAsync.Execute(null);
+      var exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
+      exchangeViewModel.RefreshCommandAsync.Execute(null);
       var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       instrumentViewModel.RefreshCommandAsync.Execute(null);
+      var holidayViewModel = (IHolidayViewModel)IApplication.Current.Services.GetService(typeof(IHolidayViewModel));
+      holidayViewModel.RefreshCommandAsync.Execute(null);
 
       //setup plugin service host and start caching plugins
       var pluginsService = m_host.Services.GetService<IPluginsService>();

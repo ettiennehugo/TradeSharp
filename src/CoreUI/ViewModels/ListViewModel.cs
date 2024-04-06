@@ -100,7 +100,10 @@ namespace TradeSharp.CoreUI.ViewModels
     /// Default list view model only support synchronous refresh.
     /// </summary>
     /// <returns></returns>
-    public override Task OnRefreshAsync() => throw new NotImplementedException($"{GetType().ToString()} view model only supports synchronous refresh.");
+    public override Task OnRefreshAsync()
+    {
+      return Task.Run(OnRefresh);
+    }
 
     public override Task OnCopyAsync(object? target)
     {
