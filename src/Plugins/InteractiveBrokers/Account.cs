@@ -5,7 +5,7 @@ namespace TradeSharp.InteractiveBrokers
   /// <summary>
   /// InteractiveBrokers account.
   /// </summary>
-  public class Account : TradeSharp.Data.Account
+  public partial class Account : TradeSharp.Data.Account
   {
 
     //constants
@@ -41,27 +41,18 @@ namespace TradeSharp.InteractiveBrokers
 
     }
 
-    public override void CancelOrder(Order order)
+    public override void CancelOrder(Data.Order order)
     {
 
       throw new NotImplementedException();
 
     }
 
-
     //properties
 
 
     //methods
-    public void setDefault(bool value) { Default = value; }
-    public void setBaseCurrency(string value) { BaseCurrency = value; }
-    public void setNetLiquidation(double value) { NetLiquidation = value; }
-    public void setSettledCash(double value) { SettledCash = value; }
-    public void setBuyingPower(double value) { BuyingPower = value; }
-    public void setMaintenanceMargin(double value) { MaintenanceMargin = value; }
-    public void setPositionsValue(double value) { PositionsValue = value; }
-    public void setAvailableFunds(double value) { AvailableFunds = value; }
-    public void setExcessLiquidity(double value) { ExcessLiquidity = value; }
-    public void setLastSyncDateTime(DateTime value) { LastSyncDateTime = value; }
+
+
   }
 }

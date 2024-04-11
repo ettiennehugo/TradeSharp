@@ -7,15 +7,12 @@
             Key = key;
             Value = value;
             Currency = currency;
-            AccountName = accountName;
+            Account = accountName;
         }
 
         public string Key { get; set; }
-
         public string Value { get; set; }
-
         public string Currency { get; set; }
-
-        public string AccountName { get; set; }
+        public string Account { get; set; }
     }
 }

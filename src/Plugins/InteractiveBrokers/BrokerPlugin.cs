@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using System.Runtime.InteropServices;
+using TradeSharp.InteractiveBrokers.Messages;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -24,7 +25,7 @@ namespace TradeSharp.InteractiveBrokers
 
     //attributes
     protected IDialogService m_dialogService;
-    protected IBClient m_clientResponseHandler;
+    protected ServiceHost m_ibServiceHost;
     protected string m_ip;
     protected int m_port;
 
@@ -38,15 +39,16 @@ namespace TradeSharp.InteractiveBrokers
     public override void Connect()
     {
       base.Connect();
-      m_clientResponseHandler.Connect(m_ip, m_port);
-      while (m_clientResponseHandler.NextOrderId <= 0) { }
-      m_clientResponseHandler.SyncAccounts();
+      m_ibServiceHost.Client.Connect(m_ip, m_port);
+      while (m_ibServiceHost.Client.NextOrderId <= 0) { }
+      raiseConnected();
     }
 
     public override void Disconnect()
     {
-      m_clientResponseHandler.Disconnect();
+      m_ibServiceHost.Client.Disconnect();
       base.Disconnect();
+      raiseDisconnected();
     }
 
     public override void Create(ILogger logger)
@@ -55,25 +57,26 @@ namespace TradeSharp.InteractiveBrokers
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
       m_ip = (string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
       m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
-      m_clientResponseHandler = IBClient.GetInstance(logger, ServiceHost, Configuration);
-      CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Download contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnDownloadContractsAsync, () => IsConnected) } );
+      m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
+      m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
+      m_ibServiceHost.Client.ConnectionClosed += HandleConnectionClosed;
+      CustomCommands.Add(new CustomCommand { Name = "Scanner Parameters", Tooltip = "Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
+      CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnDownloadContractsAsync, () => IsConnected) } );
+    }
+
+    public Task OnScannerParametersAsync()
+    {
+      return Task.Run(m_ibServiceHost.Client.ClientSocket.reqScannerParameters);
     }
 
     public Task OnDownloadContractsAsync()
     {
-      return Task.Run(() => {
-
-        //TODO: This breaks since it's coming from a background thread.
-
-        //var progress = m_dialogService.ShowProgressDialog("Downloading Interactive Brokers Contracts");
-        m_clientResponseHandler.DownloadContracts(null);
-      });
+      return Task.Run(() => m_ibServiceHost.Instruments.SynchronizeContractCache());
     }
 
     //properties
-    public override bool IsConnected { get => m_clientResponseHandler.IsConnected; }
-    public override IList<TradeSharp.Data.Account> Accounts { get => (IList<TradeSharp.Data.Account>)m_clientResponseHandler.Accounts; }
-    public IBClient ClientResponseHandler { get => m_clientResponseHandler; }
+    public override bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
+    public override IList<TradeSharp.Data.Account> Accounts { get => m_ibServiceHost.Accounts.Accounts; }
 
     //methods
     public void defineCustomProperties(Order order)
@@ -94,6 +97,16 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_logger.LogError("Order type not supported.");
       }
+    }
+
+    public void HandleConnectionStatus(ConnectionStatusMessage connectionStatusMessage)
+    {
+      raiseUpdateCommands();
+    }
+
+    public void HandleConnectionClosed()
+    {
+      raiseUpdateCommands();
     }
   }
 }

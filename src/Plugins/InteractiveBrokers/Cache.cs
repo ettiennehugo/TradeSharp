@@ -2,13 +2,15 @@
 using Microsoft.Data.Sqlite;
 using TradeSharp.Common;
 using IBApi;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TradeSharp.InteractiveBrokers
 {
   /// <summary>
   /// Database to locally store data specific to Interactive Brokers, e.g. contract details.
   /// </summary>
-  public sealed class IBCache
+  public sealed class Cache
   {
     //constants
     /// <summary>
@@ -24,16 +26,22 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //attributes
+    static private Cache? s_instance; 
     private string m_databaseFile;
     private SqliteConnection m_connection;
     private string m_connectionString;
     private ILogger m_logger;
 
     //constructors
-    public IBCache(ILogger logger, IPluginConfiguration configuration)
+    public static Cache GetInstance(ServiceHost host)
+    {
+      if (s_instance == null) s_instance = new Cache(host.Host.Services.GetRequiredService<ILogger<Cache>>(), host.Host, host.Configuration);
+      return s_instance;
+    }
+
+    protected Cache(ILogger logger, IHost host, IPluginConfiguration configuration)
     {
       m_logger = logger;
-
       string tradeSharpHome = Environment.GetEnvironmentVariable(TradeSharp.Common.Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{TradeSharp.Common.Constants.TradeSharpHome}\" not defined.");
       m_databaseFile = Path.Combine(tradeSharpHome, TradeSharp.Common.Constants.DataDir, configuration.Configuration[TradeSharp.InteractiveBrokers.Constants.CacheKey]!.ToString());
 
@@ -51,7 +59,7 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //finalizers
-    ~IBCache()
+    ~Cache()
     {
       m_connection.Close();
     }
@@ -92,8 +100,9 @@ namespace TradeSharp.InteractiveBrokers
       return commandObj.ExecuteReader();
     }
 
-    public string ToSqlSafeString(string value)
+    public string ToSqlSafeString(string? value)
     {
+      if (value == null) return "";
       return value.Replace("\'", "\'\'");
     }
 
@@ -204,7 +213,7 @@ namespace TradeSharp.InteractiveBrokers
         if (reader.Read())
         {
           string secType = reader.GetString(4);
-          if (secType == IBClient.ContractTypeStock)
+          if (secType == Client.ContractTypeStock)
           {
             contract = new ContractStock
             {
@@ -221,21 +230,21 @@ namespace TradeSharp.InteractiveBrokers
               LastTradeDateOrContractMonth = reader.GetString(10),
               //ConId = reader.GetInt32(11),  - duplicate from right table
               Cusip = reader.GetString(12),
-              LongName = reader.GetString(13),
+              LongName = FromSqlSafeString(reader.GetString(13)),
               StockType = reader.GetString(14),
               IssueDate = reader.GetString(15),
               LastTradeTime = reader.GetString(16),
-              Category = reader.GetString(17),
-              Subcategory = reader.GetString(18),
-              Industry = reader.GetString(19),
+              Category = FromSqlSafeString(reader.GetString(17)),
+              Subcategory = FromSqlSafeString(reader.GetString(18)),
+              Industry = FromSqlSafeString(reader.GetString(19)),
               Ratings = reader.GetString(20),
               TimeZoneId = reader.GetString(21),
               TradingHours = reader.GetString(22),
               LiquidHours = reader.GetString(23),
               OrderTypes = reader.GetString(24),
-              MarketName = reader.GetString(25),
-              ValidExchanges = reader.GetString(26),
-              Notes = reader.GetString(27)
+              MarketName = FromSqlSafeString(reader.GetString(25)),
+              ValidExchanges = FromSqlSafeString(reader.GetString(26)),
+              Notes = FromSqlSafeString(reader.GetString(27))
             };
           }
           else
@@ -244,20 +253,6 @@ namespace TradeSharp.InteractiveBrokers
 
       return contract;
     }
-
-    //public Contract? ContractForInstrument(Instrument instrument)
-    //{
-    //  Exchange? primaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == instrument.PrimaryExchangeId);
-    //  if (primaryExchange == null) return null;
-    //  Contract? contract = ContractForInstrument(instrument.Ticker, primaryExchange.Name);
-    //  if (contract == null)
-    //    foreach (string ticker in instrument.AlternateTickers)
-    //    {
-    //      contract = ContractForInstrument(ticker, primaryExchange.Name);
-    //      if (contract != null) break;
-    //    }
-    //  return contract;
-    //}
 
     public void UpdateContract(IBApi.Contract contract)
     {
@@ -293,21 +288,21 @@ namespace TradeSharp.InteractiveBrokers
             $"VALUES (" +
               $"{contract.UnderConId}, " +
               $"'{contract.Cusip}', " +
-              $"'{contract.LongName}', " +
+              $"'{ToSqlSafeString(contract.LongName)}', " +
               $"'{contract.StockType}', " +
               $"'{contract.IssueDate}', " +
               $"'{contract.LastTradeTime}', " +
-              $"'{contract.Category}', " +
-              $"'{contract.Subcategory}', " +
-              $"'{contract.Industry}', " +
+              $"'{ToSqlSafeString(contract.Category)}', " +
+              $"'{ToSqlSafeString(contract.Subcategory)}', " +
+              $"'{ToSqlSafeString(contract.Industry)}', " +
               $"'{contract.Ratings}', " +
               $"'{contract.TimeZoneId}', " +
               $"'{contract.TradingHours}', " +
               $"'{contract.LiquidHours}', " +
               $"'{contract.OrderTypes}', " +
-              $"'{contract.MarketName}', " +
-              $"'{contract.ValidExchanges}', " +
-              $"'{contract.Notes}' " +
+              $"'{ToSqlSafeString(contract.MarketName)}', " +
+              $"'{ToSqlSafeString(contract.ValidExchanges)}', " +
+              $"'{ToSqlSafeString(contract.Notes)}' " +
             $")"
         );
       }

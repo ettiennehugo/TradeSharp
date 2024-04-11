@@ -37,7 +37,15 @@ namespace TradeSharp.CoreUI.ViewModels
     //interface implementations
     public override Task OnRefreshAsync()
     {
-      return Task.Run(() => m_itemsService.Refresh());
+      return Task.Run(() => { 
+        m_itemsService.Refresh();
+        foreach (var plugin in m_itemsService.Items)
+        {
+          plugin.Connected += OnConnected;
+          plugin.Disconnected += OnDisconnected;
+          plugin.UpdateCommands += OnUpdateCommands;
+        }
+      });
     }
 
     public Task OnConnectAsync()
@@ -45,7 +53,6 @@ namespace TradeSharp.CoreUI.ViewModels
       return Task.Run(() =>
       {
         SelectedItem?.Connect();
-        NotifyCanExecuteChanged();    //major commands require re-evaluation of states for other buttons
       });
     }
 
@@ -54,17 +61,15 @@ namespace TradeSharp.CoreUI.ViewModels
       return Task.Run(() =>
       {
         SelectedItem?.Disconnect();
-        NotifyCanExecuteChanged();    //major commands require re-evaluation of states for other buttons
       });
     }
 
     public Task OnSettingsAsync()
     {
-    return Task.Run(() =>
-         {
-        SelectedItem?.ShowSettings();
-        NotifyCanExecuteChanged();    //major commands require re-evaluation of states for other buttons
-      });
+      return Task.Run(() =>
+        {
+          SelectedItem?.ShowSettings();
+        });
     }
 
     public override void OnAdd()
@@ -75,6 +80,21 @@ namespace TradeSharp.CoreUI.ViewModels
     public override void OnUpdate()
     {
       throw new NotImplementedException("Update not supported.");
+    }
+
+    public void OnConnected(object? sender, EventArgs e)
+    {
+      NotifyCanExecuteChanged();
+    }
+
+    public void OnDisconnected(object? sender, EventArgs e)
+    {
+      NotifyCanExecuteChanged();
+    }
+
+    public void OnUpdateCommands(object? sender, EventArgs e)
+    {
+      NotifyCanExecuteChanged();
     }
 
     protected override void NotifyCanExecuteChanged()

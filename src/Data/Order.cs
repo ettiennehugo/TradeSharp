@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace TradeSharp.Data
 {
@@ -8,7 +9,7 @@ namespace TradeSharp.Data
   /// </summary>
   [ComVisible(true)]
   [Guid("3C1D72CF-CDAB-401E-9049-53B1411E2E78")]
-  public abstract class Order
+  public abstract partial class Order: ObservableObject
   {
     //constants
 
@@ -43,9 +44,14 @@ namespace TradeSharp.Data
 
 
     //properties
-    public Account Account { get; internal set; }
-    public Instrument Instrument { get; internal set; }
-    public OrderStatus Status { get; internal set; }
+    [ObservableProperty] private Account m_account;
+    [ObservableProperty] private Instrument m_instrument;
+    [ObservableProperty] private OrderStatus m_status;
+    [ObservableProperty] private double m_quantity;
+    [ObservableProperty] private double m_filled;
+    [ObservableProperty] private double m_remaining;
+    [ObservableProperty] private double m_averageFillPrice;
+    [ObservableProperty] private double m_lastFillPrice;
     public IDictionary<string, CustomProperty> CustomProperties { get; internal set; }
 
     //methods

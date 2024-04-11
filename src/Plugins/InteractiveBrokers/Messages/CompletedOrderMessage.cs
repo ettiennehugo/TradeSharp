@@ -4,7 +4,7 @@ namespace TradeSharp.InteractiveBrokers.Messages
 {
   public class CompletedOrderMessage
     {
-        public CompletedOrderMessage(Contract contract, Order order, OrderState orderState)
+        public CompletedOrderMessage(Contract contract, IBApi.Order order, OrderState orderState)
         {
             Contract = contract;
             Order = order;
@@ -13,7 +13,7 @@ namespace TradeSharp.InteractiveBrokers.Messages
 
         public Contract Contract { get; set; }
 
-        public Order Order { get; set; }
+        public IBApi.Order Order { get; set; }
 
         public OrderState OrderState { get; set; }
     }

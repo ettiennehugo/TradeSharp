@@ -57,8 +57,14 @@ namespace TradeSharp.Data.Testing
     public bool HasSettings { get; internal set; }
     public IList<CustomCommand> CustomCommands { get; internal set; }
 
+    //delegates
+    public virtual event EventHandler? Connected;
+    public virtual event EventHandler? Disconnected;
+    public virtual event EventHandler? UpdateCommands;
+
     //methods
-
-
+    public void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }
+    public void raiseDisconnected() { if (Disconnected != null) Disconnected(this, new EventArgs()); }
+    public void raiseUpdateCommands() { if (UpdateCommands != null) UpdateCommands(this, new EventArgs()); }
   }
 }

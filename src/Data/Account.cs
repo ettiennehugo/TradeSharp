@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.Data
 {
@@ -12,7 +9,7 @@ namespace TradeSharp.Data
   /// </summary>
   [ComVisible(true)]
   [Guid("9EA66DAD-3B05-4C14-8635-138ED999A80C")]
-  public abstract class Account
+  public abstract partial class Account: ObservableObject
   {
     //constants
 
@@ -25,15 +22,15 @@ namespace TradeSharp.Data
 
     //attributes
     protected string m_name;
-    protected List<Position> m_positions;
-    protected List<Order> m_orders;
+    protected ObservableCollection<Position> m_positions;
+    protected ObservableCollection<Order> m_orders;
 
     //constructors
     public Account(string name)
     {
       m_name = name;
-      m_positions = new List<Position>();
-      m_orders = new List<Order>();
+      m_positions = new ObservableCollection<Position>();
+      m_orders = new ObservableCollection<Order>();
       CustomProperties = new Dictionary<string, CustomProperty>();
     }
 
@@ -45,18 +42,19 @@ namespace TradeSharp.Data
 
     //properties
     public string Name { get => m_name; }
-    public bool Default { get; protected set; }              //if multiple accounts are present this flag will be set for the default account
-    public string BaseCurrency { get; protected set; }       //bae currency of the account
-    public IList<Position> Positions { get => m_positions; }
-    public IList<Order> Orders { get => m_orders; }
-    public double NetLiquidation { get; protected set; }     //all cash and securities in the account
-    public double SettledCash { get; protected set; }        //cash recognised as settled
-    public double BuyingPower { get; protected set; }        //currency available to trade securities
-    public double MaintenanceMargin { get; protected set; }  //margin require for whole account
-    public double PositionsValue { get; protected set; }     //currency value of all poisitions held
-    public double AvailableFunds { get; protected set; }     //cash available for trading
-    public double ExcessLiquidity { get; protected set; }    //cash available for trading after considering margin requirements
-    public DateTime LastSyncDateTime { get; protected set; } //last time the account was synced with the broker
+    [ObservableProperty] private bool m_default;              //if multiple accounts are present this flag will be set for the default account
+    [ObservableProperty] private string m_accountType;        //type of account
+    [ObservableProperty] private string m_baseCurrency;       //base currency of the account
+    [ObservableProperty] private double m_netLiquidation;     //all cash and securities in the account
+    [ObservableProperty] private double m_settledCash;        //cash recognised as settled
+    [ObservableProperty] private double m_buyingPower;        //currency available to trade securities
+    [ObservableProperty] private double m_maintenanceMargin;  //margin require for whole account
+    [ObservableProperty] private double m_positionsValue;     //currency value of all poisitions held
+    [ObservableProperty] private double m_availableFunds;     //cash available for trading
+    [ObservableProperty] private double m_excessLiquidity;    //cash available for trading after considering margin requirements
+    [ObservableProperty] private DateTime m_lastSyncDateTime; //last time the account was synced with the broker
+    public ObservableCollection<Position> Positions { get => m_positions; }  //instrument positions held in the account
+    public ObservableCollection<Order> Orders { get => m_orders; }    //orders placed in the account
     public IDictionary<string, CustomProperty> CustomProperties { get; protected set; }  //other properties supported by the broker
 
     //methods

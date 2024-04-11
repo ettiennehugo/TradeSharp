@@ -45,6 +45,11 @@ namespace TradeSharp.Data
     bool HasSettings { get; }                           //does the plugin have settings to show
     IList<CustomCommand> CustomCommands { get; }        //custom commands supported by the plugin
 
+    //delegates
+    event EventHandler? Connected;                      //event raised when the plugin connects to the remote service
+    event EventHandler? Disconnected;                   //event raised when the plugin disconnects from the remote service
+    event EventHandler? UpdateCommands;                 //event raised when the plugin needs to update the command list
+
     //methods
     /// <summary>
     /// Called on plugin creation/destruction.

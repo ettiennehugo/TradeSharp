@@ -1,13 +1,14 @@
-﻿using System.Runtime.InteropServices;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace TradeSharp.Data
 {
   /// <summary>
-  /// Trading position held within an account at a broker.
+  /// Trading position held within a specific account at a broker.
   /// </summary>
   [ComVisible(true)]
   [Guid("B2054674-8C40-4BAA-8BE8-D1D6CAFDC18B")]
-  public class Position
+  public partial class Position: ObservableObject
   {
     //constants
 
@@ -30,13 +31,17 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public Position(Account account, Instrument instrument, PositionDirection direction, double size, double averageCost)
+    public Position(Account account, Instrument instrument, PositionDirection direction, double size, double averageCost, double marketValue, double marketPrice, double unrealizedPnl, double realizedPnl)
     {
       Account = account;
       Instrument = instrument;
       Direction = direction;
       Size = size;
       AverageCost = averageCost;
+      MarketValue = marketValue;
+      MarketPrice = marketPrice;
+      UnrealizedPnl = unrealizedPnl;
+      RealizedPnl = realizedPnl;
     }
 
     //finalizers
@@ -46,11 +51,15 @@ namespace TradeSharp.Data
 
 
     //properties
-    public Account Account { get; protected set; }
-    public Instrument Instrument { get; protected set; }
-    public PositionDirection Direction { get; protected set; }
-    public double Size { get; protected set; }
-    public double AverageCost { get; protected set; }
+    [ObservableProperty] private Account m_account;
+    [ObservableProperty] private Instrument m_instrument;
+    [ObservableProperty] private PositionDirection m_direction;
+    [ObservableProperty] private double m_size;
+    [ObservableProperty] private double m_averageCost;
+    [ObservableProperty] private double m_marketValue;
+    [ObservableProperty] private double m_marketPrice;
+    [ObservableProperty] private double m_unrealizedPnl;
+    [ObservableProperty] private double m_realizedPnl;
 
     //methods
 

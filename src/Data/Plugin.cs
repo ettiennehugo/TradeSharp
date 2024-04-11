@@ -54,9 +54,14 @@ namespace TradeSharp.Data
     public virtual bool HasSettings { get; protected set; }
     public IList<CustomCommand> CustomCommands { get; protected set; }
 
+    //delegates
+    public virtual event EventHandler? Connected;                      //event raised when the plugin connects to the remote service
+    public virtual event EventHandler? Disconnected;                   //event raised when the plugin disconnects from the remote service
+    public virtual event EventHandler? UpdateCommands;                 //event raised when the plugin needs to update the command list
+
     //methods
-
-
-
+    protected void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }
+    protected void raiseDisconnected() { if (Disconnected != null) Disconnected(this, new EventArgs()); }
+    protected void raiseUpdateCommands() { if (UpdateCommands != null) UpdateCommands(this, new EventArgs()); }
   }
 }
