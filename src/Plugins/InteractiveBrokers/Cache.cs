@@ -288,7 +288,7 @@ namespace TradeSharp.InteractiveBrokers
         ExecuteCommand(
           $"INSERT OR REPLACE INTO {TableStockContracts} (ConId, Cusip, LongName, StockType, IssueDate, LastTradeTime, Category, SubCategory, Industry, Ratings, TimeZoneId, TradingHours, LiquidHours, OrderTypes, MarketName, ValidExchanges, Notes) " +
             $"VALUES (" +
-              $"{contract.UnderConId}, " +
+              $"{contract.Contract.ConId}, " +
               $"'{contract.Cusip ?? ""}', " +
               $"'{ToSqlSafeString(contract.LongName ?? "")}', " +
               $"'{contract.StockType ?? ""}', " +

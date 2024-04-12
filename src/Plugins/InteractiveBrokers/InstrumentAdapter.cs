@@ -195,7 +195,7 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleContractDetails(ContractDetailsMessage contractDetailsMessage)
     {
-      //m_serviceHost.Cache.UpdateContract(contractDetailsMessage.ContractDetails.Contract);
+      m_serviceHost.Cache.UpdateContract(contractDetailsMessage.ContractDetails.Contract);
       m_serviceHost.Cache.UpdateContractDetails(contractDetailsMessage.ContractDetails);
     }
 
