@@ -40,7 +40,6 @@ namespace TradeSharp.InteractiveBrokers
     {
       base.Connect();
       m_ibServiceHost.Client.Connect(m_ip, m_port);
-      while (m_ibServiceHost.Client.NextOrderId <= 0) { }
       raiseConnected();
     }
 
@@ -59,9 +58,11 @@ namespace TradeSharp.InteractiveBrokers
       m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
-      m_ibServiceHost.Client.ConnectionClosed += HandleConnectionClosed;
       CustomCommands.Add(new CustomCommand { Name = "Scanner Parameters", Tooltip = "Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
-      CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnDownloadContractsAsync, () => IsConnected) } );
+      CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) } );
+      CustomCommands.Add(new CustomCommand { Name = "Update Industry Groups", Tooltip = "Update stock industry groupings", Icon = "\uE15C", Command = new AsyncRelayCommand(OnUpdateInstrumentGroupsAsync, () => IsConnected) } );
+      if (IsConnected)
+        raiseConnected();
     }
 
     public Task OnScannerParametersAsync()
@@ -69,9 +70,14 @@ namespace TradeSharp.InteractiveBrokers
       return Task.Run(m_ibServiceHost.Client.ClientSocket.reqScannerParameters);
     }
 
-    public Task OnDownloadContractsAsync()
+    public Task OnSynchronizeContractCacheAsync()
     {
       return Task.Run(() => m_ibServiceHost.Instruments.SynchronizeContractCache());
+    }
+
+    public Task OnUpdateInstrumentGroupsAsync()
+    {
+      return Task.Run(() => m_ibServiceHost.Instruments.UpdateInstrumentGroups());
     }
 
     //properties
@@ -101,11 +107,10 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleConnectionStatus(ConnectionStatusMessage connectionStatusMessage)
     {
-      raiseUpdateCommands();
-    }
-
-    public void HandleConnectionClosed()
-    {
+      if (connectionStatusMessage.IsConnected)
+        raiseConnected();
+      else
+        raiseDisconnected();
       raiseUpdateCommands();
     }
   }

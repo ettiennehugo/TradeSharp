@@ -42,7 +42,6 @@ namespace TradeSharp.InteractiveBrokers
     {
       base.Connect();
       m_ibServiceHost.Client.Connect(m_ip, m_port);
-      while (m_ibServiceHost.Client.NextOrderId <= 0) { }
       raiseConnected();
     }
 
@@ -61,7 +60,8 @@ namespace TradeSharp.InteractiveBrokers
       m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
-      m_ibServiceHost.Client.ConnectionClosed += HandleConnectionClosed;
+      if (IsConnected)
+        raiseConnected();
     }
 
     public override object Request(string ticker, Resolution resolution, DateTime start, DateTime end)
@@ -77,11 +77,10 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleConnectionStatus(ConnectionStatusMessage connectionStatusMessage)
     {
-      raiseUpdateCommands();
-    }
-
-    public void HandleConnectionClosed()
-    {
+      if (connectionStatusMessage.IsConnected)
+        raiseConnected();
+      else
+        raiseDisconnected();
       raiseUpdateCommands();
     }
   }

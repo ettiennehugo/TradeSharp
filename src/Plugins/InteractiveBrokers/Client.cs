@@ -81,7 +81,6 @@ namespace TradeSharp.InteractiveBrokers
     protected EReaderSignal m_readerSignal;
     protected EReader m_responseReader;
     protected int m_nextRequestId;
-    protected bool m_connected;
     protected int m_nextOrderId;
     protected ILogger m_logger;
     protected string m_ip;
@@ -89,7 +88,7 @@ namespace TradeSharp.InteractiveBrokers
     protected ServiceHost m_serviceHost;
     protected IDialogService m_dialogService;
     protected IPluginConfiguration m_configuration;
-    protected int m_instanceCount;
+    protected bool m_connected;
 
     //constructors
     static public Client GetInstance(ServiceHost serviceHost)
@@ -105,12 +104,10 @@ namespace TradeSharp.InteractiveBrokers
       m_logger = serviceHost.Host.Services.GetRequiredService<ILogger<Cache>>();
       m_readerSignal = new EReaderMonitorSignal();
       ClientSocket = new EClientSocket(this, m_readerSignal);
-      m_responseReaderThread = new Thread(Run);
-      m_responseReaderThread.Name = "IBApi Response Reader";
+      m_connected = false;
       m_ip = "";
       m_port = -1;
       m_nextRequestId = 1;
-      m_connected = false;
       m_nextOrderId = -1;
       m_dialogService = serviceHost.Host.Services.GetRequiredService<IDialogService>();
     }
@@ -129,7 +126,7 @@ namespace TradeSharp.InteractiveBrokers
 
     //properties
     public EClientSocket ClientSocket { get; private set; }
-    public bool IsConnected { get => /*m_connected &&*/ ClientSocket.IsConnected(); }
+    public bool IsConnected { get => m_connected && ClientSocket.IsConnected(); } //this client must be connected to TWS and TWS needs to be connected to the server
     public int NextRequestId { get => m_nextRequestId++; }
     public int NextOrderId { get => m_nextOrderId++; }
     public string IP { get => m_ip; }
@@ -142,8 +139,11 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_ip = ip;
         m_port = port;
-        ClientSocket.eConnect(m_ip, m_port, 0); //this call should be synchronous to ensure handshake is done before creating the reader thread below
-        if (m_responseReader == null) m_responseReader = new EReader(ClientSocket, m_readerSignal);   //creates the response reader thread that would invoke the EWrapper callbacks - NOTE needs to only be started once the socket connection is established and nextValidId/connected is called.
+        ClientSocket.eConnect(m_ip, m_port, 0); //this call should be synchronous to ensure handshake is done before creating the reader thread below, if this is done too quickly the TWS API immediately disconnects
+        var time = DateTime.Now;
+        var waitTime = new TimeSpan(5000000000);  //wait 5-seconds
+        while (NextOrderId <= 0) { if (DateTime.Now - time > waitTime) break; } //wait for initial handshake to complete, we need to limit the wait otherwise this thread will hang the application
+        
         if (!ClientSocket.IsConnected())
         {
           m_logger.LogError($"Connection to IP {m_ip} and port {m_port} failed - check that IB Gateway is running and check port settings in TradeSharp config file.");
@@ -152,15 +152,30 @@ namespace TradeSharp.InteractiveBrokers
         else
           ClientSocket.setServerLogLevel(5);    //log level for detailed message (not sure whether 5 is the Details value but it looks like it in TWS)
 
-        try 
+        //creates the response reader that would wait for responses and queue them to the EWrapper
+        if (m_responseReader == null)
         {
+          m_responseReader = new EReader(ClientSocket, m_readerSignal);
+          m_responseReader.Start();
+        }
+
+        //create the response reader thread that would loop the above response reader
+        if (m_responseReaderThread == null)
+        {
+          m_responseReaderThread = new Thread(ResponseReaderMain);
+          m_responseReaderThread.Name = "IBApi Response Reader";
           m_responseReaderThread.Start();
         }
-        catch (Exception e)
+
+        //raise connected event
+        m_connected = ClientSocket.IsConnected();
+        if (m_connected)
         {
-          m_logger.LogError($"Error starting response reader thread - {e.Message}");
+          var tmp = ConnectionStatus;
+          if (tmp != null)
+            ThreadPool.QueueUserWorkItem(t => tmp(new ConnectionStatusMessage(m_connected)), null);
         }
-        m_responseReader.Start();
+
       }
       else if (m_ip != ip || m_port != port)
       {
@@ -172,15 +187,19 @@ namespace TradeSharp.InteractiveBrokers
     public void Disconnect()
     {
       ClientSocket.eDisconnect();
+      m_connected = false;
+      var tmp = ConnectionStatus;
+      if (tmp != null)
+        ThreadPool.QueueUserWorkItem(t => tmp(new ConnectionStatusMessage(false)), null);
     }
 
     /// <summary>
     /// Main processing loop to read resonses from the TWS API.
     /// </summary>
-    protected void Run()
+    protected void ResponseReaderMain()
     {
-      //main message processing loop, is terminated as soon as socket is disconnected 
-      while (IsConnected)
+      //main message processing loop, is terminated when the application is closed in destructor
+      while (true)
       {
         m_readerSignal.waitForSignal();
         m_responseReader.processMsgs();
@@ -189,6 +208,11 @@ namespace TradeSharp.InteractiveBrokers
 
     public Task<Contract> ResolveContractAsync(int conId, string exchange)
     {
+
+
+      //TODO: Try to resolve first from cache.
+
+
       var reqId = new Random(DateTime.Now.Millisecond).Next();
       var resolveResult = new TaskCompletionSource<Contract>();
       var resolveContract_Error = new Action<int, int, string, string, Exception>((id, code, msg, advancedOrderRejectJson, ex) =>
@@ -231,6 +255,11 @@ namespace TradeSharp.InteractiveBrokers
 
     public Task<Contract[]> ResolveContractAsync(string secType, string symbol, string currency, string exchange)
     {
+
+
+      //TODO: Try to resolve first from cache.
+
+
       var reqId = new Random(DateTime.Now.Millisecond).Next();
       var res = new TaskCompletionSource<IBApi.Contract[]>();
       var contractList = new List<IBApi.Contract>();
@@ -274,43 +303,62 @@ namespace TradeSharp.InteractiveBrokers
       return res.Task;
     }
 
-    public int ClientId { get; set; }
-
     public event Action<int, int, string, string, Exception> Error;
 
     void EWrapper.error(Exception e)
     {
+      m_logger.LogError($"Client error - {e.Message}");
       var tmp = Error;
 
       if (tmp != null)
         ThreadPool.QueueUserWorkItem(t => tmp(0, 0, null, null, e));
     }
 
-    void EWrapper.error(string str)
+    void EWrapper.error(string errorMessage)
     {
+      m_logger.LogError($"Client error - {errorMessage}");
       var tmp = Error;
 
       if (tmp != null)
-        ThreadPool.QueueUserWorkItem(t => tmp(0, 0, str, null, null), null);
+        ThreadPool.QueueUserWorkItem(t => tmp(0, 0, errorMessage, null, null), null);
     }
 
-    public void error(int id, int errorCode, string errorMsg)
+    public void error(int id, int errorCode, string errorMessage)
     {
+      m_logger.LogError($"Client error - {id}, {errorCode}, {errorMessage}");
       var tmp = Error;
 
       if (tmp != null)
-        ThreadPool.QueueUserWorkItem(t => tmp(id, errorCode, errorMsg, null, null), null);
+        ThreadPool.QueueUserWorkItem(t => tmp(id, errorCode, errorMessage, null, null), null);
     }
 
-    public event Action ConnectionClosed;
+    void EWrapper.connectAck()
+    {
+      if (ClientSocket.AsyncEConnect)
+        ClientSocket.startApi();
+    }
+
+    public event Action<ConnectionStatusMessage> ConnectionStatus;
 
     void EWrapper.connectionClosed()
     {
       m_connected = false;
-      var tmp = ConnectionClosed;
+      var tmp = ConnectionStatus;
 
       if (tmp != null)
-        ThreadPool.QueueUserWorkItem(t => tmp(), null);
+        ThreadPool.QueueUserWorkItem(t => tmp(new ConnectionStatusMessage(m_connected)), null);
+    }
+
+    void EWrapper.nextValidId(int orderId)
+    {
+      m_connected = true;
+      m_nextOrderId = orderId;
+      var tmp = ConnectionStatus;
+
+      if (tmp != null)
+        ThreadPool.QueueUserWorkItem(t => tmp(new ConnectionStatusMessage(true)), null);
+
+      m_nextOrderId = orderId;
     }
 
     public event Action<long> CurrentTime;
@@ -381,20 +429,6 @@ namespace TradeSharp.InteractiveBrokers
 
       if (tmp != null)
         ThreadPool.QueueUserWorkItem(t => tmp(tickerId), null);
-    }
-
-    public event Action<ConnectionStatusMessage> ConnectionStatus;
-
-    void EWrapper.nextValidId(int orderId)
-    {
-      m_connected = true;
-      m_nextOrderId = orderId;
-      var tmp = ConnectionStatus;
-
-      if (tmp != null)
-        ThreadPool.QueueUserWorkItem(t => tmp(new ConnectionStatusMessage(true)), null);
-
-      m_nextOrderId = orderId;
     }
 
     public event Action<int, DeltaNeutralContract> DeltaNeutralValidation;
@@ -775,12 +809,6 @@ namespace TradeSharp.InteractiveBrokers
 
       if (tmp != null)
         ThreadPool.QueueUserWorkItem(t => tmp(reqId, contractInfo), null);
-    }
-
-    void EWrapper.connectAck()
-    {
-      if (ClientSocket.AsyncEConnect)
-        ClientSocket.startApi();
     }
 
     public event Action<PositionMultiMessage> PositionMulti;

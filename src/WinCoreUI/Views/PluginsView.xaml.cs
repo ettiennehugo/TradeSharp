@@ -84,6 +84,7 @@ namespace TradeSharp.WinCoreUI.Views
             };
 
             button.SetBinding(ButtonBase.CommandProperty, new Binding { Source = customCommand.Command, Mode = BindingMode.TwoWay });
+            ToolTipService.SetToolTip(button, customCommand.Tooltip);
             m_commandBar.PrimaryCommands.Add(button);
             m_customButtons.Add(button);
           }

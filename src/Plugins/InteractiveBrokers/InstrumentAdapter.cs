@@ -117,6 +117,15 @@ namespace TradeSharp.InteractiveBrokers
       }
     }
 
+    //NOTE: This method will only be effective after synchronizing the contract cache.
+    public void UpdateInstrumentGroups()
+    {
+
+      //TODO
+      m_logger.LogError("UpdateInstrumentGroups not implemented.");
+
+    }
+
     public void RequestScannerParameters()
     {
       m_serviceHost.Client.ClientSocket.reqScannerParameters();
