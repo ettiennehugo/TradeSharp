@@ -143,7 +143,6 @@ namespace TradeSharp.CoreUI.ViewModels
           TItem item = (TItem)target;
           Items.Remove(item);
           m_itemsService.Delete(item);
-          SelectedItem = Items.FirstOrDefault();
           count++;
         }
         else if (target is IList<TItem>)
@@ -156,7 +155,6 @@ namespace TradeSharp.CoreUI.ViewModels
           }
 
           OnRefresh();
-          SelectedItem = Items.FirstOrDefault();
         }
       });
     }

@@ -57,7 +57,7 @@ namespace TradeSharp.CoreUI.ViewModels
       if (SelectedItem != null)
         m_itemsService.Delete(SelectedItem);
       else
-        m_dialogService.ShowPopupMessageAsync("No country selected to delete.");
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "No country selected to delete.");
     }
 
     public override void OnUpdate()

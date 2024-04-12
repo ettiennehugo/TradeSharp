@@ -76,7 +76,7 @@ namespace TradeSharp.InteractiveBrokers
     /// </summary>
     public int ExecuteCommand(string command, int timeout = -1)
     {
-      if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database non-query - ${command}");
+      if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database non-query - {command}");
       var commandObj = m_connection.CreateCommand();
       commandObj.CommandTimeout = timeout >= 0 ? timeout : m_connection.DefaultTimeout;
       commandObj.CommandText = command;
@@ -85,7 +85,7 @@ namespace TradeSharp.InteractiveBrokers
 
     public object? ExecuteScalar(string command, int timeout = -1)
     {
-      if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database scalar read - ${command}");
+      if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database scalar read - {command}");
       var commandObj = m_connection.CreateCommand();
       commandObj.CommandTimeout = timeout >= 0 ? timeout : m_connection.DefaultTimeout;
       commandObj.CommandText = command;
@@ -258,20 +258,21 @@ namespace TradeSharp.InteractiveBrokers
     {
       lock (this)
       {
+        //NOTE: This contract can contain a lot of null string fields so we need to check for nulls.
         ExecuteCommand(
           $"INSERT OR REPLACE INTO {TableContracts} (ConId, Symbol, SecType, SecId, SecIdType, Exchange, PrimaryExchange, Currency, LocalSymbol, TradingClass, LastTradeDateOrContractMonth) " +
             $"VALUES (" +
               $"{contract.ConId}, " +
               $"'{contract.Symbol}', " +
               $"'{contract.SecType}', " +
-              $"'{contract.SecId}', " +
-              $"'{contract.SecIdType}', " +
-              $"'{contract.Exchange}', " +
-              $"'{contract.PrimaryExch}', " +
-              $"'{contract.Currency}', " +
-              $"'{contract.LocalSymbol}', " +
-              $"'{contract.TradingClass}', " +
-              $"'{contract.LastTradeDateOrContractMonth}' " +
+              $"'{contract.SecId ?? ""}', " +
+              $"'{contract.SecIdType ?? ""}', " +
+              $"'{contract.Exchange ?? ""}', " +
+              $"'{contract.PrimaryExch ?? ""}', " +
+              $"'{contract.Currency ?? ""}', " +
+              $"'{contract.LocalSymbol ?? ""}', " +
+              $"'{contract.TradingClass ?? ""}', " +
+              $"'{contract.LastTradeDateOrContractMonth ?? ""}' " +
             $")"
         );
       }
@@ -283,26 +284,27 @@ namespace TradeSharp.InteractiveBrokers
       // - maybe add some lookup from the Contracts table to get the type for the ConId.
       lock (this)
       {
+        //NOTE: This contract can contain a lot of null string fields so we need to check for nulls.
         ExecuteCommand(
           $"INSERT OR REPLACE INTO {TableStockContracts} (ConId, Cusip, LongName, StockType, IssueDate, LastTradeTime, Category, SubCategory, Industry, Ratings, TimeZoneId, TradingHours, LiquidHours, OrderTypes, MarketName, ValidExchanges, Notes) " +
             $"VALUES (" +
               $"{contract.UnderConId}, " +
-              $"'{contract.Cusip}', " +
-              $"'{ToSqlSafeString(contract.LongName)}', " +
-              $"'{contract.StockType}', " +
-              $"'{contract.IssueDate}', " +
-              $"'{contract.LastTradeTime}', " +
-              $"'{ToSqlSafeString(contract.Category)}', " +
-              $"'{ToSqlSafeString(contract.Subcategory)}', " +
-              $"'{ToSqlSafeString(contract.Industry)}', " +
-              $"'{contract.Ratings}', " +
-              $"'{contract.TimeZoneId}', " +
-              $"'{contract.TradingHours}', " +
-              $"'{contract.LiquidHours}', " +
-              $"'{contract.OrderTypes}', " +
-              $"'{ToSqlSafeString(contract.MarketName)}', " +
-              $"'{ToSqlSafeString(contract.ValidExchanges)}', " +
-              $"'{ToSqlSafeString(contract.Notes)}' " +
+              $"'{contract.Cusip ?? ""}', " +
+              $"'{ToSqlSafeString(contract.LongName ?? "")}', " +
+              $"'{contract.StockType ?? ""}', " +
+              $"'{contract.IssueDate ?? ""}', " +
+              $"'{contract.LastTradeTime ?? ""}', " +
+              $"'{ToSqlSafeString(contract.Category ?? "")}', " +
+              $"'{ToSqlSafeString(contract.Subcategory ?? "")}', " +
+              $"'{ToSqlSafeString(contract.Industry ?? "")}', " +
+              $"'{contract.Ratings ?? ""}', " +
+              $"'{contract.TimeZoneId ?? ""}', " +
+              $"'{contract.TradingHours ?? ""}', " +
+              $"'{contract.LiquidHours ?? ""}', " +
+              $"'{contract.OrderTypes ?? ""}', " +
+              $"'{ToSqlSafeString(contract.MarketName ?? "")}', " +
+              $"'{ToSqlSafeString(contract.ValidExchanges ?? "")}', " +
+              $"'{ToSqlSafeString(contract.Notes ?? "")}' " +
             $")"
         );
       }

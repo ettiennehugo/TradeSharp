@@ -26,7 +26,7 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
-      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
+      //DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
       GlobalExchange = GetItem(Exchange.InternationalId)!;
     }
 
@@ -48,6 +48,14 @@ namespace TradeSharp.CoreUI.ViewModels
         m_itemsService.Add(exchange);
         SelectedItem = exchange;
       }
+    }
+
+    public override void OnDelete(object? target)
+    {
+      if (SelectedItem != null)
+        m_itemsService.Delete(SelectedItem);
+      else
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "No exchange selected to delete.");
     }
 
     public override async void OnUpdate()

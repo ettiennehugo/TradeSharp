@@ -75,7 +75,9 @@ namespace TradeSharp.CoreUI.Services
 
     public bool Delete(Exchange item)
     {
-      return m_exchangeRepository.Delete(item); ;
+      var result = m_exchangeRepository.Delete(item);
+      Items.Remove(item);
+      return result;
     }
 
     public void Refresh()

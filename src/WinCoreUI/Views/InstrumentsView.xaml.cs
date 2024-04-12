@@ -96,5 +96,13 @@ namespace TradeSharp.WinCoreUI.Views
     {
       refreshFilter();
     }
+
+    private void DeleteBarButton_Click(object sender, RoutedEventArgs e)
+    {
+      //need to explicitly remove the item collection since this is the filtered list
+      ViewModel.DeleteCommand.Execute(ViewModel.SelectedItem);
+      Instruments.Remove(ViewModel.SelectedItem);
+      ViewModel.SelectedItem = ViewModel.Items.FirstOrDefault();
+    }
   }
 }

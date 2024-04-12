@@ -20,7 +20,7 @@
         <AppBarSeparator/>
         <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add instrument" IsCompact="True"/>
         <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update instrument" IsCompact="True"/>
-        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommandAsync}" CommandParameter="{x:Bind m_instruments.SelectedItems}" ToolTipService.ToolTip="Delete instrument" IsCompact="True"/>
+        <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommandAsync}" Click="DeleteBarButton_Click" ToolTipService.ToolTip="Delete instrument" IsCompact="True"/>
         <AppBarSeparator/>
         <AppBarButton Command="{x:Bind ViewModel.ImportCommandAsync}" ToolTipService.ToolTip="Import instruments" IsCompact="True">
           <AppBarButton.Icon>
