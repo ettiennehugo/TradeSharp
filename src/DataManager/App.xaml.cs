@@ -109,7 +109,7 @@ namespace TradeSharp.WinDataManager
           logging.ClearProviders();
           logging.AddConsole();
           logging.AddDebug();
-          logging.AddEventSourceLogger();
+          logging.AddEventSourceLogger();          
           if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) logging.AddEventLog();
 #if DEBUG
           logging.SetMinimumLevel(LogLevel.Trace);  //enable full logging in debug mode

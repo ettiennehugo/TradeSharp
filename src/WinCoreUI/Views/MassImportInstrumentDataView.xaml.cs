@@ -106,7 +106,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_massImportInstrumentDataService.Settings = Settings;
       m_massImportInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass export service - this can be done as an improvement when we have a progress dialog working.
       IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
-      IProgressDialog progressDialog = dialogService.ShowProgressDialog("Mass Import Progress");
+      IProgressDialog progressDialog = dialogService.ShowProgressDialog("Mass Import Progress", m_massImportInstrumentDataService.Logger);
       m_massImportInstrumentDataService.StartAsync(progressDialog);
       ParentWindow.Close();
     }

@@ -73,7 +73,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_massDownloadInstrumentDataService.Settings = Settings;
       m_massDownloadInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass download service - this can be done as an improvement when we have a progress dialog working.
       IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
-      IProgressDialog progressDialog = dialogService.ShowProgressDialog("Mass Download Progress");
+      IProgressDialog progressDialog = dialogService.ShowProgressDialog("Mass Download Progress", m_massDownloadInstrumentDataService.Logger);
       m_massDownloadInstrumentDataService.StartAsync(progressDialog);
       ParentWindow.Close();
     }

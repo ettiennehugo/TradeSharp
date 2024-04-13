@@ -44,6 +44,7 @@
     <None Remove="Views\MassImportInstrumentDataView.xaml" />
     <None Remove="Views\PluginsView.xaml" />
     <None Remove="Views\ProgressDialogView.xaml" />
+    <None Remove="Views\ProgressLoggerView.xaml" />
     <None Remove="Views\SessionsView.xaml" />
     <None Remove="Views\SessionView.xaml" />
   </ItemGroup>
@@ -54,9 +55,9 @@
     <PackageReference Include="CommunityToolkit.WinUI.Extensions" Version="8.0.240109" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240311000" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240404000" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.3233" />
-    <PackageReference Include="System.Drawing.Common" Version="8.0.3" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -191,6 +192,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Remove="Views\ExportView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\ProgressLoggerView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\PluginsView.xaml">

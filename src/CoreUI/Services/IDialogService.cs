@@ -3,6 +3,7 @@ using TradeSharp.CoreUI.Common;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -270,7 +271,7 @@ namespace TradeSharp.CoreUI.Services
     //methods
     Task ShowPopupMessageAsync(string message);
     Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
-    IProgressDialog ShowProgressDialog(string title);
+    IProgressDialog ShowProgressDialog(string title, ILogger? logger);
 
     Task<CountryInfo?> ShowSelectCountryAsync();
 

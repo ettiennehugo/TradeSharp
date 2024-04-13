@@ -13,6 +13,7 @@ using static TradeSharp.CoreUI.Services.IDialogService;
 using Microsoft.UI.Xaml;
 using TradeSharp.CoreUI.Common;
 using WinRT.Interop;
+using Microsoft.Extensions.Logging;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -102,13 +103,14 @@ namespace TradeSharp.WinDataManager.Services
     }
 
     //NOTE: This function MUST be called from the UI thread to make sure the Window has the UI thread as it's SynchronizationContext/message pump.
-    public IProgressDialog ShowProgressDialog(string title)
+    public IProgressDialog ShowProgressDialog(string title, ILogger? logger)
     {
       Window window = new Window();
       window.ExtendsContentIntoTitleBar = true;
       WinCoreUI.Views.ProgressDialogView progressView = new WinCoreUI.Views.ProgressDialogView();
       progressView.Title = title;
       progressView.ParentWindow = window;   //set so view can close the window
+      progressView.Logger = logger;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 220));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       window.Content = progressView;
       MakeDialog(window);
