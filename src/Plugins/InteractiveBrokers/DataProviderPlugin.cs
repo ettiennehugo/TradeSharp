@@ -11,6 +11,9 @@ namespace TradeSharp.InteractiveBrokers
 {
   /// <summary>
   /// Data provider plugin implementation for Interactive Brokers.
+  /// NOTES: Updated 14 April 2024
+  /// - Currently IB only returns historical data for instruments that are still actively traded that can lead to survivorship bias.
+  /// - Currretly for seconds resolution, IB only returns data only for up to 6-months back (InstrumentAdapter will limit this as well and will log a warning if dates are requested further back than 6-months).
   /// </summary>
   [ComVisible(true)]
   [Guid("D6BF3AE3-F358-4066-B177-D9763F927D67")]
@@ -32,7 +35,7 @@ namespace TradeSharp.InteractiveBrokers
     protected int m_port;
 
     //constructors
-    public DataProviderPlugin() : base("InteractiveBrokers") { }
+    public DataProviderPlugin() : base(Constants.DefaultName) { }
 
     //finalizers
 

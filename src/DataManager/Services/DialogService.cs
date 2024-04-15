@@ -102,20 +102,30 @@ namespace TradeSharp.WinDataManager.Services
       return Task.CompletedTask;
     }
 
-    //NOTE: This function MUST be called from the UI thread to make sure the Window has the UI thread as it's SynchronizationContext/message pump.
+    /// <summary>
+    /// Shows a progress dialog with the specified title and also takes a logger to echo log operations.
+    /// </summary>
     public IProgressDialog ShowProgressDialog(string title, ILogger? logger)
     {
-      Window window = new Window();
-      window.ExtendsContentIntoTitleBar = true;
-      WinCoreUI.Views.ProgressDialogView progressView = new WinCoreUI.Views.ProgressDialogView();
-      progressView.Title = title;
-      progressView.ParentWindow = window;   //set so view can close the window
-      progressView.Logger = logger;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 220));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      window.Content = progressView;
-      MakeDialog(window);
+      IProgressDialog result = null;
+      //create the dialog from the UI thread
+      TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+      if (UIDispatcherQueue.TryEnqueue(() => {
+            Window window = new Window();
+            window.ExtendsContentIntoTitleBar = true;
+            WinCoreUI.Views.ProgressDialogView progressView = new WinCoreUI.Views.ProgressDialogView();
+            progressView.Title = title;
+            progressView.ParentWindow = window;   //set so view can close the window
+            progressView.Logger = logger;
+            window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 720));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+            window.Content = progressView;
+            MakeDialog(window);
+            result = progressView;
+            taskCompletionSource.SetResult(true);
+          }))  
+      Task.WhenAny(taskCompletionSource.Task, Task.Delay(5000000)).Wait();  //wait up to 5-seconds for the dialog to be created
       //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
-      return progressView;
+      return result!;
     }
 
     protected InitNavigationService getInitNavigationService() => (InitNavigationService)((IApplication)Application.Current).Services.GetService(typeof(InitNavigationService));
@@ -594,6 +604,7 @@ namespace TradeSharp.WinDataManager.Services
     //properties
     public FontIcon StatusBarIcon { get; set; }
     public TextBlock StatusBarText { get; set; }
+    public DispatcherQueue UIDispatcherQueue { get; set; }
 
     //methods
     internal static void ResetSizeable(Window window)

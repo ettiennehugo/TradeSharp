@@ -30,7 +30,7 @@ namespace TradeSharp.InteractiveBrokers
     protected int m_port;
 
     //constructors
-    public BrokerPlugin() : base("InteractiveBrokers") { }
+    public BrokerPlugin() : base(Constants.DefaultName) { }
 
     //finalizers
 
@@ -61,6 +61,7 @@ namespace TradeSharp.InteractiveBrokers
       CustomCommands.Add(new CustomCommand { Name = "Scanner Parameters", Tooltip = "Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
       CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) } );
       CustomCommands.Add(new CustomCommand { Name = "Update Industry Groups", Tooltip = "Update stock industry groupings", Icon = "\uE15C", Command = new AsyncRelayCommand(OnUpdateInstrumentGroupsAsync, () => IsConnected) } );
+      CustomCommands.Add(new CustomCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE9D5", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
       if (IsConnected)
         raiseConnected();
     }
@@ -78,6 +79,11 @@ namespace TradeSharp.InteractiveBrokers
     public Task OnUpdateInstrumentGroupsAsync()
     {
       return Task.Run(() => m_ibServiceHost.Instruments.UpdateInstrumentGroups());
+    }
+
+    public Task OnValidateInstrumentsAsync()
+    {
+      return Task.Run(() => m_ibServiceHost.Instruments.ValidateInstruments());
     }
 
     //properties

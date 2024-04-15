@@ -34,14 +34,15 @@
       </Grid>
     </DataTemplate>
     <DataTemplate x:Key="CollapsibleLogEntry" x:DataType="coreUI:CollapsibleLogEntry">
-      <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,*">
+      <Grid ColumnDefinitions="Auto,Auto, *" RowDefinitions="Auto,*">
         <TextBlock Text="{x:Bind Timestamp}" Grid.Column="0" FontWeight="Bold" Margin="5,0,5,0"/>
         <TextBlock Text="{x:Bind Level, Converter={StaticResource LogLevelConverter}}" Grid.Column="1" FontWeight="Bold" Margin="0,0,2,0"/>
         <TextBlock Text="{x:Bind Message}" Grid.Column="2" TextWrapping="Wrap"/>
         <ToggleButton x:Name="m_expander" Grid.Row="1" Grid.Column="0" VerticalAlignment="Top" Content="+" HorizontalAlignment="Right"/>
         <ItemsControl ItemsSource="{x:Bind Children}" Style="{StaticResource LogViewerStyle}" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="Contents" Visibility="Collapsed"/>
       </Grid>
-      <!--<DataTemplate.Triggers>
+      <!--TBD: Need to see how to support these triggers.
+        <DataTemplate.Triggers>
         <Trigger SourceName="m_expander" Property="IsChecked" Value="True">
           <Setter TargetName="Contents" Property="Visibility" Value="Visible"/>
           <Setter TargetName="m_expander" Property="Content" Value="-"/>

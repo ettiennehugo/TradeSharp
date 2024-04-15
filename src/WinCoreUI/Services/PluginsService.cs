@@ -35,6 +35,7 @@ namespace TradeSharp.CoreUI.Services
       m_configurationService = configurationService;
       m_logger = logger;
       m_selectedItem = null;
+      Items = new List<IPlugin>();
     }
 
     //finalizers
@@ -73,7 +74,7 @@ namespace TradeSharp.CoreUI.Services
     //     only lists the available plugins and instantiates them when they are needed.
     public void Refresh()
     {
-      Items = new List<IPlugin>();
+      Items.Clear();
 
       //InteractiveBrokers
       IPlugin plugin = (IPlugin)new TradeSharp.InteractiveBrokers.DataProviderPlugin();

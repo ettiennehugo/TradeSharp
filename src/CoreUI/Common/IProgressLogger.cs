@@ -23,7 +23,7 @@ namespace TradeSharp.CoreUI.Common
 
 
     //methods
-    IDisposable BeginScope(LogLevel level, string message);
+    IDisposable BeginScope(string message);
     void Log(LogLevel level, string message);
     void LogInformation(string message);
     void LogDebug(string message);

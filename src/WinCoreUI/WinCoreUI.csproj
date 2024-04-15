@@ -194,12 +194,12 @@
     <Resource Remove="Views\ExportView.xaml" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Views\ProgressLoggerView.xaml">
+    <Page Update="Views\PluginsView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Views\PluginsView.xaml">
+    <Page Update="Views\ProgressLoggerView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

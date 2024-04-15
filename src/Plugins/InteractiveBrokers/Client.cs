@@ -18,56 +18,6 @@ namespace TradeSharp.InteractiveBrokers
   {
     //constants
 
-    /// <summary>
-    /// Supported contract types.
-    /// </summary>
-    public const string ContractTypeStock = "STK";
-    public const string ContractTypeCFD = "CFD";
-    public const string ContractTypeBond = "BOND";
-    public const string ContractTypeFuture = "FUT";
-    public const string ContractTypeFutureOption = "FOP";
-    public const string ContractTypeOption = "OPT";
-    public const string ContractTypeIndex = "IND";
-    public const string ContractTypeForex = "CASH";
-    public const string ContractTypeMutualFund = "FUND";
-    public const string ContractTypeFutureCombo = "BAG";
-    public const string ContractTypeStockCombo = "CS";
-    public const string ContractTypeIndexCombo = "IND";
-    public const string ContractTypeCommodity = "CMDTY";
-
-    /// <summary>
-    /// Historical durations and bar size types.
-    /// </summary>
-    public const string DurationSeconds = "S";
-    public const string DurationDays = "D";
-    public const string DurationWeeks = "W";
-    public const string DurationMonths = "M";
-    public const string DurationYears = "Y";
-
-    /// <summary>
-    /// Supported bar sizes.
-    /// </summary>
-    public const string BarSize1Sec = "1";
-    public const string BarSize5Sec = "5";
-    public const string BarSize10Sec = "10";
-    public const string BarSize15Sec = "15";
-    public const string BarSize30Sec = "30";
-    public const string BarSize1Min = "1";
-    public const string BarSize2Min = "2";
-    public const string BarSize3Min = "3";
-    public const string BarSize5Min = "5";
-    public const string BarSize10Min = "10";
-    public const string BarSize15Min = "15";
-    public const string BarSize20Min = "20";
-    public const string BarSize30Min = "30";
-    public const string BarSize1Hour = "1";
-    public const string BarSize2Hour = "2";
-    public const string BarSize3Hour = "3";
-    public const string BarSize4Hour = "4";
-    public const string BarSize8Hour = "8";
-    public const string BarSize1Day = "1";
-    public const string BarSize1Week = "1";
-    public const string BarSize1Month = "1";
 
     //enums
 
@@ -208,11 +158,6 @@ namespace TradeSharp.InteractiveBrokers
 
     public Task<Contract> ResolveContractAsync(int conId, string exchange)
     {
-
-
-      //TODO: Try to resolve first from cache.
-
-
       var reqId = new Random(DateTime.Now.Millisecond).Next();
       var resolveResult = new TaskCompletionSource<Contract>();
       var resolveContract_Error = new Action<int, int, string, string, Exception>((id, code, msg, advancedOrderRejectJson, ex) =>
@@ -255,11 +200,6 @@ namespace TradeSharp.InteractiveBrokers
 
     public Task<Contract[]> ResolveContractAsync(string secType, string symbol, string currency, string exchange)
     {
-
-
-      //TODO: Try to resolve first from cache.
-
-
       var reqId = new Random(DateTime.Now.Millisecond).Next();
       var res = new TaskCompletionSource<IBApi.Contract[]>();
       var contractList = new List<IBApi.Contract>();

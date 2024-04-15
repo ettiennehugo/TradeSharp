@@ -4,6 +4,7 @@ using TradeSharp.Common;
 using IBApi;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using TradeSharp.Data;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -16,8 +17,8 @@ namespace TradeSharp.InteractiveBrokers
     /// <summary>
     /// Cache database tables used.
     /// </summary>
-    public const string TableContracts = "Contracts";           //base table for contract mapping table
-    public const string TableStockContracts = "StockContracts"; //stock specific contract details
+    public const string TableContracts = "Contracts";              //contract definition table
+    public const string TableContractDetails = "ContractDetails";  //contract details table in cache
 
     //enums
 
@@ -31,6 +32,8 @@ namespace TradeSharp.InteractiveBrokers
     private SqliteConnection m_connection;
     private string m_connectionString;
     private ILogger m_logger;
+    private Dictionary<int, Contract> m_contractsByTickerExchange;
+    private Dictionary<int, Contract> m_contractsByConId;
 
     //constructors
     public static Cache GetInstance(ServiceHost host)
@@ -44,6 +47,8 @@ namespace TradeSharp.InteractiveBrokers
       m_logger = logger;
       string tradeSharpHome = Environment.GetEnvironmentVariable(TradeSharp.Common.Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{TradeSharp.Common.Constants.TradeSharpHome}\" not defined.");
       m_databaseFile = Path.Combine(tradeSharpHome, TradeSharp.Common.Constants.DataDir, configuration.Configuration[TradeSharp.InteractiveBrokers.Constants.CacheKey]!.ToString());
+      m_contractsByTickerExchange = new Dictionary<int, Contract>();
+      m_contractsByConId = new Dictionary<int, Contract>();
 
       //setup database connection
       m_connectionString = new SqliteConnectionStringBuilder()
@@ -65,7 +70,188 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //interface implementations
+    /// <summary>
+    /// Clears the cache of all contracts and starts recaching.
+    /// </summary>
+    public void Clear()
+    {
+      m_contractsByTickerExchange.Clear();
+      m_contractsByConId.Clear();
+    }
 
+    public Contract? GetContract(int conId)
+    {
+      Contract? contract = null;
+
+      //try a cache hit
+      if (m_contractsByConId.TryGetValue(conId, out contract)) return contract;
+
+      //try to load item into cache
+      using (var reader = ExecuteReader($"SELECT * FROM {TableContracts} NATURAL JOIN {TableContractDetails} ON ConId = ConId WHERE {TableContracts}.ConId = '{conId}'"))
+        if (reader.Read())
+        {
+          string secType = reader.GetString(4);
+          if (secType == Constants.ContractTypeStock)
+          {
+            contract = new ContractStock
+            {
+              ConId = reader.GetInt32(0),
+              Symbol = reader.GetString(1),
+              SecId = reader.GetString(2),
+              SecIdType = reader.GetString(3),
+              SecType = reader.GetString(4),
+              Exchange = reader.GetString(5),
+              PrimaryExch = reader.GetString(6),
+              Currency = reader.GetString(7),
+              LocalSymbol = reader.GetString(8),
+              TradingClass = reader.GetString(9),
+              LastTradeDateOrContractMonth = reader.GetString(10),
+              //ConId = reader.GetInt32(11),  - duplicate from right table
+              Cusip = reader.GetString(12),
+              LongName = FromSqlSafeString(reader.GetString(13)),
+              StockType = reader.GetString(14),
+              IssueDate = reader.GetString(15),
+              LastTradeTime = reader.GetString(16),
+              Category = FromSqlSafeString(reader.GetString(17)),
+              Subcategory = FromSqlSafeString(reader.GetString(18)),
+              Industry = FromSqlSafeString(reader.GetString(19)),
+              Ratings = reader.GetString(20),
+              TimeZoneId = reader.GetString(21),
+              TradingHours = reader.GetString(22),
+              LiquidHours = reader.GetString(23),
+              OrderTypes = reader.GetString(24),
+              MarketName = FromSqlSafeString(reader.GetString(25)),
+              ValidExchanges = FromSqlSafeString(reader.GetString(26)),
+              Notes = FromSqlSafeString(reader.GetString(27))
+            };
+
+            m_contractsByTickerExchange[contract.Symbol.GetHashCode() + contract.Exchange.GetHashCode()] = contract;    //assumes symbol and exchange are upprcase
+            m_contractsByConId[conId] = contract;
+          }
+          else
+            m_logger.LogError($"ContractForInstrument - Unsupported security type - {secType}");
+        }
+      return contract;
+    }
+
+    public Contract? GetContract(string ticker, string exchange)
+    {
+      Contract? contract = null;
+      string tickerUpper = ticker.ToUpper();
+      string exchangeUpper = exchange.ToUpper();
+
+      //try a cache hit
+      if (m_contractsByTickerExchange.TryGetValue(tickerUpper.GetHashCode() + exchangeUpper.GetHashCode(), out contract)) return contract;
+
+      using (var reader = ExecuteReader($"SELECT * FROM {TableContracts} JOIN {TableContractDetails} ON {TableContracts}.ConId = {TableContractDetails}.ConId WHERE {TableContracts}.Symbol = '{tickerUpper}' AND {TableContracts}.Exchange = '{exchangeUpper}'"))
+        if (reader.Read())
+        {
+          string secType = reader.GetString(4);
+          if (secType == Constants.ContractTypeStock)
+          {
+            contract = new ContractStock
+            {
+              ConId = reader.GetInt32(0),
+              Symbol = reader.GetString(1),
+              SecId = reader.GetString(2),
+              SecIdType = reader.GetString(3),
+              SecType = reader.GetString(4),
+              Exchange = reader.GetString(5),
+              PrimaryExch = reader.GetString(6),
+              Currency = reader.GetString(7),
+              LocalSymbol = reader.GetString(8),
+              TradingClass = reader.GetString(9),
+              LastTradeDateOrContractMonth = reader.GetString(10),
+              //ConId = reader.GetInt32(11),  - duplicate from right table
+              Cusip = reader.GetString(12),
+              LongName = FromSqlSafeString(reader.GetString(13)),
+              StockType = reader.GetString(14),
+              IssueDate = reader.GetString(15),
+              LastTradeTime = reader.GetString(16),
+              Category = FromSqlSafeString(reader.GetString(17)),
+              Subcategory = FromSqlSafeString(reader.GetString(18)),
+              Industry = FromSqlSafeString(reader.GetString(19)),
+              Ratings = reader.GetString(20),
+              TimeZoneId = reader.GetString(21),
+              TradingHours = reader.GetString(22),
+              LiquidHours = reader.GetString(23),
+              OrderTypes = reader.GetString(24),
+              MarketName = FromSqlSafeString(reader.GetString(25)),
+              ValidExchanges = FromSqlSafeString(reader.GetString(26)),
+              Notes = FromSqlSafeString(reader.GetString(27))
+            };
+
+            m_contractsByTickerExchange[contract.Symbol.GetHashCode() + contract.Exchange.GetHashCode()] = contract;    //assumes symbol and exchange are upprcase
+            m_contractsByConId[contract.ConId] = contract;
+          }
+          else
+            m_logger.LogError($"ContractForInstrument - Unsupported security type - {secType}");
+        }
+
+      return contract;
+    }
+
+    public void UpdateContract(IBApi.Contract contract)
+    {
+      lock (this)
+      {
+        //NOTE: This contract can contain a lot of null string fields so we need to check for nulls.
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {TableContracts} (ConId, Symbol, SecType, SecId, SecIdType, Exchange, PrimaryExchange, Currency, LocalSymbol, TradingClass, LastTradeDateOrContractMonth) " +
+            $"VALUES (" +
+              $"{contract.ConId}, " +
+              $"'{contract.Symbol}', " +
+              $"'{contract.SecType}', " +
+              $"'{contract.SecId ?? ""}', " +
+              $"'{contract.SecIdType ?? ""}', " +
+              $"'{contract.Exchange ?? ""}', " +
+              $"'{contract.PrimaryExch ?? ""}', " +
+              $"'{contract.Currency ?? ""}', " +
+              $"'{contract.LocalSymbol ?? ""}', " +
+              $"'{contract.TradingClass ?? ""}', " +
+              $"'{contract.LastTradeDateOrContractMonth ?? ""}' " +
+            $")"
+        );
+
+        if (m_contractsByTickerExchange.Count > 0) m_contractsByTickerExchange.Remove(contract.Symbol.GetHashCode() + contract.Exchange!.GetHashCode());    //assumes symbol and exchange are upprcase
+        if (m_contractsByConId.Count > 0) m_contractsByTickerExchange.Remove(contract.ConId);
+      }
+    }
+
+    public void UpdateContractDetails(ContractDetails contract)
+    {
+      //TODO: Currently only stocks are supported for update so this method may or may not work correctly for other instrument types.
+      // - maybe add some lookup from the Contracts table to get the type for the ConId.
+      lock (this)
+      {
+        //NOTE: This contract can contain a lot of null string fields so we need to check for nulls.
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {TableContractDetails} (ConId, Cusip, LongName, StockType, IssueDate, LastTradeTime, Category, SubCategory, Industry, Ratings, TimeZoneId, TradingHours, LiquidHours, OrderTypes, MarketName, ValidExchanges, Notes) " +
+            $"VALUES (" +
+              $"{contract.Contract.ConId}, " +
+              $"'{contract.Cusip ?? ""}', " +
+              $"'{ToSqlSafeString(contract.LongName ?? "")}', " +
+              $"'{contract.StockType ?? ""}', " +
+              $"'{contract.IssueDate ?? ""}', " +
+              $"'{contract.LastTradeTime ?? ""}', " +
+              $"'{ToSqlSafeString(contract.Category ?? "")}', " +
+              $"'{ToSqlSafeString(contract.Subcategory ?? "")}', " +
+              $"'{ToSqlSafeString(contract.Industry ?? "")}', " +
+              $"'{contract.Ratings ?? ""}', " +
+              $"'{contract.TimeZoneId ?? ""}', " +
+              $"'{contract.TradingHours ?? ""}', " +
+              $"'{contract.LiquidHours ?? ""}', " +
+              $"'{contract.OrderTypes ?? ""}', " +
+              $"'{ToSqlSafeString(contract.MarketName ?? "")}', " +
+              $"'{ToSqlSafeString(contract.ValidExchanges ?? "")}', " +
+              $"'{ToSqlSafeString(contract.Notes ?? "")}' " +
+            $")"
+        );
+
+        if (m_contractsByTickerExchange.Count > 0)  m_contractsByTickerExchange.Remove(contract.Contract.Symbol.GetHashCode() + contract.Contract.Exchange.GetHashCode());    //assumes symbol and exchange are upprcase
+        if (m_contractsByConId.Count > 0)  m_contractsByTickerExchange.Remove(contract.Contract.ConId);
+      }
+    }
 
     //properties
 
@@ -184,7 +370,7 @@ namespace TradeSharp.InteractiveBrokers
     private void CreateStockContractDetails()
     {
       //NOTE: This is not the complete structure but what would be needed for stocks.
-      CreateTable(TableStockContracts,
+      CreateTable(TableContractDetails,
       @"
         ConId INT PRIMARY KEY ON CONFLICT REPLACE,
         Cusip TEXT,
@@ -204,110 +390,6 @@ namespace TradeSharp.InteractiveBrokers
         ValidExchanges TEXT,
         Notes TEXT
       ");
-    }
-
-    public Contract? ContractForInstrument(string ticker, string exchange)
-    {
-      Contract? contract = null;
-      using (var reader = ExecuteReader($"SELECT * FROM {TableContracts} NATURAL JOIN {TableStockContracts} ON ConId = ConId WHERE {TableContracts}.Symbol = '{ticker}' AND {TableContracts}.PrimaryExchange = '{exchange}'"))
-        if (reader.Read())
-        {
-          string secType = reader.GetString(4);
-          if (secType == Client.ContractTypeStock)
-          {
-            contract = new ContractStock
-            {
-              ConId = reader.GetInt32(0),
-              Symbol = reader.GetString(1),
-              SecId = reader.GetString(2),
-              SecIdType = reader.GetString(3),
-              SecType = reader.GetString(4),
-              Exchange = reader.GetString(5),
-              PrimaryExch = reader.GetString(6),
-              Currency = reader.GetString(7),
-              LocalSymbol = reader.GetString(8),
-              TradingClass = reader.GetString(9),
-              LastTradeDateOrContractMonth = reader.GetString(10),
-              //ConId = reader.GetInt32(11),  - duplicate from right table
-              Cusip = reader.GetString(12),
-              LongName = FromSqlSafeString(reader.GetString(13)),
-              StockType = reader.GetString(14),
-              IssueDate = reader.GetString(15),
-              LastTradeTime = reader.GetString(16),
-              Category = FromSqlSafeString(reader.GetString(17)),
-              Subcategory = FromSqlSafeString(reader.GetString(18)),
-              Industry = FromSqlSafeString(reader.GetString(19)),
-              Ratings = reader.GetString(20),
-              TimeZoneId = reader.GetString(21),
-              TradingHours = reader.GetString(22),
-              LiquidHours = reader.GetString(23),
-              OrderTypes = reader.GetString(24),
-              MarketName = FromSqlSafeString(reader.GetString(25)),
-              ValidExchanges = FromSqlSafeString(reader.GetString(26)),
-              Notes = FromSqlSafeString(reader.GetString(27))
-            };
-          }
-          else
-            m_logger.LogError($"ContractForInstrument - Unsupported security type - {secType}");
-        }
-
-      return contract;
-    }
-
-    public void UpdateContract(IBApi.Contract contract)
-    {
-      lock (this)
-      {
-        //NOTE: This contract can contain a lot of null string fields so we need to check for nulls.
-        ExecuteCommand(
-          $"INSERT OR REPLACE INTO {TableContracts} (ConId, Symbol, SecType, SecId, SecIdType, Exchange, PrimaryExchange, Currency, LocalSymbol, TradingClass, LastTradeDateOrContractMonth) " +
-            $"VALUES (" +
-              $"{contract.ConId}, " +
-              $"'{contract.Symbol}', " +
-              $"'{contract.SecType}', " +
-              $"'{contract.SecId ?? ""}', " +
-              $"'{contract.SecIdType ?? ""}', " +
-              $"'{contract.Exchange ?? ""}', " +
-              $"'{contract.PrimaryExch ?? ""}', " +
-              $"'{contract.Currency ?? ""}', " +
-              $"'{contract.LocalSymbol ?? ""}', " +
-              $"'{contract.TradingClass ?? ""}', " +
-              $"'{contract.LastTradeDateOrContractMonth ?? ""}' " +
-            $")"
-        );
-      }
-    }
-
-    public void UpdateContractDetails(ContractDetails contract)
-    {
-      //TODO: Currently only stocks are supported for update so this method may or may not work correctly for other instrument types.
-      // - maybe add some lookup from the Contracts table to get the type for the ConId.
-      lock (this)
-      {
-        //NOTE: This contract can contain a lot of null string fields so we need to check for nulls.
-        ExecuteCommand(
-          $"INSERT OR REPLACE INTO {TableStockContracts} (ConId, Cusip, LongName, StockType, IssueDate, LastTradeTime, Category, SubCategory, Industry, Ratings, TimeZoneId, TradingHours, LiquidHours, OrderTypes, MarketName, ValidExchanges, Notes) " +
-            $"VALUES (" +
-              $"{contract.Contract.ConId}, " +
-              $"'{contract.Cusip ?? ""}', " +
-              $"'{ToSqlSafeString(contract.LongName ?? "")}', " +
-              $"'{contract.StockType ?? ""}', " +
-              $"'{contract.IssueDate ?? ""}', " +
-              $"'{contract.LastTradeTime ?? ""}', " +
-              $"'{ToSqlSafeString(contract.Category ?? "")}', " +
-              $"'{ToSqlSafeString(contract.Subcategory ?? "")}', " +
-              $"'{ToSqlSafeString(contract.Industry ?? "")}', " +
-              $"'{contract.Ratings ?? ""}', " +
-              $"'{contract.TimeZoneId ?? ""}', " +
-              $"'{contract.TradingHours ?? ""}', " +
-              $"'{contract.LiquidHours ?? ""}', " +
-              $"'{contract.OrderTypes ?? ""}', " +
-              $"'{ToSqlSafeString(contract.MarketName ?? "")}', " +
-              $"'{ToSqlSafeString(contract.ValidExchanges ?? "")}', " +
-              $"'{ToSqlSafeString(contract.Notes ?? "")}' " +
-            $")"
-        );
-      }
     }
   }
 }

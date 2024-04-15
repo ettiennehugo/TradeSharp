@@ -7,24 +7,20 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using TradeSharp.CoreUI.Common;
-using TradeSharp.CoreUI.ViewModels;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Data;
+using System.ComponentModel;
 
 namespace TradeSharp.WinCoreUI.Views
 {
-  /// <summary>
-  /// Generic view to work with plugins.
-  /// </summary>
-  public sealed partial class PluginsView : Page
+  public sealed partial class PluginsView : UserControl
   {
-
     //constants
 
 
@@ -35,14 +31,15 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    protected List<ICommandBarElement> m_customButtons = new List<ICommandBarElement>();
-
+    private List<ICommandBarElement> m_customButtons = new List<ICommandBarElement>();
+     
     //constructors
     public PluginsView()
     {
       ViewModel = (PluginsViewModel)IApplication.Current.Services.GetService(typeof(IPluginsViewModel));
       ViewModel.PropertyChanged += ViewModel_PropertyChanged;
       m_customButtons = new List<ICommandBarElement>();
+      PluginsToDisplay = PluginsToDisplay.All;
       this.InitializeComponent();
     }
 
@@ -53,12 +50,16 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //properties
+    public PluginsToDisplay PluginsToDisplay { get => ViewModel.PluginsToDisplay; set { ViewModel.PluginsToDisplay = value; } }
     public IPluginsViewModel ViewModel { get; internal set; }
 
     //methods
     //Construct the custom command buttons associated with the plugin.
     public void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
     {
+      //only update custom buttons once control is properly loaded
+      if (!IsLoaded) return;
+
       foreach (var customButton in m_customButtons)
         m_commandBar.PrimaryCommands.Remove(customButton);
       m_customButtons.Clear();

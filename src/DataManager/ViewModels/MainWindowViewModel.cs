@@ -22,7 +22,7 @@ namespace TradeSharp.WinDataManager.ViewModels
 
 
     //types
-
+    
 
     //attributes
     private readonly InitNavigationService m_initNavigationService;
@@ -32,7 +32,7 @@ namespace TradeSharp.WinDataManager.ViewModels
     /// </summary>
     private readonly Dictionary<string, Type> m_pages = new Dictionary<string, Type>()
     {
-      { INavigationService.DataManager.Brokers, typeof(WinCoreUI.Views.PluginsView) },
+      { INavigationService.DataManager.Brokers, typeof(WinCoreUI.Views.BrokersView) },
       { INavigationService.DataManager.DataProviders, typeof(WinCoreUI.Views.DataProvidersView) },
       { INavigationService.DataManager.Extensions, typeof(WinCoreUI.Views.ExtensionsView) },
       { INavigationService.DataManager.Countries, typeof(WinCoreUI.Views.CountriesView) },

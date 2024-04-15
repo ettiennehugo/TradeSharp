@@ -50,6 +50,7 @@ namespace TradeSharp.WinDataManager
       DialogService dialogService = (DialogService)((IApplication)Application.Current).Services.GetService(typeof(IDialogService));
       dialogService.StatusBarIcon = m_statusBarIcon;
       dialogService.StatusBarText = m_statusBarText;
+      dialogService.UIDispatcherQueue = DispatcherQueue;
       m_navigationView.SelectionChanged += ViewModel.OnNavigationSelectionChanged;
     }
 

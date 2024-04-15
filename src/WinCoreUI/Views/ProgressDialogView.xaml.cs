@@ -20,7 +20,7 @@ namespace TradeSharp.WinCoreUI.Views
   public sealed partial class ProgressDialogView : Page, IProgressDialog
   {
     //constants
-    public const int LogHeight = 500;
+
 
     //enums
 
@@ -43,6 +43,7 @@ namespace TradeSharp.WinCoreUI.Views
     private object m_statusMessageLock;
     private string m_statusMessageText;
     private ILogger? m_logger;
+    private bool m_logViewVisible;
 
     //constructors
     public ProgressDialogView()
@@ -61,6 +62,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_statusMessageLock = new object();
       m_statusMessageText = "";
       m_logger = null;
+      m_logViewVisible = false;
       this.InitializeComponent();
     }
 
@@ -161,7 +163,6 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       ParentWindow.SetTitleBar(m_titleBar);
-      m_layoutMain.RowDefinitions[3].Height = new GridLength(0);
     }
 
     public Task ShowAsync()
@@ -181,10 +182,10 @@ namespace TradeSharp.WinCoreUI.Views
       ParentWindow.Close();
     }
 
-    public IDisposable BeginScope(LogLevel level, string message)
+    public IDisposable BeginScope(string message)
     {
       ensureLogVisible();
-      return m_progressLogger.BeginScope(level, message);
+      return m_progressLogger.BeginScope(message);
     }
 
     public void Log(LogLevel level, string message)
@@ -223,15 +224,24 @@ namespace TradeSharp.WinCoreUI.Views
       m_progressLogger.LogCritical(message);
     }
 
+    /// <summary>
+    /// Logger view row is started out as size zero to collapse it, this method sets it up to be visible when required.
+    /// </summary>
     private void ensureLogVisible()
     {
       //make log row visible and resize window to accomodate it
-      if (m_layoutMain.RowDefinitions[3].Height == new GridLength(0))
-      {        
-        DispatcherQueue.TryEnqueue(() => m_layoutMain.RowDefinitions[3].Height = new GridLength(LogHeight));
-        Windows.Graphics.SizeInt32 size = ParentWindow.AppWindow.ClientSize;
-        ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(size.Width, size.Height + LogHeight));
-      }
+      if (m_logViewVisible) return;
+
+      DispatcherQueue.TryEnqueue(() =>
+      {
+        if (m_progressLogger.Visibility == Visibility.Collapsed)
+        {
+          m_progressLogger.Visibility = Visibility.Visible;
+          Windows.Graphics.SizeInt32 size = ParentWindow.AppWindow.ClientSize;
+          ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(size.Width, size.Height + (int)m_progressLogger.Height));
+          m_logViewVisible = true;
+        }
+      });
     }
   }
 }

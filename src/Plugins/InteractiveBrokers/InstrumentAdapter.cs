@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.InteractiveBrokers.Messages;
 using IBApi;
@@ -18,25 +19,48 @@ namespace TradeSharp.InteractiveBrokers
     public const int HistoricalIdBase = 30000000;
     public const int ContractDetailsId = InstrumentIdBase + 1;
     public const int FundamentalsId = InstrumentIdBase + 2;
-    public const int ContractDetailsRequestSleepTime = 25; //sleep time between requests in milliseconds - set limit to be under 50 requests per second https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requests-limitations
+    public const int IntraRequestSleep = 25; //sleep time between requests in milliseconds - set limit to be under 50 requests per second https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requests-limitations
 
     //enums
 
 
     //types
+    /// <summary>
+    /// Meta-data held for historical data request.
+    /// </summary>
+    private class HistoricalDataRequest
+    {
+      public HistoricalDataRequest(int requestId, Contract contract, Resolution resolution, DateTime fromDateTime, DateTime toDateTime)
+      {
+        RequestId = requestId;
+        Contract = contract;
+        Resolution = resolution;
+        FromDateTime = fromDateTime;
+        ToDateTime = toDateTime;
+      }
 
+      public int RequestId { get; set; }
+      public Contract Contract { get; set; }
+      public Resolution Resolution { get; set; }
+      public DateTime FromDateTime { get; set; }
+      public DateTime ToDateTime { get; set; }
+    }
 
     //attributes
     private static InstrumentAdapter? s_instance;
     protected ServiceHost m_serviceHost;
     private ILogger m_logger;
+    private IDialogService m_dialogService;
     private ICountryService m_countryService;
     private IExchangeService m_exchangeService;
     private IInstrumentGroupService m_instrumentGroupService;
     private IInstrumentService m_instrumentService;
+    private IDatabase m_database;
     private bool m_contractRequestActive;
     private bool m_fundamentalsRequestActive;
     private int m_historicalRequestCounter = 0;
+    private Dictionary<int, HistoricalDataRequest> m_activeHistoricalRequests;
+    private Dictionary<int, Contract> m_activeRealTimeRequests;
 
     //constructors
     public static InstrumentAdapter GetInstance(ServiceHost serviceHost)
@@ -47,12 +71,16 @@ namespace TradeSharp.InteractiveBrokers
 
     protected InstrumentAdapter(ServiceHost serviceHost)
     {
-      m_logger = serviceHost.Host.Services.GetRequiredService<ILogger<InstrumentAdapter>>();
       m_serviceHost = serviceHost;
+      m_logger = serviceHost.Host.Services.GetRequiredService<ILogger<InstrumentAdapter>>();
+      m_dialogService = serviceHost.Host.Services.GetRequiredService<IDialogService>();
       m_countryService = m_serviceHost.Host.Services.GetRequiredService<ICountryService>();
       m_exchangeService = m_serviceHost.Host.Services.GetRequiredService<IExchangeService>();
       m_instrumentGroupService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentGroupService>();
       m_instrumentService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentService>();
+      m_database = m_serviceHost.Host.Services.GetRequiredService<IDatabase>();
+      m_activeHistoricalRequests = new Dictionary<int, HistoricalDataRequest>();
+      m_activeRealTimeRequests = new Dictionary<int, Contract>();
       m_contractRequestActive = false;
       m_fundamentalsRequestActive = false;
     }
@@ -63,47 +91,57 @@ namespace TradeSharp.InteractiveBrokers
     //interface implementations
     public string InstrumentTypeToIBContractType(InstrumentType instrumentType)
     {
+      //TBD: The contract details table contains whether a specific contract is ETF/ETN/REIT etc.
       switch (instrumentType)
       {
         case InstrumentType.ETF:    //etf's trade like stocks under IB - NOTE: This will make converting back to InstrumentType ambiguous.
         case InstrumentType.Stock:
-          return Client.ContractTypeStock;
+          return Constants.ContractTypeStock;
         case InstrumentType.Option:
-          return Client.ContractTypeOption;
+          return Constants.ContractTypeOption;
         case InstrumentType.Future:
-          return Client.ContractTypeFuture;
+          return Constants.ContractTypeFuture;
         case InstrumentType.Index:
-          return Client.ContractTypeIndex;
+          return Constants.ContractTypeIndex;
         case InstrumentType.Forex:
-          return Client.ContractTypeForex;
+          return Constants.ContractTypeForex;
         case InstrumentType.MutualFund:
-          return Client.ContractTypeMutualFund;
+          return Constants.ContractTypeMutualFund;
       }
 
-      return Client.ContractTypeStock;
+      return Constants.ContractTypeStock;
     }
 
     public InstrumentType IBContractTypeToInstrumentType(string contractType)
     {
-      if (contractType == Client.ContractTypeStock)
+      //TBD: The contract details table contains whether a specific contract is ETF/ETN/REIT etc.
+      if (contractType == Constants.ContractTypeStock)
         //NOTE: The instrument might be an ETF, but we'll treat it as a stock for now.
         return InstrumentType.Stock;
-      if (contractType == Client.ContractTypeOption)
+      if (contractType == Constants.ContractTypeOption)
         return InstrumentType.Option;
-      if (contractType == Client.ContractTypeFuture)
+      if (contractType == Constants.ContractTypeFuture)
         return InstrumentType.Future;
-      if (contractType == Client.ContractTypeIndex)
+      if (contractType == Constants.ContractTypeIndex)
         return InstrumentType.Index;
-      if (contractType == Client.ContractTypeForex)
+      if (contractType == Constants.ContractTypeForex)
         return InstrumentType.Forex;
-      if (contractType == Client.ContractTypeMutualFund)
+      if (contractType == Constants.ContractTypeMutualFund)
         return InstrumentType.MutualFund;
       return InstrumentType.Stock;
     }
 
     public void SynchronizeContractCache()
     {
+      m_serviceHost.Cache.Clear();    //ensure cache starts fresh after the update
+      IProgressDialog progress = m_dialogService.ShowProgressDialog("Synchronizing Contract Cache", m_logger);
+      progress.StatusMessage = "Synchronizing Contract Cache from Instrument Definitions";
+      progress.Progress = 0;
+      progress.Minimum = 0;
+      progress.Maximum = m_instrumentService.Items.Count;
+      progress.ShowAsync();
       m_contractRequestActive = true;
+
       foreach (var instrument in m_instrumentService.Items)
       {
         var currency = "USD";
@@ -111,21 +149,102 @@ namespace TradeSharp.InteractiveBrokers
         var country = m_countryService.Items.FirstOrDefault(c => c.Id == exchange?.CountryId);
         if (country != null) currency = country?.CountryInfo?.RegionInfo.ISOCurrencySymbol;
         //NOTE: We always sync to SMART exchange irrepsecitve of the exchange given.
-        var contract = new IBApi.Contract { Symbol = instrument.Ticker, SecType = InstrumentTypeToIBContractType(instrument.Type), Exchange = "SMART", Currency = currency };
+        var contract = new IBApi.Contract { Symbol = instrument.Ticker, SecType = InstrumentTypeToIBContractType(instrument.Type), Exchange = Constants.DefaultExchange, Currency = currency };
         m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentIdBase, contract);
-        Thread.Sleep(ContractDetailsRequestSleepTime);    //throttle requests to avoid exceeding the hard limit imposed by IB
+        progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) break;
+        Thread.Sleep(IntraRequestSleep);    //throttle requests to avoid exceeding the hard limit imposed by IB
       }
+
+      progress.Complete = true;
     }
 
-    //NOTE: This method will only be effective after synchronizing the contract cache.
+    //NOTE: This method will only be effective after synchronizing the contract cache with IB's contract definitions
     public void UpdateInstrumentGroups()
     {
+      IProgressDialog progress = m_dialogService.ShowProgressDialog("Updating Instrument Groups", m_logger);
+      progress.StatusMessage = "Updating Instrument Groups from Contract Cache";
+      progress.Progress = 0;
+      progress.Minimum = 0;
+      progress.Maximum = m_instrumentGroupService.Items.Count;
+      progress.ShowAsync();
 
+      //start updating the instrument groups
+      foreach (var instrumentGroup in m_instrumentGroupService.Items)
+      {
+        int instrumentsUpdated = 0;
+        foreach (var instrument in m_instrumentService.Items)
+        {
+          var contract = m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
+          if (contract is ContractStock contractStock)
+          {
+            if (instrumentGroup.Equals(contractStock.Industry) && !instrumentGroup.SearchTickers.Contains(instrument.Ticker))
+            {
+              m_database.CreateInstrumentGroupInstrument(instrumentGroup.Id, instrument.Ticker);
+              instrumentsUpdated++;
+            }
+          }
+          else
+            if (contract != null) progress.LogError($"Contract {contract.Symbol}, {contract.SecType} is not supported.");
 
-      //TODO
-      m_logger.LogError("UpdateInstrumentGroups not implemented.");
+        }
+        progress.LogInformation($"Updated {instrumentsUpdated} instruments for group {instrumentGroup.Name}");
+        progress.Progress++;
+      }
 
+      progress.Complete = true;
+    }
 
+    /// <summary>
+    /// Checks the instrument definitions against the IB contract definitions to ensure they are in sync.
+    /// </summary>
+    public void ValidateInstruments()
+    {
+      IProgressDialog progress = m_dialogService.ShowProgressDialog("Validating Instruments", m_logger);
+      progress.StatusMessage = "Validating Instrument definitions against the Contract Cache definitions";
+      progress.Progress = 0;
+      progress.Minimum = 0;
+      progress.Maximum = m_instrumentService.Items.Count;
+      progress.ShowAsync();
+
+      foreach (var instrument in m_instrumentService.Items)
+      {
+        using (progress.BeginScope($"Validating {instrument.Ticker}"))
+        {
+          var contract = m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
+
+          if (contract == null)
+            foreach (var altTicker in instrument.AlternateTickers)
+            {
+              contract = m_serviceHost.Cache.GetContract(altTicker, Constants.DefaultExchange);
+              if (contract != null) progress.LogInformation($"Will not match on primary ticker but on alternate ticker {altTicker}.");
+            }
+
+          if (contract == null)
+            progress.LogError($"Contract definition not found.");
+          else
+          {
+            //check that instrument group would be correct
+            if (contract is ContractStock contractStock)
+            {
+              if (contractStock.Industry != string.Empty)
+              {
+                var instrumentGroup = m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Industry));
+                if (instrumentGroup == null)
+                  progress.LogError($"Instrument group for \"{contractStock.Industry}\" not found.");
+              }
+              else
+                progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Industry set.");
+            }
+            else
+              progress.LogError($"Contract {contract.Symbol}, {contract.SecType} is not supported.");
+          }
+        }
+
+        progress.Progress++;
+      }
+
+      progress.Complete = true;
     }
 
     public void RequestScannerParameters()
@@ -153,29 +272,86 @@ namespace TradeSharp.InteractiveBrokers
       }
     }
 
-
-    //TODO: See how to clean up this method to use more strict types than freeform strings - use enums instead.
-
-    public void RequestHistoricalData(Contract contract, string endDateTime, string durationString, string barSizeSetting, string whatToShow, int useRTH, bool keepUpToDate)
+    public void RequestHistoricalData(Contract contract, DateTime startDateTime, DateTime endDateTime, Resolution resolution)
     {
-      
-      m_serviceHost.Client.ClientSocket.reqHistoricalData(m_historicalRequestCounter++ + HistoricalIdBase, contract, endDateTime, durationString, barSizeSetting, whatToShow, useRTH, 1, keepUpToDate, new List<TagValue>());
+      //duration string requires a valid date range
+      if (startDateTime >= endDateTime)
+      {
+        m_logger.LogError($"Invalid date range (start: {startDateTime}, end: {endDateTime}) for historical data request on ticker {contract.Symbol}.");
+        return;
+      }
+
+      string barSizeSetting = Constants.BarSize1Day;
+      string durationString;
+      switch (resolution)
+      {
+        case Resolution.Minute:
+          barSizeSetting = Constants.BarSize1Min;
+          TimeSpan duration = endDateTime - startDateTime;
+          durationString = $"{(long)Math.Ceiling(duration.TotalDays)} {Constants.DurationDays}";
+          break;
+        case Resolution.Hour:
+          barSizeSetting = Constants.BarSize1Hour;
+          duration = endDateTime - startDateTime;
+          durationString = $"{(long)Math.Ceiling(duration.TotalDays)} {Constants.DurationDays}";
+          break;
+        case Resolution.Day:
+          barSizeSetting = Constants.BarSize1Day;
+          duration = endDateTime - startDateTime;
+          durationString = $"{(long)Math.Ceiling(duration.TotalDays)} {Constants.DurationDays}";
+          break;
+        case Resolution.Week:
+          barSizeSetting = Constants.BarSize1Week;
+          duration = endDateTime - startDateTime;          
+
+          if (duration.TotalDays < 7)
+          {
+            m_logger.LogError($"Invalid date range (start: {startDateTime}, end: {endDateTime}) for weekly historical data request on ticker {contract.Symbol}.");
+            return;
+          }
+          
+          durationString = $"{(long)Math.Ceiling(duration.TotalDays / 7)} {Constants.DurationWeeks}";
+          break;
+        case Resolution.Month:
+          barSizeSetting = Constants.BarSize1Month;
+          duration = endDateTime - startDateTime;
+
+          if (duration.TotalDays < 365)
+            durationString = $"{(long)Math.Ceiling(duration.TotalDays)} {Constants.DurationMonths}";
+          else
+            durationString = $"{(long)Math.Ceiling(duration.TotalDays / 365)} {Constants.DurationYears}";
+          break;
+        default:
+          m_logger.LogError($"Unsupported resolution requested {resolution.ToString()} on ticker {contract.Symbol} for historical data.");
+          return;   //intentional exit on error state
+      }
+
+      int reqId = m_historicalRequestCounter + HistoricalIdBase;
+      m_activeHistoricalRequests[reqId] = new HistoricalDataRequest(reqId, contract, resolution, startDateTime, endDateTime);
+      m_serviceHost.Client.ClientSocket.reqHistoricalData(reqId, contract, endDateTime.ToString(), durationString, barSizeSetting, "TRADES" /*whatToShow*/ , 1 /*useRTH*/, 1 /*formatDate - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#hist-format-date*/, false /*keepUpToDate*/, new List<TagValue>());
     }
 
-    public void RequestRealTimeBars(Contract contract, int barSize, string whatToShow, bool useRTH)
+    /// <summary>
+    /// Request real-time data for the given instrument, IB looks like it will send info every 5-seconds (https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#live-bars) 
+    /// Returns the request Id used to cancal the data request.
+    /// </summary>
+    public int RequestRealTimeBars(Contract contract, int barSize, string whatToShow, bool useRTH)
     {
-      
-      //TODO: Add lookup table for real-time subscription with the associated reqId's used since it's used for the cancellation as well.
-
-      m_serviceHost.Client.ClientSocket.reqRealTimeBars(m_historicalRequestCounter++ + HistoricalIdBase, contract, barSize, whatToShow, useRTH, new List<TagValue>());
+      int reqId = m_historicalRequestCounter++ + HistoricalIdBase;
+      m_activeRealTimeRequests[reqId] = contract;
+      //NOTE: barSize is currently ignored (14 April 2024)
+      m_serviceHost.Client.ClientSocket.reqRealTimeBars(reqId, contract, barSize, whatToShow, useRTH, new List<TagValue>());
+      return reqId;
     }
-    
-    public void CancelRealTimeBars(Contract contract, int barSize)
+
+    public bool CancelRealTimeBars(int requestId)
     {
-
-      //TODO: Add lookup table for real-time subscription.
-
-      m_serviceHost.Client.ClientSocket.cancelRealTimeBars(m_historicalRequestCounter + HistoricalIdBase);
+      bool result = m_activeRealTimeRequests.Remove(requestId);
+      if (result)
+        m_serviceHost.Client.ClientSocket.cancelRealTimeBars(requestId);
+      else
+        m_logger.LogError($"Failed to cancel real-time bars request with request Id {requestId}.");
+      return result;
     }
 
     //properties
@@ -208,12 +384,24 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleHistoricalData(HistoricalDataMessage historicalDataMessage)
     {
-
+      if (m_activeHistoricalRequests.TryGetValue(historicalDataMessage.RequestId, out HistoricalDataRequest? request))
+      {
+        if (DateTime.TryParse(historicalDataMessage.Date, out DateTime dateTime))
+        {
+          //NOTE: Requests must be done as whole units of days, week, months or years so we need to make sure that the response date is within the specific requested date range.
+          if (dateTime >= request.FromDateTime && dateTime <= request.ToDateTime)
+            m_database.UpdateData(Constants.DefaultName, request.Contract.Symbol, request.Resolution, dateTime, historicalDataMessage.Open, historicalDataMessage.High, historicalDataMessage.Low, historicalDataMessage.Close, historicalDataMessage.Volume);
+        }
+        else
+          m_logger.LogError($"Failed to parse date {historicalDataMessage.Date} for historical data request entry for reqId {historicalDataMessage.RequestId}");
+      }
+      else
+        m_logger.LogError($"Failed to find historical data request entry for reqId {historicalDataMessage.RequestId}");
     }
 
     public void HandleHistoricalDataEnd(HistoricalDataEndMessage historicalDataEndMessage)
     {
-
+      m_activeHistoricalRequests.Remove(historicalDataEndMessage.RequestId);
     }
 
     public void HandleUpdateMktDepth(DeepBookMessage updateMktDepthMessage)
@@ -224,11 +412,14 @@ namespace TradeSharp.InteractiveBrokers
     public void HandleRealTimeBar(RealTimeBarMessage realTimeBarsMessage)
     {
 
+      //TODO:
+      // - Update data for the real-time bar update in the database tables. How would you do this? Update all resolutions even if it means partial bars vs update only requested resolution update?
+      // - Add some event that could be raised to fire the bar update.
+
     }
 
     public void HandleFundamentalsData(FundamentalsMessage fundamentalsMessage)
     {
-      //TODO: Store fundamentals data.
       m_fundamentalsRequestActive = false;
     }
 

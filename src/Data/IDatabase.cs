@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
 using System.ComponentModel;
+using System.Diagnostics.Metrics;
 
 namespace TradeSharp.Data
 {
@@ -497,12 +498,34 @@ namespace TradeSharp.Data
     [ObservableProperty] private IList<Guid> m_secondaryExchangeIds;
 
     //methods
+    public override bool Equals(object? other)
+    {
+      if (other != null)
+      {
+        if (other is Instrument instrument)
+        {
+          if (Ticker == instrument.Ticker) return true;
+          if (AlternateTickers.FirstOrDefault(t => t == instrument.Ticker) != null) return true;
+          if (instrument.AlternateTickers.FirstOrDefault(t => t == Ticker) != null) return true;
+        }
+        else if (other is string ticker)
+        {
+          if (Ticker == ticker) return true;
+          if (AlternateTickers.FirstOrDefault(t => t == ticker) != null) return true;
+        }
+      }
+
+      return false;
+    }
+
+    public override int GetHashCode()
+    {
+      return Ticker.GetHashCode() + AlternateTickers.GetHashCode();
+    }
+
     public bool Equals(Instrument? other)
     {
-      if (Ticker == other!.Ticker) return true;
-      if (AlternateTickers.FirstOrDefault(t => t == other.Ticker) != null) return true;
-      if (other!.AlternateTickers.FirstOrDefault(t => t == Ticker) != null) return true;
-      return false;
+      return other == this;
     }
 
     public object Clone()
@@ -534,6 +557,7 @@ namespace TradeSharp.Data
       Instrument instrument = (Instrument)o;
       return Ticker.CompareTo(instrument.Ticker);
     }
+
   }
 
   /// <summary>
@@ -620,21 +644,40 @@ namespace TradeSharp.Data
     [ObservableProperty] private string m_description;
     [ObservableProperty] private string m_userId;   //specific Id to be used by the user, can be used in data file exports/imports to identify the group
     [ObservableProperty] private IList<string> m_instruments; //instruments associated with the group
-    [ObservableProperty] private IList<string> m_searchTickers;   //set of tickers and alternate associated with the group
+    [ObservableProperty] private IList<string> m_searchTickers;   //set of tickers AND alternate tickers for instruments associated with the group
 
-    public bool Equals(InstrumentGroup? other)
-    { 
-      //NOTE: We perform case insensitive comparison for the name and alternate names
+    public override bool Equals(object? other)
+    {
       if (other != null)
       {
-        if (other.Id == Id) return true;
-        if (other.UserId.ToUpper() == UserId.ToUpper()) return true;
-        if (other.Name.ToUpper() == Name.ToUpper()) return true;
-        //perform two way comparison for alternate names
-        if (other.AlternateNames.FirstOrDefault(t => t.ToUpper() == Name.ToUpper()) != null) return true;
-        if (AlternateNames.FirstOrDefault(t => t.ToUpper() == other.Name.ToUpper()) != null) return true;
+        if (other is InstrumentGroup instrumentGroup)
+        {
+          if (instrumentGroup.Id == Id) return true;
+          if (instrumentGroup.UserId.ToUpper() == UserId.ToUpper()) return true;
+          if (instrumentGroup.Name.ToUpper() == Name.ToUpper()) return true;
+          //perform two way comparison for alternate names
+          if (instrumentGroup.AlternateNames.FirstOrDefault(t => t.ToUpper() == Name.ToUpper()) != null) return true;
+          if (AlternateNames.FirstOrDefault(t => t.ToUpper() == instrumentGroup.Name.ToUpper()) != null) return true;
+        }
+        else if (other is string name)
+        {
+          name = name.ToUpper();
+          if (Name.ToUpper() == name) return true;
+          if (AlternateNames.FirstOrDefault(t => t.ToUpper() == name) != null) return true;
+        }
       }
+
       return false;
+    }
+
+    public override int GetHashCode()
+    {
+      return Name.GetHashCode() + AlternateNames.GetHashCode();
+    }
+
+    public bool Equals(InstrumentGroup? other)
+    {
+      return other == this;
     }
 
     public object Clone()

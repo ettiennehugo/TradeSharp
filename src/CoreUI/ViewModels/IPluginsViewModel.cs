@@ -3,9 +3,20 @@ using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
-	/// <summary>
-	/// Concrete interface for the plugins view model.
-	/// </summary>
+  /// <summary>
+  /// Types of plugins to display.
+  /// </summary>
+  public enum PluginsToDisplay
+  {
+    All,
+    Brokers,
+    DataProviders,
+    Extensions
+  }
+
+  /// <summary>
+  /// Concrete interface for the plugins view model.
+  /// </summary>
   public interface IPluginsViewModel : IListViewModel<IPlugin>
   {
 		//constants
@@ -21,6 +32,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
 		//properties
+    public PluginsToDisplay PluginsToDisplay { get; set; }
 		public AsyncRelayCommand ConnectCommandAsync { get; set; }
 		public AsyncRelayCommand DisconnectCommandAsync { get; set; }
 		public AsyncRelayCommand SettingsCommandAsync { get; set; }
