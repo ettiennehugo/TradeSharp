@@ -51,7 +51,7 @@ namespace TradeSharp.WinDataManager.Services
     private const int WS_SYSMENU = 0x80000;
     private const int WS_DLGFRAME = 0x400000;
     private const int WS_SIZEBOX = 0x40000;
-    
+
     [DllImport("user32.dll")]
     extern private static IntPtr GetActiveWindow();
 
@@ -110,20 +110,20 @@ namespace TradeSharp.WinDataManager.Services
       IProgressDialog result = null;
       //create the dialog from the UI thread
       TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
-      if (UIDispatcherQueue.TryEnqueue(() => {
-            Window window = new Window();
-            window.ExtendsContentIntoTitleBar = true;
-            WinCoreUI.Views.ProgressDialogView progressView = new WinCoreUI.Views.ProgressDialogView();
-            progressView.Title = title;
-            progressView.ParentWindow = window;   //set so view can close the window
-            progressView.Logger = logger;
-            window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 720));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-            window.Content = progressView;
-            MakeDialog(window);
-            result = progressView;
-            taskCompletionSource.SetResult(true);
-          }))  
-      Task.WhenAny(taskCompletionSource.Task, Task.Delay(5000000)).Wait();  //wait up to 5-seconds for the dialog to be created
+      if (UIDispatcherQueue.TryEnqueue(() =>
+      {
+        Window window = new Window();
+        WinCoreUI.Views.ProgressDialogView progressDialog = new WinCoreUI.Views.ProgressDialogView();
+        progressDialog.Title = title;
+        progressDialog.Logger = logger;
+        progressDialog.ParentWindow = window;
+        window.ExtendsContentIntoTitleBar = true;
+        window.Content = progressDialog;
+        MakeDialog(window);
+        result = progressDialog;
+        taskCompletionSource.SetResult(true);
+      }))
+        Task.WhenAny(taskCompletionSource.Task, Task.Delay(5000000)).Wait();  //wait up to 5-seconds for the dialog to be created
       //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
       return result!;
     }
@@ -616,7 +616,7 @@ namespace TradeSharp.WinDataManager.Services
 
     internal static void HideMinimizeAndMaximizeButtons(Window window)
     {
-      IntPtr hwnd =  WindowNative.GetWindowHandle(window);
+      IntPtr hwnd = WindowNative.GetWindowHandle(window);
       var currentStyle = GetWindowLong(hwnd, GWL_STYLE);
       SetWindowLong(hwnd, GWL_STYLE, (currentStyle & ~WS_MAXIMIZEBOX & ~WS_MINIMIZEBOX));
     }

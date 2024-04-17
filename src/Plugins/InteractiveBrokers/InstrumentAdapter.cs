@@ -152,7 +152,7 @@ namespace TradeSharp.InteractiveBrokers
         var contract = new IBApi.Contract { Symbol = instrument.Ticker, SecType = InstrumentTypeToIBContractType(instrument.Type), Exchange = Constants.DefaultExchange, Currency = currency };
         m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentIdBase, contract);
         progress.Progress++;
-        if (progress.CancellationTokenSource.IsCancellationRequested) break;
+        if (progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
         Thread.Sleep(IntraRequestSleep);    //throttle requests to avoid exceeding the hard limit imposed by IB
       }
 
@@ -190,6 +190,7 @@ namespace TradeSharp.InteractiveBrokers
         }
         progress.LogInformation($"Updated {instrumentsUpdated} instruments for group {instrumentGroup.Name}");
         progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
       }
 
       progress.Complete = true;
@@ -227,14 +228,17 @@ namespace TradeSharp.InteractiveBrokers
             //check that instrument group would be correct
             if (contract is ContractStock contractStock)
             {
-              if (contractStock.Industry != string.Empty)
+              if (contractStock.StockType == Constants.StockTypeCommon)
               {
-                var instrumentGroup = m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Industry));
-                if (instrumentGroup == null)
-                  progress.LogError($"Instrument group for \"{contractStock.Industry}\" not found.");
+                if (contractStock.Industry != string.Empty)
+                {
+                  var instrumentGroup = m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Industry));
+                  if (instrumentGroup == null)
+                    progress.LogError($"Instrument group for \"{contractStock.Industry}\" not found.");
+                }
+                else
+                  progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Industry set.");
               }
-              else
-                progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Industry set.");
             }
             else
               progress.LogError($"Contract {contract.Symbol}, {contract.SecType} is not supported.");
@@ -242,6 +246,7 @@ namespace TradeSharp.InteractiveBrokers
         }
 
         progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
       }
 
       progress.Complete = true;

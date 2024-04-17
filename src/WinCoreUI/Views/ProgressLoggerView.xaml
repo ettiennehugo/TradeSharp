@@ -29,7 +29,7 @@
     <DataTemplate x:Key="LogEntry" x:DataType="coreUI:LogEntry">
       <Grid ColumnDefinitions="Auto, Auto">
         <TextBlock Text="{x:Bind Timestamp}" Grid.Column="0" FontWeight="Bold" Margin="5,0,5,0"/>
-        <TextBlock Text="{x:Bind Level}" Foreground="{x:Bind Level, Converter={StaticResource LogLevelToColorConverter}}"   Grid.Column="1" FontWeight="Bold" Margin="0,0,2,0"/>
+        <TextBlock Text="{x:Bind Level}" Foreground="{x:Bind Level, Converter={StaticResource LogLevelToColorConverter}}" Grid.Column="1" FontWeight="Bold" Margin="0,0,2,0"/>
         <TextBlock Text="{x:Bind Message}" Grid.Column="2" TextWrapping="Wrap"/>
       </Grid>
     </DataTemplate>
@@ -51,7 +51,7 @@
     </DataTemplate>
   </UserControl.Resources>
   <StackPanel x:Name="m_main">
-    <ItemsControl x:Name="m_itemsViewer" ItemsSource="{x:Bind Entries}" Style="{StaticResource LogViewerStyle}"/>
+    <ItemsControl x:Name="m_itemsViewer" BorderThickness="2" ItemsSource="{x:Bind Entries}" Style="{StaticResource LogViewerStyle}"/>
     <!--<ItemsControl.Template>
         <ControlTemplate>
           <ScrollViewer CanContentScroll="True">

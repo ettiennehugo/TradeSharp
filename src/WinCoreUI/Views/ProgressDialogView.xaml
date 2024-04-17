@@ -7,20 +7,19 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Loaded="Page_Loaded"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <Grid x:Name="m_layoutMain" RowDefinitions="32, Auto, Auto, Auto, Auto, Auto" RowSpacing="0">
-      <Grid x:Name="m_titleBar" ColumnDefinitions="32, *" Grid.Row="0" Grid.Column="0">
-        <Image x:Name="m_titleBarIcon" Source="Assets/Square64x64.ico" HorizontalAlignment="Center" VerticalAlignment="Center" Width="24" Height="24"  Grid.Row="0" Grid.Column="0"/>
-        <TextBlock x:Name="m_titleBarText" Text="{x:Bind Title}" TextAlignment="Left" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" Grid.Row="0" Grid.Column="1"/>
-      </Grid>
-      <TextBlock x:Name="m_progressTitle" Grid.Row="1"/>
-      <StackPanel Grid.Row="2" Orientation="Horizontal">
-        <ProgressBar x:Name="m_progressBar" Margin="3,3" Width="570" IsIndeterminate="False" ShowPaused="False" ShowError="False"/>
-        <TextBlock x:Name="m_progressLabel" Margin="3,3" Width="40" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-      </StackPanel>
-    <local:ProgressLoggerView x:Name="m_progressLogger" Grid.Row="3" Height="500"/>
-    <TextBlock x:Name="m_statusMessage" Grid.Row="4" Margin="3,3" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+    Loaded="Page_Loaded">
+  <Grid x:Name="m_layoutMain" RowDefinitions="32, Auto, Auto, Auto, Auto, Auto"  RowSpacing="0">
+    <Grid x:Name="m_titleBar" ColumnDefinitions="32, *" Grid.Row="0" Grid.Column="0">
+      <Image x:Name="m_titleBarIcon" Source="Assets/Square64x64.ico" HorizontalAlignment="Center" VerticalAlignment="Center" Width="24" Height="24"  Grid.Row="0" Grid.Column="0"/>
+      <TextBlock x:Name="m_titleBarText" Text="{x:Bind Title}" TextAlignment="Left" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" Grid.Row="0" Grid.Column="1"/>
+    </Grid>
+    <TextBlock x:Name="m_progressTitle" Grid.Row="1"/>
+    <StackPanel Grid.Row="2" Orientation="Horizontal">
+      <ProgressBar x:Name="m_progressBar" Margin="3,3" Width="570" IsIndeterminate="False" ShowPaused="False" ShowError="False"/>
+      <TextBlock x:Name="m_progressLabel" Margin="3,3" Width="40" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+    </StackPanel>
+    <TextBlock x:Name="m_statusMessage" Grid.Row="3" Margin="3,3" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+    <local:ProgressLoggerView x:Name="m_progressLogger" Grid.Row="4" Height="500" Visibility="Collapsed"/>
     <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
       <Button x:Name="m_cancelBtn" Content="Cancel" Click="m_cancelBtn_Click" ToolTipService.ToolTip="Cancel operation and close" Margin="3,3"/>
     </StackPanel>

@@ -4,6 +4,7 @@ using TradeSharp.CoreUI.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Dispatching;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -14,7 +15,7 @@ using System.Runtime.InteropServices;
 namespace TradeSharp.WinCoreUI.Views
 {
   /// <summary>
-  /// An empty page that can be used on its own or navigated to within a Frame.
+  /// Progress dialog with an optional log display.
   /// NOTE: The API of this window can be accessed from background threads so we need to run a lot of it through the dispatcher queue on the UI thread.
   /// </summary>
   public sealed partial class ProgressDialogView : Page, IProgressDialog
@@ -42,6 +43,7 @@ namespace TradeSharp.WinCoreUI.Views
     private bool m_complete;
     private object m_statusMessageLock;
     private string m_statusMessageText;
+    private bool m_parentWindowSizeInit;
     private ILogger? m_logger;
     private bool m_logViewVisible;
 
@@ -63,7 +65,8 @@ namespace TradeSharp.WinCoreUI.Views
       m_statusMessageText = "";
       m_logger = null;
       m_logViewVisible = false;
-      this.InitializeComponent();
+      m_parentWindowSizeInit = false;
+      InitializeComponent();
     }
 
     //finalizers
@@ -74,7 +77,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public CancellationTokenSource CancellationTokenSource => m_cancellationTokenSource;
-    public Window ParentWindow { get; set; }
+    public Window ParentWindow { set; get; }
     public string Title
     {
       get => m_title;
@@ -163,6 +166,8 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       ParentWindow.SetTitleBar(m_titleBar);
+      ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 300));
+      m_parentWindowSizeInit = true;
     }
 
     public Task ShowAsync()
@@ -230,18 +235,20 @@ namespace TradeSharp.WinCoreUI.Views
     private void ensureLogVisible()
     {
       //make log row visible and resize window to accomodate it
-      if (m_logViewVisible) return;
+      //NOTE: Logging can be called before the window is initialized so we ignore the resize in this method
+      //      otherwise the initiliazation of the window size will override this resize.
+      if (!m_parentWindowSizeInit || m_logViewVisible) return;
 
-      DispatcherQueue.TryEnqueue(() =>
+      ParentWindow.DispatcherQueue.TryEnqueue(() =>
       {
-        if (m_progressLogger.Visibility == Visibility.Collapsed)
-        {
-          m_progressLogger.Visibility = Visibility.Visible;
-          Windows.Graphics.SizeInt32 size = ParentWindow.AppWindow.ClientSize;
-          ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(size.Width, size.Height + (int)m_progressLogger.Height));
-          m_logViewVisible = true;
-        }
+        m_progressLogger.Visibility = Visibility.Visible;
+        //resize the controls and window to accomodate the larger log view
+        m_progressBar.Width = 1060;
+        ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2230, 1280));
+        m_parentWindowSizeInit = true;
       });
+
+      m_logViewVisible = true;
     }
   }
 }
