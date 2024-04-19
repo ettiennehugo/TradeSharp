@@ -94,7 +94,7 @@ namespace TradeSharp.InteractiveBrokers
       //TBD: The contract details table contains whether a specific contract is ETF/ETN/REIT etc.
       switch (instrumentType)
       {
-        case InstrumentType.ETF:    //etf's trade like stocks under IB - NOTE: This will make converting back to InstrumentType ambiguous.
+        case InstrumentType.ETF:    //etf's have entries under the ContractDetails in the StockType
         case InstrumentType.Stock:
           return Constants.ContractTypeStock;
         case InstrumentType.Option:
@@ -197,6 +197,107 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     /// <summary>
+    /// Checks the instrument groups against the IB contract definitions to ensure they are in sync.
+    /// </summary>
+    private class InstrumentGroupValidation
+    {
+      public InstrumentGroupValidation()
+      {
+        Industry = string.Empty;
+        IndustryFound = false;
+        Category = string.Empty;
+        CategoryFound = false;
+        Subcategory = string.Empty;
+        SubcategoryFound = false;
+      }
+
+      public string Industry { get; set; }
+      public bool IndustryFound { get; set; }
+      public string Category { get; set; }
+      public bool CategoryFound { get; set; }
+      public string Subcategory { get; set; }
+      public bool SubcategoryFound { get; set; }
+    }
+
+    public void ValidateInstrumentGroups()
+    {
+      List<InstrumentGroupValidation> definedContractGroups = new List<InstrumentGroupValidation>();
+
+      IProgressDialog progress = m_dialogService.ShowProgressDialog("Validating Instrument Group Definitions", m_logger);
+      progress.StatusMessage = "Accumulating industry class definitions from the InteractiveBrokers contract definitions";
+      progress.Progress = 0;
+      progress.Minimum = 0;
+      progress.Maximum = m_instrumentService.Items.Count + m_instrumentGroupService.Items.Count;
+      progress.ShowAsync();
+
+      foreach (var instrument in m_instrumentService.Items)
+      {
+        var contract = m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
+
+        if (contract == null)
+          foreach (var altTicker in instrument.AlternateTickers)
+          {
+            contract = m_serviceHost.Cache.GetContract(altTicker, Constants.DefaultExchange);
+            if (contract != null) break;
+          }
+
+        if (contract == null)
+          progress.LogWarning($"Contract definition for instrument \"{instrument.Ticker}\" not found - skipping.");
+        else
+        {
+          //check that instrument group would be correct
+          if (contract is ContractStock contractStock)
+          {
+            var contractGroup = definedContractGroups.FirstOrDefault((g) => g.Industry == contractStock.Industry && g.Category == contractStock.Category && g.Subcategory == contractStock.Subcategory);
+            if (contractGroup == null)
+            {
+              contractGroup = new InstrumentGroupValidation { Industry = contractStock.Industry, Category = contractStock.Category, Subcategory = contractStock.Subcategory };
+              definedContractGroups.Add(contractGroup);
+            }
+          }
+        }
+
+        progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+      }
+
+      List<InstrumentGroup> missingInstrumentGroups = new List<InstrumentGroup>();
+      progress.StatusMessage = "Analyzing instrument group definitions";
+      foreach (var instrumentGroup in m_instrumentGroupService.Items)
+      {
+        var contractGroup = definedContractGroups.FirstOrDefault((g) => (!g.IndustryFound && instrumentGroup.Equals(g.Industry)) || (!g.CategoryFound && instrumentGroup.Equals(g.Category)) || (!g.SubcategoryFound && instrumentGroup.Equals(g.Subcategory)));
+
+        if (contractGroup != null)
+        {
+          if (instrumentGroup.Equals(contractGroup.Industry))
+            contractGroup.IndustryFound = true;
+          if (instrumentGroup.Equals(contractGroup.Category))
+            contractGroup.CategoryFound = true;
+          if (instrumentGroup.Equals(contractGroup.Subcategory))
+            contractGroup.SubcategoryFound = true;
+        }
+        else
+          missingInstrumentGroups.Add(instrumentGroup);
+
+        progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+      }
+
+      progress.StatusMessage = $"Searching for potential matches on {missingInstrumentGroups.Count} instrument groups";
+      progress.Maximum += missingInstrumentGroups.Count;
+      foreach (var instrumentGroup in missingInstrumentGroups)
+      {
+        
+
+        progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+      }
+
+      progress.Progress = progress.Maximum;
+      progress.Complete = true;
+    }
+
+    /// <summary>
     /// Checks the instrument definitions against the IB contract definitions to ensure they are in sync.
     /// </summary>
     public void ValidateInstruments()
@@ -232,9 +333,9 @@ namespace TradeSharp.InteractiveBrokers
               {
                 if (contractStock.Industry != string.Empty)
                 {
-                  var instrumentGroup = m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Industry));
+                  var instrumentGroup = m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Subcategory));
                   if (instrumentGroup == null)
-                    progress.LogError($"Instrument group for \"{contractStock.Industry}\" not found.");
+                    progress.LogError($"Instrument group for {contractStock.Industry}->{contractStock.Category}->{contractStock.Subcategory} not found.");
                 }
                 else
                   progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Industry set.");

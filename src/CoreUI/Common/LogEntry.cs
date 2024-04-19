@@ -40,7 +40,9 @@ namespace TradeSharp.CoreUI.Common
     [ObservableProperty] private string m_message;
 
     //methods
-
-
+    public virtual bool Matches(string filterText)
+    {
+      return filterText.Length == 0 || Message.Contains(filterText);
+    }
   }
 }

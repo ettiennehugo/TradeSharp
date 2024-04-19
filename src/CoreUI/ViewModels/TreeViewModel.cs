@@ -123,7 +123,10 @@ namespace TradeSharp.CoreUI.ViewModels
     /// Default tree view model only support synchronous refresh.
     /// </summary>
     /// <returns></returns>
-    public override Task OnRefreshAsync() => throw new NotImplementedException($"{GetType().ToString()} view model only supports synchronous refresh.");
+    public override Task OnRefreshAsync()
+    {
+      return Task.Run(() => m_itemsService.Refresh());
+    }
 
     public override Task OnDeleteAsync(object? target)
     {

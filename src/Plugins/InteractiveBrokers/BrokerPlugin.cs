@@ -60,8 +60,9 @@ namespace TradeSharp.InteractiveBrokers
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
       CustomCommands.Add(new CustomCommand { Name = "Scanner Parameters", Tooltip = "Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
       CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) } );
-      CustomCommands.Add(new CustomCommand { Name = "Update Industry Groups", Tooltip = "Update stock industry groupings", Icon = "\uE15C", Command = new AsyncRelayCommand(OnUpdateInstrumentGroupsAsync, () => IsConnected) } );
-      CustomCommands.Add(new CustomCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE9D5", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
+      CustomCommands.Add(new CustomCommand { Name = "Update Industry Groups", Tooltip = "Update stock industry groupings", Icon = "\uE9D5", Command = new AsyncRelayCommand(OnUpdateInstrumentGroupsAsync, () => IsConnected) } );
+      CustomCommands.Add(new CustomCommand { Name = "Validate Instrument Groups", Tooltip = "Validate Defined Instrument Groups against Cached Contracts", Icon = "\uE15C", Command = new AsyncRelayCommand(OnValidateInstrumentGroupsAsync) } );
+      CustomCommands.Add(new CustomCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
       if (IsConnected)
         raiseConnected();
     }
@@ -79,6 +80,11 @@ namespace TradeSharp.InteractiveBrokers
     public Task OnUpdateInstrumentGroupsAsync()
     {
       return Task.Run(() => m_ibServiceHost.Instruments.UpdateInstrumentGroups());
+    }
+
+    public Task OnValidateInstrumentGroupsAsync()
+    {
+      return Task.Run(() => m_ibServiceHost.Instruments.ValidateInstrumentGroups());
     }
 
     public Task OnValidateInstrumentsAsync()

@@ -38,13 +38,13 @@
     <None Remove="Views\InstrumentGroupView.xaml" />
     <None Remove="Views\InstrumentsView.xaml" />
     <None Remove="Views\InstrumentView.xaml" />
+    <None Remove="Views\LoggerView.xaml" />
     <None Remove="Views\MassCopyInstrumentDataView.xaml" />
     <None Remove="Views\MassDownloadInstrumentDataView.xaml" />
     <None Remove="Views\MassExportInstrumentDataView.xaml" />
     <None Remove="Views\MassImportInstrumentDataView.xaml" />
     <None Remove="Views\PluginsView.xaml" />
     <None Remove="Views\ProgressDialogView.xaml" />
-    <None Remove="Views\ProgressLoggerView.xaml" />
     <None Remove="Views\SessionsView.xaml" />
     <None Remove="Views\SessionView.xaml" />
   </ItemGroup>
@@ -199,7 +199,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Views\ProgressLoggerView.xaml">
+    <Page Update="Views\LoggerView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

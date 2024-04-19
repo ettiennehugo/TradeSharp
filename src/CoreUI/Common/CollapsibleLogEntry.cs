@@ -35,7 +35,18 @@ namespace TradeSharp.CoreUI.Common
     public ObservableCollection<LogEntry> Children { get; set; }
 
     //methods
+    public override bool Matches(string filterText)
+    {
+      bool matches = base.Matches(filterText);
 
+      if (!matches)
+        foreach (LogEntry child in Children)
+        {
+          matches = child.Matches(filterText);
+          if (matches) break;
+        }
 
+      return matches;
+    }
   }
 }

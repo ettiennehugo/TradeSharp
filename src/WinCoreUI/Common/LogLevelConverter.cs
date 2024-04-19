@@ -22,7 +22,7 @@ namespace TradeSharp.WinCoreUI.Common
           _ => "Unknown"
         };
       }
-      return "Unknown";
+      return value;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -41,7 +41,7 @@ namespace TradeSharp.WinCoreUI.Common
            _ => LogLevel.None
         };
       }
-      return LogLevel.None;
+      return value;
     }
   }
 }
