@@ -241,9 +241,10 @@ namespace TradeSharp.InteractiveBrokers
             if (contract != null) break;
           }
 
-        if (contract == null)
-          progress.LogWarning($"Contract definition for instrument \"{instrument.Ticker}\" not found - skipping.");
-        else
+        //if (contract == null)
+        //  progress.LogWarning($"Contract definition for instrument \"{instrument.Ticker}\" not found - skipping.");
+        //else
+        if (contract != null)
         {
           //check that instrument group would be correct
           if (contract is ContractStock contractStock)
@@ -288,8 +289,8 @@ namespace TradeSharp.InteractiveBrokers
       foreach (var instrumentGroup in missingInstrumentGroups)
       {
 
-        progress.LogError($"Could not find matching group for {instrumentGroup.Name}", HandleMissingInstrumentGroup, "Test string"); 
-        
+        progress.LogError($"Could not find matching group for {instrumentGroup.Name}", HandleMissingInstrumentGroup, "Test string", "Fix issue");
+
 
         progress.Progress++;
         if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled

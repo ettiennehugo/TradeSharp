@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Data;
 
 namespace TradeSharp.WinCoreUI.Views
 {
@@ -28,7 +29,7 @@ namespace TradeSharp.WinCoreUI.Views
   /// Log view control for LogEntry type objects.
   /// Based on example from - https://stackoverflow.com/questions/16743804/implementing-a-log-viewer-with-wpf
   /// </summary>
-  public sealed partial class LoggerView : UserControl, IProgressLogger
+  public sealed partial class LoggerView : UserControl, ILoggerView
   {
     //constants
 
@@ -61,14 +62,17 @@ namespace TradeSharp.WinCoreUI.Views
     //attributes
     internal Stack<CollapsibleLogEntry> m_scopedLogs;
     private List<LogEntry> m_entries;
-
+    private bool m_flushToView;
+    
     //constructors
     public LoggerView()
     {
       m_entries = new List<LogEntry>();
       m_scopedLogs = new Stack<CollapsibleLogEntry>();
       Entries = new ObservableCollection<LogEntry>();
+      m_flushToView = false;    //default to not flush log entries to the view since it can be expensive on the UI thread for long running processes
       this.InitializeComponent();
+      //NOTE: The m_logTreeView does not have a binding on its ItemsSource property yet, it's only set in filterEntries to perform fast filtering.
     }
 
     //finalizers
@@ -79,6 +83,15 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     ILogger? Logger { get; set; }  //logger to echo log entries to
+    public bool FlushToView { 
+      get => m_flushToView;
+      set
+      {
+        if (m_flushToView == value) return;
+        m_flushToView = value;
+        DispatcherQueue.TryEnqueue(filterEntries);
+      }
+    }  //flush log entries to the view
     public ObservableCollection<LogEntry> Entries { get; set; }  //observable collection of log entries for display
 
     //methods
@@ -90,22 +103,18 @@ namespace TradeSharp.WinCoreUI.Views
     {
       CollapsibleLogEntry logEntry = new CollapsibleLogEntry() { Timestamp = DateTime.Now, Level = LogLevel.Information, Message = message };
       
-      TaskCompletionSource<bool> taskCompletionToken = new TaskCompletionSource<bool>();
-      DispatcherQueue.TryEnqueue(() => {
-        //add new scope log entry as a child of the previous collapsible log entry if we are already in a scope or add it to the
-        //Entries collection if we are not in a scope push it onto the scoped logs stack to make it the new logging scope
-        if (m_scopedLogs.Count > 0)
-          m_scopedLogs.Peek().Children.Add(logEntry);
-        else
-        {
-          m_entries.Add(logEntry);
-        }
-        m_scopedLogs.Push(logEntry);
-        if (filter(logEntry)) Entries.Add(logEntry);
-        taskCompletionToken.SetResult(true);
-      });
+      //add new scope log entry as a child of the previous collapsible log entry if we are already in a scope or add it to the
+      //Entries collection if we are not in a scope push it onto the scoped logs stack to make it the new logging scope
+      if (m_scopedLogs.Count > 0)
+        m_scopedLogs.Peek().Children.Add(logEntry);
+      else
+      {
+        m_entries.Add(logEntry);
+      }
+      m_scopedLogs.Push(logEntry);
 
-      taskCompletionToken.Task.Wait();  //wait for the UI thread to finish adding the collapsible log entry
+      if (FlushToView && filter(logEntry)) DispatcherQueue.TryEnqueue(() => Entries.Add(logEntry));
+
       IDisposable? loggerScope = Logger is not null ? Logger.BeginScope(message) : null;
       return new LoggingScope(this, loggerScope);      
     }
@@ -114,54 +123,51 @@ namespace TradeSharp.WinCoreUI.Views
     /// Route the new log entries based on the current logging scope.
     /// NOTE: Entries and CollapsibleLog entry in the scopedLog would raise UI updates and must be executed from the UI thread.
     /// </summary>
-    public void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null)
+    public void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
       //ensure we're always thread safe in case the progress logger is used by multiple threads
       lock (this)
       {
-        LogEntry entry = new LogEntry() { Timestamp = DateTime.Now, Level = level, Message = message, Fix = fix, FixParameter = parameter };
+        LogEntry entry = new LogEntry() { Timestamp = DateTime.Now, Level = level, Message = message, Fix = fix, FixParameter = parameter, FixTooltip = fixTooltip };
        
-        DispatcherQueue.TryEnqueue(() => {
-          //add the log entry to the current scope if we are in a scope or add it to the Entries collection if we are not in a scope
-          if (m_scopedLogs.Count > 0)
-          {
-            var scopedLog = m_scopedLogs.Peek();
-            scopedLog.Children.Add(entry);
-            if (level > scopedLog.Level) scopedLog.Level = level; //scope adopts the highest log level to make it visible in the logs
-          }
-          else
-            m_entries.Add(entry);
+        //add the log entry to the current scope if we are in a scope or add it to the Entries collection if we are not in a scope
+        if (m_scopedLogs.Count > 0)
+        {
+          var scopedLog = m_scopedLogs.Peek();
+          scopedLog.Children.Add(entry);
+          if (level > scopedLog.Level) scopedLog.Level = level; //scope adopts the highest log level to make it visible in the logs
+        }
+        else
+          m_entries.Add(entry);
 
-          if (filter(entry)) Entries.Add(entry);
-        });        
-
+        if (FlushToView && filter(entry)) DispatcherQueue.TryEnqueue(() => Entries.Add(entry));
         Logger?.Log(level, message);
       }
     }
 
-    public void LogCritical(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogCritical(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      Log(LogLevel.Critical, message, fix, parameter);
+      Log(LogLevel.Critical, message, fix, parameter, fixTooltip);
     }
 
-    public void LogDebug(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogDebug(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      Log(LogLevel.Debug, message, fix, parameter);
+      Log(LogLevel.Debug, message, fix, parameter, fixTooltip);
     }
 
-    public void LogError(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogError(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      Log(LogLevel.Error, message, fix, parameter);
+      Log(LogLevel.Error, message, fix, parameter, fixTooltip);
     }
 
-    public void LogInformation(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogInformation(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      Log(LogLevel.Information, message, fix, parameter);
+      Log(LogLevel.Information, message, fix, parameter, fixTooltip);
     }
 
-    public void LogWarning(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogWarning(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      Log(LogLevel.Warning, message, fix, parameter);
+      Log(LogLevel.Warning, message, fix, parameter, fixTooltip);
     }
 
     private bool filter(LogEntry entry)
@@ -176,10 +182,14 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void filterEntries()
     {
-      Entries.Clear();
-      foreach (LogEntry entry in m_entries)
+      if (FlushToView)
       {
-        if (filter(entry)) Entries.Add(entry);
+        //NOTE: We filter in memory to speed up adding and then recreate the binding to the ItemsSource.
+        List<LogEntry> entries = new List<LogEntry>();
+        foreach (LogEntry entry in m_entries)
+          if (filter(entry)) entries.Add(entry);
+        Entries = new ObservableCollection<LogEntry>(entries);
+        m_logTreeView.SetBinding(TreeView.ItemsSourceProperty, new Binding() { Source = Entries, Mode = BindingMode.OneWay });
       }
     }
 

@@ -16,21 +16,21 @@
     <DataTemplate x:Key="LogEntryTemplate" x:DataType="coreUI:LogEntry">
       <TreeViewItem>
         <StackPanel Orientation="Horizontal" Margin="0" Padding="0">
-          <TextBlock Text="{x:Bind Timestamp}" Width="100" FontWeight="Bold" Margin="0" Padding="0"/>
-          <TextBlock Text="{x:Bind Level}" Width="100" Foreground="{x:Bind Level, Converter={StaticResource LogLevelToColorConverter}}" FontWeight="Bold" Margin="10, 0" Padding="0"/>
-          <Button Width="48" Click="fixButton_Click" Visibility="{x:Bind Fix, Converter={StaticResource ReferenceToVisibilityConverter}, Mode=OneWay}" Tag="{x:Bind FixParameter}">
-            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC7A;"/>
+          <TextBlock Text="{x:Bind Timestamp}" Width="100" Height="24" FontWeight="Bold" Margin="0" Padding="0,2"/>
+          <TextBlock Text="{x:Bind Level}" Width="100" Height="24" Foreground="{x:Bind Level, Converter={StaticResource LogLevelToColorConverter}}" FontWeight="Bold" Margin="10, 0" Padding="0,2"/>
+          <Button Width="32" Height="24" Margin="0" Padding="0" Click="fixButton_Click" Visibility="{x:Bind Fix, Converter={StaticResource ReferenceToVisibilityConverter}, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind FixTooltip}" Tag="{x:Bind FixParameter}">
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC7A;" Margin="0"/>
           </Button>
-          <TextBlock Text="{x:Bind Message}" TextWrapping="Wrap" Margin="0" Padding="0"/>
+          <TextBlock Text="{x:Bind Message}" Height="24" TextWrapping="Wrap" Margin="5,0,0,0" Padding="0,2"/>
         </StackPanel>
       </TreeViewItem>
     </DataTemplate>
     <DataTemplate x:Key="CollapsibleLogEntryTemplate" x:DataType="coreUI:CollapsibleLogEntry">
       <TreeViewItem ItemsSource="{x:Bind Children}">
         <StackPanel Orientation="Horizontal" Margin="0" Padding="0">
-          <TextBlock Text="{x:Bind Timestamp}" Width="100" FontWeight="Bold" Margin="0" Padding="0"/>
-          <TextBlock Text="{x:Bind Level}" Width="100" Foreground="{x:Bind Level, Converter={StaticResource LogLevelToColorConverter}}" FontWeight="Bold" Margin="10, 0" Padding="0"/>
-          <TextBlock Text="{x:Bind Message}" TextWrapping="Wrap" Margin="0" Padding="0"/>
+          <TextBlock Text="{x:Bind Timestamp}" Width="100" Height="24" FontWeight="Bold" Margin="0" Padding="0,2"/>
+          <TextBlock Text="{x:Bind Level}" Width="100" Height="24" Foreground="{x:Bind Level, Converter={StaticResource LogLevelToColorConverter}}" FontWeight="Bold" Margin="10, 0" Padding="0,2"/>
+          <TextBlock Text="{x:Bind Message}" Height="24" TextWrapping="Wrap" Margin="5,0,0,0" Padding="0,2"/>
         </StackPanel>
       </TreeViewItem>
     </DataTemplate>
@@ -57,6 +57,6 @@
         </StackPanel>
       </AppBarElementContainer>
     </CommandBar>
-    <TreeView x:Name="m_logTreeView" Grid.Row="1" ItemsSource="{x:Bind Entries}" ItemTemplateSelector="{StaticResource LogEntryTemplateSelector}" />
+    <TreeView x:Name="m_logTreeView" Grid.Row="1" ItemTemplateSelector="{StaticResource LogEntryTemplateSelector}"/>
   </Grid>
 </UserControl>

@@ -28,6 +28,7 @@ namespace TradeSharp.CoreUI.Common
       Message = "";
       Fix = null;
       FixParameter = null;
+      FixTooltip = "";
     }
 
     //finalizers
@@ -42,11 +43,12 @@ namespace TradeSharp.CoreUI.Common
     [ObservableProperty] private string m_message;
     public Action<object?>? Fix { get; set; }
     public object? FixParameter { get; set; }
+    [ObservableProperty] private string m_fixTooltip;
 
     //methods
     public virtual bool Matches(string filterText)
     {
-      return filterText.Length == 0 || Message.Contains(filterText);
+      return filterText.Length == 0 || Message.ToUpper().Contains(filterText);
     }
   }
 }

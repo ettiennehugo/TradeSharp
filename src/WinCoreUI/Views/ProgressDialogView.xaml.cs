@@ -138,7 +138,12 @@ namespace TradeSharp.WinCoreUI.Views
         lock (m_completeLock)
         {
           m_complete = value;
-          if (m_complete) m_cancelBtn.DispatcherQueue.TryEnqueue(() => { m_cancelBtn.Content = "Close"; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
+          if (m_complete)
+          {
+            m_loggerView.FlushToView = true;  //flush log entries to the view since the process is complete
+            ensureLogVisible();   //NOTE: Having the log visible while the process is running can overwhelm the UI thread, so only make it visible once complete for viewing.
+            m_cancelBtn.DispatcherQueue.TryEnqueue(() => { m_cancelBtn.Content = "Close"; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
+          }
         }
       }
     }
@@ -160,6 +165,12 @@ namespace TradeSharp.WinCoreUI.Views
     {
       get => m_logger;
       set => m_logger = value;
+    }
+
+    public bool FlushToView
+    {
+      get => m_loggerView.FlushToView;
+      set => m_loggerView.FlushToView = value;
     }
 
     //methods
@@ -189,44 +200,37 @@ namespace TradeSharp.WinCoreUI.Views
 
     public IDisposable BeginScope(string message)
     {
-      ensureLogVisible();
-      return m_progressLogger.BeginScope(message);
+      return m_loggerView.BeginScope(message);
     }
 
-    public void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null)
+    public void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      ensureLogVisible();
-      m_progressLogger.Log(level, message, fix, parameter);
+      m_loggerView.Log(level, message, fix, parameter, fixTooltip);
     }
 
-    public void LogInformation(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogInformation(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      ensureLogVisible();
-      m_progressLogger.LogInformation(message, fix, parameter);
+      m_loggerView.LogInformation(message, fix, parameter, fixTooltip);
     }
 
-    public void LogDebug(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogDebug(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      ensureLogVisible();
-      m_progressLogger.LogDebug(message, fix, parameter); 
+      m_loggerView.LogDebug(message, fix, parameter, fixTooltip); 
     }
 
-    public void LogWarning(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogWarning(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      ensureLogVisible();
-      m_progressLogger.LogWarning(message, fix, parameter);
+      m_loggerView.LogWarning(message, fix, parameter, fixTooltip);
     }
 
-    public void LogError(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogError(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      ensureLogVisible();
-      m_progressLogger.LogError(message, fix, parameter);
+      m_loggerView.LogError(message, fix, parameter, fixTooltip);
     }
 
-    public void LogCritical(string message, Action<object?>? fix = null, object? parameter = null)
+    public void LogCritical(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
     {
-      ensureLogVisible();
-      m_progressLogger.LogCritical(message, fix, parameter);
+      m_loggerView.LogCritical(message, fix, parameter, fixTooltip);
     }
 
     /// <summary>
@@ -234,14 +238,14 @@ namespace TradeSharp.WinCoreUI.Views
     /// </summary>
     private void ensureLogVisible()
     {
-      //make log row visible and resize window to accomodate it
+      //make log viewer visible and resize window to accomodate it
       //NOTE: Logging can be called before the window is initialized so we ignore the resize in this method
       //      otherwise the initiliazation of the window size will override this resize.
       if (!m_parentWindowSizeInit || m_logViewVisible) return;
 
       ParentWindow.DispatcherQueue.TryEnqueue(() =>
       {
-        m_progressLogger.Visibility = Visibility.Visible;
+        m_loggerView.Visibility = Visibility.Visible;
         //resize the controls and window to accomodate the larger log view
         m_progressBar.Width = 1060;
         ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2230, 1280));

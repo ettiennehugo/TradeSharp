@@ -19,7 +19,7 @@
       <TextBlock x:Name="m_progressLabel" Margin="3,3" Width="40" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
     </StackPanel>
     <TextBlock x:Name="m_statusMessage" Grid.Row="3" Margin="3,3" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-    <local:LoggerView x:Name="m_progressLogger" Grid.Row="4" Height="500" Visibility="Collapsed"/>
+    <local:LoggerView x:Name="m_loggerView" Grid.Row="4" Height="500" Visibility="Collapsed"/>
     <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
       <Button x:Name="m_cancelBtn" Content="Cancel" Click="m_cancelBtn_Click" ToolTipService.ToolTip="Cancel operation and close" Margin="3,3"/>
     </StackPanel>
