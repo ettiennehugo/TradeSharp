@@ -193,40 +193,40 @@ namespace TradeSharp.WinCoreUI.Views
       return m_progressLogger.BeginScope(message);
     }
 
-    public void Log(LogLevel level, string message)
+    public void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null)
     {
       ensureLogVisible();
-      m_progressLogger.Log(level, message);
+      m_progressLogger.Log(level, message, fix, parameter);
     }
 
-    public void LogInformation(string message)
+    public void LogInformation(string message, Action<object?>? fix = null, object? parameter = null)
     {
       ensureLogVisible();
-      m_progressLogger.LogInformation(message);
+      m_progressLogger.LogInformation(message, fix, parameter);
     }
 
-    public void LogDebug(string message)
+    public void LogDebug(string message, Action<object?>? fix = null, object? parameter = null)
     {
       ensureLogVisible();
-      m_progressLogger.LogDebug(message); 
+      m_progressLogger.LogDebug(message, fix, parameter); 
     }
 
-    public void LogWarning(string message)
+    public void LogWarning(string message, Action<object?>? fix = null, object? parameter = null)
     {
       ensureLogVisible();
-      m_progressLogger.LogWarning(message);
+      m_progressLogger.LogWarning(message, fix, parameter);
     }
 
-    public void LogError(string message)
+    public void LogError(string message, Action<object?>? fix = null, object? parameter = null)
     {
       ensureLogVisible();
-      m_progressLogger.LogError(message);
+      m_progressLogger.LogError(message, fix, parameter);
     }
 
-    public void LogCritical(string message)
+    public void LogCritical(string message, Action<object?>? fix = null, object? parameter = null)
     {
       ensureLogVisible();
-      m_progressLogger.LogCritical(message);
+      m_progressLogger.LogCritical(message, fix, parameter);
     }
 
     /// <summary>

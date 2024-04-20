@@ -25,7 +25,7 @@ namespace TradeSharp.Data.Testing
     {
       m_name = "";
       m_tickers = new List<string>();
-      CustomCommands = new List<CustomCommand>();
+      Commands = new List<PluginCommand>();
     }
 
     //finalizers
@@ -36,7 +36,7 @@ namespace TradeSharp.Data.Testing
     {
       m_name = "TestDataProvider";
       HasSettings = false;
-      CustomCommands = new List<CustomCommand>();
+      Commands = new List<PluginCommand>();
     }
 
     public void Destroy() { IsConnected = false; }
@@ -55,7 +55,7 @@ namespace TradeSharp.Data.Testing
     public IHost ServiceHost { get; set; }
     public bool IsConnected { get; internal set; }
     public bool HasSettings { get; internal set; }
-    public IList<CustomCommand> CustomCommands { get; internal set; }
+    public IList<PluginCommand> Commands { get; internal set; }
 
     //delegates
     public virtual event EventHandler? Connected;

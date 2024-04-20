@@ -17,7 +17,7 @@ namespace TradeSharp.InteractiveBrokers
   /// </summary>
   [ComVisible(true)]
   [Guid("D6BF3AE3-F358-4066-B177-D9763F927D67")]
-  public class DataProviderPlugin : TradeSharp.Data.DataProviderPlugin
+  public class DataProviderPlugin : TradeSharp.Data.DataProviderPlugin, IInteractiveBrokersPlugin
   {
     //constants
 
@@ -41,20 +41,6 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //interface implementations
-    public override void Connect()
-    {
-      base.Connect();
-      m_ibServiceHost.Client.Connect(m_ip, m_port);
-      raiseConnected();
-    }
-
-    public override void Disconnect()
-    {
-      m_ibServiceHost.Client.Disconnect();
-      base.Disconnect();
-      raiseDisconnected();
-    }
-
     public override void Create(ILogger logger)
     {
       base.Create(logger);
@@ -63,8 +49,10 @@ namespace TradeSharp.InteractiveBrokers
       m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
-      if (IsConnected)
-        raiseConnected();
+      Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) });
+      Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) });
+      Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
+      raiseUpdateCommands();
     }
 
     public override object Request(string ticker, Resolution resolution, DateTime start, DateTime end)
@@ -73,10 +61,30 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //properties
-    public override bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
+    public bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
     public override int ConnectionCountMax => 1;  //IB limits the number of connections to 1 and it's also limited by 50 calls per second (9 April 2024)
 
+    //delegates
+    public event EventHandler? Connected;                      //event raised when the plugin connects to the remote service
+    public event EventHandler? Disconnected;                   //event raised when the plugin disconnects from the remote service
+
     //methods
+    public Task OnConnectAsync()
+    {
+      return Task.Run(() => {
+        m_ibServiceHost.Client.Connect(m_ip, m_port);
+        raiseUpdateCommands();
+      });
+    }
+
+    public Task OnDisconnectAsync()
+    {
+      return Task.Run(() =>
+      {
+        m_ibServiceHost.Client.Disconnect();
+        raiseUpdateCommands();
+      });
+    }
 
     public void HandleConnectionStatus(ConnectionStatusMessage connectionStatusMessage)
     {
@@ -86,5 +94,8 @@ namespace TradeSharp.InteractiveBrokers
         raiseDisconnected();
       raiseUpdateCommands();
     }
+
+    protected void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }
+    protected void raiseDisconnected() { if (Disconnected != null) Disconnected(this, new EventArgs()); }
   }
 }

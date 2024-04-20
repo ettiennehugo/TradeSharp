@@ -26,14 +26,7 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       m_pluginsToDisplay = PluginsToDisplay.All;
       m_items = new ObservableCollection<IPlugin>(itemsService.Items);
-      ConnectCommandAsync = new AsyncRelayCommand(OnConnectAsync, () => SelectedItem != null && !SelectedItem.IsConnected);
-      DisconnectCommandAsync = new AsyncRelayCommand(OnDisconnectAsync, () => SelectedItem != null && SelectedItem.IsConnected);
-      SettingsCommandAsync = new AsyncRelayCommand(OnSettingsAsync, () => SelectedItem != null && SelectedItem.HasSettings);
     }
-
-    public AsyncRelayCommand ConnectCommandAsync { get; set; }
-    public AsyncRelayCommand DisconnectCommandAsync { get; set; }
-    public AsyncRelayCommand SettingsCommandAsync { get; set; }
 
     //finalizers
 
@@ -44,39 +37,11 @@ namespace TradeSharp.CoreUI.ViewModels
       return Task.Run(() => { 
         m_itemsService.Refresh();
         foreach (var plugin in m_itemsService.Items)
-        {
-          plugin.Connected += OnConnected;
-          plugin.Disconnected += OnDisconnected;
           plugin.UpdateCommands += OnUpdateCommands;
-        }
 
         //filter the plugins to display
         refresh();
       });
-    }
-
-    public Task OnConnectAsync()
-    {
-      return Task.Run(() =>
-      {
-        SelectedItem?.Connect();
-      });
-    }
-
-    public Task OnDisconnectAsync()
-    {
-      return Task.Run(() =>
-      {
-        SelectedItem?.Disconnect();
-      });
-    }
-
-    public Task OnSettingsAsync()
-    {
-      return Task.Run(() =>
-        {
-          SelectedItem?.ShowSettings();
-        });
     }
 
     public override void OnAdd()
@@ -89,16 +54,6 @@ namespace TradeSharp.CoreUI.ViewModels
       throw new NotImplementedException("Update not supported.");
     }
 
-    public void OnConnected(object? sender, EventArgs e)
-    {
-      NotifyCanExecuteChanged();
-    }
-
-    public void OnDisconnected(object? sender, EventArgs e)
-    {
-      NotifyCanExecuteChanged();
-    }
-
     public void OnUpdateCommands(object? sender, EventArgs e)
     {
       NotifyCanExecuteChanged();
@@ -107,13 +62,10 @@ namespace TradeSharp.CoreUI.ViewModels
     protected override void NotifyCanExecuteChanged()
     {
       base.NotifyCanExecuteChanged();
-      ConnectCommandAsync.NotifyCanExecuteChanged();
-      DisconnectCommandAsync.NotifyCanExecuteChanged();
-      SettingsCommandAsync.NotifyCanExecuteChanged();
 
       //allow update of selected item's custom commands
       if (SelectedItem != null)
-        foreach (var command in SelectedItem.CustomCommands)
+        foreach (var command in SelectedItem.Commands)
           if (command.Command != null) command.Command.NotifyCanExecuteChanged();
     }
 

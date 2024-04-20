@@ -24,11 +24,11 @@ namespace TradeSharp.CoreUI.Common
 
     //methods
     IDisposable BeginScope(string message);
-    void Log(LogLevel level, string message);
-    void LogInformation(string message);
-    void LogDebug(string message);
-    void LogWarning(string message);
-    void LogError(string message);
-    void LogCritical(string message);
+    void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null);
+    void LogInformation(string message, Action<object?>? fix = null, object? parameter = null);
+    void LogDebug(string message, Action<object?>? fix = null, object? parameter = null);
+    void LogWarning(string message, Action<object?>? fix = null, object? parameter = null);
+    void LogError(string message, Action<object?>? fix = null, object? parameter = null);
+    void LogCritical(string message, Action<object?>? fix = null, object? parameter = null);
   }
 }

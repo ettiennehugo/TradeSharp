@@ -287,6 +287,8 @@ namespace TradeSharp.InteractiveBrokers
       progress.Maximum += missingInstrumentGroups.Count;
       foreach (var instrumentGroup in missingInstrumentGroups)
       {
+
+        progress.LogError($"Could not find matching group for {instrumentGroup.Name}", HandleMissingInstrumentGroup, "Test string"); 
         
 
         progress.Progress++;
@@ -295,6 +297,11 @@ namespace TradeSharp.InteractiveBrokers
 
       progress.Progress = progress.Maximum;
       progress.Complete = true;
+    }
+
+    public void HandleMissingInstrumentGroup(object? parameter)
+    {
+      m_logger.LogInformation($"HandleMissingInstrumentGroup called with parameter {parameter}");
     }
 
     /// <summary>

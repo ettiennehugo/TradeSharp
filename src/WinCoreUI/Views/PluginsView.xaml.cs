@@ -64,14 +64,11 @@ namespace TradeSharp.WinCoreUI.Views
         m_commandBar.PrimaryCommands.Remove(customButton);
       m_customButtons.Clear();
 
-      if (ViewModel.SelectedItem == null || ViewModel.SelectedItem.CustomCommands.Count == 0) m_customButtonSeparator.Visibility = Visibility.Collapsed;
-
       if (ViewModel.SelectedItem != null)
       {
-        m_customButtonSeparator.Visibility = Visibility.Visible;
-        foreach (var customCommand in ViewModel.SelectedItem.CustomCommands)
+        foreach (var customCommand in ViewModel.SelectedItem.Commands)
         {
-          if (customCommand.Name == CustomCommand.Separator)
+          if (customCommand.Name == PluginCommand.Separator)
           {
             var separator = new AppBarSeparator();
             m_commandBar.PrimaryCommands.Add(separator);

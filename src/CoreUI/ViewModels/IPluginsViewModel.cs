@@ -33,13 +33,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
 		//properties
     public PluginsToDisplay PluginsToDisplay { get; set; }
-		public AsyncRelayCommand ConnectCommandAsync { get; set; }
-		public AsyncRelayCommand DisconnectCommandAsync { get; set; }
-		public AsyncRelayCommand SettingsCommandAsync { get; set; }
 
 		//methods
-		Task OnConnectAsync();
-		Task OnDisconnectAsync();
-		Task OnSettingsAsync();
+
 	}
 }

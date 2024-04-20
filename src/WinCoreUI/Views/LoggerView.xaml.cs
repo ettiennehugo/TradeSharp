@@ -114,12 +114,12 @@ namespace TradeSharp.WinCoreUI.Views
     /// Route the new log entries based on the current logging scope.
     /// NOTE: Entries and CollapsibleLog entry in the scopedLog would raise UI updates and must be executed from the UI thread.
     /// </summary>
-    public void Log(LogLevel level, string message)
+    public void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null)
     {
       //ensure we're always thread safe in case the progress logger is used by multiple threads
       lock (this)
       {
-        LogEntry entry = new LogEntry() { Timestamp = DateTime.Now, Level = level, Message = message };
+        LogEntry entry = new LogEntry() { Timestamp = DateTime.Now, Level = level, Message = message, Fix = fix, FixParameter = parameter };
        
         DispatcherQueue.TryEnqueue(() => {
           //add the log entry to the current scope if we are in a scope or add it to the Entries collection if we are not in a scope
@@ -139,29 +139,29 @@ namespace TradeSharp.WinCoreUI.Views
       }
     }
 
-    public void LogCritical(string message)
+    public void LogCritical(string message, Action<object?>? fix = null, object? parameter = null)
     {
-      Log(LogLevel.Critical, message);
+      Log(LogLevel.Critical, message, fix, parameter);
     }
 
-    public void LogDebug(string message)
+    public void LogDebug(string message, Action<object?>? fix = null, object? parameter = null)
     {
-      Log(LogLevel.Debug, message);
+      Log(LogLevel.Debug, message, fix, parameter);
     }
 
-    public void LogError(string message)
+    public void LogError(string message, Action<object?>? fix = null, object? parameter = null)
     {
-      Log(LogLevel.Error, message);
+      Log(LogLevel.Error, message, fix, parameter);
     }
 
-    public void LogInformation(string message)
+    public void LogInformation(string message, Action<object?>? fix = null, object? parameter = null)
     {
-      Log(LogLevel.Information, message);
+      Log(LogLevel.Information, message, fix, parameter);
     }
 
-    public void LogWarning(string message)
+    public void LogWarning(string message, Action<object?>? fix = null, object? parameter = null)
     {
-      Log(LogLevel.Warning, message);
+      Log(LogLevel.Warning, message, fix, parameter);
     }
 
     private bool filter(LogEntry entry)
@@ -169,7 +169,8 @@ namespace TradeSharp.WinCoreUI.Views
       string filterText = m_filter.Text.ToUpper();
       bool typeMatch = ((bool)m_toggleInformation.IsChecked! && entry.Level == LogLevel.Information) ||
                        ((bool)m_toggleWarnings.IsChecked! && entry.Level == LogLevel.Warning) ||
-                       ((bool)m_toggleError.IsChecked! && entry.Level == LogLevel.Error);
+                       ((bool)m_toggleError.IsChecked! && entry.Level == LogLevel.Error) ||
+                       ((bool)m_toggleCritical.IsChecked! && entry.Level == LogLevel.Critical);
       return typeMatch && entry.Matches(filterText);
     }
 
@@ -190,6 +191,13 @@ namespace TradeSharp.WinCoreUI.Views
     private void toggleLogEntries_Click(object sender, RoutedEventArgs e)
     {
       filterEntries();
+    }
+
+    private void fixButton_Click(object sender, RoutedEventArgs e)
+    {
+      Button button = (Button)sender;
+      LogEntry entry = (LogEntry)button.DataContext;
+      entry.Fix?.Invoke(entry.FixParameter);
     }
   }
 }

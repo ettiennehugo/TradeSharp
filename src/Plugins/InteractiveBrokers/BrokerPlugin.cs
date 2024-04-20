@@ -12,7 +12,7 @@ namespace TradeSharp.InteractiveBrokers
   /// </summary>
   [ComVisible(true)]
   [Guid("617D70F7-F0D8-4BCD-8FCF-DAF41135EF16")]
-  public class BrokerPlugin : TradeSharp.Data.BrokerPlugin
+  public class BrokerPlugin : TradeSharp.Data.BrokerPlugin, IInteractiveBrokersPlugin
   {
     //constants
 
@@ -36,20 +36,6 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //interface implementations
-    public override void Connect()
-    {
-      base.Connect();
-      m_ibServiceHost.Client.Connect(m_ip, m_port);
-      raiseConnected();
-    }
-
-    public override void Disconnect()
-    {
-      m_ibServiceHost.Client.Disconnect();
-      base.Disconnect();
-      raiseDisconnected();
-    }
-
     public override void Create(ILogger logger)
     {
       base.Create(logger);
@@ -58,13 +44,32 @@ namespace TradeSharp.InteractiveBrokers
       m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
-      CustomCommands.Add(new CustomCommand { Name = "Scanner Parameters", Tooltip = "Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
-      CustomCommands.Add(new CustomCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) } );
-      CustomCommands.Add(new CustomCommand { Name = "Update Industry Groups", Tooltip = "Update stock industry groupings", Icon = "\uE9D5", Command = new AsyncRelayCommand(OnUpdateInstrumentGroupsAsync, () => IsConnected) } );
-      CustomCommands.Add(new CustomCommand { Name = "Validate Instrument Groups", Tooltip = "Validate Defined Instrument Groups against Cached Contracts", Icon = "\uE15C", Command = new AsyncRelayCommand(OnValidateInstrumentGroupsAsync) } );
-      CustomCommands.Add(new CustomCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
-      if (IsConnected)
-        raiseConnected();
+      Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) } );
+      Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
+      Commands.Add(new PluginCommand { Name = "Scanner Parameters", Tooltip = "Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = "Update Industry Groups", Tooltip = "Update stock industry groupings", Icon = "\uE9D5", Command = new AsyncRelayCommand(OnUpdateInstrumentGroupsAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = "Validate Instrument Groups", Tooltip = "Validate Defined Instrument Groups against Cached Contracts", Icon = "\uE15C", Command = new AsyncRelayCommand(OnValidateInstrumentGroupsAsync) } );
+      Commands.Add(new PluginCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
+      raiseUpdateCommands();
+    }
+
+    public Task OnConnectAsync()
+    {
+      return Task.Run(() => {
+        m_ibServiceHost.Client.Connect(m_ip, m_port);
+        raiseUpdateCommands();
+      });
+    }
+
+    public Task OnDisconnectAsync()
+    {
+      return Task.Run(() =>
+      {
+        m_ibServiceHost.Client.Disconnect();
+        raiseUpdateCommands();
+      });
     }
 
     public Task OnScannerParametersAsync()
@@ -93,8 +98,12 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //properties
-    public override bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
+    public bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
     public override IList<TradeSharp.Data.Account> Accounts { get => m_ibServiceHost.Accounts.Accounts; }
+
+    //delegates
+    public event EventHandler? Connected;                      //event raised when the plugin connects to the remote service
+    public event EventHandler? Disconnected;                   //event raised when the plugin disconnects from the remote service
 
     //methods
     public void defineCustomProperties(Order order)
@@ -125,5 +134,8 @@ namespace TradeSharp.InteractiveBrokers
         raiseDisconnected();
       raiseUpdateCommands();
     }
+
+    protected void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }
+    protected void raiseDisconnected() { if (Disconnected != null) Disconnected(this, new EventArgs()); }
   }
 }

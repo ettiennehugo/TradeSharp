@@ -12,17 +12,21 @@
   <UserControl.Resources>
     <common:LogLevelToColorConverter x:Key="LogLevelToColorConverter"/>
     <common:LogLevelConverter x:Key="LogLevelConverter"/>
+    <common:ReferenceToVisibilityConverter x:Key="ReferenceToVisibilityConverter"/>
     <DataTemplate x:Key="LogEntryTemplate" x:DataType="coreUI:LogEntry">
       <TreeViewItem>
         <StackPanel Orientation="Horizontal" Margin="0" Padding="0">
           <TextBlock Text="{x:Bind Timestamp}" Width="100" FontWeight="Bold" Margin="0" Padding="0"/>
           <TextBlock Text="{x:Bind Level}" Width="100" Foreground="{x:Bind Level, Converter={StaticResource LogLevelToColorConverter}}" FontWeight="Bold" Margin="10, 0" Padding="0"/>
+          <Button Width="48" Click="fixButton_Click" Visibility="{x:Bind Fix, Converter={StaticResource ReferenceToVisibilityConverter}, Mode=OneWay}" Tag="{x:Bind FixParameter}">
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC7A;"/>
+          </Button>
           <TextBlock Text="{x:Bind Message}" TextWrapping="Wrap" Margin="0" Padding="0"/>
         </StackPanel>
       </TreeViewItem>
     </DataTemplate>
     <DataTemplate x:Key="CollapsibleLogEntryTemplate" x:DataType="coreUI:CollapsibleLogEntry">
-      <TreeViewItem CollapsedGlyph="\uE76C" ExpandedGlyph="\uE70D"  ItemsSource="{x:Bind Children}">
+      <TreeViewItem ItemsSource="{x:Bind Children}">
         <StackPanel Orientation="Horizontal" Margin="0" Padding="0">
           <TextBlock Text="{x:Bind Timestamp}" Width="100" FontWeight="Bold" Margin="0" Padding="0"/>
           <TextBlock Text="{x:Bind Level}" Width="100" Foreground="{x:Bind Level, Converter={StaticResource LogLevelToColorConverter}}" FontWeight="Bold" Margin="10, 0" Padding="0"/>
@@ -43,6 +47,9 @@
       <AppBarToggleButton x:Name="m_toggleError" IsChecked="True" Click="toggleLogEntries_Click" ToolTipService.ToolTip="Show error entries" IsCompact="True">
         <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE783;"/>
       </AppBarToggleButton>
+      <AppBarToggleButton x:Name="m_toggleCritical" IsChecked="True" Click="toggleLogEntries_Click" ToolTipService.ToolTip="Show critical entries" IsCompact="True">
+        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE730;"/>
+      </AppBarToggleButton>
       <AppBarElementContainer x:Name="m_filterContainer">
         <StackPanel Orientation="Horizontal">
           <TextBlock x:Name="m_filterLbl" Margin="5,10,8,0" VerticalAlignment="Center" Text="Filter by"/>
@@ -50,6 +57,6 @@
         </StackPanel>
       </AppBarElementContainer>
     </CommandBar>
-    <TreeView x:Name="m_logTreeView" Grid.Row="1" ItemsSource="{x:Bind Entries}" ItemTemplateSelector="{StaticResource LogEntryTemplateSelector}"/>
+    <TreeView x:Name="m_logTreeView" Grid.Row="1" ItemsSource="{x:Bind Entries}" ItemTemplateSelector="{StaticResource LogEntryTemplateSelector}" />
   </Grid>
 </UserControl>
