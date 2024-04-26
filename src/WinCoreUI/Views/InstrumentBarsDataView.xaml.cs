@@ -297,7 +297,7 @@ namespace TradeSharp.WinCoreUI.Views
     private void onViewModelRefresh(object? sender, RefreshEventArgs e)
     {
       //NOTE: Event to refresh will most likely come from a background thread, so we need to marshal the call to the UI thread.
-      DispatcherQueue.TryEnqueue(new Microsoft.UI.Dispatching.DispatcherQueueHandler(() => resetFilter()));
+      DispatcherQueue.TryEnqueue(resetFilter);
     }
 
     private void m_startDateTime_TextChanged(object sender, TextChangedEventArgs e)

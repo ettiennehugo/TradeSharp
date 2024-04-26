@@ -16,7 +16,7 @@ namespace TradeSharp.WinCoreUI.Common
   public class IncrementalObservableCollection<T> : ObservableCollection<T>, ISupportIncrementalLoading
   {
     //constants
-    public const int DefaultPageSize = 20;
+    public const int DefaultPageSize = 50;
 
     //enums
 

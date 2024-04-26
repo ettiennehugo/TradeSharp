@@ -5,7 +5,7 @@ namespace TradeSharp.CoreUI.Common
   /// <summary>
   /// Dialog to show progress of a long running task, setting of properties must be thread safe.
   /// </summary>
-  public interface IProgressDialog : ILoggerView
+  public interface IProgressDialog : ICorrectiveLogger
   {
     //constants
 

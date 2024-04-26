@@ -84,7 +84,7 @@ namespace TradeSharp.WinCoreUI.Views
       set
       {
         m_title = value;
-        m_titleBar.DispatcherQueue.TryEnqueue(() => m_titleBarText.Text = m_title);
+        DispatcherQueue.TryEnqueue(() => m_titleBarText.Text = m_title);
       }
     }
 
@@ -97,7 +97,7 @@ namespace TradeSharp.WinCoreUI.Views
         lock (m_minimumLock) 
         {
           m_minimum = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          m_progressBar.DispatcherQueue.TryEnqueue(() => m_progressBar.Minimum = m_minimum);
+          DispatcherQueue.TryEnqueue(() => m_progressBar.Minimum = m_minimum);
         }
       }
     }
@@ -110,7 +110,7 @@ namespace TradeSharp.WinCoreUI.Views
         lock (m_maximumLock)
         {
           m_maximum = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          m_progressBar.DispatcherQueue.TryEnqueue(() => m_progressBar.Maximum = m_maximum);
+          DispatcherQueue.TryEnqueue(() => m_progressBar.Maximum = m_maximum);
         }
       }
     }
@@ -124,8 +124,7 @@ namespace TradeSharp.WinCoreUI.Views
         {
           m_progress = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
           m_progressPercent = m_maximum > 0 && m_progress >= 0 ? (m_progress / m_maximum) * 100 : 0;
-          m_progressBar.DispatcherQueue.TryEnqueue(() => m_progressBar.Value = m_progress);
-          m_progressLabel.DispatcherQueue.TryEnqueue(() => m_progressLabel.Text = $"{m_progressPercent:#0}%");
+          DispatcherQueue.TryEnqueue(() => { m_progressBar.Value = m_progress; m_progressLabel.Text = $"{m_progressPercent:#0}%"; } );
         }
       }
     }
@@ -139,11 +138,7 @@ namespace TradeSharp.WinCoreUI.Views
         {
           m_complete = value;
           if (m_complete)
-          {
-            m_loggerView.FlushToView = true;  //flush log entries to the view since the process is complete
-            ensureLogVisible();   //NOTE: Having the log visible while the process is running can overwhelm the UI thread, so only make it visible once complete for viewing.
-            m_cancelBtn.DispatcherQueue.TryEnqueue(() => { m_cancelBtn.Content = "Close"; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
-          }
+            DispatcherQueue.TryEnqueue(() => { m_cancelBtn.Content = "Close"; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
         }
       }
     }
@@ -156,7 +151,7 @@ namespace TradeSharp.WinCoreUI.Views
         lock (m_statusMessageLock) 
         {
           m_statusMessageText = value;   //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          m_statusMessage.DispatcherQueue.TryEnqueue(() => m_statusMessage.Text = m_statusMessageText);
+          DispatcherQueue.TryEnqueue(() => m_statusMessage.Text = m_statusMessageText);
         }
       }
     }
@@ -165,12 +160,6 @@ namespace TradeSharp.WinCoreUI.Views
     {
       get => m_logger;
       set => m_logger = value;
-    }
-
-    public bool FlushToView
-    {
-      get => m_loggerView.FlushToView;
-      set => m_loggerView.FlushToView = value;
     }
 
     //methods
@@ -200,37 +189,44 @@ namespace TradeSharp.WinCoreUI.Views
 
     public IDisposable BeginScope(string message)
     {
+      ensureLogVisible();
       return m_loggerView.BeginScope(message);
     }
 
-    public void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections Log(LogLevel level, string message)
     {
-      m_loggerView.Log(level, message, fix, parameter, fixTooltip);
+      ensureLogVisible();
+      return m_loggerView.Log(level, message);
     }
 
-    public void LogInformation(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogInformation(string message)
     {
-      m_loggerView.LogInformation(message, fix, parameter, fixTooltip);
+      ensureLogVisible();
+      return m_loggerView.LogInformation(message);
     }
 
-    public void LogDebug(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogDebug(string message)
     {
-      m_loggerView.LogDebug(message, fix, parameter, fixTooltip); 
+      ensureLogVisible();
+      return m_loggerView.LogDebug(message); 
     }
 
-    public void LogWarning(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogWarning(string message)
     {
-      m_loggerView.LogWarning(message, fix, parameter, fixTooltip);
+      ensureLogVisible();
+      return m_loggerView.LogWarning(message);
     }
 
-    public void LogError(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogError(string message)
     {
-      m_loggerView.LogError(message, fix, parameter, fixTooltip);
+      ensureLogVisible();
+      return m_loggerView.LogError(message);
     }
 
-    public void LogCritical(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogCritical(string message)
     {
-      m_loggerView.LogCritical(message, fix, parameter, fixTooltip);
+      ensureLogVisible();
+      return m_loggerView.LogCritical(message);
     }
 
     /// <summary>
@@ -243,12 +239,12 @@ namespace TradeSharp.WinCoreUI.Views
       //      otherwise the initiliazation of the window size will override this resize.
       if (!m_parentWindowSizeInit || m_logViewVisible) return;
 
-      ParentWindow.DispatcherQueue.TryEnqueue(() =>
+      DispatcherQueue.TryEnqueue(() =>
       {
-        m_loggerView.Visibility = Visibility.Visible;
         //resize the controls and window to accomodate the larger log view
         m_progressBar.Width = 1060;
         ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2230, 1280));
+        m_loggerView.Visibility = Visibility.Visible;
         m_parentWindowSizeInit = true;
       });
 

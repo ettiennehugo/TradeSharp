@@ -26,9 +26,7 @@ namespace TradeSharp.CoreUI.Common
       Timestamp = DateTime.Now;
       Level = LogLevel.Information;
       Message = "";
-      Fix = null;
-      FixParameter = null;
-      FixTooltip = "";
+      Corrections = new LogCorrections();
     }
 
     //finalizers
@@ -41,9 +39,7 @@ namespace TradeSharp.CoreUI.Common
     [ObservableProperty] private DateTime m_timestamp;
     [ObservableProperty] private LogLevel m_level;
     [ObservableProperty] private string m_message;
-    public Action<object?>? Fix { get; set; }
-    public object? FixParameter { get; set; }
-    [ObservableProperty] private string m_fixTooltip;
+    public ILogCorrections Corrections { get; protected set; }
 
     //methods
     public virtual bool Matches(string filterText)

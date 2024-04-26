@@ -1,12 +1,13 @@
 using Microsoft.UI.Xaml.Controls;
 using System;
-using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Common;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Data;
+using Windows.Foundation;
+using System.Threading.Tasks;
+using TradeSharp.WinCoreUI.Common;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TradeSharp.WinCoreUI.Views
 {
@@ -15,21 +16,53 @@ namespace TradeSharp.WinCoreUI.Views
   /// </summary>
   class LogEntryTemplateSelector : DataTemplateSelector
   {
-    public DataTemplate LogEntryTemplate { get; set; }
+    public DataTemplate LogEntrySingleCorrectionTemplate { get; set; }
+    public DataTemplate LogEntryMultiCorrectionTemplate { get; set; }
     public DataTemplate CollapsibleLogEntryTemplate { get; set; }
 
     protected override DataTemplate SelectTemplateCore(object item)
     {
-      //CollapsibleLogEntry is a sub-class of LogEntry for we check against it which template to use
-      return item is CollapsibleLogEntry ? CollapsibleLogEntryTemplate : LogEntryTemplate;
+      LogEntryDecorator logEntryDecorator = (LogEntryDecorator)item;  
+      if (logEntryDecorator.Entry is CollapsibleLogEntry)
+        return CollapsibleLogEntryTemplate;
+      else
+        return logEntryDecorator.Entry.Corrections.Corrections.Count > 1 ? LogEntryMultiCorrectionTemplate : LogEntrySingleCorrectionTemplate;
     }
+  }
+
+  /// <summary>
+  /// Decorator for log entries to add additional screen specific functionality.
+  /// </summary>
+  public partial class LogEntryDecorator : ObservableObject
+  {
+    public LogEntryDecorator(LogEntry entry)
+    {
+      Entry = entry;
+
+      switch (entry.Corrections.Corrections.Count)
+      {
+        case 0:
+          Tooltip = "No corrections available";
+          break;
+        case 1:
+          Tooltip = entry.Corrections.Corrections[0].Tooltip;
+          break;
+        default:
+          Tooltip = "Select correction to apply";
+          break;
+      }
+    }
+
+    //properties
+    [ObservableProperty] LogEntry m_entry;
+    [ObservableProperty] string m_tooltip;
   }
 
   /// <summary>
   /// Log view control for LogEntry type objects.
   /// Based on example from - https://stackoverflow.com/questions/16743804/implementing-a-log-viewer-with-wpf
   /// </summary>
-  public sealed partial class LoggerView : UserControl, ILoggerView
+  public sealed partial class LoggerView : UserControl, ICorrectiveLogger, IIncrementalSource<LogEntryDecorator>
   {
     //constants
 
@@ -58,21 +91,23 @@ namespace TradeSharp.WinCoreUI.Views
       }
     }
 
-
     //attributes
     internal Stack<CollapsibleLogEntry> m_scopedLogs;
     private List<LogEntry> m_entries;
-    private bool m_flushToView;
-    
+    private int m_lastReturnedIndex;
+    private MenuFlyout m_correctionsMenuFlyout;
+
     //constructors
     public LoggerView()
     {
       m_entries = new List<LogEntry>();
       m_scopedLogs = new Stack<CollapsibleLogEntry>();
-      Entries = new ObservableCollection<LogEntry>();
-      m_flushToView = false;    //default to not flush log entries to the view since it can be expensive on the UI thread for long running processes
+      Entries = new IncrementalObservableCollection<LogEntryDecorator>(this);
+      IsLoading = false;
+      HasMoreItems = true;
       this.InitializeComponent();
-      //NOTE: The m_logTreeView does not have a binding on its ItemsSource property yet, it's only set in filterEntries to perform fast filtering.
+      //NOTE: The m_logView does not have a binding on its ItemsSource property yet, it's only set in filterEntries to perform fast filtering.
+      m_correctionsMenuFlyout = Resources["CorrectionsMenuFlyout"] as MenuFlyout;
     }
 
     //finalizers
@@ -83,16 +118,9 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     ILogger? Logger { get; set; }  //logger to echo log entries to
-    public bool FlushToView { 
-      get => m_flushToView;
-      set
-      {
-        if (m_flushToView == value) return;
-        m_flushToView = value;
-        DispatcherQueue.TryEnqueue(filterEntries);
-      }
-    }  //flush log entries to the view
-    public ObservableCollection<LogEntry> Entries { get; set; }  //observable collection of log entries for display
+    public IncrementalObservableCollection<LogEntryDecorator> Entries { get; set; }  //observable collection of log entries for display
+    public bool HasMoreItems { get; internal set; }
+    public bool IsLoading;
 
     //methods
     /// <summary>
@@ -101,35 +129,39 @@ namespace TradeSharp.WinCoreUI.Views
     /// </summary>
     public IDisposable BeginScope(string message)
     {
-      CollapsibleLogEntry logEntry = new CollapsibleLogEntry() { Timestamp = DateTime.Now, Level = LogLevel.Information, Message = message };
-      
-      //add new scope log entry as a child of the previous collapsible log entry if we are already in a scope or add it to the
-      //Entries collection if we are not in a scope push it onto the scoped logs stack to make it the new logging scope
-      if (m_scopedLogs.Count > 0)
-        m_scopedLogs.Peek().Children.Add(logEntry);
-      else
-      {
-        m_entries.Add(logEntry);
-      }
-      m_scopedLogs.Push(logEntry);
+      CollapsibleLogEntry entry = new CollapsibleLogEntry() { Timestamp = DateTime.Now, Level = LogLevel.Information, Message = message };
 
-      if (FlushToView && filter(logEntry)) DispatcherQueue.TryEnqueue(() => Entries.Add(logEntry));
+      lock (this)
+      {
+        //add new scope log entry as a child of the previous collapsible log entry if we are already in a scope or add it to the
+        //Entries collection if we are not in a scope push it onto the scoped logs stack to make it the new logging scope
+        if (m_scopedLogs.Count > 0)
+          m_scopedLogs.Peek().Children.Add(entry);
+        else
+        {
+          m_entries.Add(entry);
+        }
+        m_scopedLogs.Push(entry);
+
+        //update the incremental loading state
+        HasMoreItems = m_lastReturnedIndex < m_entries.Count;
+      }
 
       IDisposable? loggerScope = Logger is not null ? Logger.BeginScope(message) : null;
-      return new LoggingScope(this, loggerScope);      
+      return new LoggingScope(this, loggerScope);
     }
 
     /// <summary>
     /// Route the new log entries based on the current logging scope.
     /// NOTE: Entries and CollapsibleLog entry in the scopedLog would raise UI updates and must be executed from the UI thread.
     /// </summary>
-    public void Log(LogLevel level, string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections Log(LogLevel level, string message)
     {
       //ensure we're always thread safe in case the progress logger is used by multiple threads
+      LogEntry entry = new LogEntry() { Timestamp = DateTime.Now, Level = level, Message = message };
+
       lock (this)
       {
-        LogEntry entry = new LogEntry() { Timestamp = DateTime.Now, Level = level, Message = message, Fix = fix, FixParameter = parameter, FixTooltip = fixTooltip };
-       
         //add the log entry to the current scope if we are in a scope or add it to the Entries collection if we are not in a scope
         if (m_scopedLogs.Count > 0)
         {
@@ -140,74 +172,189 @@ namespace TradeSharp.WinCoreUI.Views
         else
           m_entries.Add(entry);
 
-        if (FlushToView && filter(entry)) DispatcherQueue.TryEnqueue(() => Entries.Add(entry));
         Logger?.Log(level, message);
+
+        //update the incremental loading state
+        HasMoreItems = m_lastReturnedIndex < m_entries.Count;
       }
+
+      return entry.Corrections;
     }
 
-    public void LogCritical(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogCritical(string message)
     {
-      Log(LogLevel.Critical, message, fix, parameter, fixTooltip);
+      return Log(LogLevel.Critical, message);
     }
 
-    public void LogDebug(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogDebug(string message)
     {
-      Log(LogLevel.Debug, message, fix, parameter, fixTooltip);
+      return Log(LogLevel.Debug, message);
     }
 
-    public void LogError(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogError(string message)
     {
-      Log(LogLevel.Error, message, fix, parameter, fixTooltip);
+      return Log(LogLevel.Error, message);
     }
 
-    public void LogInformation(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogInformation(string message)
     {
-      Log(LogLevel.Information, message, fix, parameter, fixTooltip);
+      return Log(LogLevel.Information, message);
     }
 
-    public void LogWarning(string message, Action<object?>? fix = null, object? parameter = null, string fixTooltip = "")
+    public ILogCorrections LogWarning(string message)
     {
-      Log(LogLevel.Warning, message, fix, parameter, fixTooltip);
+      return Log(LogLevel.Warning, message);
     }
 
-    private bool filter(LogEntry entry)
+    /// <summary>
+    /// Synchronously read the filter data from the UI for use in a background thread.
+    /// </summary>
+    private void readUIFilters(out string filterText, out bool includeInformation, out bool includeWarnings, out bool includeError, out bool includeCritical)
     {
-      string filterText = m_filter.Text.ToUpper();
-      bool typeMatch = ((bool)m_toggleInformation.IsChecked! && entry.Level == LogLevel.Information) ||
-                       ((bool)m_toggleWarnings.IsChecked! && entry.Level == LogLevel.Warning) ||
-                       ((bool)m_toggleError.IsChecked! && entry.Level == LogLevel.Error) ||
-                       ((bool)m_toggleCritical.IsChecked! && entry.Level == LogLevel.Critical);
-      return typeMatch && entry.Matches(filterText);
-    }
+      string filterTextInt = filterText = "";
+      bool includeInformationInt = includeInformation = false;
+      bool includeWarningsInt = includeWarnings = false;
+      bool includeErrorInt = includeError = false;
+      bool includeCriticalInt = includeCritical = false;
 
-    private void filterEntries()
-    {
-      if (FlushToView)
+      TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+      DispatcherQueue.TryEnqueue(() =>
       {
-        //NOTE: We filter in memory to speed up adding and then recreate the binding to the ItemsSource.
-        List<LogEntry> entries = new List<LogEntry>();
-        foreach (LogEntry entry in m_entries)
-          if (filter(entry)) entries.Add(entry);
-        Entries = new ObservableCollection<LogEntry>(entries);
-        m_logTreeView.SetBinding(TreeView.ItemsSourceProperty, new Binding() { Source = Entries, Mode = BindingMode.OneWay });
-      }
+        filterTextInt = m_filter.Text.ToUpper();
+        includeInformationInt = (bool)m_toggleInformation.IsChecked!;
+        includeWarningsInt = (bool)m_toggleWarnings.IsChecked!;
+        includeErrorInt = (bool)m_toggleError.IsChecked!;
+        includeCriticalInt = (bool)m_toggleCritical.IsChecked!;
+        taskCompletionSource.SetResult(true);
+      });
+
+      taskCompletionSource.Task.Wait();
+      filterText = filterTextInt;
+      includeInformation = includeInformationInt;
+      includeWarnings = includeWarningsInt;
+      includeError = includeErrorInt;
+      includeCritical = includeCriticalInt;
+    }
+
+    /// <summary>
+    /// Resets the incremental loading state to reload the log entries, used when filters are changed.
+    /// </summary>
+    private void reloadEntries()
+    {
+      Entries.Clear();
+      Entries.RefreshAsync();
+      HasMoreItems = true;
+      m_lastReturnedIndex = 0;
     }
 
     private void m_filter_TextChanged(object sender, TextChangedEventArgs e)
     {
-      filterEntries();
+      reloadEntries();
     }
 
     private void toggleLogEntries_Click(object sender, RoutedEventArgs e)
     {
-      filterEntries();
+      reloadEntries();
     }
 
-    private void fixButton_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Handler for log entries that only have a single correction associated with it.
+    /// </summary>
+    private void fixEntryClick(object sender, RoutedEventArgs e)
     {
       Button button = (Button)sender;
       LogEntry entry = (LogEntry)button.DataContext;
-      entry.Fix?.Invoke(entry.FixParameter);
+      entry.Corrections.Corrections[0].Fix?.Invoke(entry.Corrections.Corrections[0].Parameter);
+    }
+
+    /// <summary>
+    /// Handler for log entries that have multiple corrections associated with it.
+    /// </summary>
+    private void mutliCorrectionDropDownClick(object sender, RoutedEventArgs e)
+    {
+      //construct the corrections menu flyout
+      m_correctionsMenuFlyout.Items.Clear();
+      DropDownButton dropDownButton = (DropDownButton)sender;
+      LogEntry entry = (LogEntry)dropDownButton.DataContext;
+      foreach (var correction in entry.Corrections.Corrections)
+      {
+        MenuFlyoutItem item = new MenuFlyoutItem() { Text = correction.Name };
+        ToolTipService.SetToolTip(item, correction.Tooltip);
+        item.Click += (s, e) => correction.Fix?.Invoke(correction.Parameter);
+        m_correctionsMenuFlyout.Items.Add(item);
+      }
+
+      //display it at the requested position
+      //var point = new Point(0, 0);
+      //if (args.TryGetPosition(sender, out point))
+      //  m_correctionsMenuFlyout.ShowAt((UIElement)sender, point);
+      //else
+      m_correctionsMenuFlyout.ShowAt(dropDownButton);
+    }
+
+    /// <summary>
+    /// Cleans up menu entries when the flyout is closed.
+    /// </summary>
+    private void correctionsMenuFlyoutClosed(object sender, object e)
+    {
+      m_correctionsMenuFlyout.Items.Clear();
+    }
+
+    private void collapsibleLogFixClick(object sender, RoutedEventArgs e)
+    {
+      Button button = (Button)sender;
+      CollapsibleLogEntry entry = (CollapsibleLogEntry)button.DataContext;
+
+
+      //TODO: Display another log viewer with just the details of the collapsible log entry.
+      //  - make a method Log(LogEntry) and copy down the log entries to the new log viewer.
+      //  - display the new log viewer. 
+
+
+    }
+
+    public Task<IList<LogEntryDecorator>> LoadMoreItemsAsync(int count)
+    {
+      if (IsLoading) return Task.FromResult((IList<LogEntryDecorator>)Array.Empty<LogEntryDecorator>());
+
+      return Task.Run(() =>
+      {
+        var items = new List<LogEntryDecorator>();
+
+        lock (this)
+        {
+          IsLoading = true;
+          HasMoreItems = m_entries.Count > 0;
+
+          if (HasMoreItems)
+          {
+            readUIFilters(out string filterText, out bool includeInformation, out bool includeWarnings, out bool includeError, out bool includeCritical);
+            int returnedCount = 0;
+            for (int i = m_lastReturnedIndex; returnedCount < count && i < m_entries.Count; i++)
+            {
+              var entry = m_entries[i];
+              m_lastReturnedIndex++;
+
+              //filter item based on the current filter settings
+              bool typeMatch = (includeInformation && entry.Level == LogLevel.Information) ||
+                               (includeWarnings && entry.Level == LogLevel.Warning) ||
+                               (includeError && entry.Level == LogLevel.Error) ||
+                               (includeCritical && entry.Level == LogLevel.Critical);
+              if (typeMatch && entry.Matches(filterText))
+              {
+                returnedCount++;
+                items.Add(new LogEntryDecorator(entry));
+              }
+            }
+
+            HasMoreItems = m_lastReturnedIndex < m_entries.Count;
+          }
+
+          IsLoading = false;
+        }
+
+        return (IList<LogEntryDecorator>)items;
+      });
     }
   }
 }

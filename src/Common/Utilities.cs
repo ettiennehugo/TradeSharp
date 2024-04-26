@@ -89,14 +89,25 @@
       return MakeCsvSafe(result);
     }
 
-
-    public static void Sort<T>(IList<T> collection) where T : IComparable
+    public static void Sort<TSource>(IList<TSource> collection) where TSource : IComparable
     {
-      List<T> sorted = collection.OrderBy(x => x).ToList();
+      List<TSource> sorted = collection.OrderBy(x => x).ToList();
       for (int i = 0; i < sorted.Count(); i++)
       {
         int oldIndex = collection.IndexOf(sorted[i]);
-        T item = collection[oldIndex];
+        TSource item = collection[oldIndex];
+        collection.RemoveAt(oldIndex);
+        collection.Insert(i, item);
+      }
+    }
+
+    public static void Sort<TSource, TKey>(IList<TSource> collection, Func<TSource,TKey> keySelector) where TSource : IComparable
+    {
+      List<TSource> sorted = collection.OrderBy(keySelector).ToList();
+      for (int i = 0; i < sorted.Count(); i++)
+      {
+        int oldIndex = collection.IndexOf(sorted[i]);
+        TSource item = collection[oldIndex];
         collection.RemoveAt(oldIndex);
         collection.Insert(i, item);
       }

@@ -201,24 +201,100 @@ namespace TradeSharp.InteractiveBrokers
     /// </summary>
     private class InstrumentGroupValidation
     {
+      //Word separators used to split the contract group names into words for matching
+      public static string[] WordSeparators = new string[] { " ", "\t", ",", "-", "_", ".", "/", "\\" };
+
       public InstrumentGroupValidation()
       {
+        InstrumentGroup = null;
         Industry = string.Empty;
         IndustryFound = false;
         Category = string.Empty;
         CategoryFound = false;
         Subcategory = string.Empty;
         SubcategoryFound = false;
+        IndustryWords = Array.Empty<string>();
+        CategoryWords = Array.Empty<string>();
+        SubcategoryWords = Array.Empty<string>();
       }
 
+      public Contract Contract { get; set; }
+      public InstrumentGroup? InstrumentGroup { get; set; }
       public string Industry { get; set; }
       public bool IndustryFound { get; set; }
       public string Category { get; set; }
       public bool CategoryFound { get; set; }
       public string Subcategory { get; set; }
       public bool SubcategoryFound { get; set; }
+      public string[] IndustryWords { get; set; }
+      public string[] CategoryWords { get; set; }
+      public string[] SubcategoryWords { get; set; }
+      private bool m_initWordLists = false;
+
+      private string[] splitWords(string text)
+      {
+        return text.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries);
+      }
+
+      /// <summary>
+      /// Performs a match on the given instrument group and returns a weighted score based on the number of words that match
+      /// between the contracts' industry category and sub-category and the given IndustryGroup.
+      /// </summary>
+      public double Match(InstrumentGroup instrumentGroup)
+      {
+        double score = 0.0;
+        int count = 0;
+
+        if (!m_initWordLists)
+        {
+          IndustryWords = splitWords(Industry);
+          CategoryWords = splitWords(Category);
+          SubcategoryWords = splitWords(Subcategory);
+          m_initWordLists = true;
+        }
+
+        string[] nameWords = splitWords(instrumentGroup.Name);
+        score += matchWords(IndustryWords, nameWords);
+        count++;
+        score += matchWords(CategoryWords, nameWords);
+        count++;
+        score += matchWords(SubcategoryWords, nameWords);
+        count++;
+
+        foreach (var alternateName in instrumentGroup.AlternateNames)
+        {
+          nameWords = splitWords(alternateName);
+          score += matchWords(IndustryWords, nameWords);
+          count++;
+          score += matchWords(CategoryWords, nameWords);
+          count++;
+          score += matchWords(SubcategoryWords, nameWords);
+          count++;
+        }
+
+        return count != 0 ? score / count : 0.0;
+      }
+
+      private double matchWords(string[] words1, string[] words2)
+      {
+        double score = 0.0;
+        foreach (var word1 in words1)
+          foreach (var word2 in words2)
+          {
+            if (word1.Equals(word2, StringComparison.OrdinalIgnoreCase))
+            {
+              score += 1.0;
+              break;
+            }
+          }
+
+        return score;
+      }
     }
 
+    /// <summary>
+    /// Strategy method to handle the fixing of missing instrument groups.
+    /// </summary>
     public void ValidateInstrumentGroups()
     {
       List<InstrumentGroupValidation> definedContractGroups = new List<InstrumentGroupValidation>();
@@ -241,10 +317,9 @@ namespace TradeSharp.InteractiveBrokers
             if (contract != null) break;
           }
 
-        //if (contract == null)
-        //  progress.LogWarning($"Contract definition for instrument \"{instrument.Ticker}\" not found - skipping.");
-        //else
-        if (contract != null)
+        if (contract == null)
+          progress.LogWarning($"Contract definition for instrument \"{instrument.Ticker}\" not found - skipping.");
+        else
         {
           //check that instrument group would be correct
           if (contract is ContractStock contractStock)
@@ -252,7 +327,7 @@ namespace TradeSharp.InteractiveBrokers
             var contractGroup = definedContractGroups.FirstOrDefault((g) => g.Industry == contractStock.Industry && g.Category == contractStock.Category && g.Subcategory == contractStock.Subcategory);
             if (contractGroup == null)
             {
-              contractGroup = new InstrumentGroupValidation { Industry = contractStock.Industry, Category = contractStock.Category, Subcategory = contractStock.Subcategory };
+              contractGroup = new InstrumentGroupValidation { Contract = contract, Industry = contractStock.Industry, Category = contractStock.Category, Subcategory = contractStock.Subcategory };
               definedContractGroups.Add(contractGroup);
             }
           }
@@ -262,46 +337,95 @@ namespace TradeSharp.InteractiveBrokers
         if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
       }
 
+      List<InstrumentGroup> matchedInstrumentGroups = new List<InstrumentGroup>();
       List<InstrumentGroup> missingInstrumentGroups = new List<InstrumentGroup>();
-      progress.StatusMessage = "Analyzing instrument group definitions";
-      foreach (var instrumentGroup in m_instrumentGroupService.Items)
+      
+      if (!progress.CancellationTokenSource.IsCancellationRequested)
       {
-        var contractGroup = definedContractGroups.FirstOrDefault((g) => (!g.IndustryFound && instrumentGroup.Equals(g.Industry)) || (!g.CategoryFound && instrumentGroup.Equals(g.Category)) || (!g.SubcategoryFound && instrumentGroup.Equals(g.Subcategory)));
-
-        if (contractGroup != null)
+        progress.StatusMessage = "Analyzing instrument group definitions";
+        foreach (var instrumentGroup in m_instrumentGroupService.Items)
         {
-          if (instrumentGroup.Equals(contractGroup.Industry))
-            contractGroup.IndustryFound = true;
-          if (instrumentGroup.Equals(contractGroup.Category))
-            contractGroup.CategoryFound = true;
-          if (instrumentGroup.Equals(contractGroup.Subcategory))
-            contractGroup.SubcategoryFound = true;
-        }
-        else
-          missingInstrumentGroups.Add(instrumentGroup);
+          var contractGroup = definedContractGroups.FirstOrDefault((g) => (!g.IndustryFound && instrumentGroup.Equals(g.Industry)) || (!g.CategoryFound && instrumentGroup.Equals(g.Category)) || (!g.SubcategoryFound && instrumentGroup.Equals(g.Subcategory)));
 
-        progress.Progress++;
-        if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+          if (contractGroup != null)
+          {
+            if (instrumentGroup.Equals(contractGroup.Industry))
+            {
+              contractGroup.IndustryFound = true;
+              matchedInstrumentGroups.Add(instrumentGroup);
+            }
+
+            if (instrumentGroup.Equals(contractGroup.Category))
+            {
+              contractGroup.CategoryFound = true;
+              matchedInstrumentGroups.Add(instrumentGroup);
+            }
+
+            if (instrumentGroup.Equals(contractGroup.Subcategory))
+            {
+              contractGroup.SubcategoryFound = true;
+              matchedInstrumentGroups.Add(instrumentGroup);
+            }
+          }
+          else
+            missingInstrumentGroups.Add(instrumentGroup);
+
+          progress.Progress++;
+          if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+        }
       }
 
-      progress.StatusMessage = $"Searching for potential matches on {missingInstrumentGroups.Count} instrument groups";
-      progress.Maximum += missingInstrumentGroups.Count;
-      foreach (var instrumentGroup in missingInstrumentGroups)
+      if (!progress.CancellationTokenSource.IsCancellationRequested)
       {
+        using (progress.BeginScope($"Matched {matchedInstrumentGroups.Count} instrument groups"))
+          foreach (var instrumentGroup in matchedInstrumentGroups)
+          {
+            progress.LogInformation($"Matched group {instrumentGroup.Name}");
+            if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+          }
+      }
 
-        progress.LogError($"Could not find matching group for {instrumentGroup.Name}", HandleMissingInstrumentGroup, "Test string", "Fix issue");
+      if (!progress.CancellationTokenSource.IsCancellationRequested && missingInstrumentGroups.Count > 0)
+      {
+        progress.StatusMessage = $"Searching for potential matches on {missingInstrumentGroups.Count} instrument groups";
+        progress.Maximum += missingInstrumentGroups.Count * definedContractGroups.Count;
+        foreach (var instrumentGroup in missingInstrumentGroups)
+        {
+          List<Tuple<double, ContractStock, InstrumentGroup>> matchScores = new List<Tuple<double, ContractStock, InstrumentGroup>>();
+          foreach (var contractGroup in definedContractGroups)
+          {
+            double score = contractGroup.Match(instrumentGroup);
+            if (score > 0.0) matchScores.Add(new Tuple<double, ContractStock, InstrumentGroup>(score, (ContractStock)contractGroup.Contract, instrumentGroup));
+            progress.Progress++;
+            if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+          }
 
+          if (matchScores.Count > 0)
+          {
+            Common.Utilities.Sort(matchScores, x => x.Item1);
+            ILogCorrections corrections = progress.LogInformation($"Matches found for group {instrumentGroup.Name} - {matchScores.Count}");
+            foreach (var match in matchScores)
+              corrections.Add($"Add alternate name {match.Item2.Subcategory} with match score {match.Item1:.4}", HandleFixMissingInstrumentGroup, match);
+          }
+          else
+            progress.LogWarning($"No matches found for group {instrumentGroup.Name}.");
 
-        progress.Progress++;
-        if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+          progress.Progress++;
+          if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+        }
       }
 
       progress.Progress = progress.Maximum;
       progress.Complete = true;
     }
 
-    public void HandleMissingInstrumentGroup(object? parameter)
+    public void HandleFixMissingInstrumentGroup(object? parameter)
     {
+
+      //TODO - Implement method to fix missing instrument group
+
+      //parameter is - Tuple<double, ContractStock, InstrumentGroup>(score, (ContractStock)contractGroup.Contract, instrumentGroup)
+
       m_logger.LogInformation($"HandleMissingInstrumentGroup called with parameter {parameter}");
     }
 

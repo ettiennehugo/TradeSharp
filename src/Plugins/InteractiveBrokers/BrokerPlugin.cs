@@ -49,7 +49,6 @@ namespace TradeSharp.InteractiveBrokers
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
       Commands.Add(new PluginCommand { Name = "Scanner Parameters", Tooltip = "Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) } );
-      Commands.Add(new PluginCommand { Name = "Update Industry Groups", Tooltip = "Update stock industry groupings", Icon = "\uE9D5", Command = new AsyncRelayCommand(OnUpdateInstrumentGroupsAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Validate Instrument Groups", Tooltip = "Validate Defined Instrument Groups against Cached Contracts", Icon = "\uE15C", Command = new AsyncRelayCommand(OnValidateInstrumentGroupsAsync) } );
       Commands.Add(new PluginCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
       raiseUpdateCommands();
@@ -80,11 +79,6 @@ namespace TradeSharp.InteractiveBrokers
     public Task OnSynchronizeContractCacheAsync()
     {
       return Task.Run(() => m_ibServiceHost.Instruments.SynchronizeContractCache());
-    }
-
-    public Task OnUpdateInstrumentGroupsAsync()
-    {
-      return Task.Run(() => m_ibServiceHost.Instruments.UpdateInstrumentGroups());
     }
 
     public Task OnValidateInstrumentGroupsAsync()
