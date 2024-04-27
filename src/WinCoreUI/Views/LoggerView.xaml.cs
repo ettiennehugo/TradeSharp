@@ -8,6 +8,8 @@ using Windows.Foundation;
 using System.Threading.Tasks;
 using TradeSharp.WinCoreUI.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
+using TradeSharp.CoreUI.Services;
+using TradeSharp.CoreUI.Views;
 
 namespace TradeSharp.WinCoreUI.Views
 {
@@ -96,6 +98,7 @@ namespace TradeSharp.WinCoreUI.Views
     private List<LogEntry> m_entries;
     private int m_lastReturnedIndex;
     private MenuFlyout m_correctionsMenuFlyout;
+    IDialogService m_dialogService;
 
     //constructors
     public LoggerView()
@@ -103,6 +106,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_entries = new List<LogEntry>();
       m_scopedLogs = new Stack<CollapsibleLogEntry>();
       Entries = new IncrementalObservableCollection<LogEntryDecorator>(this);
+      m_dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       IsLoading = false;
       HasMoreItems = true;
       this.InitializeComponent();
@@ -149,6 +153,32 @@ namespace TradeSharp.WinCoreUI.Views
 
       IDisposable? loggerScope = Logger is not null ? Logger.BeginScope(message) : null;
       return new LoggingScope(this, loggerScope);
+    }
+
+    /// <summary>
+    /// Adds the given entry to the log entries collection.
+    /// </summary>
+    public void Add(LogEntry entry)
+    {
+      lock(this)
+      {
+        m_entries.Add(entry);
+        //update the incremental loading state
+        HasMoreItems = m_lastReturnedIndex < m_entries.Count;
+      }
+    }
+
+    /// <summary>
+    /// Clear all log entries.
+    /// </summary>
+    public void Clear()
+    {
+      lock(this)
+      {
+        m_entries.Clear();
+        m_lastReturnedIndex = 0;
+        HasMoreItems = false;
+      }
     }
 
     /// <summary>
@@ -227,8 +257,8 @@ namespace TradeSharp.WinCoreUI.Views
         includeCriticalInt = (bool)m_toggleCritical.IsChecked!;
         taskCompletionSource.SetResult(true);
       });
-
       taskCompletionSource.Task.Wait();
+
       filterText = filterTextInt;
       includeInformation = includeInformationInt;
       includeWarnings = includeWarningsInt;
@@ -283,12 +313,6 @@ namespace TradeSharp.WinCoreUI.Views
         item.Click += (s, e) => correction.Fix?.Invoke(correction.Parameter);
         m_correctionsMenuFlyout.Items.Add(item);
       }
-
-      //display it at the requested position
-      //var point = new Point(0, 0);
-      //if (args.TryGetPosition(sender, out point))
-      //  m_correctionsMenuFlyout.ShowAt((UIElement)sender, point);
-      //else
       m_correctionsMenuFlyout.ShowAt(dropDownButton);
     }
 
@@ -300,17 +324,12 @@ namespace TradeSharp.WinCoreUI.Views
       m_correctionsMenuFlyout.Items.Clear();
     }
 
-    private void collapsibleLogFixClick(object sender, RoutedEventArgs e)
+    private void collapsibleLogEntryClick(object sender, RoutedEventArgs e)
     {
       Button button = (Button)sender;
-      CollapsibleLogEntry entry = (CollapsibleLogEntry)button.DataContext;
-
-
-      //TODO: Display another log viewer with just the details of the collapsible log entry.
-      //  - make a method Log(LogEntry) and copy down the log entries to the new log viewer.
-      //  - display the new log viewer. 
-
-
+      LogEntry entry = (LogEntry)button.DataContext;
+      ICorrectiveLoggerDialog correctiveLoggerDialog = m_dialogService.CreateCorrectiveLoggerDialog(entry.Message, entry);
+      correctiveLoggerDialog.ShowAsync();
     }
 
     public Task<IList<LogEntryDecorator>> LoadMoreItemsAsync(int count)

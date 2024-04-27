@@ -12,7 +12,7 @@ using Microsoft.UI.Dispatching;
 using static TradeSharp.CoreUI.Services.IDialogService;
 using Microsoft.UI.Xaml;
 using TradeSharp.CoreUI.Common;
-using WinRT.Interop;
+using TradeSharp.CoreUI.Views;
 using Microsoft.Extensions.Logging;
 
 namespace TradeSharp.WinDataManager.Services
@@ -103,14 +103,14 @@ namespace TradeSharp.WinDataManager.Services
     }
 
     /// <summary>
-    /// Shows a progress dialog with the specified title and also takes a logger to echo log operations.
+    /// Creates a progress dialog with the specified title and also takes a logger to echo log operations.
     /// </summary>
-    public IProgressDialog ShowProgressDialog(string title, ILogger? logger)
+    public IProgressDialog CreateProgressDialog(string title, ILogger? logger)
     {
       IProgressDialog result = null;
       //create the dialog from the UI thread
       TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
-      if (UIDispatcherQueue.TryEnqueue(() =>
+      if (UIDispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>    //dialog creation needs precedence since other logs might still be incrementally loading
       {
         Window window = new Window();
         WinCoreUI.Views.ProgressDialogView progressDialog = new WinCoreUI.Views.ProgressDialogView();
@@ -123,7 +123,26 @@ namespace TradeSharp.WinDataManager.Services
         result = progressDialog;
         taskCompletionSource.SetResult(true);
       }))
-        Task.WhenAny(taskCompletionSource.Task, Task.Delay(5000000)).Wait();  //wait up to 5-seconds for the dialog to be created
+        taskCompletionSource.Task.Wait(10000); //wait up to 10-seconds for the dialog to be created
+      //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
+      return result!;
+    }
+
+    public ICorrectiveLoggerDialog CreateCorrectiveLoggerDialog(string title, LogEntry? entry = null)
+    {
+      ICorrectiveLoggerDialog result = null;
+      //create the dialog from the UI thread
+      TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+      if (UIDispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>    //dialog creation needs precedence since other logs might still be incrementally loading
+      {
+        WinCoreUI.Views.LoggerViewDialog loggerViewDialog = new WinCoreUI.Views.LoggerViewDialog(entry);
+        loggerViewDialog.Title = title;
+        loggerViewDialog.ExtendsContentIntoTitleBar = true;
+        MakeDialog(loggerViewDialog);
+        result = loggerViewDialog;
+        taskCompletionSource.SetResult(true);
+      }))
+        taskCompletionSource.Task.Wait(10000); //wait up to 10-seconds for the dialog to be created
       //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
       return result!;
     }

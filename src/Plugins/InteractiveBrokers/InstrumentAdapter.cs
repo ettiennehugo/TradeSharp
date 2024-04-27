@@ -134,7 +134,7 @@ namespace TradeSharp.InteractiveBrokers
     public void SynchronizeContractCache()
     {
       m_serviceHost.Cache.Clear();    //ensure cache starts fresh after the update
-      IProgressDialog progress = m_dialogService.ShowProgressDialog("Synchronizing Contract Cache", m_logger);
+      IProgressDialog progress = m_dialogService.CreateProgressDialog("Synchronizing Contract Cache", m_logger);
       progress.StatusMessage = "Synchronizing Contract Cache from Instrument Definitions";
       progress.Progress = 0;
       progress.Minimum = 0;
@@ -162,7 +162,7 @@ namespace TradeSharp.InteractiveBrokers
     //NOTE: This method will only be effective after synchronizing the contract cache with IB's contract definitions
     public void UpdateInstrumentGroups()
     {
-      IProgressDialog progress = m_dialogService.ShowProgressDialog("Updating Instrument Groups", m_logger);
+      IProgressDialog progress = m_dialogService.CreateProgressDialog("Updating Instrument Groups", m_logger);
       progress.StatusMessage = "Updating Instrument Groups from Contract Cache";
       progress.Progress = 0;
       progress.Minimum = 0;
@@ -299,13 +299,14 @@ namespace TradeSharp.InteractiveBrokers
     {
       List<InstrumentGroupValidation> definedContractGroups = new List<InstrumentGroupValidation>();
 
-      IProgressDialog progress = m_dialogService.ShowProgressDialog("Validating Instrument Group Definitions", m_logger);
+      IProgressDialog progress = m_dialogService.CreateProgressDialog("Validating Instrument Group Definitions", m_logger);
       progress.StatusMessage = "Accumulating industry class definitions from the InteractiveBrokers contract definitions";
       progress.Progress = 0;
       progress.Minimum = 0;
       progress.Maximum = m_instrumentService.Items.Count + m_instrumentGroupService.Items.Count;
       progress.ShowAsync();
 
+      List<string> missingInstruments = new List<string>();
       foreach (var instrument in m_instrumentService.Items)
       {
         var contract = m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
@@ -318,7 +319,7 @@ namespace TradeSharp.InteractiveBrokers
           }
 
         if (contract == null)
-          progress.LogWarning($"Contract definition for instrument \"{instrument.Ticker}\" not found - skipping.");
+          missingInstruments.Add($"{instrument.Ticker}");
         else
         {
           //check that instrument group would be correct
@@ -337,7 +338,15 @@ namespace TradeSharp.InteractiveBrokers
         if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
       }
 
-      List<InstrumentGroup> matchedInstrumentGroups = new List<InstrumentGroup>();
+      if (missingInstruments.Count > 0)
+        using (progress.BeginScope($"Missing {missingInstruments.Count} contracts - run instrument analysis to correct this"))
+          foreach (var missingInstrument in missingInstruments)
+          {
+            progress.LogWarning($"{missingInstrument}");
+            if (progress.CancellationTokenSource.IsCancellationRequested) return;
+          }
+          
+      List<Tuple<InstrumentGroup, string>> matchedInstrumentGroups = new List<Tuple<InstrumentGroup, string>>();
       List<InstrumentGroup> missingInstrumentGroups = new List<InstrumentGroup>();
       
       if (!progress.CancellationTokenSource.IsCancellationRequested)
@@ -352,19 +361,19 @@ namespace TradeSharp.InteractiveBrokers
             if (instrumentGroup.Equals(contractGroup.Industry))
             {
               contractGroup.IndustryFound = true;
-              matchedInstrumentGroups.Add(instrumentGroup);
+              matchedInstrumentGroups.Add(new (instrumentGroup, $"\"{instrumentGroup.Name}\" matched with industry \"{contractGroup.Industry}\""));
             }
 
             if (instrumentGroup.Equals(contractGroup.Category))
             {
               contractGroup.CategoryFound = true;
-              matchedInstrumentGroups.Add(instrumentGroup);
+              matchedInstrumentGroups.Add(new (instrumentGroup, $"\"{instrumentGroup.Name}\" matched with category \"{contractGroup.Category}\""));
             }
 
             if (instrumentGroup.Equals(contractGroup.Subcategory))
             {
               contractGroup.SubcategoryFound = true;
-              matchedInstrumentGroups.Add(instrumentGroup);
+              matchedInstrumentGroups.Add(new (instrumentGroup, $"\"{instrumentGroup.Name}\" matched with sub-category \"{contractGroup.Subcategory}\""));
             }
           }
           else
@@ -378,9 +387,9 @@ namespace TradeSharp.InteractiveBrokers
       if (!progress.CancellationTokenSource.IsCancellationRequested)
       {
         using (progress.BeginScope($"Matched {matchedInstrumentGroups.Count} instrument groups"))
-          foreach (var instrumentGroup in matchedInstrumentGroups)
+          foreach (var matchedInstrumentGroup in matchedInstrumentGroups)
           {
-            progress.LogInformation($"Matched group {instrumentGroup.Name}");
+            progress.LogInformation(matchedInstrumentGroup.Item2);
             if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
           }
       }
@@ -403,12 +412,12 @@ namespace TradeSharp.InteractiveBrokers
           if (matchScores.Count > 0)
           {
             Common.Utilities.Sort(matchScores, x => x.Item1);
-            ILogCorrections corrections = progress.LogInformation($"Matches found for group {instrumentGroup.Name} - {matchScores.Count}");
+            ILogCorrections corrections = progress.LogInformation($"{matchScores.Count} matches found for group \"{instrumentGroup.Name}\"");
             foreach (var match in matchScores)
-              corrections.Add($"Add alternate name {match.Item2.Subcategory} with match score {match.Item1:.4}", HandleFixMissingInstrumentGroup, match);
+              corrections.Add($"Add alternate name \"{match.Item2.Subcategory}\" with match score {match.Item1:F3}", HandleFixMissingInstrumentGroup, match);
           }
           else
-            progress.LogWarning($"No matches found for group {instrumentGroup.Name}.");
+            progress.LogWarning($"No matches found for group \"{instrumentGroup.Name}\".");
 
           progress.Progress++;
           if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
@@ -434,7 +443,7 @@ namespace TradeSharp.InteractiveBrokers
     /// </summary>
     public void ValidateInstruments()
     {
-      IProgressDialog progress = m_dialogService.ShowProgressDialog("Validating Instruments", m_logger);
+      IProgressDialog progress = m_dialogService.CreateProgressDialog("Validating Instruments", m_logger);
       progress.StatusMessage = "Validating Instrument definitions against the Contract Cache definitions";
       progress.Progress = 0;
       progress.Minimum = 0;

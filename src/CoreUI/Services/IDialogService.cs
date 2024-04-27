@@ -1,5 +1,6 @@
 ﻿using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Views;
 using TradeSharp.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.ComponentModel;
@@ -271,7 +272,8 @@ namespace TradeSharp.CoreUI.Services
     //methods
     Task ShowPopupMessageAsync(string message);
     Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
-    IProgressDialog ShowProgressDialog(string title, ILogger? logger);
+    IProgressDialog CreateProgressDialog(string title, ILogger? logger);
+    ICorrectiveLoggerDialog CreateCorrectiveLoggerDialog(string title, LogEntry? entry = null); //adds given log entry to display it in the dialog (typically a collapsible log entry
 
     Task<CountryInfo?> ShowSelectCountryAsync();
 

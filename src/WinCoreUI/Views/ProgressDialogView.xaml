@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Loaded="Page_Loaded">
-  <Grid x:Name="m_layoutMain" RowDefinitions="32, Auto, Auto, Auto, Auto, Auto"  RowSpacing="0">
+  <Grid x:Name="m_layoutMain" RowDefinitions="32, Auto, Auto, Auto, Auto, Auto" RowSpacing="0">
     <Grid x:Name="m_titleBar" ColumnDefinitions="32, *" Grid.Row="0" Grid.Column="0">
       <Image x:Name="m_titleBarIcon" Source="Assets/Square64x64.ico" HorizontalAlignment="Center" VerticalAlignment="Center" Width="24" Height="24"  Grid.Row="0" Grid.Column="0"/>
       <TextBlock x:Name="m_titleBarText" Text="{x:Bind Title}" TextAlignment="Left" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextWrapping="NoWrap" Style="{StaticResource CaptionTextBlockStyle}" Grid.Row="0" Grid.Column="1"/>
