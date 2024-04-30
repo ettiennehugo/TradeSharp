@@ -204,6 +204,14 @@ namespace TradeSharp.InteractiveBrokers
       //Word separators used to split the contract group names into words for matching
       public static string[] WordSeparators = new string[] { " ", "\t", ",", "-", "_", ".", "/", "\\" };
 
+      public enum MatchesOn
+      {
+        None,
+        Industry,
+        Category,
+        Subcategory
+      }
+
       public InstrumentGroupValidation()
       {
         InstrumentGroup = null;
@@ -238,13 +246,12 @@ namespace TradeSharp.InteractiveBrokers
 
       /// <summary>
       /// Performs a match on the given instrument group and returns a weighted score based on the number of words that match
-      /// between the contracts' industry category and sub-category and the given IndustryGroup.
+      /// between the contracts' industry, category and sub-category and the given IndustryGroup.
       /// </summary>
-      public double Match(InstrumentGroup instrumentGroup)
+      public Tuple<double, MatchesOn, string> Match(InstrumentGroup instrumentGroup)
       {
-        double score = 0.0;
-        int count = 0;
-
+        Tuple<double, MatchesOn, string> result = new Tuple<double, MatchesOn, string>(0.0, MatchesOn.None, string.Empty);
+        double highestScore = 0.0;
         if (!m_initWordLists)
         {
           IndustryWords = splitWords(Industry);
@@ -254,30 +261,60 @@ namespace TradeSharp.InteractiveBrokers
         }
 
         string[] nameWords = splitWords(instrumentGroup.Name);
-        score += matchWords(IndustryWords, nameWords);
-        count++;
-        score += matchWords(CategoryWords, nameWords);
-        count++;
-        score += matchWords(SubcategoryWords, nameWords);
-        count++;
+        double score = matchWords(IndustryWords, nameWords);
+        if (score > highestScore)
+        {
+          result = new Tuple<double, MatchesOn, string>(score, MatchesOn.Industry, $"Matched name \"{instrumentGroup.Name}\" with industry \"{Industry}\"->\"{Category}\"->\"{Subcategory}\"");
+          highestScore = score;
+        }
+
+        score = matchWords(CategoryWords, nameWords);
+        if (score > highestScore)
+        {
+          result = new Tuple<double, MatchesOn, string>(score, MatchesOn.Category, $"Matched name \"{instrumentGroup.Name}\" with category \"{Industry}\"->\"{Category}\"->\"{Subcategory}\"");
+          highestScore = score;
+        }
+
+        score = matchWords(SubcategoryWords, nameWords);
+        if (score > highestScore)
+        {
+          result = new Tuple<double, MatchesOn, string>(score, MatchesOn.Subcategory, $"Matched name \"{instrumentGroup.Name}\" with sub-category \"{Industry}\"->\"{Category}\"->\"{Subcategory}\"");
+          highestScore = score;
+        }
 
         foreach (var alternateName in instrumentGroup.AlternateNames)
         {
           nameWords = splitWords(alternateName);
-          score += matchWords(IndustryWords, nameWords);
-          count++;
-          score += matchWords(CategoryWords, nameWords);
-          count++;
-          score += matchWords(SubcategoryWords, nameWords);
-          count++;
+          score = matchWords(IndustryWords, nameWords);
+          if (score > highestScore)
+          {
+            result = new Tuple<double, MatchesOn, string>(score, MatchesOn.Industry, $"Matched alternate name \"{alternateName}\" with industry \"{Industry}\"->\"{Category}\"->\"{Subcategory}\"");
+            highestScore = score;
+          }
+
+          score = matchWords(CategoryWords, nameWords);
+          if (score > highestScore)
+          {
+            result = new Tuple<double, MatchesOn, string>(score, MatchesOn.Category, $"Matched alternate name \"{alternateName}\" with category \"{Industry}\"->\"{Category}\"->\"{Subcategory}\"");
+            highestScore = score;
+          }
+
+          score = matchWords(SubcategoryWords, nameWords);
+          if (score > highestScore)
+          {
+            result = new Tuple<double, MatchesOn, string>(score, MatchesOn.Subcategory, $"Matched alternate name \"{alternateName}\" with sub-category \"{Industry}\"->\"{Category}\"->\"{Subcategory}\"");
+            highestScore = score;
+          }
         }
 
-        return count != 0 ? score / count : 0.0;
+        return result;
       }
 
       private double matchWords(string[] words1, string[] words2)
       {
         double score = 0.0;
+        int count = words1.Length + words2.Length;
+
         foreach (var word1 in words1)
           foreach (var word2 in words2)
           {
@@ -288,7 +325,7 @@ namespace TradeSharp.InteractiveBrokers
             }
           }
 
-        return score;
+        return count > 0 ? score / count : 0.0;
       }
     }
 
@@ -398,13 +435,14 @@ namespace TradeSharp.InteractiveBrokers
       {
         progress.StatusMessage = $"Searching for potential matches on {missingInstrumentGroups.Count} instrument groups";
         progress.Maximum += missingInstrumentGroups.Count * definedContractGroups.Count;
+
         foreach (var instrumentGroup in missingInstrumentGroups)
         {
-          List<Tuple<double, ContractStock, InstrumentGroup>> matchScores = new List<Tuple<double, ContractStock, InstrumentGroup>>();
+          List<Tuple<double, InstrumentGroupValidation.MatchesOn, InstrumentGroupValidation, InstrumentGroup, string>> matchScores = new List<Tuple<double, InstrumentGroupValidation.MatchesOn, InstrumentGroupValidation, InstrumentGroup, string>>();
           foreach (var contractGroup in definedContractGroups)
           {
-            double score = contractGroup.Match(instrumentGroup);
-            if (score > 0.0) matchScores.Add(new Tuple<double, ContractStock, InstrumentGroup>(score, (ContractStock)contractGroup.Contract, instrumentGroup));
+            Tuple<double, InstrumentGroupValidation.MatchesOn, string> result = contractGroup.Match(instrumentGroup);
+            if (result.Item1 > 0.0) matchScores.Add(new Tuple<double, InstrumentGroupValidation.MatchesOn, InstrumentGroupValidation, InstrumentGroup, string>(result.Item1, result.Item2, contractGroup, instrumentGroup, result.Item3));
             progress.Progress++;
             if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
           }
@@ -414,7 +452,7 @@ namespace TradeSharp.InteractiveBrokers
             Common.Utilities.Sort(matchScores, x => x.Item1);
             ILogCorrections corrections = progress.LogInformation($"{matchScores.Count} matches found for group \"{instrumentGroup.Name}\"");
             foreach (var match in matchScores)
-              corrections.Add($"Add alternate name \"{match.Item2.Subcategory}\" with match score {match.Item1:F3}", HandleFixMissingInstrumentGroup, match);
+              corrections.Add($"{match.Item5} - score {match.Item1:F3}", HandleFixMissingInstrumentGroup, match);
           }
           else
             progress.LogWarning($"No matches found for group \"{instrumentGroup.Name}\".");
@@ -430,12 +468,35 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleFixMissingInstrumentGroup(object? parameter)
     {
+      if (parameter == null)
+      {
+        m_logger.LogError($"HandleMissingInstrumentGroup encountered null parameter.");
+        return;
+      }
 
-      //TODO - Implement method to fix missing instrument group
+      if (parameter is Tuple<double, InstrumentGroupValidation.MatchesOn, InstrumentGroupValidation, InstrumentGroup, string> match)
+      {
+        string valueToAdd;
+        switch (match.Item2)
+        {
+          case InstrumentGroupValidation.MatchesOn.Industry:
+            valueToAdd = match.Item3.Industry;
+            break;
+          case InstrumentGroupValidation.MatchesOn.Category:
+            valueToAdd = match.Item3.Category;
+            break;
+          case InstrumentGroupValidation.MatchesOn.Subcategory:
+            valueToAdd = match.Item3.Subcategory;
+            break;
+          default:
+            m_logger.LogError($"HandleMissingInstrumentGroup encountered incorrect match state.");
+            return;
+        }
 
-      //parameter is - Tuple<double, ContractStock, InstrumentGroup>(score, (ContractStock)contractGroup.Contract, instrumentGroup)
-
-      m_logger.LogInformation($"HandleMissingInstrumentGroup called with parameter {parameter}");
+        match.Item4.AlternateNames.Add(valueToAdd);
+        m_database.UpdateInstrumentGroup(match.Item4);
+        m_logger.LogInformation($"Added alternate name \"{valueToAdd}\" to instrument group \"{match.Item4.Name}\"");
+      }
     }
 
     /// <summary>

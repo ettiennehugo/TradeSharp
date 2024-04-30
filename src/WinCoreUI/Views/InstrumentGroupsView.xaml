@@ -59,7 +59,7 @@
     <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}" SelectionMode="Single" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}" Expanding="m_instrumentGroups_Expanding" Collapsed="m_instrumentGroups_Collapsed" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.VerticalScrollMode="Auto" Grid.Row="1">
       <TreeView.ItemTemplate>
         <DataTemplate x:DataType="cuiservices:InstrumentGroupNodeType">
-          <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="{x:Bind Expanded}">
+          <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="{x:Bind Expanded, Mode=OneWay}">
             <Grid RowDefinitions="Auto, Auto">
               <TextBlock Text="{x:Bind Item.Name}" Grid.Row="0"/>
               <winui:ItemsRepeater ItemsSource="{x:Bind Item.Instruments}" Visibility="{x:Bind InstrumentsVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1" Margin="2">

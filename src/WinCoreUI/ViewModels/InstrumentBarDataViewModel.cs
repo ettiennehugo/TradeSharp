@@ -19,7 +19,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
   /// Windows specific implementatation of the InstrumentBarDataViewModel to support incremental loading on windows - not sure why these collections are tied to windows but it also means the view model needs to have a specific
   /// implementation on Windows to support it!!!
   /// </summary>
-  public class WinInstrumentBarDataViewModel : InstrumentBarDataViewModel, IIncrementalSource<IBarData>
+  public class InstrumentBarDataViewModel : CoreUI.ViewModels.InstrumentBarDataViewModel, IIncrementalSource<IBarData>
   {
     //constants
 
@@ -36,7 +36,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
     private DateTime m_oldToDateTime;
 
     //constructors
-    public WinInstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService, ILogger<InstrumentBarDataViewModel> logger) : base(itemService, navigationService, dialogService, logger) 
+    public InstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService, ILogger<InstrumentBarDataViewModel> logger) : base(itemService, navigationService, dialogService, logger) 
     {
       IncrementalItems = new IncrementalObservableCollection<IBarData>(this);
       Items = IncrementalItems;

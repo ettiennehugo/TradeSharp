@@ -88,7 +88,7 @@ namespace TradeSharp.CoreUI.ViewModels
     /// <summary>
     /// Expand all the nodes up to the root from the given node in order to display the node.
     /// </summary>
-    protected void expandToNode(ITreeNodeType<Guid, InstrumentGroup> node)
+    protected virtual void expandToNode(ITreeNodeType<Guid, InstrumentGroup> node)
     {
       ITreeNodeType<Guid, InstrumentGroup>? parentNode = node.Parent;
       Stack<ITreeNodeType<Guid, InstrumentGroup>> stack = new Stack<ITreeNodeType<Guid, InstrumentGroup>>();
@@ -103,6 +103,7 @@ namespace TradeSharp.CoreUI.ViewModels
         ITreeNodeType<Guid, InstrumentGroup> nextNode = stack.Pop();
         nextNode.Expanded = true;
       }
+
     }
 
     /// <summary>
@@ -124,12 +125,13 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override void OnFindNext()
     {
-      if (m_foundNodeIndex < m_foundNodes.Count)
+      if (m_foundNodeIndex < m_foundNodes.Count - 1)
       {
         m_foundNodeIndex++;
         ITreeNodeType<Guid, InstrumentGroup> foundNode = m_foundNodes[m_foundNodeIndex];
         expandToNode(foundNode);
         SelectedNode = foundNode;
+
       }
       else
         m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Search complete", $"Nothing else found for search term \"{FindText}\"");

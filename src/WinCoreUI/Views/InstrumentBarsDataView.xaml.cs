@@ -49,7 +49,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_configurationService = (IConfigurationService)IApplication.Current.Services.GetService(typeof(IConfigurationService));
       m_exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
-      ViewModel = (WinInstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
+      ViewModel = (ViewModels.InstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
       ViewModel.UIDispatcherQueue = DispatcherQueue.GetForCurrentThread();
       ViewModel.Resolution = Resolution;
       ViewModel.RefreshEvent += onViewModelRefresh;
@@ -108,7 +108,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     public string FilterStartTooltip { get => (string)GetValue(FilterStartTooltipProperty); internal set { SetValue(FilterStartTooltipProperty, value); } }
     public string FilterEndTooltip { get => (string)GetValue(FilterEndTooltipProperty); internal set { SetValue(FilterEndTooltipProperty, value); } }
-    public WinInstrumentBarDataViewModel ViewModel { get; internal set; }
+    public ViewModels.InstrumentBarDataViewModel ViewModel { get; internal set; }
 
     //methods
     private void refreshCopyMenu()

@@ -35,7 +35,7 @@ namespace TradeSharp.CoreUI.ViewModels
       CollapseNodeCommand = new RelayCommand<object?>(OnCollapseNode);
       FindFirstCommand = new RelayCommand(OnFindFirst, () => FindText.Length > 0);
       FindNextCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
-      FindPreviousCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
+      FindPreviousCommand = new RelayCommand(OnFindPrevious, () => FindText.Length > 0);
       m_findText = string.Empty;
       ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null || SelectedNodes.Count > 0);
     }
@@ -87,7 +87,7 @@ namespace TradeSharp.CoreUI.ViewModels
     /// <summary>
     /// Get/set selected set of nodes for the view model and associated items service. 
     /// </summary>
-    public ObservableCollection<ITreeNodeType<TKey, TItem>> SelectedNodes
+    public virtual ObservableCollection<ITreeNodeType<TKey, TItem>> SelectedNodes
     { 
       get => m_itemsService.SelectedNodes;
       set
@@ -195,6 +195,7 @@ namespace TradeSharp.CoreUI.ViewModels
       base.NotifyCanExecuteChanged();
       FindFirstCommand.NotifyCanExecuteChanged();
       FindNextCommand.NotifyCanExecuteChanged();
+      FindPreviousCommand.NotifyCanExecuteChanged();
     }
   }
 }

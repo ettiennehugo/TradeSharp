@@ -96,10 +96,10 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<IMassImportInstrumentDataService, MassImportInstrumentDataService>();
           services.AddSingleton<IMassExportInstrumentDataService, MassExportInstrumentDataService>();
           services.AddSingleton<IInstrumentViewModel, InstrumentViewModel>();
-          services.AddSingleton<IInstrumentGroupViewModel, InstrumentGroupViewModel>();
+          services.AddSingleton<IInstrumentGroupViewModel, WinCoreUI.ViewModels.InstrumentGroupViewModel>();
           services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddTransient<IInstrumentBarDataService, InstrumentBarDataService>(); //this service must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
-          services.AddTransient<IInstrumentBarDataViewModel, WinInstrumentBarDataViewModel>();  //windows implementation is used in order to support incremental loading
+          services.AddTransient<IInstrumentBarDataViewModel, WinCoreUI.ViewModels.InstrumentBarDataViewModel>();  //windows implementation is used in order to support incremental loading
           //NOTE: Plugins needs to be loaded last of all the services/view models since the base repositories/services/view models need to be in place to support the plugins.
           services.AddSingleton<IPluginsService, PluginsService>();
           services.AddSingleton<IPluginsViewModel, PluginsViewModel>();
@@ -134,6 +134,12 @@ namespace TradeSharp.WinDataManager
       instrumentViewModel.RefreshCommandAsync.Execute(null);
       var holidayViewModel = (IHolidayViewModel)IApplication.Current.Services.GetService(typeof(IHolidayViewModel));
       holidayViewModel.RefreshCommandAsync.Execute(null);
+
+      //setup dispatcher queue for UI thread
+      var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+      var instrumentBarDataViewModel = (IInstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
+      ((WinCoreUI.ViewModels.InstrumentBarDataViewModel)instrumentBarDataViewModel).UIDispatcherQueue = dispatcherQueue;
+      ((WinCoreUI.ViewModels.InstrumentGroupViewModel)instrumentGroupViewModel).UIDispatcherQueue = dispatcherQueue;
 
       //setup plugin service host and start caching plugins
       var pluginsService = m_host.Services.GetService<IPluginsService>();
