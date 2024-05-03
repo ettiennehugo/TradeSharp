@@ -42,6 +42,7 @@ namespace TradeSharp.CoreUI.ViewModels
     AsyncRelayCommand ExportCommandAsync { get; set; }
     RelayCommand<object?> ExpandNodeCommand { get; set; }
     RelayCommand<object?> CollapseNodeCommand { get; set; }
+    RelayCommand ClearFilterCommand { get; set; }
     RelayCommand FindFirstCommand { get; set; }
     RelayCommand FindNextCommand { get; set; }
     RelayCommand FindPreviousCommand { get; set; }
@@ -57,6 +58,7 @@ namespace TradeSharp.CoreUI.ViewModels
     Task OnImportAsync();
     void OnRefresh();
     Task OnRefreshAsync();
+    void OnClearFilter();
     void OnFindFirst();
     void OnFindNext();
     void OnFindPrevious();

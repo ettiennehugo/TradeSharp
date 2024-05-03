@@ -13,6 +13,8 @@
 
     //Miscellaneous other constants
     public const string DefaultExchange = "SMART";    //by default we check everything against the SMART exchange that would route to the appropriate exchange
+    public const string DefaultRootInstrumentGroupName = "Interactive Brokers Classifications";    //default root instrument group used when copying IB industries and categories into TradeSharp 
+    public const string DefaultRootInstrumentGroupTag = "IBIndustriesRoot";    //tag used for IB classifications root instrument group
 
     /// <summary>
     /// Supported contract types.

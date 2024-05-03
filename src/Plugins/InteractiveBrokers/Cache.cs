@@ -79,6 +79,53 @@ namespace TradeSharp.InteractiveBrokers
       m_contractsByConId.Clear();
     }
 
+    public List<Contract> GetContracts()
+    {
+      List<Contract> contracts = new List<Contract>();
+      using (var reader = ExecuteReader($"SELECT * FROM {TableContracts} JOIN {TableContractDetails} USING (ConId)"))
+        while (reader.Read())
+        {
+          string secType = reader.GetString(4);
+          if (secType == Constants.ContractTypeStock)
+          {
+            ContractStock contract = new ContractStock
+            {
+              ConId = reader.GetInt32(0),
+              Symbol = reader.GetString(1),
+              SecId = reader.GetString(2),
+              SecIdType = reader.GetString(3),
+              SecType = reader.GetString(4),
+              Exchange = reader.GetString(5),
+              PrimaryExch = reader.GetString(6),
+              Currency = reader.GetString(7),
+              LocalSymbol = reader.GetString(8),
+              TradingClass = reader.GetString(9),
+              LastTradeDateOrContractMonth = reader.GetString(10),
+              Cusip = reader.GetString(11),
+              LongName = FromSqlSafeString(reader.GetString(12)),
+              StockType = reader.GetString(13),
+              IssueDate = reader.GetString(14),
+              LastTradeTime = reader.GetString(15),
+              Category = FromSqlSafeString(reader.GetString(16)),
+              Subcategory = FromSqlSafeString(reader.GetString(17)),
+              Industry = FromSqlSafeString(reader.GetString(18)),
+              Ratings = reader.GetString(19),
+              TimeZoneId = reader.GetString(20),
+              TradingHours = reader.GetString(21),
+              LiquidHours = reader.GetString(22),
+              OrderTypes = reader.GetString(23),
+              MarketName = FromSqlSafeString(reader.GetString(24)),
+              ValidExchanges = FromSqlSafeString(reader.GetString(25)),
+              Notes = FromSqlSafeString(reader.GetString(26))
+            };
+            contracts.Add(contract);
+          }
+          else
+            m_logger.LogError($"ContractForInstrument - Unsupported security type - {secType}");
+        }
+      return contracts;
+    }
+
     public Contract? GetContract(int conId)
     {
       Contract? contract = null;

@@ -70,6 +70,6 @@
         </Grid>
       </AppBarElementContainer>
     </CommandBar>
-    <ListView x:Name="m_logView" Grid.Row="1" ItemsSource="{x:Bind Entries, Mode=OneWay}" ItemTemplateSelector="{StaticResource LogEntryTemplateSelector}" DataFetchSize="1" IncrementalLoadingTrigger="Edge" IncrementalLoadingThreshold="5" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+    <ListView x:Name="m_logView" Grid.Row="1" ItemsSource="{x:Bind Entries, Mode=OneWay}" ItemTemplateSelector="{StaticResource LogEntryTemplateSelector}" DataFetchSize="1" IncrementalLoadingTrigger="Edge" IncrementalLoadingThreshold="5" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled"/>
   </Grid>
 </UserControl>

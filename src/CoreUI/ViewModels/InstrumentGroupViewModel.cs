@@ -103,7 +103,16 @@ namespace TradeSharp.CoreUI.ViewModels
         ITreeNodeType<Guid, InstrumentGroup> nextNode = stack.Pop();
         nextNode.Expanded = true;
       }
+    }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public override void OnClearFilter()
+    {
+      m_foundNodes.Clear();
+      m_foundNodeIndex = 0;
+      NotifyCanExecuteChanged();
     }
 
     /// <summary>

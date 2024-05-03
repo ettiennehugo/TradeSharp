@@ -70,7 +70,7 @@
         <TextBlock Text="Volume" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2, 0, 0, 0" Grid.Column="5"/>
       </Grid>
     </Border>
-    <ListView x:Name="m_dataTable" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" SelectionMode="Extended" DataFetchSize="1" IncrementalLoadingTrigger="Edge" IncrementalLoadingThreshold="10" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Grid.Row="2" Grid.Column="0">
+    <ListView x:Name="m_dataTable" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" SelectionMode="Extended" DataFetchSize="1" IncrementalLoadingTrigger="Edge" IncrementalLoadingThreshold="10" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" Grid.Row="2" Grid.Column="0">
       <ListView.ItemTemplate>
         <DataTemplate x:Name="BarDataTemplate" x:DataType="tsdata:IBarData">
           <Border BorderBrush="{ThemeResource TextControlElevationBorderBrush}" BorderThickness="0, 0, 0, 1">

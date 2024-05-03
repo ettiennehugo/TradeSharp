@@ -33,6 +33,7 @@ namespace TradeSharp.CoreUI.ViewModels
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
       ExpandNodeCommand = new RelayCommand<object?>(OnExpandNode);
       CollapseNodeCommand = new RelayCommand<object?>(OnCollapseNode);
+      ClearFilterCommand = new RelayCommand(OnClearFilter, () => FindText.Length > 0);
       FindFirstCommand = new RelayCommand(OnFindFirst, () => FindText.Length > 0);
       FindNextCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
       FindPreviousCommand = new RelayCommand(OnFindPrevious, () => FindText.Length > 0);
@@ -56,6 +57,7 @@ namespace TradeSharp.CoreUI.ViewModels
     /// <summary>
     /// Find the first/next node in the tree that matches the find text.
     /// </summary>
+    public RelayCommand ClearFilterCommand { get; set; }
     public RelayCommand FindFirstCommand { get; set; }
     public RelayCommand FindNextCommand { get; set; }
     public RelayCommand FindPreviousCommand { get; set; }
@@ -174,6 +176,7 @@ namespace TradeSharp.CoreUI.ViewModels
     /// <summary>
     /// Abstract definitions for search commands.
     /// </summary>
+    public abstract void OnClearFilter();
     public abstract void OnFindFirst();
     public abstract void OnFindNext();
     public abstract void OnFindPrevious();
