@@ -120,6 +120,7 @@ namespace TradeSharp.WinDataManager.Services
         window.ExtendsContentIntoTitleBar = true;
         window.Content = progressDialog;
         MakeDialog(window);
+        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 300));
         result = progressDialog;
         taskCompletionSource.SetResult(true);
       }))

@@ -166,7 +166,6 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       ParentWindow.SetTitleBar(m_titleBar);
-      ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 300));
       m_parentWindowSizeInit = true;
     }
 
@@ -236,10 +235,11 @@ namespace TradeSharp.WinCoreUI.Views
     {
       //make log viewer visible and resize window to accomodate it
       //NOTE: Logging can be called before the window is initialized so we ignore the resize in this method
-      //      otherwise the initiliazation of the window size will override this resize.
+      //      otherwise the initialization of the window size will override this resize.
       if (!m_parentWindowSizeInit || m_logViewVisible) return;
 
-      DispatcherQueue.TryEnqueue(() =>
+      m_logViewVisible = true;  //flag that we already requested the log view to be visible
+      DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
       {
         //resize the controls and window to accomodate the larger log view
         m_progressBar.Width = 1060;
@@ -247,8 +247,6 @@ namespace TradeSharp.WinCoreUI.Views
         m_loggerView.Visibility = Visibility.Visible;
         m_parentWindowSizeInit = true;
       });
-
-      m_logViewVisible = true;
     }
   }
 }

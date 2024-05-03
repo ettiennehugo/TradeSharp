@@ -72,14 +72,17 @@ namespace TradeSharp.InteractiveBrokers.Commands
             {
               if (contractStock.StockType == Constants.StockTypeCommon)
               {
-                if (contractStock.Industry != string.Empty)
+                if (contractStock.Subcategory != string.Empty)
                 {
                   var instrumentGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Subcategory));
                   if (instrumentGroup == null)
                     progress.LogError($"Instrument group for {contractStock.Industry}->{contractStock.Category}->{contractStock.Subcategory} not found.");
                 }
                 else
-                  progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Industry set.");
+                {
+                  if (contractStock.Industry != string.Empty) progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Industry set.");
+                  if (contractStock.Category != string.Empty) progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Category set.");
+                }
               }
             }
             else
