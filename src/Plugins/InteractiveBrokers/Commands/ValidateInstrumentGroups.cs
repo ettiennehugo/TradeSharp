@@ -72,10 +72,13 @@ namespace TradeSharp.InteractiveBrokers.Commands
         m_initWordLists = true;
       }
 
+      //we compare terminal groups only against the sub-categories defined
+      bool terminalGroup = InstrumentAdapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.ParentId == instrumentGroup.Id) == null;
+
       string[] nameWords = splitWords(instrumentGroup.Name);
       double score = 0.0;
       
-      if (!IndustryFound)
+      if (!IndustryFound && !terminalGroup)
       {
         score = matchWords(IndustryWords, nameWords); //industry can only match entries right under the root
         if (score > highestScore)
@@ -85,7 +88,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         }
       }
 
-      if (!CategoryFound)
+      if (!CategoryFound && !terminalGroup)
       {
         score = matchWords(CategoryWords, nameWords);
         if (score > highestScore)
@@ -95,7 +98,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         }
       }
 
-      if (!SubcategoryFound)
+      if (!SubcategoryFound && terminalGroup)
       {
         score = matchWords(SubcategoryWords, nameWords);
         if (score > highestScore)
@@ -109,7 +112,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       {
         nameWords = splitWords(alternateName);
         
-        if (!IndustryFound)
+        if (!IndustryFound && !terminalGroup)
         {
           score = matchWords(IndustryWords, nameWords);
           if (score > highestScore)
@@ -119,7 +122,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
           }
         }
 
-        if (!CategoryFound)
+        if (!CategoryFound && !terminalGroup)
         {
           score = matchWords(CategoryWords, nameWords);
           if (score > highestScore)
@@ -129,7 +132,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
           }
         }
 
-        if (!SubcategoryFound)
+        if (!SubcategoryFound && terminalGroup)
         {
           score = matchWords(SubcategoryWords, nameWords);
           if (score > highestScore)
@@ -150,13 +153,11 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
       foreach (var word1 in words1)
         foreach (var word2 in words2)
-        {
           if (word1.Equals(word2, StringComparison.OrdinalIgnoreCase))
           {
             score += 1.0;
             break;
           }
-        }
 
       return count > 0 ? score / count : 0.0;
     }
@@ -220,7 +221,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       progress.StatusMessage = "Accumulating industry class definitions from the InteractiveBrokers contract definitions";
       progress.Progress = 0;
       progress.Minimum = 0;
-      progress.Maximum = m_adapter.m_instrumentService.Items.Count + m_adapter.m_instrumentGroupService.Items.Count;
+      progress.Maximum = m_adapter.m_instrumentService.Items.Count;
       progress.ShowAsync();
 
       List<string> missingInstruments = new List<string>();
@@ -266,55 +267,63 @@ namespace TradeSharp.InteractiveBrokers.Commands
       List<Tuple<InstrumentGroup, string>> matchedInstrumentGroups = new List<Tuple<InstrumentGroup, string>>();
       List<InstrumentGroup> missingInstrumentGroups = new List<InstrumentGroup>();
 
-      if (!progress.CancellationTokenSource.IsCancellationRequested)
+      //determine non-IB industry groups to validate
+      InstrumentGroup? rootGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.Tag == Constants.DefaultRootInstrumentGroupTag);
+
+      List<InstrumentGroup> groupsToValidate;
+      if (rootGroup != null)
+        //only select groups that are not children of the IB root group since the IB groups will always match and
+        //hide problematic non-IB groups
+        groupsToValidate = m_adapter.m_instrumentGroupService.Items.Where((g) => !IsChildOf(rootGroup, g)).ToList();
+      else
+        groupsToValidate = m_adapter.m_instrumentGroupService.Items.ToList();
+
+      if (groupsToValidate.Count == 0)
       {
-        progress.StatusMessage = "Analyzing instrument group definitions";
-        foreach (var instrumentGroup in m_adapter.m_instrumentGroupService.Items)
+        progress.LogWarning("No instrument groups to validate.");
+        progress.Complete = true;
+        return;
+      }
+
+      progress.StatusMessage = "Analyzing instrument group definitions";
+      progress.Maximum += groupsToValidate.Count;
+      foreach (var instrumentGroup in groupsToValidate)
+      {
+        var contractGroup = definedContractGroups.FirstOrDefault((g) => (!g.IndustryFound && instrumentGroup.Equals(g.Industry)) || (!g.CategoryFound && instrumentGroup.Equals(g.Category)) || (!g.SubcategoryFound && instrumentGroup.Equals(g.Subcategory)));
+
+        if (contractGroup != null)
         {
-          var contractGroup = definedContractGroups.FirstOrDefault((g) => (!g.IndustryFound && instrumentGroup.Equals(g.Industry)) || (!g.CategoryFound && instrumentGroup.Equals(g.Category)) || (!g.SubcategoryFound && instrumentGroup.Equals(g.Subcategory)));
-
-          if (contractGroup != null)
+          if (instrumentGroup.Equals(contractGroup.Industry))
           {
-            if (instrumentGroup.Equals(contractGroup.Industry))
-            {
-              contractGroup.IndustryFound = true;
-              matchedInstrumentGroups.Add(new(instrumentGroup, $"\"{instrumentGroup.Name}\" matched with industry \"{contractGroup.Industry}\""));
-            }
-
-            if (instrumentGroup.Equals(contractGroup.Category))
-            {
-              contractGroup.CategoryFound = true;
-              matchedInstrumentGroups.Add(new(instrumentGroup, $"\"{instrumentGroup.Name}\" matched with category \"{contractGroup.Category}\""));
-            }
-
-            if (instrumentGroup.Equals(contractGroup.Subcategory))
-            {
-              contractGroup.SubcategoryFound = true;
-              matchedInstrumentGroups.Add(new(instrumentGroup, $"\"{instrumentGroup.Name}\" matched with sub-category \"{contractGroup.Subcategory}\""));
-            }
+            contractGroup.IndustryFound = true;
+            matchedInstrumentGroups.Add(new(instrumentGroup, $"\"{instrumentGroup.Name}\" matched with industry \"{contractGroup.Industry}\""));
           }
-          else
-            missingInstrumentGroups.Add(instrumentGroup);
 
-          progress.Progress++;
-          if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
+          if (instrumentGroup.Equals(contractGroup.Category))
+          {
+            contractGroup.CategoryFound = true;
+            matchedInstrumentGroups.Add(new(instrumentGroup, $"\"{instrumentGroup.Name}\" matched with category \"{contractGroup.Category}\""));
+          }
+
+          if (instrumentGroup.Equals(contractGroup.Subcategory))
+          {
+            contractGroup.SubcategoryFound = true;
+            matchedInstrumentGroups.Add(new(instrumentGroup, $"\"{instrumentGroup.Name}\" matched with sub-category \"{contractGroup.Subcategory}\""));
+          }
         }
+        else
+          missingInstrumentGroups.Add(instrumentGroup);
+
+        progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
       }
 
-      if (!progress.CancellationTokenSource.IsCancellationRequested)
-      {
-        using (progress.BeginScope($"Matched {matchedInstrumentGroups.Count} instrument groups"))
-          foreach (var matchedInstrumentGroup in matchedInstrumentGroups)
-          {
-            progress.LogInformation(matchedInstrumentGroup.Item2);
-            if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
-          }
-      }
+      progress.LogInformation($"Matched {matchedInstrumentGroups.Count} instrument groups");
 
-      if (!progress.CancellationTokenSource.IsCancellationRequested && missingInstrumentGroups.Count > 0)
+      if (missingInstrumentGroups.Count > 0)
       {
         progress.StatusMessage = $"Searching for potential matches on {missingInstrumentGroups.Count} instrument groups";
-        progress.Maximum += missingInstrumentGroups.Count * definedContractGroups.Count;
+        progress.Maximum += missingInstrumentGroups.Count;
 
         InstrumentGroup? rootInstrumentGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault(g => g.ParentId == InstrumentGroup.InstrumentGroupRoot);
         foreach (var instrumentGroup in missingInstrumentGroups)
@@ -352,9 +361,11 @@ namespace TradeSharp.InteractiveBrokers.Commands
           else
             progress.LogWarning($"No matches found for group \"{instrumentGroup.Name}\".");
 
-          progress.Progress++;
           if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
         }
+
+        progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) return;  //exit thread when operation is cancelled
       }
 
       progress.Progress = progress.Maximum;
@@ -392,6 +403,21 @@ namespace TradeSharp.InteractiveBrokers.Commands
         m_adapter.m_database.UpdateInstrumentGroup(match.Item4);
         m_adapter.m_logger.LogInformation($"Added alternate name \"{valueToAdd}\" to instrument group \"{match.Item4.Name}\"");
       }
+    }
+
+    public bool IsChildOf(InstrumentGroup parent, InstrumentGroup child)
+    {
+      if (parent == child) return false; //can never be child of self
+      if (child.ParentId == InstrumentGroup.InstrumentGroupRoot) return false;  //top-level nodes are never a child of anything
+
+      InstrumentGroup currentNode = child;
+      while (currentNode.ParentId != InstrumentGroup.InstrumentGroupRoot)
+      {
+        if (currentNode.ParentId == parent.Id) return true;
+        currentNode = m_adapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.Id == currentNode.ParentId)!; //NOTE: We allow a crash if the parent is not found since there might be a problem in the tree.
+      }
+
+      return false;
     }
   }
 }
