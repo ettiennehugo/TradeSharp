@@ -58,6 +58,11 @@ namespace TradeSharp.WinDataManager
       UnhandledException += OnAppUnhandledException;
     }
 
+    public void Shutdown()
+    {
+      shutdownServices();
+    }
+
     //properties
     public IServiceProvider Services { get => m_host.Services; }
 
@@ -119,6 +124,11 @@ namespace TradeSharp.WinDataManager
       
       //run the service host for whatever reason!!!
       m_host.RunAsync();
+    }
+
+    private void shutdownServices()
+    {
+      m_host.Dispose();
     }
 
     private void loadCachedData()

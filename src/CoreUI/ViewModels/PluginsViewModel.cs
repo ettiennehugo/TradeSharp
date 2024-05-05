@@ -6,7 +6,7 @@ using TradeSharp.Data;
 namespace TradeSharp.CoreUI.ViewModels
 {
   //View model to work with the plugins configured for TradeSharp.  
-  public class PluginsViewModel : ListViewModel<IPlugin>, IPluginsViewModel
+  public class PluginsViewModel : ListViewModel<IPlugin>, IPluginsViewModel, IDisposable
   {
     //constants
 
@@ -74,6 +74,12 @@ namespace TradeSharp.CoreUI.ViewModels
     public override IList<IPlugin> Items { get => m_items; set => throw new NotImplementedException("Do not set the PluginViewModel items - use PluginsToDisplay to filter the list."); }
 
     //methods
+    public void Dispose()
+    {
+      foreach (var plugin in m_items)
+        if (plugin is IDisposable disposable) disposable.Dispose();
+    }
+
     protected void refresh()
     {
       m_items.Clear();
@@ -87,6 +93,5 @@ namespace TradeSharp.CoreUI.ViewModels
         else if (m_pluginsToDisplay == PluginsToDisplay.Extensions && item is IExtensionPlugin)
           m_items.Add(item);
     }
-
   }
 }

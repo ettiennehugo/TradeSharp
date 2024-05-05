@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Activated="Window_Activated"
+    Closed="Window_Closed"
     mc:Ignorable="d">
   <Grid x:Name="m_main" RowDefinitions="32, *">
     <Grid x:Name="m_titleBar" ColumnDefinitions="32, *"  Grid.Row="0" Grid.Column="0">

@@ -39,7 +39,7 @@ namespace TradeSharp.Data.Testing
       Commands = new List<PluginCommand>();
     }
 
-    public void Destroy() { IsConnected = false; }
+    public void Dispose() { IsConnected = false; }
 
     public void Connect() { IsConnected = true; }
     public void Disconnect() { IsConnected = false; }

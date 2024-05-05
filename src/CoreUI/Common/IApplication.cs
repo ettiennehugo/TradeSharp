@@ -18,10 +18,13 @@
 
 
     //properties
+    public static IApplication Current { get; set; }
     IServiceProvider Services { get; }
 
     //methods
-    public static IApplication Current { get; set; }
-
+    /// <summary>
+    /// Shutdown the services used by the application.
+    /// </summary>
+    void Shutdown();
   }
 }

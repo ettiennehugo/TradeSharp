@@ -27,8 +27,9 @@ namespace TradeSharp.InteractiveBrokers
 
     //attributes
     static protected Client? m_instance = null;
-    protected Thread m_responseReaderThread;
-    protected EReaderSignal m_readerSignal;
+    protected CancellationTokenSource? m_cancelResponseReaderThread;
+    protected Thread? m_responseReaderThread;
+    protected EReaderSignal? m_readerSignal;
     protected EReader m_responseReader;
     protected int m_nextRequestId;
     protected int m_nextOrderId;
@@ -65,7 +66,13 @@ namespace TradeSharp.InteractiveBrokers
     public void Dispose()
     {
       if (ClientSocket.IsConnected()) ClientSocket.eDisconnect();
-      if (m_responseReaderThread != null) m_responseReaderThread.Join();
+
+      //shutdown the response reader thread - we need to set the cancellation token then issue a dummy signal before
+      //deallocating the response components
+      if (m_cancelResponseReaderThread != null) m_cancelResponseReaderThread.Cancel();      
+      
+      m_readerSignal!.issueSignal();  //this will signal a response in the processing loop of ResponseReaderMain to unblock the thread
+      m_readerSignal = null;
     }
 
     //finalizers
@@ -100,6 +107,7 @@ namespace TradeSharp.InteractiveBrokers
         //create the response reader thread that would loop the above response reader
         if (m_responseReaderThread == null)
         {
+          m_cancelResponseReaderThread = new CancellationTokenSource();
           m_responseReaderThread = new Thread(ResponseReaderMain);
           m_responseReaderThread.Name = "IBApi Response Reader";
           m_responseReaderThread.Start();
@@ -156,12 +164,15 @@ namespace TradeSharp.InteractiveBrokers
     /// </summary>
     protected void ResponseReaderMain()
     {
-      //main message processing loop, is terminated when the application is closed in destructor
-      while (true)
+      while (!m_cancelResponseReaderThread!.IsCancellationRequested)
       {
-        m_readerSignal.waitForSignal();
+        m_readerSignal!.waitForSignal();
         m_responseReader.processMsgs();
       }
+
+      m_cancelResponseReaderThread.Dispose();
+      m_cancelResponseReaderThread = null;
+      m_responseReaderThread = null;
     }
 
     public Task<Contract> ResolveContractAsync(int conId, string exchange)

@@ -58,10 +58,10 @@ namespace TradeSharp.InteractiveBrokers
       raiseUpdateCommands();
     }
 
-    public override void Destroy()
+    public override void Dispose()
     {
-      if (m_ibServiceHost.Client.IsConnected) m_ibServiceHost.Client.Disconnect();
-      base.Destroy();
+      if (m_ibServiceHost.Client.IsConnected) m_ibServiceHost.Client.Dispose();
+      base.Dispose();
     }
 
     public Task OnConnectAsync()

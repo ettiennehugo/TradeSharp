@@ -45,13 +45,21 @@ namespace TradeSharp.WinDataManager
     //methods
     private void Window_Activated(object sender, WindowActivatedEventArgs args)
     {
-      ViewModel = (MainWindowViewModel)((IApplication)Application.Current).Services.GetService(typeof(MainWindowViewModel));
-      ViewModel.SetNavigationFrame(m_mainContent);
-      DialogService dialogService = (DialogService)((IApplication)Application.Current).Services.GetService(typeof(IDialogService));
-      dialogService.StatusBarIcon = m_statusBarIcon;
-      dialogService.StatusBarText = m_statusBarText;
-      dialogService.UIDispatcherQueue = DispatcherQueue;
-      m_navigationView.SelectionChanged += ViewModel.OnNavigationSelectionChanged;
+      if (args.WindowActivationState != WindowActivationState.Deactivated)
+      {
+        ViewModel = (MainWindowViewModel)((IApplication)Application.Current).Services.GetService(typeof(MainWindowViewModel));
+        ViewModel.SetNavigationFrame(m_mainContent);
+        DialogService dialogService = (DialogService)((IApplication)Application.Current).Services.GetService(typeof(IDialogService));
+        dialogService.StatusBarIcon = m_statusBarIcon;
+        dialogService.StatusBarText = m_statusBarText;
+        dialogService.UIDispatcherQueue = DispatcherQueue;
+        m_navigationView.SelectionChanged += ViewModel.OnNavigationSelectionChanged;
+      }
+    }
+
+    private void Window_Closed(object sender, WindowEventArgs args)
+    {
+      IApplication.Current.Shutdown();
     }
 
     private void m_mainContent_Navigated(object sender, Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)

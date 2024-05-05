@@ -128,11 +128,14 @@ namespace TradeSharp.WinCoreUI.Views
       m_massExport.IsEnabled = true;
       m_massCopy.IsEnabled = true;
       m_massDownload.IsEnabled = SelectedDataProvider is IMassDownload;      
-      m_minuteBarsData.DataProvider = SelectedDataProvider.Name;
-      m_hoursBarsData.DataProvider = SelectedDataProvider.Name;
-      m_daysBarsData.DataProvider = SelectedDataProvider.Name;
-      m_weeksBarsData.DataProvider = SelectedDataProvider.Name;
-      m_monthsBarsData.DataProvider = SelectedDataProvider.Name;
+      if (SelectedDataProvider != null)
+      {
+        m_minuteBarsData.DataProvider = SelectedDataProvider.Name;
+        m_hoursBarsData.DataProvider = SelectedDataProvider.Name;
+        m_daysBarsData.DataProvider = SelectedDataProvider.Name;
+        m_weeksBarsData.DataProvider = SelectedDataProvider.Name;
+        m_monthsBarsData.DataProvider = SelectedDataProvider.Name;
+      }
     }
 
     private void m_instrumentsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)

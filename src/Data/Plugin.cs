@@ -10,7 +10,7 @@ namespace TradeSharp.Data
   /// </summary>
   [ComVisible(true)]
   [Guid("C82F2509-7A77-467E-B6DD-7FD42AEE449D")]
-  public class Plugin : IPlugin
+  public class Plugin : IPlugin, IDisposable
   {
     //constants
 
@@ -40,7 +40,7 @@ namespace TradeSharp.Data
       m_logger = logger;
     }
 
-    public virtual void Destroy() { }
+    public virtual void Dispose() { }
 
     //properties
     public string Name { get; internal set; }
