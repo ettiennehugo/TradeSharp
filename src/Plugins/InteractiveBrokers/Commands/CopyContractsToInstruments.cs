@@ -39,7 +39,9 @@ namespace TradeSharp.InteractiveBrokers.Commands
     public void Run()
     {
 
-      //TODO
+      //TODO - Do not know whether this would be possible since we already download the contracts from IB based
+      //       on the defined set of Instrument definitions due to the fact that the search does not return all
+      //       the defined instruments.
       m_adapter.m_logger.LogCritical("Copy contracts to instruments not implemented.");
 
     }

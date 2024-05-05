@@ -15,7 +15,7 @@ namespace TradeSharp.InteractiveBrokers
   public class InstrumentAdapter
   {
     //constants
-    private const int InstrumentIdBase = 20000000;
+    public const int InstrumentIdBase = 20000000;
     public const int HistoricalIdBase = 30000000;
     public const int ContractDetailsId = InstrumentIdBase + 1;
     public const int FundamentalsId = InstrumentIdBase + 2;
@@ -133,67 +133,14 @@ namespace TradeSharp.InteractiveBrokers
 
     public void SynchronizeContractCache()
     {
-      m_serviceHost.Cache.Clear();    //ensure cache starts fresh after the update
-      IProgressDialog progress = m_dialogService.CreateProgressDialog("Synchronizing Contract Cache", m_logger);
-      progress.StatusMessage = "Synchronizing Contract Cache from Instrument Definitions";
-      progress.Progress = 0;
-      progress.Minimum = 0;
-      progress.Maximum = m_instrumentService.Items.Count;
-      progress.ShowAsync();
-      m_contractRequestActive = true;
-
-      foreach (var instrument in m_instrumentService.Items)
-      {
-        var currency = "USD";
-        var exchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == instrument.PrimaryExchangeId);
-        var country = m_countryService.Items.FirstOrDefault(c => c.Id == exchange?.CountryId);
-        if (country != null) currency = country?.CountryInfo?.RegionInfo.ISOCurrencySymbol;
-        //NOTE: We always sync to SMART exchange irrepsecitve of the exchange given.
-        var contract = new IBApi.Contract { Symbol = instrument.Ticker, SecType = InstrumentTypeToIBContractType(instrument.Type), Exchange = Constants.DefaultExchange, Currency = currency };
-        m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentIdBase, contract);
-        progress.Progress++;
-        if (progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
-        Thread.Sleep(IntraRequestSleep);    //throttle requests to avoid exceeding the hard limit imposed by IB
-      }
-
-      progress.Complete = true;
+      Commands.SynchronizeContractCache synchronizeContractCache = new Commands.SynchronizeContractCache(this);
+      synchronizeContractCache.Run();
     }
 
-    //NOTE: This method will only be effective after synchronizing the contract cache with IB's contract definitions
-    public void UpdateInstrumentGroups()
+    public void DefineSupportedExchanges()
     {
-      IProgressDialog progress = m_dialogService.CreateProgressDialog("Updating Instrument Groups", m_logger);
-      progress.StatusMessage = "Updating Instrument Groups from Contract Cache";
-      progress.Progress = 0;
-      progress.Minimum = 0;
-      progress.Maximum = m_instrumentGroupService.Items.Count;
-      progress.ShowAsync();
-
-      //start updating the instrument groups
-      foreach (var instrumentGroup in m_instrumentGroupService.Items)
-      {
-        int instrumentsUpdated = 0;
-        foreach (var instrument in m_instrumentService.Items)
-        {
-          var contract = m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
-          if (contract is ContractStock contractStock)
-          {
-            if (instrumentGroup.Equals(contractStock.Industry) && !instrumentGroup.SearchTickers.Contains(instrument.Ticker))
-            {
-              m_database.CreateInstrumentGroupInstrument(instrumentGroup.Id, instrument.Ticker);
-              instrumentsUpdated++;
-            }
-          }
-          else
-            if (contract != null) progress.LogError($"Contract {contract.Symbol}, {contract.SecType} is not supported.");
-
-        }
-        progress.LogInformation($"Updated {instrumentsUpdated} instruments for group {instrumentGroup.Name}");
-        progress.Progress++;
-        if (progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
-      }
-
-      progress.Complete = true;
+      Commands.DefineSupportedExchanges command = new Commands.DefineSupportedExchanges(this);
+      command.Run();
     }
 
     public void ValidateInstrumentGroups()

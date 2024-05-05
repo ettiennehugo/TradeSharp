@@ -38,7 +38,7 @@ namespace TradeSharp.Data
   
 
     //properties
-    string Name { get; }                                //name of the broker plugin
+    string Name { get; }                                //name of the plugin
     IHost ServiceHost { get; set; }                     //service host for TradeSharp
     IPluginConfiguration Configuration { get; set; }    //configuration profile for the broker plugin
     IList<PluginCommand> Commands { get; }              //custom commands supported by the plugin

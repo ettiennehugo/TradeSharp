@@ -47,13 +47,21 @@ namespace TradeSharp.InteractiveBrokers
       Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
-      Commands.Add(new PluginCommand { Name = "Scanner Parameters", Tooltip = "Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = "Scanner Parameters", Tooltip = "Test Command - Request market scanner parameters", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScannerParametersAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
+      Commands.Add(new PluginCommand { Name = "Define Exchange", Tooltip = "Define supported Exchanges", Icon = "\uF22C", Command = new AsyncRelayCommand(OnDefineSupportedExchangesAsync) } );
       Commands.Add(new PluginCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Validate Non-IB Instrument Groups", Tooltip = "Validate Non-IB Instrument Groups against IB Instrument Groups", Icon = "\uE15C", Command = new AsyncRelayCommand(OnValidateInstrumentGroupsAsync) } );
       Commands.Add(new PluginCommand { Name = "Copy Classifications to Instrument Groups", Tooltip = "Copy the Interactive Brokers classifications to Instrument Groups", Icon = "\uF413", Command = new AsyncRelayCommand(OnCopyIBClassesToInstrumentGroupsAsync) } );
       Commands.Add(new PluginCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
       Commands.Add(new PluginCommand { Name = "Copy Contracts to Instruments", Tooltip = "Copy the Interactive Brokers contracts to Instruments", Icon = "\uE8C8", Command = new AsyncRelayCommand(OnCopyContractsToInstrumentsAsync) } );
       raiseUpdateCommands();
+    }
+
+    public override void Destroy()
+    {
+      if (m_ibServiceHost.Client.IsConnected) m_ibServiceHost.Client.Disconnect();
+      base.Destroy();
     }
 
     public Task OnConnectAsync()
@@ -76,6 +84,11 @@ namespace TradeSharp.InteractiveBrokers
     public Task OnScannerParametersAsync()
     {
       return Task.Run(m_ibServiceHost.Client.ClientSocket.reqScannerParameters);
+    }
+
+    public Task OnDefineSupportedExchangesAsync()
+    {
+      return Task.Run(m_ibServiceHost.Instruments.DefineSupportedExchanges);
     }
 
     public Task OnSynchronizeContractCacheAsync()

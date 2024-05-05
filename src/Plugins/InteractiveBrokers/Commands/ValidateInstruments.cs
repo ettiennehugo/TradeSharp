@@ -52,42 +52,39 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
       foreach (var instrument in m_adapter.m_instrumentService.Items)
       {
-        using (progress.BeginScope($"Validating {instrument.Ticker}"))
-        {
-          var contract = m_adapter.m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
+        var contract = m_adapter.m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
 
-          if (contract == null)
-            foreach (var altTicker in instrument.AlternateTickers)
-            {
-              contract = m_adapter.m_serviceHost.Cache.GetContract(altTicker, Constants.DefaultExchange);
-              if (contract != null) progress.LogInformation($"Will not match on primary ticker but on alternate ticker {altTicker}.");
-            }
-
-          if (contract == null)
-            progress.LogError($"Contract definition not found.");
-          else
+        if (contract == null)
+          foreach (var altTicker in instrument.AlternateTickers)
           {
-            //check that instrument group would be correct
-            if (contract is ContractStock contractStock)
+            contract = m_adapter.m_serviceHost.Cache.GetContract(altTicker, Constants.DefaultExchange);
+            if (contract != null) progress.LogInformation($"Will not match on primary ticker but on alternate ticker {altTicker}.");
+          }
+
+        if (contract == null)
+          progress.LogError($"\"{instrument.Ticker}\" - No contract definition found for ticker.");
+        else
+        {
+          //check that instrument group would be correct
+          if (contract is ContractStock contractStock)
+          {
+            if (contractStock.StockType == Constants.StockTypeCommon)
             {
-              if (contractStock.StockType == Constants.StockTypeCommon)
+              if (contractStock.Subcategory != string.Empty)
               {
-                if (contractStock.Subcategory != string.Empty)
-                {
-                  var instrumentGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Subcategory));
-                  if (instrumentGroup == null)
-                    progress.LogError($"Instrument group for {contractStock.Industry}->{contractStock.Category}->{contractStock.Subcategory} not found.");
-                }
-                else
-                {
-                  if (contractStock.Industry != string.Empty) progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Industry set.");
-                  if (contractStock.Category != string.Empty) progress.LogWarning($"Stock contract {contractStock.Symbol} has no associated Category set.");
-                }
+                var instrumentGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Subcategory));
+                if (instrumentGroup == null)
+                  progress.LogError($"\"{instrument.Ticker}\" - Instrument group for {contractStock.Industry}->{contractStock.Category}->{contractStock.Subcategory} not found.");
+              }
+              else
+              {
+                if (contractStock.Industry != string.Empty) progress.LogWarning($"\"{instrument.Ticker}\" - Stock contract {contractStock.Symbol} has no associated Industry set.");
+                if (contractStock.Category != string.Empty) progress.LogWarning($"\"{instrument.Ticker}\" - Stock contract {contractStock.Symbol} has no associated Category set.");
               }
             }
-            else
-              progress.LogError($"Contract {contract.Symbol}, {contract.SecType} is not supported.");
           }
+          else
+            progress.LogError($"Contract {contract.Symbol}, {contract.SecType} is not supported.");
         }
 
         progress.Progress++;

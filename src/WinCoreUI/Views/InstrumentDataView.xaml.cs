@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.ViewModels;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
@@ -34,16 +35,16 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private IConfigurationService m_configurationService;
+    private IPluginsViewModel m_pluginViewModel;
     private IDialogService m_dialogService;
 
     //constructors
     public InstrumentDataView()
     {
-      m_configurationService = (IConfigurationService)IApplication.Current.Services.GetService(typeof(IConfigurationService));
+      m_pluginViewModel = (IPluginsViewModel)IApplication.Current.Services.GetService(typeof(IPluginsViewModel));
+      m_pluginViewModel.PluginsToDisplay = PluginsToDisplay.DataProviders;
       InstrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       m_dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
-      DataProviders = new ObservableCollection<string>();
       Instruments = new ObservableCollection<Instrument>(InstrumentViewModel.Items);
       this.InitializeComponent();
     }
@@ -55,18 +56,12 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //properties
-    public ObservableCollection<string> DataProviders { get; set; }
+    public IPlugin SelectedDataProvider { get; set; }
+    public IList<IPlugin> DataProviders { get => m_pluginViewModel.Items; }
     public ObservableCollection<Instrument> Instruments { get; set; }
     public IInstrumentViewModel InstrumentViewModel { get; set; }
 
     //methods
-    private void Page_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-    {
-      //refresh the list of data providers
-      DataProviders.Clear();
-      foreach (var provider in m_configurationService.DataProviders) DataProviders.Add(provider.Key);
-    }
-
     private bool filterInstrument(Instrument instrument)
     {
       if (m_instrumentFilter.Text.Length == 0) return true;
@@ -132,12 +127,12 @@ namespace TradeSharp.WinCoreUI.Views
       m_massImport.IsEnabled = true;
       m_massExport.IsEnabled = true;
       m_massCopy.IsEnabled = true;
-      m_massDownload.IsEnabled = true;
-      m_minuteBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
-      m_hoursBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
-      m_daysBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
-      m_weeksBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
-      m_monthsBarsData.DataProvider = (string)m_dataProviders.SelectedItem;
+      m_massDownload.IsEnabled = SelectedDataProvider is IMassDownload;      
+      m_minuteBarsData.DataProvider = SelectedDataProvider.Name;
+      m_hoursBarsData.DataProvider = SelectedDataProvider.Name;
+      m_daysBarsData.DataProvider = SelectedDataProvider.Name;
+      m_weeksBarsData.DataProvider = SelectedDataProvider.Name;
+      m_monthsBarsData.DataProvider = SelectedDataProvider.Name;
     }
 
     private void m_instrumentsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -151,22 +146,22 @@ namespace TradeSharp.WinCoreUI.Views
 
     private async void m_massImport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      await m_dialogService.ShowMassDataImportAsync((string)m_dataProviders.SelectedItem);
+      await m_dialogService.ShowMassDataImportAsync(SelectedDataProvider.Name);
     }
 
     private async void m_massExport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-      await m_dialogService.ShowMassDataExportAsync((string)m_dataProviders.SelectedItem);
+      await m_dialogService.ShowMassDataExportAsync(SelectedDataProvider.Name);
     }
 
     private async void m_massCopy_Click(object sender, RoutedEventArgs e)
     {
-      await m_dialogService.ShowMassDataCopyAsync((string)m_dataProviders.SelectedItem);
+      await m_dialogService.ShowMassDataCopyAsync(SelectedDataProvider.Name);
     }
 
     private async void m_massDownload_Click(object sender, RoutedEventArgs e)
     {
-      await m_dialogService.ShowMassDataDownloadAsync((string)m_dataProviders.SelectedItem);
+      await m_dialogService.ShowMassDataDownloadAsync(SelectedDataProvider.Name);
     }
   }
 }

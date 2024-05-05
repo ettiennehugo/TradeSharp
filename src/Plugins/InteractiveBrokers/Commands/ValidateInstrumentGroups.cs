@@ -53,7 +53,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
     private string[] splitWords(string text)
     {
-      return text.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries);
+      string intText = text.Replace("&", " and ");
+      return intText.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries);
     }
 
     /// <summary>

@@ -22,7 +22,7 @@ namespace TradeSharp.Common
         ("en-AU", "AU", "AUS", "Australia"),
         ("nl-BE", "BE", "BEL", "Belgium"),
         ("en-CA", "CA", "CAN", "Canada"),
-        ("en-KY", "KY", "CYM", "Cayman Islands (the)"),
+        ("en-KY", "KY", "CYM", "Cayman Islands"),
         ("fi-FI", "FI", "FIN", "Finland"),
         ("fr-FR", "FR", "FRA", "France"),
         ("de-DE", "DE", "DEU", "Germany"),
@@ -46,15 +46,17 @@ namespace TradeSharp.Common
         ("pl-PL", "PL", "POL", "Poland"),
         ("pt-PT", "PT", "PRT", "Portugal"),
         ("ar-QA", "QA", "QAT", "Qatar"),
-        ("ru-RU", "RU", "RUS", "Russian Federation (the)"),
+        ("ru-RU", "RU", "RUS", "Russian Federation"),
         ("en-SG", "SG", "SGP", "Singapore"),
         ("en-ZA", "ZA", "ZAF", "South Africa"),
         ("se-SE", "SE", "SWE", "Sweden"),
         ("de-CH", "CH", "CHE", "Switzerland"),
         ("th-TH", "TH", "THA", "Thailand"),
         ("ar-TR", "TR", "TUR", "Turkey"),
-        ("ar-AE", "AE", "ARE", "United Arab Emirates (the)"),
-        ("en-GB", "GB", "GBR", "United Kingdom of Great Britain and Northern Ireland (the)"),
+        ("ar-AE", "AE", "ARE", "United Arab Emirates"),
+        ("en-GB", "GB", "GBR", "United Kingdom of Great Britain and Northern Ireland"),
+        ("en-US", "US", "USA", "United States of America"),
+
       };
 
     //enums

@@ -11,7 +11,6 @@
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:data="using:TradeSharp.Data"
     mc:Ignorable="d"
-    Loaded="Page_Loaded"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
   <Page.Resources>
     <wcuicommon:TypeCastConverter x:Key="TypeCastConverter"/>
@@ -42,7 +41,14 @@
       </CommandBar>
     </StackPanel>
     <TextBlock x:Name="m_dataProvidersHeader" Text="Data Providers" Style="{ThemeResource BodyStrongTextBlockStyle}" Grid.Row="1" Grid.Column="0"/>
-    <ListView x:Name="m_dataProviders" SelectionMode="Single" ItemsSource="{x:Bind DataProviders}" SelectionChanged="m_dataProviders_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="2" Grid.Column="0">
+    <ListView x:Name="m_dataProviders" SelectionMode="Single" ItemsSource="{x:Bind DataProviders}" SelectedItem="{x:Bind SelectedDataProvider, Mode=TwoWay}" SelectionChanged="m_dataProviders_SelectionChanged" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="2" Grid.Column="0">
+      <ListView.ItemTemplate>
+        <DataTemplate x:Name="Plugin" x:DataType="data:IPlugin">
+          <Grid ColumnDefinitions="*">
+            <TextBlock Text="{x:Bind Name, Mode=OneTime}" Width="200" Height="24" Grid.Column="0" Margin="2"/>
+          </Grid>
+        </DataTemplate>
+      </ListView.ItemTemplate>
       <ListView.ItemsPanel>
         <ItemsPanelTemplate>
           <controls:WrapPanel Orientation="Horizontal" />

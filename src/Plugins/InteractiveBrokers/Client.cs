@@ -14,7 +14,7 @@ namespace TradeSharp.InteractiveBrokers
   /// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html
   /// Pacing violations - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#historical-pacing-limitations
   /// </summary>
-  public class Client : EWrapper
+  public class Client : EWrapper, IDisposable
   {
     //constants
 
@@ -62,7 +62,7 @@ namespace TradeSharp.InteractiveBrokers
       m_dialogService = serviceHost.Host.Services.GetRequiredService<IDialogService>();
     }
 
-    ~Client()
+    public void Dispose()
     {
       if (ClientSocket.IsConnected()) ClientSocket.eDisconnect();
       if (m_responseReaderThread != null) m_responseReaderThread.Join();
@@ -89,18 +89,6 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_ip = ip;
         m_port = port;
-        ClientSocket.eConnect(m_ip, m_port, 0); //this call should be synchronous to ensure handshake is done before creating the reader thread below, if this is done too quickly the TWS API immediately disconnects
-        var time = DateTime.Now;
-        var waitTime = new TimeSpan(5000000000);  //wait 5-seconds
-        while (NextOrderId <= 0) { if (DateTime.Now - time > waitTime) break; } //wait for initial handshake to complete, we need to limit the wait otherwise this thread will hang the application
-        
-        if (!ClientSocket.IsConnected())
-        {
-          m_logger.LogError($"Connection to IP {m_ip} and port {m_port} failed - check that IB Gateway is running and check port settings in TradeSharp config file.");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Connection to IP {m_ip} and port {m_port} failed - check that IB Gateway is running and check port settings in TradeSharp config file.");
-        }
-        else
-          ClientSocket.setServerLogLevel(5);    //log level for detailed message (not sure whether 5 is the Details value but it looks like it in TWS)
 
         //creates the response reader that would wait for responses and queue them to the EWrapper
         if (m_responseReader == null)
@@ -117,6 +105,27 @@ namespace TradeSharp.InteractiveBrokers
           m_responseReaderThread.Start();
         }
 
+        try
+        {
+          ClientSocket.eConnect(m_ip, m_port, 0); //this call should be synchronous to ensure handshake is done before creating the reader thread below, if this is done too quickly the TWS API immediately disconnects
+          Thread.Sleep(1000); //wait for the connection to be established before continuing otherwise the TWS API will disconnect/enter an error state
+          var time = DateTime.Now;
+          var waitTime = new TimeSpan(5000000000);  //wait 5-seconds
+          while (NextOrderId <= 0) { if (DateTime.Now - time > waitTime) break; } //wait for initial handshake to complete, we need to limit the wait otherwise this thread will hang the application
+
+          if (!ClientSocket.IsConnected())
+          {
+            m_logger.LogError($"Connection to IP {m_ip} and port {m_port} failed - check that IB Gateway is running and check port settings in TradeSharp config file.");
+            m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Connection to IP {m_ip} and port {m_port} failed - check that IB Gateway is running and check port settings in TradeSharp config file.");
+          }
+          else
+            ClientSocket.setServerLogLevel(5);    //log level for detailed message (not sure whether 5 is the Details value but it looks like it in TWS)
+        }
+        catch (Exception e)
+        {
+          m_logger.LogError($"Connection to IP {m_ip} and port {m_port} failed with exception - {e.Message}");
+        }
+
         //raise connected event
         m_connected = ClientSocket.IsConnected();
         if (m_connected)
@@ -125,7 +134,6 @@ namespace TradeSharp.InteractiveBrokers
           if (tmp != null)
             ThreadPool.QueueUserWorkItem(t => tmp(new ConnectionStatusMessage(m_connected)), null);
         }
-
       }
       else if (m_ip != ip || m_port != port)
       {

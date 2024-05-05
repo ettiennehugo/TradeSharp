@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.Input;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.InteractiveBrokers.Messages;
-
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -17,7 +17,7 @@ namespace TradeSharp.InteractiveBrokers
   /// </summary>
   [ComVisible(true)]
   [Guid("D6BF3AE3-F358-4066-B177-D9763F927D67")]
-  public class DataProviderPlugin : TradeSharp.Data.DataProviderPlugin, IInteractiveBrokersPlugin
+  public class DataProviderPlugin : TradeSharp.Data.DataProviderPlugin, IInteractiveBrokersPlugin, IMassDownload
   {
     //constants
 
@@ -30,6 +30,7 @@ namespace TradeSharp.InteractiveBrokers
 
     //attributes
     protected IDialogService m_dialogService;
+    protected IInstrumentService m_instrumentService;
     protected ServiceHost m_ibServiceHost;
     protected string m_ip;
     protected int m_port;
@@ -45,6 +46,7 @@ namespace TradeSharp.InteractiveBrokers
     {
       base.Create(logger);
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
+      m_instrumentService = (IInstrumentService)ServiceHost.Services.GetService(typeof(IInstrumentService))!;
       m_ip = (string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
       m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
@@ -55,9 +57,20 @@ namespace TradeSharp.InteractiveBrokers
       raiseUpdateCommands();
     }
 
+    public override void Destroy()
+    {
+      if (m_ibServiceHost.Client.IsConnected) m_ibServiceHost.Client.Disconnect();
+      base.Destroy();
+    }
+
     public override object Request(string ticker, Resolution resolution, DateTime start, DateTime end)
     {
+
+
       throw new NotImplementedException();
+
+
+
     }
 
     //properties
@@ -97,5 +110,29 @@ namespace TradeSharp.InteractiveBrokers
 
     protected void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }
     protected void raiseDisconnected() { if (Disconnected != null) Disconnected(this, new EventArgs()); }
+
+    public void Download(DateTime start, DateTime end, Resolution resolution, IList<string> tickers)
+    {
+      IProgressDialog progress = m_dialogService.CreateProgressDialog("Mass Data Download", m_logger);
+      progress.StatusMessage = $"Downloading data from InteractiveBrokers for {tickers.Count} instruments between {start} and {end} at {resolution} resolution";
+      progress.Progress = 0;
+      progress.Minimum = 0;
+      progress.Maximum = tickers.Count;
+      progress.ShowAsync();
+
+      foreach (var ticker in tickers)
+      {
+        progress.LogInformation($"Requesting data for {ticker}");
+        Request(ticker, resolution, start, end);
+        progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested)
+        {
+          progress.StatusMessage += " - Cancelled";
+          break;
+        }
+      }
+
+      progress.Complete = true;
+    }
   }
 }
