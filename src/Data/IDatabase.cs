@@ -441,7 +441,9 @@ namespace TradeSharp.Data
 
   /// <summary>
   /// Storage base class for instrument data, specializations will extend this and use extended properties to save additional field data into the database.
-  /// Good source to download instrument definitions - https://www.nasdaq.com/market-activity/stocks/screener
+  /// Good sources to download instrument definitions
+  /// Nasdaq - https://www.nasdaq.com/market-activity/stocks/screener
+  /// InteractiveBrokers - https://www.interactivebrokers.com/en/trading/products-exchanges.php#/productTypes=STK
   /// </summary>
   public partial class Instrument : DataObject, ICloneable, IUpdateable<Instrument>, IComparable
   {
@@ -602,16 +604,6 @@ namespace TradeSharp.Data
     }
 
     //methods
-
-
-
-    //TODO
-    // - Need to extend interface to support stock specific properties
-    // - Update SqliteDatabase to create Stock instances instead of Instrument instances when the type is set to that.
-    // - Add unit tests to verify that lazy loading of get set properties actually works and that database is updated when required.
-    // - Extend the InstrumentService to support stock specific properties in import/export and add unit tests to verify that it works.
-    //   - Remember to extend unit tests to cover these new properties.
-
 
 
   }

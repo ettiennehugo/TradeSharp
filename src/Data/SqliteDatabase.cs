@@ -2,6 +2,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data
@@ -112,13 +113,11 @@ namespace TradeSharp.Data
     //interface implementations
     public void StartTransaction()
     {
-      //https://sqlite.org/lang_transaction.html
       ExecuteCommand("BEGIN TRANSACTION");
     }
 
     public void EndTransaction(bool success)
     {
-      //https://sqlite.org/lang_transaction.html
       if (success)
         ExecuteCommand("END TRANSACTION");
       else
@@ -560,6 +559,7 @@ namespace TradeSharp.Data
     {
       lock (this)
       {
+        //update common instrument elements
         ExecuteCommand(
           $"INSERT OR REPLACE INTO {TableInstrument} (Ticker, AttributeSet, Tag, Type, Name, Description, PrimaryExchangeId, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, AlternateTickers) " +
             $"VALUES (" +
@@ -585,6 +585,18 @@ namespace TradeSharp.Data
               $"VALUES (" +
                 $"'{instrument.Ticker}', " +
                 $"'{otherExchangeId.ToString()}'" +
+              $")"
+          );
+        }
+
+        //update stock specific elements
+        if (instrument is Stock stock)
+        {
+          ExecuteCommand(
+            $"INSERT OR REPLACE INTO {TableStock} (Ticker, MarketCap) " +
+              $"VALUES (" +
+                $"'{instrument.Ticker}', " +
+                $"'{stock.MarketCap}'" +
               $")"
           );
         }
@@ -1220,7 +1232,21 @@ namespace TradeSharp.Data
           List<Guid> secondaryExchangeIds = new List<Guid>();
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
-          return new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+          InstrumentType instrumentType = (InstrumentType)reader.GetInt32(3);
+
+          switch (instrumentType)
+          {
+            case InstrumentType.Stock:
+              Stock stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+              using (var stockReader = ExecuteReader($"SELECT MarketCap FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read()) stock.MarketCap = stockReader.GetInt64(0);
+
+              return stock;
+            default:
+              return new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+          }
         }
 
       return null;
@@ -1257,6 +1283,17 @@ namespace TradeSharp.Data
               $")"
           );
         }
+
+        if (instrument is Stock stock)
+        {
+          ExecuteCommand(
+            $"INSERT OR REPLACE INTO {TableStock} (Ticker, MarketCap) " +
+              $"VALUES (" +
+                $"'{instrument.Ticker}', " +
+                $"'{stock.MarketCap}'" +
+              $")"
+          );
+        }
       }
     }
 
@@ -1272,6 +1309,7 @@ namespace TradeSharp.Data
       lock (this)
       {
         result = ExecuteCommand($"DELETE FROM {TableInstrument} WHERE Ticker = '{ticker}'");
+        result = ExecuteCommand($"DELETE FROM {TableStock} WHERE Ticker = '{ticker}'");
         result += ExecuteCommand($"DELETE FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'");
         result += ExecuteCommand($"DELETE FROM {TableInstrumentGroupInstrument} WHERE InstrumentTicker = '{ticker}'");
 

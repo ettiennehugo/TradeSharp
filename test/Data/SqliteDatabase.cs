@@ -75,7 +75,7 @@ namespace TradeSharp.Data.Testing
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
       m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
       IList<string> alternateTickers = new List<string> { "ATEST1", "ATEST2" };
-      m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, alternateTickers, "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty); //database layer stores dates in UTC
+      m_instrument = new Stock("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, alternateTickers, "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty); //database layer stores dates in UTC
     }
 
     //finalizers
@@ -329,6 +329,33 @@ namespace TradeSharp.Data.Testing
         $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{exchange.Id.ToString()}' ")
       , "Secondary exchange not persisted.");
+
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
+        $"Ticker = '{m_instrument.Ticker}' " +
+        $"AND MarketCap = 0")
+        , "Instrument MarketCap not persisted or not set correctly");
+    }
+
+    [TestMethod]
+    public void CreateStock_PersistData_Success()
+    {
+      Stock stock = (Stock)m_instrument;
+      stock.MarketCap = 1234567890;
+      m_database.CreateInstrument(m_instrument);
+
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
+        $"Ticker = '{m_instrument.Ticker}' " +
+        $"AND Tag = '{m_instrument.Tag}' " +
+        $"AND Type = {(int)m_instrument.Type} " +
+        $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
+        $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
+        $"AND AlternateTickers = '{string.Join(',', m_instrument.AlternateTickers)}'")
+      , "Instrument not persisted to database.");
+
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
+        $"Ticker = '{m_instrument.Ticker}' " +
+        $"AND MarketCap = 1234567890")
+        , "Instrument MarketCap not persisted or not set correctly");
     }
 
     [TestMethod]
@@ -487,6 +514,35 @@ namespace TradeSharp.Data.Testing
         $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{thirdExchange.Id.ToString()}'")
       , "Instrument not associated with exchange 3.");
+    }
+
+    [TestMethod]
+    public void UpdateStock_StockAttributes_Success()
+    {
+      Stock stock = (Stock)m_instrument;
+      stock.MarketCap = 1234567890;
+      m_database.CreateInstrument(m_instrument);
+
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
+        $"Ticker = '{m_instrument.Ticker}' " +
+        $"AND Tag = '{m_instrument.Tag}' " +
+        $"AND Type = {(int)m_instrument.Type} " +
+        $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
+        $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
+        $"AND AlternateTickers = '{string.Join(',', m_instrument.AlternateTickers)}'")
+      , "Instrument not persisted to database.");
+
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
+        $"Ticker = '{m_instrument.Ticker}' " +
+        $"AND MarketCap = 1234567890")
+        , "Stock attributes not persisted or not set correctly");
+
+      stock.MarketCap = 987654321;
+      m_database.UpdateInstrument(m_instrument);
+      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
+        $"Ticker = '{m_instrument.Ticker}' " +
+        $"AND MarketCap = 987654321")
+        , "Stock attributes not correctly updated");
     }
 
     [TestMethod]
