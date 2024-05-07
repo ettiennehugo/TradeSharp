@@ -441,8 +441,9 @@ namespace TradeSharp.Data
 
   /// <summary>
   /// Storage base class for instrument data, specializations will extend this and use extended properties to save additional field data into the database.
+  /// Good source to download instrument definitions - https://www.nasdaq.com/market-activity/stocks/screener
   /// </summary>
-  public partial class Instrument : DataObject, IEquatable<Instrument>, ICloneable, IUpdateable<Instrument>, IComparable
+  public partial class Instrument : DataObject, ICloneable, IUpdateable<Instrument>, IComparable
   {
     //constants
     /// <summary>
@@ -521,11 +522,6 @@ namespace TradeSharp.Data
     public override int GetHashCode()
     {
       return Ticker.GetHashCode() + AlternateTickers.GetHashCode();
-    }
-
-    public bool Equals(Instrument? other)
-    {
-      return other == this;
     }
 
     public object Clone()

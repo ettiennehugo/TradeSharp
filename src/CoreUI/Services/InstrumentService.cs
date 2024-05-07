@@ -21,6 +21,7 @@ namespace TradeSharp.CoreUI.Services
     public const string FilterDescription = "Description";
 
     // Tokens used by the import/export functionality.
+    // NOTE: When multiple tokens are supported we use the first one as the primary token and the others as secondary tokens.
     private const string extensionCSV = ".csv";
     private const string extensionJSON = ".json";
     private const string tokenCsvType = "type";
@@ -38,6 +39,10 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenCsvBigPointValue1 = "big point value";
     private const string tokenCsvBigPointValue2 = "bigpointvalue";
     private const string tokenCsvBigPointValue3 = "bpv";
+    private const string tokenCsvMarketCap1 = "marketcap";
+    private const string tokenCsvMarketCap2 = "market cap";
+    private const string tokenCsvMarketCap3 = "mrktcap";
+    private const string tokenCsvMarketCap4 = "mrkt cap";
     private const string tokenCsvTag = "tag";
     private const string tokenCsvSecondaryExchanges1 = "secondaryexchanges";
     private const string tokenCsvSecondaryExchanges2 = "secondary exchanges";
@@ -58,6 +63,10 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenJsonBigPointValue1 = "big point value";
     private const string tokenJsonBigPointValue2 = "bigpointvalue";
     private const string tokenJsonBigPointValue3 = "bpv";
+    private const string tokenJsonMarketCap1 = "marketcap";
+    private const string tokenJsonMarketCap2 = "market cap";
+    private const string tokenJsonMarketCap3 = "mrkt cap";
+    private const string tokenJsonMarketCap4 = "mrkt cap";
     private const string tokenJsonAttributes = "Attributes";
     private const string tokenJsonSecondaryExchanges = "SecondaryExchanges";
 
@@ -132,7 +141,13 @@ namespace TradeSharp.CoreUI.Services
     public bool Update(Instrument item)
     {
       var result = m_instrumentRepository.Update(item);
-      Data.Utilities.UpdateItem(item, Items);
+      for (int i = 0; i < Items.Count(); i++)
+        if (item.Equals(Items[i]))
+        {
+          Items[i].Update(item);
+          return result;
+        }
+
       return result;
     }
 
@@ -248,16 +263,17 @@ namespace TradeSharp.CoreUI.Services
               string? inceptionDateStr = fileInstrumentJson.ContainsKey(tokenJsonInceptionDate1) ? (string?)(fileInstrumentJson![tokenJsonInceptionDate1]!.AsValue().Deserialize(typeof(string))) : null;
               if (inceptionDateStr == null) inceptionDateStr = fileInstrumentJson.ContainsKey(tokenJsonInceptionDate2) ? (string?)(fileInstrumentJson![tokenJsonInceptionDate2]!.AsValue().Deserialize(typeof(string))) : null;
               if ((inceptionDateStr == null || !DateTime.TryParse(inceptionDateStr, null, DateTimeStyles.None, out inceptionDate)) && Debugging.ImportExport) m_logger.LogError($"Failed to parse inception date for instrument \"{ticker}\", defaulting to default minimum date.");
-              int priceDecimals = -1;
-              if (priceDecimals == -1) priceDecimals = fileInstrumentJson.ContainsKey(tokenJsonPriceDecimals1) ? (int?)(fileInstrumentJson![tokenJsonPriceDecimals1]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
+              int priceDecimals = fileInstrumentJson.ContainsKey(tokenJsonPriceDecimals1) ? (int?)(fileInstrumentJson![tokenJsonPriceDecimals1]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
               if (priceDecimals == -1) priceDecimals = fileInstrumentJson.ContainsKey(tokenJsonPriceDecimals2) ? (int?)(fileInstrumentJson![tokenJsonPriceDecimals2]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
-              int minimumMovement = -1;
-              if (minimumMovement == -1) minimumMovement = fileInstrumentJson.ContainsKey(tokenJsonMinimumMovement1) ? (int?)(fileInstrumentJson![tokenJsonMinimumMovement1]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
+              int minimumMovement = fileInstrumentJson.ContainsKey(tokenJsonMinimumMovement1) ? (int?)(fileInstrumentJson![tokenJsonMinimumMovement1]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
               if (minimumMovement == -1) minimumMovement = fileInstrumentJson.ContainsKey(tokenJsonMinimumMovement2) ? (int?)(fileInstrumentJson![tokenJsonMinimumMovement2]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
-              int bigPointValue = -1;
-              if (bigPointValue == -1) bigPointValue = fileInstrumentJson.ContainsKey(tokenJsonBigPointValue1) ? (int?)(fileInstrumentJson![tokenJsonBigPointValue1]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
+              int bigPointValue = fileInstrumentJson.ContainsKey(tokenJsonBigPointValue1) ? (int?)(fileInstrumentJson![tokenJsonBigPointValue1]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
               if (bigPointValue == -1) bigPointValue = fileInstrumentJson.ContainsKey(tokenJsonBigPointValue2) ? (int?)(fileInstrumentJson![tokenJsonBigPointValue2]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
               if (bigPointValue == -1) bigPointValue = fileInstrumentJson.ContainsKey(tokenJsonBigPointValue3) ? (int?)(fileInstrumentJson![tokenJsonBigPointValue3]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
+              int marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap1) ? (int?)(fileInstrumentJson[tokenJsonMarketCap1]!.AsValue().Deserialize(typeof(int))) ?? 0 : 0;
+              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap2) ? (int?)(fileInstrumentJson[tokenJsonMarketCap2]!.AsValue().Deserialize(typeof(int))) ?? 0 : 0;
+              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap3) ? (int?)(fileInstrumentJson[tokenJsonMarketCap3]!.AsValue().Deserialize(typeof(int))) ?? 0 : 0;
+              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap4) ? (int?)(fileInstrumentJson[tokenJsonMarketCap4]!.AsValue().Deserialize(typeof(int))) ?? 0 : 0;
 
               //attribute can be parsed a string or integer or integer string value ("3") - we support conversion of all three cases
               Attributes attributes = InstrumentGroup.DefaultAttributeSet;
@@ -332,7 +348,16 @@ namespace TradeSharp.CoreUI.Services
               }
 
               //create or update the instrument as required
-              Instrument fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty);
+              Instrument? fileInstrument = null;
+              if (type == InstrumentType.Stock)
+              {
+                var stock = new Stock(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty);
+                stock.MarketCap = marketCap;
+                fileInstrument = stock;
+              }
+              else
+                fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty);
+
               Instrument? definedInstrument = definedInstruments.FirstOrDefault(x => x.Equals(fileInstrument));
               if (definedInstrument != null)
               {
@@ -345,7 +370,7 @@ namespace TradeSharp.CoreUI.Services
                   case ImportReplaceBehavior.Replace:
                     //replacing name, description, tag and all data from the input file
                     if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
-                    m_instrumentRepository.Update(new Instrument(ticker, attributes, tag, type, Array.Empty<string>(), name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty));
+                    m_instrumentRepository.Update(fileInstrument);
                     replacedCount++;
                     break;
                   case ImportReplaceBehavior.Update:
@@ -353,7 +378,17 @@ namespace TradeSharp.CoreUI.Services
                     if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
                     alternateTickers = alternateTickers.Union(definedInstrument.AlternateTickers).ToList();
                     secondaryExchanges = secondaryExchanges.Union(definedInstrument.SecondaryExchangeIds).ToList();
-                    m_instrumentRepository.Update(new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty));
+
+                    if (type == InstrumentType.Stock)
+                    {
+                      var stock = new Stock(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty);
+                      stock.MarketCap = marketCap;
+                      fileInstrument = stock;
+                    }
+                    else
+                      fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty);
+
+                    m_instrumentRepository.Update(fileInstrument);
                     updatedCount++;
                     break;
                 }
@@ -432,6 +467,7 @@ namespace TradeSharp.CoreUI.Services
             int priceDecimals = -1;
             int minimumMovement = -1;
             int bigPointValue = -1;
+            int marketCap = 0;
             IList<string> secondaryExchanges = new List<string>();
 
             lineNo++;
@@ -483,6 +519,10 @@ namespace TradeSharp.CoreUI.Services
                   secondaryExchanges = TradeSharp.Common.Utilities.FromCsv(columnValue!);
                 else if (columnName == tokenCsvTag)
                   tag = columnValue!;
+                else if (columnName == tokenCsvMarketCap1 || columnName == tokenCsvMarketCap2 || columnName == tokenCsvMarketCap3 || columnName == tokenCsvMarketCap4)
+                {
+                  if (!int.TryParse(columnValue!, out marketCap) && Debugging.ImportExport) m_logger.LogError($"Failed to parse market cap \"{columnValue!}\" at line {lineNo}, defaulting to 0.");
+                }
                 else if (columnName == tokenCsvAttributes)
                 {
                   if (Enum.TryParse(typeof(Attributes), columnValue!, out object? parsedAttributes))
@@ -551,7 +591,17 @@ namespace TradeSharp.CoreUI.Services
                 if (Debugging.ImportExport) m_logger.LogWarning($"No secondary Exchange with Guid/Name \"{secondaryExchange}\" for instrument \"{ticker}\" found, discarding it.");
             }
 
-            fileInstruments.Add(new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, secondaryExchangeIds, string.Empty));
+            Instrument? fileInstrument = null;
+            if (type == InstrumentType.Stock)
+            {
+              var stock = new Stock(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, secondaryExchangeIds, string.Empty);
+              stock.MarketCap = marketCap;
+              fileInstrument = stock;
+            }
+            else
+              fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, exchangeId, secondaryExchangeIds, string.Empty);
+
+            fileInstruments.Add(fileInstrument);
           }
 
           long instrumentsProcessed = 0;
@@ -645,6 +695,7 @@ namespace TradeSharp.CoreUI.Services
             [tokenJsonPriceDecimals1] = instrument.PriceDecimals,
             [tokenJsonMinimumMovement1] = instrument.MinimumMovement,
             [tokenJsonBigPointValue1] = instrument.BigPointValue,
+            [tokenJsonMarketCap1] = instrument is Stock stock ? stock.MarketCap : 0,
             [tokenJsonAttributes] = ((int)instrument.AttributeSet),   //need to first cast to an integer otherwise it renders the tokens/words of the attribute set
             [tokenJsonSecondaryExchanges] = new JsonArray()
           };
@@ -702,7 +753,7 @@ namespace TradeSharp.CoreUI.Services
       using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         IList<Instrument> instruments = m_database.GetInstruments();
-        file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvAlternateTickers},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate1},{tokenCsvPriceDecimals1},{tokenCsvMinimumMovement1},{tokenCsvBigPointValue1},{tokenCsvTag},{tokenCsvSecondaryExchanges1},{tokenCsvAttributes}");
+        file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvAlternateTickers},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate1},{tokenCsvPriceDecimals1},{tokenCsvMinimumMovement1},{tokenCsvBigPointValue1},{tokenCsvMarketCap1},{tokenCsvTag},{tokenCsvSecondaryExchanges1},{tokenCsvAttributes}");
 
         foreach (Instrument instrument in instruments)
         {
@@ -732,6 +783,8 @@ namespace TradeSharp.CoreUI.Services
           instrumentDefinition += instrument.MinimumMovement;
           instrumentDefinition += ",";
           instrumentDefinition += instrument.BigPointValue;
+          instrumentDefinition += ",";
+          instrumentDefinition += instrument is Stock stock ? stock.MarketCap : 0;
           instrumentDefinition += ",";
           instrumentDefinition += instrument.Tag;
           instrumentDefinition += ",";

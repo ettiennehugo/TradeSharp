@@ -12,15 +12,15 @@ namespace TradeSharp.CoreUI.Testing.Services
   {
     //constants
     string[] csv = [
-      "type,ticker,alternatetickers,name,description,exchange,inception date,price decimals,minimum movement,big point value,tag,attributes,secondary exchanges",
-      "Stock,MSFT,\"MSFT^C,MSFT-C\",Microsoft,Microsoft Corporation,NYSE,2021-01-01T00:00:00,2,1,1,MSFT,3,\"Nasdaq,LSE\"",
-      "3,AAPL,\"AAPL^C,AAPL~C\",Apple,Apple Corporation,NYSE,2021-01-01T00:00:00,2,1,1,AAPL,3,\"Nasdaq\",",
-      "Stock,DISP,\"DISP^C,DISP-C\",Disney,Disney Corporation,NYSE,2021-01-01T00:00:00,2,1,1,DISP,3,\"Nasdaq,LSE\"",
-      "3,NFLX,\"NFLX^C,NFLX~C\",Netflix,Netflix Corporation,NYSE,2021-01-01T00:00:00,2,1,1,NFLX,3,\"Nasdaq\",",
-      "Stock,AUTO,\"AUTO^C,AUTO@C\",Autozone,Autozone Corporation,NYSE,2021-01-01T00:00:00,2,1,1,AUTO,3,\"Nasdaq,LSE\"",
-      "3,PEP,\"PEP~C,PEP@C\",Pep Boys,Pep Boys Corporation,NYSE,2021-01-01T00:00:00,2,1,1,PEP,3,\"LSE\",",
-      "Stock,GOOD,\"GOOD_C,GOOD-C\",Goodyear,Goodyear Corporation,NYSE,2021-01-01T00:00:00,2,1,1,GOOD,3,\"Nasdaq\",",
-      "3,MICH,\"MICH~C,MICH^C\",Michelin,Michelin Corporation,NYSE,2021-01-01T00:00:00,2,1,1,MICH,3,\"LSE\","
+      "type,ticker,alternatetickers,name,description,exchange,inception date,price decimals,minimum movement,big point value,marketcap,tag,attributes,secondary exchanges",
+      "Stock,MSFT,\"MSFT^C,MSFT-C\",Microsoft,Microsoft Corporation,NYSE,2021-01-01T00:00:00,2,1,1,100000,MSFT,3,\"Nasdaq,LSE\"",
+      "5,AAPL,\"AAPL^C,AAPL~C\",Apple,Apple Corporation,NYSE,2021-01-01T00:00:00,2,1,1,200000,AAPL,3,\"Nasdaq\",",
+      "Stock,DISP,\"DISP^C,DISP-C\",Disney,Disney Corporation,NYSE,2021-01-01T00:00:00,2,1,1,300000,DISP,3,\"Nasdaq,LSE\"",
+      "5,NFLX,\"NFLX^C,NFLX~C\",Netflix,Netflix Corporation,NYSE,2021-01-01T00:00:00,2,1,1,400000,NFLX,3,\"Nasdaq\",",
+      "Stock,AUTO,\"AUTO^C,AUTO@C\",Autozone,Autozone Corporation,NYSE,2021-01-01T00:00:00,2,1,1,500000,AUTO,3,\"Nasdaq,LSE\"",
+      "5,PEP,\"PEP~C,PEP@C\",Pep Boys,Pep Boys Corporation,NYSE,2021-01-01T00:00:00,2,1,1,600000,PEP,3,\"LSE\",",
+      "Stock,GOOD,\"GOOD_C,GOOD-C\",Goodyear,Goodyear Corporation,NYSE,2021-01-01T00:00:00,2,1,1,700000,GOOD,3,\"Nasdaq\",",
+      "5,MICH,\"MICH~C,MICH^C\",Michelin,Michelin Corporation,NYSE,2021-01-01T00:00:00,2,1,1,800000,MICH,3,\"LSE\","
     ];
 
     string[] json = [
@@ -36,12 +36,13 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
+      "    \"MarketCap\": 100000,",
       "    \"Tag\": \"MSFT\",",
       "    \"Attributes\": \"3\",",
       "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
       "  },",
       "  {",
-      "    \"Type\": \"Stock\",",
+      "    \"Type\": \"5\",",
       "    \"Ticker\": \"AAPL\",",
       "    \"AlternateTickers\": [\"AAPL^C\",\",AAPL~C\"],",
       "    \"Name\": \"Apple\",",
@@ -51,6 +52,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
+      "    \"MarketCap\": 200000,",
       "    \"Tag\": \"AAPL\",",
       "    \"Attributes\": 3,",
       "    \"SecondaryExchanges\": [\"Nasdaq\"]",
@@ -66,12 +68,13 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
+      "    \"MarketCap\": 300000,",
       "    \"Tag\": \"DISP\",",
       "    \"Attributes\": 3,",
       "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
       "  },",
       "  {",
-      "    \"Type\": \"3\",",
+      "    \"Type\": \"5\",",
       "    \"Ticker\": \"NFLX\",",
       "    \"AlternateTickers\": [\"NFLX^C\",\"NFLX~C\"],",
       "    \"Name\": \"Netflix\",",
@@ -81,6 +84,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
+      "    \"MarketCap\": 400000,",
       "    \"Tag\": \"NFLX\",",
       "    \"Attributes\": \"3\",",
       "    \"SecondaryExchanges\": [\"Nasdaq\"]",
@@ -96,12 +100,13 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
+      "    \"MarketCap\": 500000,",
       "    \"Tag\": \"AUTO\",",
       "    \"Attributes\": \"3\",",
       "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
       "  },",
       "  {",
-      "    \"Type\": \"3\",",
+      "    \"Type\": \"5\",",
       "    \"Ticker\": \"PEP\",",
       "    \"AlternateTickers\": [\"PEP~C\",\"PEP@C\"],",
       "    \"Name\": \"Pep Boys\",",
@@ -111,6 +116,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
+      "    \"MarketCap\": 600000,",
       "    \"Tag\": \"PEP\",",
       "    \"Attributes\": \"3\",",
       "    \"SecondaryExchanges\": [\"LSE\"]",
@@ -126,12 +132,13 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
+      "    \"MarketCap\": 700000,",
       "    \"Tag\": \"GOOD\",",
       "    \"Attributes\": \"3\",",
       "    \"SecondaryExchanges\": [\"Nasdaq\"]",
       "  },",
       "  {",
-      "    \"Type\": \"3\",",
+      "    \"Type\": \"5\",",
       "    \"Ticker\": \"MICH\",",
       "    \"AlternateTickers\": [\"MICH~C\",\"MICH^C\"],",
       "    \"Name\": \"Michelin\",",
@@ -141,6 +148,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
+      "    \"MarketCap\": 800000,",
       "    \"Tag\": \"MICH\",",
       "    \"Attributes\": 3,",
       "    \"SecondaryExchanges\": [\"LSE\"]",
@@ -189,13 +197,21 @@ namespace TradeSharp.CoreUI.Testing.Services
 
       //create the test stock instruments and instrument groups
       var msft = new Stock("MSFT", Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, new List<string> { "MSFT^C", "MSFT-C" }, "Microsoft", "Microsoft Corporation", new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id, m_lse.Id }, string.Empty);
+      msft.MarketCap = 100000;
       var aapl = new Stock("AAPL", Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, new List<string> { "AAPL^C", "AAPL~C" }, "Apple", "Apple Corporation", new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id }, string.Empty);
+      aapl.MarketCap = 200000;
       var disp = new Stock("DISP", Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, new List<string> { "DISP^C", "DISP-C" }, "Disney", "Disney Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id, m_lse.Id }, string.Empty);
+      disp.MarketCap = 300000;
       var nflx = new Stock("NFLX", Instrument.DefaultAttributeSet, "NFLX", InstrumentType.Stock, new List<string> { "NFLX^C", "NFLX~C" }, "Netflix", "Netflix Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id }, string.Empty);
+      nflx.MarketCap = 400000;
       var auto = new Stock("AUTO", Instrument.DefaultAttributeSet, "AUTO", InstrumentType.Stock, new List<string> { "AUTO^C", "AUTO@C" }, "Autozone", "Autozone Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id, m_lse.Id }, string.Empty);
+      auto.MarketCap = 500000;
       var pep = new Stock("PEP", Instrument.DefaultAttributeSet, "PEP", InstrumentType.Stock, new List<string> { "PEP~C", "PEP@C" }, "Pep Boys", "Pep Boys Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_lse.Id }, string.Empty);
+      pep.MarketCap = 600000;
       var good = new Stock("GOOD", Instrument.DefaultAttributeSet, "GOOD", InstrumentType.Stock, new List<string> { "GOOD_C", "GOOD-C" }, "Goodyear", "Goodyear Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_nasdaq.Id }, string.Empty);
+      good.MarketCap = 700000;
       var mich = new Stock("MICH", Instrument.DefaultAttributeSet, "MICH", InstrumentType.Stock, new List<string> { "MICH~C", "MICH^C" }, "Michelin", "Michelin Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id,  new List<Guid> { m_lse.Id }, string.Empty);
+      mich.MarketCap = 800000;
 
       m_exchanges = new List<Exchange>{ m_global, m_nyse, m_nasdaq, m_lse };
       m_instruments = new List<Instrument>{ msft, aapl, disp, nflx, auto, pep, good, mich };
@@ -289,10 +305,13 @@ namespace TradeSharp.CoreUI.Testing.Services
       foreach (var instrument in importedInstruments)
       {
         var expectedInstrument = expectedInstruments.Find(x => x.Ticker == instrument.Ticker);
+        Stock expectedStock = (Stock)expectedInstrument!;
         if (expectedInstrument == null)
           Assert.Fail($"Instrument {instrument.Ticker} not found in the database");
         else
         {
+          Assert.IsTrue(instrument is Stock, "Instrument is not a stock");
+          Stock stock = (Stock)instrument;
           Assert.AreEqual(instrument.Ticker, expectedInstrument.Ticker, "Ticker is not correct");
           Assert.AreEqual(instrument.Name, expectedInstrument.Name, "Name is not correct");
           Assert.AreEqual(instrument.Description, expectedInstrument.Description, "Description is not correct");
@@ -301,6 +320,7 @@ namespace TradeSharp.CoreUI.Testing.Services
           Assert.AreEqual(instrument.PriceDecimals, expectedInstrument.PriceDecimals, "PriceDecimals is not correct");
           Assert.AreEqual(instrument.MinimumMovement, expectedInstrument.MinimumMovement, "MinimumMovement");
           Assert.AreEqual(instrument.BigPointValue, expectedInstrument.BigPointValue, "BigPointValue is not correct");
+          Assert.AreEqual(stock.MarketCap, expectedStock.MarketCap, "MarketCap is not correct");
           Assert.AreEqual(instrument.Tag, expectedInstrument.Tag, "Tag is not correct");
           Assert.AreEqual(instrument.AttributeSet, expectedInstrument.AttributeSet, "AttributesSet is not correct");
           Assert.IsTrue(listEquals(instrument.SecondaryExchangeIds, expectedInstrument.SecondaryExchangeIds), "SecondaryExchangeIds is not correct");
