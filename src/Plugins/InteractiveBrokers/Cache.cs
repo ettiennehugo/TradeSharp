@@ -79,19 +79,6 @@ namespace TradeSharp.InteractiveBrokers
       m_contractsByConId.Clear();
     }
 
-    //public void StartTransaction()
-    //{
-    //  ExecuteCommand("BEGIN TRANSACTION");
-    //}
-
-    //public void EndTransaction(bool success)
-    //{
-    //  if (success)
-    //    ExecuteCommand("END TRANSACTION");
-    //  else
-    //    ExecuteCommand("ROLLBACK TRANSACTION");
-    //}
-
     public List<Contract> GetContracts()
     {
       List<Contract> contracts = new List<Contract>();

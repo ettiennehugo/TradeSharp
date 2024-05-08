@@ -13,7 +13,7 @@ namespace TradeSharp.CoreUI.Testing.Services
     //constants
     string[] csv = [
       "type,ticker,alternatetickers,name,description,exchange,inception date,price decimals,minimum movement,big point value,marketcap,tag,attributes,secondary exchanges",
-      "Stock,MSFT,\"MSFT^C,MSFT-C\",Microsoft,Microsoft Corporation,NYSE,2021-01-01T00:00:00,2,1,1,100000,MSFT,3,\"Nasdaq,LSE\"",
+      "Stock,MSFT,\"MSFT^C,MSFT-C\",Microsoft,Microsoft Corporation,NYSE,2021-01-01T00:00:00,2,1,1,3.07356E+12,MSFT,3,\"Nasdaq,LSE\"",
       "5,AAPL,\"AAPL^C,AAPL~C\",Apple,Apple Corporation,NYSE,2021-01-01T00:00:00,2,1,1,200000,AAPL,3,\"Nasdaq\",",
       "Stock,DISP,\"DISP^C,DISP-C\",Disney,Disney Corporation,NYSE,2021-01-01T00:00:00,2,1,1,300000,DISP,3,\"Nasdaq,LSE\"",
       "5,NFLX,\"NFLX^C,NFLX~C\",Netflix,Netflix Corporation,NYSE,2021-01-01T00:00:00,2,1,1,400000,NFLX,3,\"Nasdaq\",",
@@ -36,7 +36,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "    \"PriceDecimals\": 2,",
       "    \"MinimumMovement\": 1,",
       "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 100000,",
+      "    \"MarketCap\": 3.07356E+12,",
       "    \"Tag\": \"MSFT\",",
       "    \"Attributes\": \"3\",",
       "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
@@ -197,7 +197,7 @@ namespace TradeSharp.CoreUI.Testing.Services
 
       //create the test stock instruments and instrument groups
       var msft = new Stock("MSFT", Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, new List<string> { "MSFT^C", "MSFT-C" }, "Microsoft", "Microsoft Corporation", new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id, m_lse.Id }, string.Empty);
-      msft.MarketCap = 100000;
+      msft.MarketCap = 3073560000000;
       var aapl = new Stock("AAPL", Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, new List<string> { "AAPL^C", "AAPL~C" }, "Apple", "Apple Corporation", new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id }, string.Empty);
       aapl.MarketCap = 200000;
       var disp = new Stock("DISP", Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, new List<string> { "DISP^C", "DISP-C" }, "Disney", "Disney Corporation",  new DateTime(2021, 1, 1, 0, 0, 0,DateTimeKind.Utc), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_nyse.Id, new List<Guid> { m_nasdaq.Id, m_lse.Id }, string.Empty);

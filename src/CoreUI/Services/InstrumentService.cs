@@ -270,10 +270,10 @@ namespace TradeSharp.CoreUI.Services
               int bigPointValue = fileInstrumentJson.ContainsKey(tokenJsonBigPointValue1) ? (int?)(fileInstrumentJson![tokenJsonBigPointValue1]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
               if (bigPointValue == -1) bigPointValue = fileInstrumentJson.ContainsKey(tokenJsonBigPointValue2) ? (int?)(fileInstrumentJson![tokenJsonBigPointValue2]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
               if (bigPointValue == -1) bigPointValue = fileInstrumentJson.ContainsKey(tokenJsonBigPointValue3) ? (int?)(fileInstrumentJson![tokenJsonBigPointValue3]!.AsValue().Deserialize(typeof(int))) ?? -1 : -1;
-              int marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap1) ? (int?)(fileInstrumentJson[tokenJsonMarketCap1]!.AsValue().Deserialize(typeof(int))) ?? 0 : 0;
-              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap2) ? (int?)(fileInstrumentJson[tokenJsonMarketCap2]!.AsValue().Deserialize(typeof(int))) ?? 0 : 0;
-              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap3) ? (int?)(fileInstrumentJson[tokenJsonMarketCap3]!.AsValue().Deserialize(typeof(int))) ?? 0 : 0;
-              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap4) ? (int?)(fileInstrumentJson[tokenJsonMarketCap4]!.AsValue().Deserialize(typeof(int))) ?? 0 : 0;
+              double marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap1) ? (double?)(fileInstrumentJson[tokenJsonMarketCap1]!.AsValue().Deserialize(typeof(double))) ?? 0 : 0;
+              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap2) ? (double?)(fileInstrumentJson[tokenJsonMarketCap2]!.AsValue().Deserialize(typeof(double))) ?? 0 : 0;
+              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap3) ? (double?)(fileInstrumentJson[tokenJsonMarketCap3]!.AsValue().Deserialize(typeof(double))) ?? 0 : 0;
+              if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap4) ? (double?)(fileInstrumentJson[tokenJsonMarketCap4]!.AsValue().Deserialize(typeof(double))) ?? 0 : 0;
 
               //attribute can be parsed a string or integer or integer string value ("3") - we support conversion of all three cases
               Attributes attributes = InstrumentGroup.DefaultAttributeSet;
@@ -467,7 +467,7 @@ namespace TradeSharp.CoreUI.Services
             int priceDecimals = -1;
             int minimumMovement = -1;
             int bigPointValue = -1;
-            int marketCap = 0;
+            double marketCap = 0;
             IList<string> secondaryExchanges = new List<string>();
 
             lineNo++;
@@ -521,7 +521,7 @@ namespace TradeSharp.CoreUI.Services
                   tag = columnValue!;
                 else if (columnName == tokenCsvMarketCap1 || columnName == tokenCsvMarketCap2 || columnName == tokenCsvMarketCap3 || columnName == tokenCsvMarketCap4)
                 {
-                  if (!int.TryParse(columnValue!, out marketCap) && Debugging.ImportExport) m_logger.LogError($"Failed to parse market cap \"{columnValue!}\" at line {lineNo}, defaulting to 0.");
+                  if (!double.TryParse(columnValue!, out marketCap) && Debugging.ImportExport) m_logger.LogError($"Failed to parse market cap \"{columnValue!}\" at line {lineNo}, defaulting to 0.");
                 }
                 else if (columnName == tokenCsvAttributes)
                 {

@@ -1241,7 +1241,7 @@ namespace TradeSharp.Data
               Stock stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
 
               using (var stockReader = ExecuteReader($"SELECT MarketCap FROM {TableStock} WHERE Ticker = '{ticker}'"))
-                if (stockReader.Read()) stock.MarketCap = stockReader.GetInt64(0);
+                if (stockReader.Read()) stock.MarketCap = stockReader.GetDouble(0);
 
               return stock;
             default:
@@ -2540,7 +2540,7 @@ namespace TradeSharp.Data
       CreateTable(TableStock,
       @"
         Ticker TEXT PRIMARY KEY ON CONFLICT REPLACE,
-        MarketCap INTEGER
+        MarketCap REAL
       ");
     }
 

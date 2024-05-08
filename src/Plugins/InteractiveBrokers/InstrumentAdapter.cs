@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.InteractiveBrokers.Messages;
 using IBApi;
-using System.Net;
 using TradeSharp.Data;
 
 namespace TradeSharp.InteractiveBrokers
