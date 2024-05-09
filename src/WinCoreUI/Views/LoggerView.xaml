@@ -18,8 +18,8 @@
     <common:CorrectionsToCorrectionParameterConverter x:Key="CorrectionsToCorrectionParameterConverter"/>
     <MenuFlyout x:Key="CorrectionsMenuFlyout" Closed="correctionsMenuFlyoutClosed"/>
     <DataTemplate x:Key="LogEntrySingleCorrectionTemplate" x:DataType="local:LogEntryDecorator">
-      <Grid ColumnDefinitions="100, 100, 48, Auto">
-        <TextBlock Text="{x:Bind Entry.Timestamp, Mode=OneTime}" Width="100" Height="24" Grid.Column="0" FontWeight="Bold" Margin="0" Padding="0,2"/>
+      <Grid ColumnDefinitions="150, 100, 48, Auto">
+        <TextBlock Text="{x:Bind Entry.Timestamp, Mode=OneTime}" Width="150" Height="24" Grid.Column="0" FontWeight="Bold" Margin="0" Padding="0,2"/>
         <TextBlock Text="{x:Bind Entry.Level, Mode=OneTime}" Width="100" Height="24" Grid.Column="1" Foreground="{x:Bind Entry.Level, Converter={StaticResource LogLevelToColorConverter}, Mode=OneTime}" FontWeight="Bold" Margin="10, 0" Padding="0,2"/>
         <Button Width="32" Height="24"  Grid.Column="2" Margin="0" Padding="0" Click="fixEntryClick" Visibility="{x:Bind Entry.Corrections, Converter={StaticResource CorrectionsToVisibilityConverter}, Mode=OneTime}" ToolTipService.ToolTip="{x:Bind Tooltip}" DataContext="{x:Bind Entry, Mode=OneTime}">
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC7A;" Margin="0"/>
@@ -28,8 +28,8 @@
       </Grid>
     </DataTemplate>
     <DataTemplate x:Key="LogEntryMultiCorrectionTemplate" x:DataType="local:LogEntryDecorator">
-      <Grid ColumnDefinitions="100, 100, 48, Auto">
-        <TextBlock Text="{x:Bind Entry.Timestamp, Mode=OneTime}" Width="100" Height="24" Grid.Column="0" FontWeight="Bold" Margin="0" Padding="0,2"/>
+      <Grid ColumnDefinitions="150, 100, 48, Auto">
+        <TextBlock Text="{x:Bind Entry.Timestamp, Mode=OneTime}" Width="150" Height="24" Grid.Column="0" FontWeight="Bold" Margin="0" Padding="0,2"/>
         <TextBlock Text="{x:Bind Entry.Level, Mode=OneTime}" Width="100" Height="24" Grid.Column="1" Foreground="{x:Bind Entry.Level, Converter={StaticResource LogLevelToColorConverter}}" FontWeight="Bold" Margin="10, 0" Padding="0,2"/>
         <DropDownButton Width="48" Height="24" Flyout="{StaticResource CorrectionsMenuFlyout}" Click="mutliCorrectionDropDownClick" Grid.Column="2" Margin="0" Padding="0" ToolTipService.ToolTip="{x:Bind Tooltip, Mode=OneTime}" DataContext="{x:Bind Entry, Mode=OneTime}">
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC7A;" Margin="0"/>
@@ -38,8 +38,8 @@
       </Grid>
     </DataTemplate>
     <DataTemplate x:Key="CollapsibleLogEntryTemplate" x:DataType="local:LogEntryDecorator">
-      <Grid ColumnDefinitions="100, 100, 48, Auto">
-        <TextBlock Text="{x:Bind Entry.Timestamp, Mode=OneTime}" Width="100" Height="24" Grid.Column="0" FontWeight="Bold" Margin="0" Padding="0,2"/>
+      <Grid ColumnDefinitions="150, 100, 48, Auto">
+        <TextBlock Text="{x:Bind Entry.Timestamp, Mode=OneTime}" Width="150" Height="24" Grid.Column="0" FontWeight="Bold" Margin="0" Padding="0,2"/>
         <TextBlock Text="{x:Bind Entry.Level, Mode=OneTime}" Width="100" Height="24" Grid.Column="1" Foreground="{x:Bind Entry.Level, Converter={StaticResource LogLevelToColorConverter}}" FontWeight="Bold" Margin="10, 0" Padding="0,2"/>
         <Button Width="32" Height="24"  Grid.Column="2" Margin="0" Padding="0" Click="collapsibleLogEntryClick"  ToolTipService.ToolTip="{x:Bind Tooltip, Mode=OneTime}" DataContext="{x:Bind Entry, Mode=OneTime}">
           <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE712;" Margin="0"/>
