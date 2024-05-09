@@ -111,17 +111,26 @@ namespace TradeSharp.Data
     }
 
     //interface implementations
+    /// <summary>
+    /// Start a new transaction - NOTE: Be careful with transaction as SQLite does not support nested transactions.
+    /// </summary>
     public void StartTransaction()
     {
-      ExecuteCommand("BEGIN TRANSACTION");
+      lock (this) ExecuteCommand("BEGIN TRANSACTION");
     }
 
+    /// <summary>
+    /// End a transaction with either a commit or rollback.
+    /// </summary>
     public void EndTransaction(bool success)
     {
-      if (success)
-        ExecuteCommand("END TRANSACTION");
-      else
-        ExecuteCommand("ROLLBACK TRANSACTION");
+      lock (this)
+      {
+        if (success)
+          ExecuteCommand("END TRANSACTION");
+        else
+          ExecuteCommand("ROLLBACK TRANSACTION");
+      }
     }
 
     public void Optimize()

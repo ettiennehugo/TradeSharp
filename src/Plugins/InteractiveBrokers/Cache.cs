@@ -11,7 +11,7 @@ namespace TradeSharp.InteractiveBrokers
   /// <summary>
   /// Database to locally store data specific to Interactive Brokers, e.g. contract details.
   /// </summary>
-  public sealed class Cache
+  public sealed class Cache: IDisposable
   {
     //constants
     /// <summary>
@@ -64,12 +64,34 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //finalizers
-    ~Cache()
+    public void Dispose()
     {
       m_connection.Close();
     }
 
     //interface implementations
+    /// <summary>
+    /// Start a new transaction - NOTE: Be careful with transaction as SQLite does not support nested transactions.
+    /// </summary>
+    public void StartTransaction()
+    {
+      lock (this) ExecuteCommand("BEGIN TRANSACTION");
+    }
+
+    /// <summary>
+    /// End a transaction with either a commit or rollback.
+    /// </summary>
+    public void EndTransaction(bool success)
+    {
+      lock (this)
+      {
+        if (success)
+          ExecuteCommand("END TRANSACTION");
+        else
+          ExecuteCommand("ROLLBACK TRANSACTION");
+      }
+    }
+
     /// <summary>
     /// Clears the cache of all contracts and starts recaching.
     /// </summary>

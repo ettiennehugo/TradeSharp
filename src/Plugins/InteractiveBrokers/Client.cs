@@ -97,24 +97,9 @@ namespace TradeSharp.InteractiveBrokers
         m_ip = ip;
         m_port = port;
 
-        //creates the response reader that would wait for responses and queue them to the EWrapper
-        if (m_responseReader == null)
-        {
-          m_responseReader = new EReader(ClientSocket, m_readerSignal);
-          m_responseReader.Start();
-        }
-
-        //create the response reader thread that would loop the above response reader
-        if (m_responseReaderThread == null)
-        {
-          m_cancelResponseReaderThread = new CancellationTokenSource();
-          m_responseReaderThread = new Thread(ResponseReaderMain);
-          m_responseReaderThread.Name = "IBApi Response Reader";
-          m_responseReaderThread.Start();
-        }
-
         try
         {
+          m_nextOrderId = -1; //make sure we wait for the next valid order ID from IB before continueing
           ClientSocket.eConnect(m_ip, m_port, 0); //this call should be synchronous to ensure handshake is done before creating the reader thread below, if this is done too quickly the TWS API immediately disconnects
           Thread.Sleep(1000); //wait for the connection to be established before continuing otherwise the TWS API will disconnect/enter an error state
           var time = DateTime.Now;
@@ -132,6 +117,23 @@ namespace TradeSharp.InteractiveBrokers
         catch (Exception e)
         {
           m_logger.LogError($"Connection to IP {m_ip} and port {m_port} failed with exception - {e.Message}");
+        }
+
+        //creates the response reader that would wait for responses and queue them to the EWrapper
+        //NOTE: The response reader MUST be created after the initial handshake above otherwise none of the callbacks will work.
+        if (m_responseReader == null)
+        {
+          m_responseReader = new EReader(ClientSocket, m_readerSignal);
+          m_responseReader.Start();
+        }
+
+        //create the response reader thread that would loop the above response reader
+        if (m_responseReaderThread == null)
+        {
+          m_cancelResponseReaderThread = new CancellationTokenSource();
+          m_responseReaderThread = new Thread(ResponseReaderMain);
+          m_responseReaderThread.Name = "IBApi Response Reader";
+          m_responseReaderThread.Start();
         }
 
         //raise connected event

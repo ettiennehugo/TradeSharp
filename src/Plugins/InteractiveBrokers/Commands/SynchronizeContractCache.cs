@@ -51,6 +51,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
       int count = 0;
 
+      //m_adapter.m_serviceHost.Cache.StartTransaction(); //NOTE: This could cause a clash with other transactions when commands are run asynchronously.
       foreach (var instrument in m_adapter.m_instrumentService.Items)
       {
         var currency = "USD";   //currently hardcoded to support Stock contract retrieval
@@ -62,14 +63,10 @@ namespace TradeSharp.InteractiveBrokers.Commands
         m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentAdapter.InstrumentIdBase, contract);
         m_progress.Progress++;
 
-        //TEST CODE
-        count++;
-        if (count > 1000) break;
-        //TEST CODE
-
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
         Thread.Sleep(InstrumentAdapter.IntraRequestSleep);    //throttle requests to avoid exceeding the hard limit imposed by IB
       }
+      //m_adapter.m_serviceHost.Cache.EndTransaction(true);
 
       m_adapter.m_serviceHost.Client.Error -= HandleError;
       m_progress.Complete = true;

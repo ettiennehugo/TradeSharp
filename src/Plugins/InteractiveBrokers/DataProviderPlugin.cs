@@ -57,12 +57,6 @@ namespace TradeSharp.InteractiveBrokers
       raiseUpdateCommands();
     }
 
-    public override void Dispose()
-    {
-      if (m_ibServiceHost.Client.IsConnected) m_ibServiceHost.Client.Disconnect();
-      base.Dispose();
-    }
-
     public override object Request(string ticker, Resolution resolution, DateTime start, DateTime end)
     {
 

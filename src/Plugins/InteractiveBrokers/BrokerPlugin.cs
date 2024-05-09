@@ -60,7 +60,8 @@ namespace TradeSharp.InteractiveBrokers
 
     public override void Dispose()
     {
-      if (m_ibServiceHost.Client.IsConnected) m_ibServiceHost.Client.Dispose();
+      m_ibServiceHost.Client.Dispose();
+      m_ibServiceHost.Cache.Dispose();
       base.Dispose();
     }
 

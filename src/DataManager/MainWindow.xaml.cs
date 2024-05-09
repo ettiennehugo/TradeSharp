@@ -28,7 +28,6 @@ namespace TradeSharp.WinDataManager
     public MainWindow()
     {
       this.InitializeComponent();
-      //https://learn.microsoft.com/en-us/windows/apps/develop/title-bar?tabs=wasdk
       this.ExtendsContentIntoTitleBar = true;
       this.SetTitleBar(m_titleBar);
     }
