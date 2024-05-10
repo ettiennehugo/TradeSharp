@@ -20,6 +20,7 @@
     /// Supported contract types.
     /// </summary>
     public const string ContractTypeStock = "STK";
+    public const string ContractTypeETF = "ETF";
     public const string ContractTypeCFD = "CFD";
     public const string ContractTypeBond = "BOND";
     public const string ContractTypeFuture = "FUT";

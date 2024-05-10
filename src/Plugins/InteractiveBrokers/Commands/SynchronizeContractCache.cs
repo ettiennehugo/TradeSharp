@@ -61,8 +61,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
         //NOTE: This is very much coded to work with only Stock cotnracts, other contract types will need to be handled differently.
         var contract = new IBApi.Contract { Symbol = instrument.Ticker, SecType = m_adapter.InstrumentTypeToIBContractType(instrument.Type), Exchange = Constants.DefaultExchange, Currency = currency };
         m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentAdapter.InstrumentIdBase, contract);
+    
         m_progress.Progress++;
-
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
         Thread.Sleep(InstrumentAdapter.IntraRequestSleep);    //throttle requests to avoid exceeding the hard limit imposed by IB
       }

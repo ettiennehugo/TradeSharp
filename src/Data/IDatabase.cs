@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
 using System.ComponentModel;
-using System.Diagnostics.Metrics;
 
 namespace TradeSharp.Data
 {
@@ -22,6 +21,10 @@ namespace TradeSharp.Data
     Future,
     Option,
     MutualFund,
+    [Description("Contract for Difference")]
+    CFD,
+    Bond,
+    Commodity,
   }
 
   /// <summary>
@@ -513,6 +516,7 @@ namespace TradeSharp.Data
         }
         else if (other is string ticker)
         {
+          ticker = ticker.ToUpper();
           if (Ticker == ticker) return true;
           if (AlternateTickers.FirstOrDefault(t => t == ticker) != null) return true;
         }

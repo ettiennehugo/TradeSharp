@@ -112,10 +112,11 @@ namespace TradeSharp.InteractiveBrokers
 
     public InstrumentType IBContractTypeToInstrumentType(string contractType)
     {
-      //TBD: The contract details table contains whether a specific contract is ETF/ETN/REIT etc.
+      //TBD: Still need to support REIT/ETN.
       if (contractType == Constants.ContractTypeStock)
-        //NOTE: The instrument might be an ETF, but we'll treat it as a stock for now.
         return InstrumentType.Stock;
+      if (contractType == Constants.ContractTypeETF)
+        return InstrumentType.ETF;
       if (contractType == Constants.ContractTypeOption)
         return InstrumentType.Option;
       if (contractType == Constants.ContractTypeFuture)
@@ -126,6 +127,8 @@ namespace TradeSharp.InteractiveBrokers
         return InstrumentType.Forex;
       if (contractType == Constants.ContractTypeMutualFund)
         return InstrumentType.MutualFund;
+
+      m_logger.LogWarning($"Contract to Instrument type conversion does not support conversion of IB type \"{contractType}\"");
       return InstrumentType.Stock;
     }
 
