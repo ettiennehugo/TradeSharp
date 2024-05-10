@@ -3,7 +3,7 @@
     x:Class="TradeSharp.WinCoreUI.Views.InstrumentGroupsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:cuiservices="using:TradeSharp.CoreUI.Services"
+    xmlns:cui="using:TradeSharp.CoreUI.Services"
     xmlns:winui="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -17,7 +17,11 @@
       <common:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </ResourceDictionary>
   </Page.Resources>
-  <Grid x:Name="m_main" RowDefinitions="Auto, *">
+  <Grid x:Name="m_main">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
     <StackPanel x:Name="m_commandBarLayout" Orientation="Horizontal" Grid.Row="0">
       <CommandBar x:Name="m_commandBar" Background="Transparent" OverflowButtonVisibility="Collapsed">
         <AppBarButton Icon="Refresh" Command="{x:Bind ViewModel.RefreshCommand}" ToolTipService.ToolTip="Refresh" IsCompact="True"/>
@@ -40,7 +44,7 @@
         <AppBarSeparator/>
         <AppBarElementContainer x:Name="m_filterContainer">
           <StackPanel Orientation="Horizontal">
-            <TextBlock x:Name="m_findInstrumentGroupLabel" Text="Search by" Margin="0, 8, 8, 8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBlock x:Name="m_findInstrumentGroupLabel" Text="Search using" Margin="0, 8, 8, 8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <TextBox x:Name="m_findInstrumentGroupFilter" Width="300" PlaceholderText="expression" Margin="0, 8" HorizontalAlignment="Left" VerticalAlignment="Center" TextChanged="m_findInstrumentGroupFilter_TextChanged" KeyDown="m_findInstrumentGroupFilter_KeyDown"/>
           </StackPanel>
         </AppBarElementContainer>
@@ -58,14 +62,28 @@
     </StackPanel>
     <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}" SelectionMode="Single" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}" Expanding="m_instrumentGroups_Expanding" Collapsed="m_instrumentGroups_Collapsed" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" Grid.Row="1">
       <TreeView.ItemTemplate>
-        <DataTemplate x:DataType="cuiservices:InstrumentGroupNodeType">
+        <DataTemplate x:DataType="cui:InstrumentGroupNodeType">
           <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="{x:Bind Expanded, Mode=OneWay}">
-            <Grid RowDefinitions="Auto, Auto">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
               <TextBlock Text="{x:Bind Item.Name}" Grid.Row="0"/>
-              <winui:ItemsRepeater ItemsSource="{x:Bind Item.Instruments}" Visibility="{x:Bind InstrumentsVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1" Margin="2">
+              <winui:ItemsRepeater ItemsSource="{x:Bind Instruments}" Visibility="{x:Bind InstrumentsVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1">
                 <winui:ItemsRepeater.Layout>
                   <controls:WrapLayout Orientation="Horizontal" VerticalSpacing="5" HorizontalSpacing="5"/>
                 </winui:ItemsRepeater.Layout>
+                <winui:ItemsRepeater.ItemTemplate>
+                  <DataTemplate x:DataType="cui:InstrumentGroupNodeInstrument">
+                    <Grid>
+                      <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                      </Grid.RowDefinitions>
+                      <TextBlock Text="{x:Bind Ticker}" ToolTipService.ToolTip="{x:Bind Description}" Grid.Row="0"/>
+                    </Grid>
+                  </DataTemplate>
+                </winui:ItemsRepeater.ItemTemplate>
               </winui:ItemsRepeater>
             </Grid>
           </TreeViewItem>

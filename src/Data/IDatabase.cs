@@ -627,7 +627,7 @@ namespace TradeSharp.Data
       Description = description;
       UserId = userId;
       Instruments = instruments;
-      SearchTickers = new List<string>();   //this gets lazy loaded when needed - see RefreshAssociatedTickers
+      //
     }
 
     [ObservableProperty] private Guid m_parentId;
@@ -636,7 +636,6 @@ namespace TradeSharp.Data
     [ObservableProperty] private string m_description;
     [ObservableProperty] private string m_userId;   //specific Id to be used by the user, can be used in data file exports/imports to identify the group
     [ObservableProperty] private IList<string> m_instruments; //instruments associated with the group
-    [ObservableProperty] private IList<string> m_searchTickers;   //set of tickers AND alternate tickers for instruments associated with the group
 
     public override bool Equals(object? other)
     {

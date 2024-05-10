@@ -44,7 +44,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      if (ViewModel.Nodes.Count == 0) ViewModel.RefreshCommand.Execute(null);
+      if (ViewModel.Nodes.Count == 0) ViewModel.RefreshCommandAsync.Execute(null);
     }
 
     //methods

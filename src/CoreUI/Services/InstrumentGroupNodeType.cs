@@ -8,6 +8,45 @@ namespace TradeSharp.CoreUI.Services
   ////https://github.com/microsoft/WinUI-Gallery/blob/main/WinUIGallery/ControlPages/TreeViewPage.xaml.cs
 
   /// <summary>
+  /// Instrument group instrument association display type, used to add the ticker and description as a tooltip to the UI.
+  /// </summary>
+  public partial class InstrumentGroupNodeInstrument : ObservableObject
+  {
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+
+
+    //constructors
+    public InstrumentGroupNodeInstrument(string ticker, string description)
+    {
+      Ticker = ticker;
+      Description= description;
+    }
+
+    //finalizers
+
+
+    //interface implementations
+
+
+    //properties
+    [ObservableProperty] private string m_ticker;
+    [ObservableProperty] private string m_description;
+
+    //methods
+
+
+  }
+
+  /// <summary>
   /// Implementation of the instrument group nodes to manage instrument groups in a tree view model.
   /// </summary>
   public partial class InstrumentGroupNodeType : ObservableObject, ITreeNodeType<Guid, InstrumentGroup>
@@ -23,15 +62,18 @@ namespace TradeSharp.CoreUI.Services
 
     //attributes
     private IInstrumentGroupService m_instrumentGroupService;
+    private IInstrumentService m_instrumentService;
 
     //constructors
-    public InstrumentGroupNodeType(IInstrumentGroupService service, InstrumentGroupNodeType? parent, InstrumentGroup item, bool expanded)
+    public InstrumentGroupNodeType(IInstrumentGroupService instrumentGroupService, IInstrumentService instrumentService, InstrumentGroupNodeType? parent, InstrumentGroup item, bool expanded)
     {
-      m_instrumentGroupService = service;
+      m_instrumentGroupService = instrumentGroupService;
+      m_instrumentService = instrumentService;
       Item = item;
       Id = Item.Id;
       ParentId = Item.ParentId;
       Parent = parent;
+      Instruments = new ObservableCollection<InstrumentGroupNodeInstrument>();
       Children = new ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
       Expanded = expanded;
       InstrumentsVisible = Item.Instruments.Count > 0;
@@ -44,9 +86,19 @@ namespace TradeSharp.CoreUI.Services
     //interface implementations
     public void Refresh()
     {
+      Instruments.Clear();
       Children.Clear();
       foreach (InstrumentGroup instrumentGroup in m_instrumentGroupService.Items)
-        if (instrumentGroup.ParentId == Id) Children.Add(new InstrumentGroupNodeType(m_instrumentGroupService, this, instrumentGroup, false));
+        if (instrumentGroup.ParentId == Id) Children.Add(new InstrumentGroupNodeType(m_instrumentGroupService, m_instrumentService, this, instrumentGroup, false));
+
+      foreach (var ticker in Item.Instruments)
+      {
+        var instrument = m_instrumentService.Items.FirstOrDefault(i => i.Equals(ticker));
+        if (instrument != null) 
+          Instruments.Add(new InstrumentGroupNodeInstrument(instrument.Ticker, instrument.Description));
+        else
+          Instruments.Add(new InstrumentGroupNodeInstrument(ticker, "<No description found>"));
+      }
     }
 
     //properties
@@ -56,6 +108,7 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] private InstrumentGroup m_item;
     [ObservableProperty] private bool m_expanded;
     [ObservableProperty] private bool m_instrumentsVisible;
+    public ObservableCollection<InstrumentGroupNodeInstrument> Instruments { get; internal set; }
     public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> Children { get; internal set; }
 
     //methods

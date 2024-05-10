@@ -27,15 +27,17 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //attributes
     private IInstrumentGroupService m_instrumentGroupService;
+    private IInstrumentService m_instrumentService;
     private IList<ITreeNodeType<Guid, InstrumentGroup>> m_foundNodes;
     private int m_foundNodeIndex;
 
     //constructors
-    public InstrumentGroupViewModel(IInstrumentGroupService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
+    public InstrumentGroupViewModel(IInstrumentGroupService instrumentGroupService, IInstrumentService instrumentService, INavigationService navigationService, IDialogService dialogService) : base(instrumentGroupService, navigationService, dialogService)
     {
       m_foundNodes = new List<ITreeNodeType<Guid, InstrumentGroup>>();
       m_foundNodeIndex = 0;
-      m_instrumentGroupService = (IInstrumentGroupService)m_itemsService;
+      m_instrumentGroupService = instrumentGroupService;
+      m_instrumentService = instrumentService;
       m_instrumentGroupService.RefreshEvent += onServiceRefresh;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? target) => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Deletable));
@@ -51,7 +53,7 @@ namespace TradeSharp.CoreUI.ViewModels
       Guid parentId = SelectedNode != null ? SelectedNode.Item.Id : InstrumentGroup.InstrumentGroupRoot;
       InstrumentGroup? newInstrumentGroup = await m_dialogService.ShowCreateInstrumentGroupAsync(parentId);
       if (newInstrumentGroup != null)
-        m_itemsService.Add(new InstrumentGroupNodeType((IInstrumentGroupService)m_itemsService, null, newInstrumentGroup, true));   //null since parent is the root node
+        m_itemsService.Add(new InstrumentGroupNodeType((IInstrumentGroupService)m_itemsService, m_instrumentService, null, newInstrumentGroup, true));   //null since parent is the root node
     }
 
     public override async void OnUpdate()
@@ -189,8 +191,10 @@ namespace TradeSharp.CoreUI.ViewModels
 
         if (!nodeAdded)
         {
+          //NOTE: This search does NOT search the alternate tickers of the instruments only, to expand that would require
+          //      passing the IInstrumentService to the nodes to retrieve the alternate tickers for the instrument. 
           //https://stackoverflow.com/questions/23316932/invoke-command-when-treeviewitem-is-expanded
-          foreach (var ticker in node.Item.SearchTickers)
+          foreach (var ticker in node.Item.Instruments)
             if (ticker.Contains(findText))
             {
               m_foundNodes.Add(node);

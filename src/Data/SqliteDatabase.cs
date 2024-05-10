@@ -499,7 +499,7 @@ namespace TradeSharp.Data
     {
       List<string> result = new List<string>();
 
-      using (var reader = ExecuteReader($"SELECT InstrumentGroupId, InstrumentTicker, Name, Description FROM {TableInstrumentGroupInstrument} INNER JOIN {TableInstrumentGroup} ON InstrumentGroupId == Id WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' ORDER BY Name ASC, Description ASC"))
+      using (var reader = ExecuteReader($"SELECT InstrumentGroupId, InstrumentTicker, Name, Description FROM {TableInstrumentGroupInstrument} INNER JOIN {TableInstrumentGroup} ON InstrumentGroupId == Id WHERE InstrumentGroupId = '{instrumentGroupId.ToString()}' ORDER BY InstrumentTicker ASC"))
         while (reader.Read()) result.Add(reader.GetString(1));
 
       return result;

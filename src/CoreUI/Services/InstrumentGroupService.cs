@@ -201,7 +201,7 @@ namespace TradeSharp.CoreUI.Services
       //TODO: There is a bug in this code where the Add would result in an ExceptionAccessViolation, it's some threading issue since it does not occur consistenly.
       foreach (var item in Items)
         if (item.ParentId == InstrumentGroup.InstrumentGroupRoot)
-          Nodes.Add(new InstrumentGroupNodeType(this, null, item, true));   //null since parent is the root node
+          Nodes.Add(new InstrumentGroupNodeType(this, m_instrumentService, null, item, true));   //null since parent is the root node
       SelectedNode = Nodes.FirstOrDefault(x => x.ParentId == InstrumentGroup.InstrumentGroupRoot); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
     }
 

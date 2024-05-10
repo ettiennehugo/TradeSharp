@@ -24,7 +24,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
 
 
     //constructors
-    public InstrumentGroupViewModel(IInstrumentGroupService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) { }
+    public InstrumentGroupViewModel(IInstrumentGroupService instrumentGroupService, IInstrumentService instrumentService, INavigationService navigationService, IDialogService dialogService) : base(instrumentGroupService, instrumentService, navigationService, dialogService) { }
 
     //finalizers
 

@@ -134,16 +134,16 @@ namespace TradeSharp.WinDataManager
     private void loadCachedData()
     {
       //start caching crucial data
-      var countryViewModel = (ICountryViewModel)IApplication.Current.Services.GetService(typeof(ICountryViewModel));
-      countryViewModel.RefreshCommandAsync.Execute(null);
-      var exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
-      exchangeViewModel.RefreshCommandAsync.Execute(null);
-      var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
-      instrumentGroupViewModel.RefreshCommandAsync.Execute(null);
-      var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
-      instrumentViewModel.RefreshCommandAsync.Execute(null);
       var holidayViewModel = (IHolidayViewModel)IApplication.Current.Services.GetService(typeof(IHolidayViewModel));
-      holidayViewModel.RefreshCommandAsync.Execute(null);
+      holidayViewModel.RefreshCommand.Execute(null);
+      var countryViewModel = (ICountryViewModel)IApplication.Current.Services.GetService(typeof(ICountryViewModel));
+      countryViewModel.RefreshCommand.Execute(null);
+      var exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
+      exchangeViewModel.RefreshCommand.Execute(null);
+      var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
+      instrumentViewModel.RefreshCommand.Execute(null);
+      var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
+      instrumentGroupViewModel.RefreshCommand.Execute(null);
 
       //setup dispatcher queue for UI thread
       var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
