@@ -117,14 +117,24 @@ namespace TradeSharp.InteractiveBrokers.Commands
               //check whether the instrument is associated with the specific instrument group
               if (instrumentType != InstrumentType.ETF && stock.Subcategory == string.Empty)
               {
-                m_adapter.m_logger.LogWarning($"Stock {stock.Symbol} does not have a subcategory set.");
+                m_progress.LogWarning($"Stock {stock.Symbol} does not have a subcategory set.");
                 break;
               }
 
-              var instrumentGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.Equals(stock.Subcategory));
+              //NOTE: There can potentially be instrument groups where the category has the same as the stock sub-category,
+              //      in this case we need to find the associated sub-category and ignore the category. The sub-category
+              //      will not contain any child groups.
+              InstrumentGroup? instrumentGroup = null;
+              foreach (var group in m_adapter.m_instrumentGroupService.Items)
+                if (group.Equals(stock.Subcategory) && m_adapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.ParentId == group.Id) == null)                
+                {
+                  instrumentGroup = group;
+                  break;
+                }
+
               if (instrumentGroup == null)
               {
-                m_adapter.m_logger.LogWarning($"Stock {stock.Symbol} subcategory {stock.Subcategory} not found.");
+                m_progress.LogWarning($"Stock {stock.Symbol} subcategory {stock.Subcategory} not found.");
                 break;
               }
 
@@ -137,10 +147,10 @@ namespace TradeSharp.InteractiveBrokers.Commands
               }
             }
             else
-              m_adapter.m_logger.LogWarning($"Contract type {contract.SecType} for symbol {contract.Symbol} did not return ContractStock type.");
+              m_progress.LogError($"Contract type {contract.SecType} for symbol {contract.Symbol} did not return ContractStock type.");
             break;
           default:
-            m_adapter.m_logger.LogWarning($"Unsupported contract type {contract.SecType} for symbol {contract.Symbol}");
+            m_progress.LogError($"Unsupported contract type {contract.SecType} for symbol {contract.Symbol}");
             break;
         }
 
