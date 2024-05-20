@@ -91,8 +91,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       {
         if (contract is ContractStock contractStock)
         {
-          if (contractStock.Industry == "") continue; //skip contracts with incomplete or no category definitions
-          if (requiredInstrumentGroups.FirstOrDefault((g) => g.Item1 == contractStock.Industry && g.Item2 == contractStock.Category && g.Item3 == contractStock.Subcategory) == null)
+          if (contractStock.Industry != "" && requiredInstrumentGroups.FirstOrDefault((g) => g.Item1 == contractStock.Industry && g.Item2 == contractStock.Category && g.Item3 == contractStock.Subcategory) == null)
             requiredInstrumentGroups.Add(new Tuple<string, string, string>(contractStock.Industry, contractStock.Category, contractStock.Subcategory));
         }
 

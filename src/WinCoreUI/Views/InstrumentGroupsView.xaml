@@ -63,7 +63,7 @@
     <TreeView x:Name="m_instrumentGroups" ItemsSource="{x:Bind ViewModel.Nodes}" SelectionMode="Single" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}" Expanding="m_instrumentGroups_Expanding" Collapsed="m_instrumentGroups_Collapsed" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" Grid.Row="1">
       <TreeView.ItemTemplate>
         <DataTemplate x:DataType="cui:InstrumentGroupNodeType">
-          <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="{x:Bind Expanded, Mode=OneWay}">
+          <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="{x:Bind Expanded, Mode=TwoWay}">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -76,12 +76,7 @@
                 </winui:ItemsRepeater.Layout>
                 <winui:ItemsRepeater.ItemTemplate>
                   <DataTemplate x:DataType="cui:InstrumentGroupNodeInstrument">
-                    <Grid>
-                      <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                      </Grid.RowDefinitions>
-                      <TextBlock Text="{x:Bind Ticker}" ToolTipService.ToolTip="{x:Bind Description}" Grid.Row="0"/>
-                    </Grid>
+                    <TextBlock Text="{x:Bind Ticker}" ToolTipService.ToolTip="{x:Bind Description}"/>
                   </DataTemplate>
                 </winui:ItemsRepeater.ItemTemplate>
               </winui:ItemsRepeater>

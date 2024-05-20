@@ -490,7 +490,7 @@ namespace TradeSharp.CoreUI.Services
           }
 
           //update the instrument group based on the replace behavior
-          InstrumentGroup? definedInstrumentGroup = definedInstrumentGroups.FirstOrDefault<InstrumentGroup>(x => fileInstrumentGroup.Equals(x));
+          InstrumentGroup? definedInstrumentGroup = definedInstrumentGroups.FirstOrDefault(x => fileInstrumentGroup.Equals(x));
           if (definedInstrumentGroup != null)
           {
             //update the instrument group based on the replace behavior

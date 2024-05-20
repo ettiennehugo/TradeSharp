@@ -627,7 +627,6 @@ namespace TradeSharp.Data
       Description = description;
       UserId = userId;
       Instruments = instruments;
-      //
     }
 
     [ObservableProperty] private Guid m_parentId;

@@ -1,13 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
-using System.Collections.ObjectModel;
-using static System.Net.WebRequestMethods;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -142,7 +135,6 @@ namespace TradeSharp.CoreUI.ViewModels
         ITreeNodeType<Guid, InstrumentGroup> foundNode = m_foundNodes[m_foundNodeIndex];
         expandToNode(foundNode);
         SelectedNode = foundNode;
-
       }
       else
         m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Search complete", $"Nothing else found for search term \"{FindText}\"");
