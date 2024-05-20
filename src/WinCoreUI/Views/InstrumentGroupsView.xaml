@@ -70,16 +70,18 @@
                 <RowDefinition Height="Auto"/>
               </Grid.RowDefinitions>
               <TextBlock Text="{x:Bind Item.Name}" Grid.Row="0"/>
-              <winui:ItemsRepeater ItemsSource="{x:Bind Instruments}" Visibility="{x:Bind InstrumentsVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1">
-                <winui:ItemsRepeater.Layout>
-                  <controls:WrapLayout Orientation="Horizontal" VerticalSpacing="5" HorizontalSpacing="5"/>
-                </winui:ItemsRepeater.Layout>
-                <winui:ItemsRepeater.ItemTemplate>
+              <ItemsControl ItemsSource="{x:Bind Instruments}" Visibility="{x:Bind InstrumentsVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <controls:WrapPanel Orientation="Horizontal"/>
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="cui:InstrumentGroupNodeInstrument">
-                    <TextBlock Text="{x:Bind Ticker}" ToolTipService.ToolTip="{x:Bind Description}"/>
+                    <TextBlock Text="{x:Bind Ticker}" ToolTipService.ToolTip="{x:Bind Description}" Margin="5,2"/>
                   </DataTemplate>
-                </winui:ItemsRepeater.ItemTemplate>
-              </winui:ItemsRepeater>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
             </Grid>
           </TreeViewItem>
         </DataTemplate>
