@@ -24,7 +24,6 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     IInstrumentService m_instrumentService;
     ILogger<MassDownloadInstrumentDataService> m_logger;
-    ILogger? m_taskLogger;
 
     //constructors
     public MassDownloadInstrumentDataService(ILogger<MassDownloadInstrumentDataService> logger, IDialogService dialogService, IInstrumentService instrumentService) : base(dialogService)
@@ -32,7 +31,6 @@ namespace TradeSharp.CoreUI.Services
       Settings = new MassDownloadSettings();
       m_logger = logger;
       IsRunning = false;
-      ///DataProvider = null;   //TODO: Set the first available data provider as the default.
       m_instrumentService = instrumentService;
     }
 
@@ -53,13 +51,13 @@ namespace TradeSharp.CoreUI.Services
     {
       if (DataProvider == null)
       {
-        if (Debugging.MassInstrumentDataDownload) m_logger.LogInformation("Failed to start mass download, no data provider was set");
+        if (Debugging.MassInstrumentDataDownload) m_logger.LogError("Failed to start mass download, no data provider was set");
         return Task.CompletedTask;
       }
 
       if (IsRunning)
       {
-        if (Debugging.MassInstrumentDataExport) m_logger.LogInformation("Mass download already running, returning from mass download");
+        if (Debugging.MassInstrumentDataDownload) m_logger.LogWarning("Mass download already running, returning from mass download");
         return Task.CompletedTask;
       }
 
@@ -67,6 +65,16 @@ namespace TradeSharp.CoreUI.Services
       {
         try
         {
+          Queue<Tuple<Resolution, Instrument>> downloadCombinations = new Queue<Tuple<Resolution, Instrument>>();
+          foreach (Instrument instrument in m_instrumentService.Items)
+          {
+            if (Settings.ResolutionMinute) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Minute, instrument));
+            if (Settings.ResolutionHour) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Hour, instrument));
+            if (Settings.ResolutionDay) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Day, instrument));
+            if (Settings.ResolutionWeek) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Week, instrument));
+            if (Settings.ResolutionMonth) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Month, instrument));
+          }
+
           IsRunning = true;
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
@@ -77,23 +85,50 @@ namespace TradeSharp.CoreUI.Services
           object failureCountLock = new object();
           int failureCount = 0;
 
+          progressDialog.StatusMessage = $"Requesting data for {m_instrumentService.Items.Count} instruments";
+          progressDialog.Progress = 0;
+          progressDialog.Minimum = 0;
+          progressDialog.Maximum = downloadCombinations.Count;
+          progressDialog.ShowAsync();
 
-          //TODO: implement mass download of instrument data
+          List<Task> tasks = new List<Task>();
+          while (downloadCombinations.Count > 0 && !progressDialog.CancellationTokenSource.IsCancellationRequested)
+          {
+            //allocate block of threads to download data
+            while (tasks.Count < Settings.ThreadCount && downloadCombinations.Count > 0)
+            {
+              Tuple<Resolution, Instrument> downloadCombination = downloadCombinations.Dequeue();
+              tasks.Add(Task.Run(() =>
+              {
+                progressDialog.LogInformation($"Requesting data for {downloadCombination.Item2.Ticker}");
+                if (DataProvider!.Request(downloadCombination.Item2, downloadCombination.Item1, Settings.FromDateTime, Settings.ToDateTime))
+                  lock (successCountLock) successCount++;
+                else
+                  lock (failureCountLock) failureCount++;
+                progressDialog.Progress++;
+              }));
+            }
 
+            //wait for all threads to complete and then clear the list for next block
+            try { Task.WaitAll(tasks.ToArray(), progressDialog.CancellationTokenSource.Token); } catch (OperationCanceledException) { }
+            tasks.Clear();
+          }
 
           stopwatch.Stop();
           TimeSpan elapsed = stopwatch.Elapsed;
-          IsRunning = false;
 
-          //output status message
-          if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Mass download complete - Attempted {instrumentDownloadCount} instruments, downloaded {successCount} instruments successfully and failed on {failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Download", $"Downloaded data for {instrumentDownloadCount} instruments for the selected resolutions");
+          if (progressDialog.CancellationTokenSource.IsCancellationRequested)
+            progressDialog.StatusMessage += " - Cancelled";
+          else
+            progressDialog.StatusMessage = $"Mass download complete - Attempted {instrumentDownloadCount} instruments, downloaded {successCount} instruments successfully and failed on {failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})";
+
+          progressDialog.Complete = true;
+          IsRunning = false;
         }
         catch (Exception e)
         {
           IsRunning = false;
-          if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"EXCEPTION: Mass download main thread failed - (Exception: \"{e.Message}\"");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Download Failed", $"Mass download main thread failed - (Exception: \"{e.Message}\"");
+          progressDialog.LogError($"EXCEPTION: Mass download main thread failed - (Exception: \"{e.Message}\"");
         }
       });
     }

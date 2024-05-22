@@ -45,7 +45,7 @@ namespace TradeSharp.Data.Testing
     public void Disconnect() { IsConnected = false; }
     public void ShowSettings() { }
 
-    public object Request(string ticker, Resolution resolution, DateTime start, DateTime end) { return new List<BarData>(); }   //just return empty list
+    public bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end) { return true; }
 
     //properties
     public string Name => m_name;

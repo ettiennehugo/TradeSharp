@@ -101,6 +101,21 @@ namespace TradeSharp.InteractiveBrokers
       m_contractsByConId.Clear();
     }
 
+    /// <summary>
+    /// Returns the set of defined symbols in the contract cache.
+    /// </summary>
+    public List<string> GetDefinedSymbols()
+    {
+      List<string> result = new List<string>();
+      using (var reader = ExecuteReader($"SELECT Symbol FROM {TableContracts}"))
+        while (reader.Read())
+          result.Add(reader.GetString(0));
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the set of defined Contract in the contract cache.
+    /// </summary>
     public List<Contract> GetContracts()
     {
       List<Contract> contracts = new List<Contract>();

@@ -1,7 +1,6 @@
 using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using TradeSharp.Common;
 using TradeSharp.CoreUI.ViewModels;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
@@ -127,7 +126,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_massImport.IsEnabled = true;
       m_massExport.IsEnabled = true;
       m_massCopy.IsEnabled = true;
-      m_massDownload.IsEnabled = SelectedDataProvider is IMassDownload;      
+      m_massDownload.IsEnabled = true;
       if (SelectedDataProvider != null)
       {
         m_minuteBarsData.DataProvider = SelectedDataProvider.Name;

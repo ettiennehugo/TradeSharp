@@ -41,11 +41,11 @@ namespace TradeSharp.Data
 
 
     //interface implementations
-    public abstract object Request(string ticker, Resolution resolution, DateTime start, DateTime end);
+    public abstract bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end);
 
     //properties
     public virtual IList<string> Tickers { get => throw new NotImplementedException(); }
-    public virtual int ConnectionCountMax => Environment.ProcessorCount;
+    public virtual int ConnectionCountMax { get => Environment.ProcessorCount; }
 
     //methods
 

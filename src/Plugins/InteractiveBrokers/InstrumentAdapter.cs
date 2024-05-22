@@ -4,6 +4,7 @@ using TradeSharp.CoreUI.Services;
 using TradeSharp.InteractiveBrokers.Messages;
 using IBApi;
 using TradeSharp.Data;
+using System.Globalization;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -132,6 +133,12 @@ namespace TradeSharp.InteractiveBrokers
       return InstrumentType.Stock;
     }
 
+    public void ScanForContracts()
+    {
+      Commands.ContractScanner contractScanner = new Commands.ContractScanner(this);
+      contractScanner.Run();
+    }
+
     public void SynchronizeContractCache()
     {
       Commands.SynchronizeContractCache synchronizeContractCache = new Commands.SynchronizeContractCache(this);
@@ -193,6 +200,7 @@ namespace TradeSharp.InteractiveBrokers
       }
     }
 
+    //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requesting-historical-bars
     public void RequestHistoricalData(Contract contract, DateTime startDateTime, DateTime endDateTime, Resolution resolution)
     {
       //duration string requires a valid date range
@@ -202,6 +210,11 @@ namespace TradeSharp.InteractiveBrokers
         return;
       }
 
+      //compute the end date/time as UTC - IB requires the format yyyymmdd hh:mm:ss xx/xxxx where yyyymmdd and xx/xxxx are optional. E.g.: 20031126 15:59:00 US/Eastern OR
+      //yyyymmddd-hh:mm:ss time is in UTC
+      string endDateTimeStr = endDateTime.ToUniversalTime().ToString("yyyyMMdd-HH:mm:ss");
+
+      //compute the duration string based on the resolution and start date
       string barSizeSetting = Constants.BarSize1Day;
       string durationString;
       switch (resolution)
@@ -209,47 +222,36 @@ namespace TradeSharp.InteractiveBrokers
         case Resolution.Minute:
           barSizeSetting = Constants.BarSize1Min;
           TimeSpan duration = endDateTime - startDateTime;
-          durationString = $"{(long)Math.Ceiling(duration.TotalDays)} {Constants.DurationDays}";
+          durationString = computeDuration(duration);
           break;
         case Resolution.Hour:
           barSizeSetting = Constants.BarSize1Hour;
           duration = endDateTime - startDateTime;
-          durationString = $"{(long)Math.Ceiling(duration.TotalDays)} {Constants.DurationDays}";
+          durationString = computeDuration(duration);
           break;
         case Resolution.Day:
           barSizeSetting = Constants.BarSize1Day;
           duration = endDateTime - startDateTime;
-          durationString = $"{(long)Math.Ceiling(duration.TotalDays)} {Constants.DurationDays}";
+          durationString = computeDuration(duration);
           break;
         case Resolution.Week:
           barSizeSetting = Constants.BarSize1Week;
-          duration = endDateTime - startDateTime;          
-
-          if (duration.TotalDays < 7)
-          {
-            m_logger.LogError($"Invalid date range (start: {startDateTime}, end: {endDateTime}) for weekly historical data request on ticker {contract.Symbol}.");
-            return;
-          }
-          
-          durationString = $"{(long)Math.Ceiling(duration.TotalDays / 7)} {Constants.DurationWeeks}";
+          duration = endDateTime - startDateTime;
+          durationString = computeDuration(duration);
           break;
         case Resolution.Month:
           barSizeSetting = Constants.BarSize1Month;
           duration = endDateTime - startDateTime;
-
-          if (duration.TotalDays < 365)
-            durationString = $"{(long)Math.Ceiling(duration.TotalDays)} {Constants.DurationMonths}";
-          else
-            durationString = $"{(long)Math.Ceiling(duration.TotalDays / 365)} {Constants.DurationYears}";
+          durationString = computeDuration(duration);
           break;
         default:
           m_logger.LogError($"Unsupported resolution requested {resolution.ToString()} on ticker {contract.Symbol} for historical data.");
           return;   //intentional exit on error state
       }
 
-      int reqId = m_historicalRequestCounter + HistoricalIdBase;
+      int reqId = m_historicalRequestCounter++ + HistoricalIdBase;
       m_activeHistoricalRequests[reqId] = new HistoricalDataRequest(reqId, contract, resolution, startDateTime, endDateTime);
-      m_serviceHost.Client.ClientSocket.reqHistoricalData(reqId, contract, endDateTime.ToString(), durationString, barSizeSetting, "TRADES" /*whatToShow*/ , 1 /*useRTH*/, 1 /*formatDate - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#hist-format-date*/, false /*keepUpToDate*/, new List<TagValue>());
+      m_serviceHost.Client.ClientSocket.reqHistoricalData(reqId, contract, endDateTimeStr, durationString, barSizeSetting, "TRADES" /*whatToShow*/ , 1 /*useRTH*/, 1 /*formatDate as UTC - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#hist-format-date*/, false /*keepUpToDate*/, new List<TagValue>());
     }
 
     /// <summary>
@@ -305,9 +307,11 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleHistoricalData(HistoricalDataMessage historicalDataMessage)
     {
+      
       if (m_activeHistoricalRequests.TryGetValue(historicalDataMessage.RequestId, out HistoricalDataRequest? request))
-      {
-        if (DateTime.TryParse(historicalDataMessage.Date, out DateTime dateTime))
+      { 
+        //NOTE: Historical data requests must be done in UTC since we assume it is in UTC here.
+        if (DateTime.TryParseExact(historicalDataMessage.Date, Constants.DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dateTime))
         {
           //NOTE: Requests must be done as whole units of days, week, months or years so we need to make sure that the response date is within the specific requested date range.
           if (dateTime >= request.FromDateTime && dateTime <= request.ToDateTime)
@@ -344,5 +348,25 @@ namespace TradeSharp.InteractiveBrokers
       m_fundamentalsRequestActive = false;
     }
 
+
+    /// <summary>
+    /// Computes the duration string for the historical data request based on the total duration.
+    /// https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#hist-step-size
+    /// </summary>
+    private string computeDuration(TimeSpan duration)
+    {
+      if (duration.TotalHours < 24)
+      {
+        return $"{Math.Ceiling(duration.TotalDays)} {Constants.DurationDays}";
+      }
+      else if (duration.TotalDays < 365)
+      {
+        return $"{Math.Ceiling(duration.TotalDays)} {Constants.DurationDays}";
+      }
+      else
+      {
+        return $"{Math.Ceiling(duration.TotalDays / 365)} {Constants.DurationYears}";
+      }
+    }
   }
 }

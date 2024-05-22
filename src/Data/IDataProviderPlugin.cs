@@ -31,11 +31,12 @@ namespace TradeSharp.Data
     /// Set of tickers supported by the data provider.
     /// </summary>
     IList<string> Tickers { get; }
+    int ConnectionCountMax { get; }
 
     //methods
     /// <summary>
     /// Request the data for a specific ticker with a given resolution and time range.
     /// </summary>
-    object Request(string ticker, Resolution resolution, DateTime start, DateTime end);
+    bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end);
   }
 }

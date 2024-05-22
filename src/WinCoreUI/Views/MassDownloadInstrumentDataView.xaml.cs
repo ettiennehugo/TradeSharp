@@ -2,8 +2,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using TradeSharp.Common;
+using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
+using System.Linq;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,12 +28,15 @@ namespace TradeSharp.WinCoreUI.Views
 
     //attributes
     private IMassDownloadInstrumentDataService m_massDownloadInstrumentDataService;
+    private IPluginsService m_pluginsService;
+    private IDataProviderPlugin? m_dataProvider;
 
     //constructors
     public MassDownloadInstrumentDataView()
     {
       Settings = new MassDownloadSettings();
       m_massDownloadInstrumentDataService = (IMassDownloadInstrumentDataService)IApplication.Current.Services.GetService(typeof(IMassDownloadInstrumentDataService));
+      m_pluginsService = (IPluginsService)IApplication.Current.Services.GetService(typeof(IPluginsService));
       this.InitializeComponent();
     }
 
@@ -45,7 +50,7 @@ namespace TradeSharp.WinCoreUI.Views
     public string DefaultStartDateTime { get => Constants.DefaultMinimumDateTime.ToString("yyyy-MM-dd HH:mm"); }
     public string DefaultEndDateTime { get => Constants.DefaultMaximumDateTime.ToString("yyyy-MM-dd HH:mm"); }
     public MassDownloadSettings Settings { get; internal set; }
-    public int ThreadCountMax { get => Environment.ProcessorCount; }
+    public int ThreadCountMax { get; internal set; }
     public Window ParentWindow { get; set; }
     public string DataProvider { get; set; }
 
@@ -53,6 +58,9 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportExportDataDateTimeTimeZone));
+      m_endDateTime.Text = DateTime.Now.ToString("yyyy-MM-dd") + " 23:59";
+      m_dataProvider = (IDataProviderPlugin)m_pluginsService.Items.FirstOrDefault(p => p is IDataProviderPlugin && p.Name == DataProvider);
+      if (m_dataProvider != null) ThreadCountMax = m_dataProvider.ConnectionCountMax;
     }
 
     private bool enableDownloadButton()
@@ -63,15 +71,9 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_downloadBtn_Click(object sender, RoutedEventArgs e)
     {
-      
-      //TODO: Need to look up a data provider once the data provider service/view model is available.  
-
-      //IDataProviderService
-      //m_massDownloadInstrumentDataService.DataProvider = getDataProvider(DataProvider);
-
-
+      m_massDownloadInstrumentDataService.DataProvider = m_dataProvider;
       m_massDownloadInstrumentDataService.Settings = Settings;
-      m_massDownloadInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass download service - this can be done as an improvement when we have a progress dialog working.
+      m_massDownloadInstrumentDataService.Logger = null;
       IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Download Progress", m_massDownloadInstrumentDataService.Logger);
       m_massDownloadInstrumentDataService.StartAsync(progressDialog);

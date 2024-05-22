@@ -17,7 +17,7 @@ namespace TradeSharp.InteractiveBrokers
   /// </summary>
   [ComVisible(true)]
   [Guid("D6BF3AE3-F358-4066-B177-D9763F927D67")]
-  public class DataProviderPlugin : TradeSharp.Data.DataProviderPlugin, IInteractiveBrokersPlugin, IMassDownload
+  public class DataProviderPlugin : TradeSharp.Data.DataProviderPlugin, IInteractiveBrokersPlugin
   {
     //constants
 
@@ -47,8 +47,8 @@ namespace TradeSharp.InteractiveBrokers
       base.Create(logger);
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
       m_instrumentService = (IInstrumentService)ServiceHost.Services.GetService(typeof(IInstrumentService))!;
-      m_ip = (string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
-      m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
+      m_ip = (string)Configuration!.Configuration[Constants.IpKey];
+      m_port = int.Parse((string)Configuration!.Configuration[Constants.PortKey]);
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
       Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) });
@@ -57,14 +57,27 @@ namespace TradeSharp.InteractiveBrokers
       raiseUpdateCommands();
     }
 
-    public override object Request(string ticker, Resolution resolution, DateTime start, DateTime end)
+    public override bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end)
     {
+      if (!IsConnected)
+      {
+        m_logger.LogError("Failed to request historical data, not connected to TWS API");
+        return false;
+      }
 
+      IBApi.Contract? contract = m_ibServiceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
 
-      throw new NotImplementedException();
+      if (contract == null)
+        foreach (var ticker in instrument.AlternateTickers)
+        {
+          contract = m_ibServiceHost.Cache.GetContract(ticker, Constants.DefaultExchange);
+          if (contract != null) break;
+        }
 
+      if (contract == null) return false;
 
-
+      m_ibServiceHost.Instruments.RequestHistoricalData(contract, start, end, resolution);     
+      return true;
     }
 
     //properties
@@ -104,29 +117,5 @@ namespace TradeSharp.InteractiveBrokers
 
     protected void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }
     protected void raiseDisconnected() { if (Disconnected != null) Disconnected(this, new EventArgs()); }
-
-    public void Download(DateTime start, DateTime end, Resolution resolution, IList<string> tickers)
-    {
-      IProgressDialog progress = m_dialogService.CreateProgressDialog("Mass Data Download", m_logger);
-      progress.StatusMessage = $"Downloading data from InteractiveBrokers for {tickers.Count} instruments between {start} and {end} at {resolution} resolution";
-      progress.Progress = 0;
-      progress.Minimum = 0;
-      progress.Maximum = tickers.Count;
-      progress.ShowAsync();
-
-      foreach (var ticker in tickers)
-      {
-        progress.LogInformation($"Requesting data for {ticker}");
-        Request(ticker, resolution, start, end);
-        progress.Progress++;
-        if (progress.CancellationTokenSource.IsCancellationRequested)
-        {
-          progress.StatusMessage += " - Cancelled";
-          break;
-        }
-      }
-
-      progress.Complete = true;
-    }
   }
 }

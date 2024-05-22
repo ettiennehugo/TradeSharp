@@ -207,20 +207,17 @@ namespace TradeSharp.InteractiveBrokers
     {
       m_logger.LogInformation("TODO - HandleOpenOrder not implemented.");
 
-      //Order? order = resolveOrder(openOrderMessage.OrderId);
-      //if (order == null)
-      //{
-      //  m_logger.LogWarning($"HandleOpenOrder - order not found - {openOrderMessage.OrderId}");
-      //  return;
-      //}
-
+      //Order order = resolveOrder(openOrderMessage.OrderId);
+      
       //order.Status = openOrderMessage.OrderState.Status == "" ? Data.Order.OrderStatus.Filled : Data.Order.OrderStatus.Open;   //TODO - need to complete this
       //order.Size = openOrderMessage.Order. .TotalQuantity;
       //order.
-      //order.Filled = openOrderMessage.Order.Filled;
-      //order.Remaining = openOrderMessage.Order.Remaining;
+      //order.Filled += openOrderMessage.Order.FilledQuantity;
+      //order.Remaining = openOrderMessage.Order.TotalQuantity - openOrderMessage.Order.FilledQuantity;
       //order.AverageFillPrice = openOrderMessage.Order.AverageFillPrice;
-      //order.LastFillPrice = openOrderMessage.Order.LastFillPrice;     
+      //order.LastFillPrice = openOrderMessage.OrderState.LastFilledPrice;
+
+
     }
 
     protected Account resolveAccount(string accountName)
@@ -249,7 +246,7 @@ namespace TradeSharp.InteractiveBrokers
       return position;
     }
 
-    protected Order resolveOrder(Account account, int orderId)
+    protected Order resolveOrder(Data.Account account, int orderId)
     {
       Order? order = (Order?)account.Orders.FirstOrDefault(x => ((Order)x).OrderId == orderId);
       if (order == null)
@@ -260,6 +257,7 @@ namespace TradeSharp.InteractiveBrokers
 
       return order;
     }
+
 
     protected Order? resolveOrder(int orderId)
     {

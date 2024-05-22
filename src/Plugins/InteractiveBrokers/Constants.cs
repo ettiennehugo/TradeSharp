@@ -65,27 +65,33 @@
     /// <summary>
     /// Supported bar sizes.
     /// </summary>
-    public const string BarSize1Sec = "1";      //only available for 6-months back
-    public const string BarSize5Sec = "5";      //only available for 6-months back
-    public const string BarSize10Sec = "10";    //only available for 6-months back
-    public const string BarSize15Sec = "15";    //only available for 6-months back
-    public const string BarSize30Sec = "30";    //only available for 6-months back
-    public const string BarSize1Min = "1";
-    public const string BarSize2Min = "2";
-    public const string BarSize3Min = "3";
-    public const string BarSize5Min = "5";
-    public const string BarSize10Min = "10";
-    public const string BarSize15Min = "15";
-    public const string BarSize20Min = "20";
-    public const string BarSize30Min = "30";
-    public const string BarSize1Hour = "1";
-    public const string BarSize2Hour = "2";
-    public const string BarSize3Hour = "3";
-    public const string BarSize4Hour = "4";
-    public const string BarSize8Hour = "8";
-    public const string BarSize1Day = "1";
-    public const string BarSize1Week = "1";
-    public const string BarSize1Month = "1";
+    public const string BarSize1Sec = "1 secs";      //only available for 6-months back
+    public const string BarSize5Sec = "5 secs";      //only available for 6-months back
+    public const string BarSize10Sec = "10 secs";    //only available for 6-months back
+    public const string BarSize15Sec = "15 secs";    //only available for 6-months back
+    public const string BarSize30Sec = "30 secs";    //only available for 6-months back
+    public const string BarSize1Min = "1 min";
+    public const string BarSize2Min = "2 mins";
+    public const string BarSize3Min = "3 mins";
+    public const string BarSize5Min = "5 mins";
+    public const string BarSize10Min = "10 mins";
+    public const string BarSize15Min = "15 mins";
+    public const string BarSize20Min = "20 mins";
+    public const string BarSize30Min = "30 mins";
+    public const string BarSize1Hour = "1 hour";
+    public const string BarSize2Hour = "2 hours";
+    public const string BarSize3Hour = "3 hours";
+    public const string BarSize4Hour = "4 hours";
+    public const string BarSize8Hour = "8 hours";
+    public const string BarSize1Day = "1 day";
+    public const string BarSize1Week = "1W";
+    public const string BarSize1Month = "1M";
+
+
+    /// <summary>
+    /// Set of response message DateTime formats to parse.
+    /// </summary>
+    public static string[] DateTimeFormats = { "yyyyMMdd HH:mm:ss", "yyyyMMdd HHmmss", "yyyyMMdd" };
 
   }
 }
