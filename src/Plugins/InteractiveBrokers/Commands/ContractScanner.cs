@@ -6,8 +6,11 @@ namespace TradeSharp.InteractiveBrokers.Commands
   /// <summary>
   /// Scans the Interactive Brokers for contracts that are not defined in the local cache, Interactive Brokers does not provide and API
   /// to just ask for the set of contracts that are available.
-  /// NOTE: This operation will run for a LONG time if made to long to scan for all possible contracts so we keep it fairly short. Using
-  ///       a 25-millisecond wait between requests would take about 3.5 hours to process all possible combinations of 4-letter tickers.
+  /// NOTE: 
+  ///  - This operation will run for a LONG time if made to long to scan for all possible contracts so we keep it fairly short. Using
+  ///    a 25-millisecond wait between requests would take about 3.5 hours to process all possible combinations of 4-letter tickers.
+  ///  - The scanner only returns minimal data even in the contracts, the full contract details will need to be requested separately
+  ///    to fill in the fill contract and contract details tables.
   /// </summary>
   public class ContractScanner
   {
@@ -99,7 +102,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
           //wait for the response to be handled
           var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
           while (m_requestId != -1 && !cancellationTokenSource.Token.IsCancellationRequested)
-            Task.Delay(25).Wait();  //need to keep this higher than 20 milliseconds.
+            Thread.Sleep(InstrumentAdapter.IntraRequestSleep);   //throttle requests to avoid exceeding the hard limit imposed by IB
 
           //persist found contracts at specific intervals so ensure we don't lose them if the program crashes
           if (m_contractsFound.Count > 0 && m_contractsFound.Count % PersistInterval == 0)
@@ -151,6 +154,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
     public void HandleSymbolSamples(SymbolSamplesMessage symbols)
     {
+      //NOTE: The contract data returned here contains only the basic information in order to retrieve the rest of the
+      //      contract data and contract details.
       foreach (var symbol in symbols.ContractDescriptions)
         if (symbol.Contract != null && m_contractsNotProcessed.Remove(symbol.Contract.Symbol))
           m_contractsFound.Add(symbol.Contract);

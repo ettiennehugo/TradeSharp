@@ -114,7 +114,37 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     /// <summary>
-    /// Returns the set of defined Contract in the contract cache.
+    /// Return the set of cached headers in the Contract table of the cache.
+    /// </summary>
+    public List<Contract> GetContractHeaders()
+    {
+      List<Contract> contracts = new List<Contract>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {TableContracts}"))
+        while (reader.Read())
+        {
+          Contract contract = new Contract
+          {
+            ConId = reader.GetInt32(0),
+            Symbol = reader.GetString(1),
+            SecId = reader.GetString(2),
+            SecIdType = reader.GetString(3),
+            SecType = reader.GetString(4),
+            Exchange = reader.GetString(5),
+            PrimaryExch = reader.GetString(6),
+            Currency = reader.GetString(7),
+            LocalSymbol = reader.GetString(8),
+            TradingClass = reader.GetString(9),
+            LastTradeDateOrContractMonth = reader.GetString(10)
+          };
+          contracts.Add(contract);
+        }
+
+      return contracts;
+    }
+
+    /// <summary>
+    /// Returns the set of defined Contract data in the contract cache - this would include the ContractDetails.
     /// </summary>
     public List<Contract> GetContracts()
     {

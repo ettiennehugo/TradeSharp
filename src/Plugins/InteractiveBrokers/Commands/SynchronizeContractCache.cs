@@ -39,27 +39,22 @@ namespace TradeSharp.InteractiveBrokers.Commands
     //methods
     public void Run()
     {
-      m_adapter.m_serviceHost.Cache.Clear();    //ensure cache starts fresh after the update
+      List<IBApi.Contract> contracts = m_adapter.m_serviceHost.Cache.GetContractHeaders();
       m_progress = m_adapter.m_dialogService.CreateProgressDialog("Synchronizing Contract Cache", m_adapter.m_logger);
-      m_progress.StatusMessage = "Synchronizing Contract Cache from Instrument Definitions";
+      m_progress.StatusMessage = "Synchronizing Contract Cache from Interactive Brokers";
       m_progress.Progress = 0;
       m_progress.Minimum = 0;
-      m_progress.Maximum = m_adapter.m_instrumentService.Items.Count;
+      m_progress.Maximum = contracts.Count;
       m_progress.ShowAsync();
+
       m_adapter.m_serviceHost.Client.Error += HandleError;
       m_adapter.m_contractRequestActive = true;
 
-      foreach (var instrument in m_adapter.m_instrumentService.Items)
+      foreach (var contract in contracts)
       {
-        var currency = "USD";   //currently hardcoded to support Stock contract retrieval
-        var exchange = m_adapter.m_exchangeService.Items.FirstOrDefault(e => e.Id == instrument.PrimaryExchangeId);
-        var country = m_adapter.m_countryService.Items.FirstOrDefault(c => c.Id == exchange?.CountryId);
-        if (country != null) currency = country?.CountryInfo?.RegionInfo.ISOCurrencySymbol;
-        //NOTE: This is very much coded to work with only Stock cotnracts, other contract types will need to be handled differently.
-        var contract = new IBApi.Contract { Symbol = instrument.Ticker, SecType = m_adapter.InstrumentTypeToIBContractType(instrument.Type), Exchange = Constants.DefaultExchange, Currency = currency };
-        m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentAdapter.InstrumentIdBase, contract);
-    
         m_progress.Progress++;
+        //NOTE: InstrumentAdapter.HandleContractDetails is called when the contract details are received.
+        m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentAdapter.InstrumentIdBase, contract);
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
         Thread.Sleep(InstrumentAdapter.IntraRequestSleep);    //throttle requests to avoid exceeding the hard limit imposed by IB
       }

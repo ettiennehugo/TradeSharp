@@ -48,9 +48,9 @@ namespace TradeSharp.InteractiveBrokers
       Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
       Commands.Add(new PluginCommand { Name = "Scan for Contracts", Tooltip = "Run an exhaustive search for new contracts supported by Interactive Brokers", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScanForContractsAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = "Download Contracts", Tooltip = "Download the rest of the contract and contract details based off contract headers", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) });
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
       Commands.Add(new PluginCommand { Name = "Define Exchange", Tooltip = "Define supported Exchanges", Icon = "\uF22C", Command = new AsyncRelayCommand(OnDefineSupportedExchangesAsync) } );
-      Commands.Add(new PluginCommand { Name = "Download Contracts", Tooltip = "Cache defined instrument contract definitions", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Validate Non-IB Instrument Groups", Tooltip = "Validate Non-IB Instrument Groups against IB Instrument Groups", Icon = "\uE15C", Command = new AsyncRelayCommand(OnValidateInstrumentGroupsAsync) } );
       Commands.Add(new PluginCommand { Name = "Copy Classifications to Instrument Groups", Tooltip = "Copy the Interactive Brokers classifications to Instrument Groups", Icon = "\uF413", Command = new AsyncRelayCommand(OnCopyIBClassesToInstrumentGroupsAsync) } );
       Commands.Add(new PluginCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );

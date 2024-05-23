@@ -18,7 +18,9 @@ namespace TradeSharp.InteractiveBrokers
     public const int HistoricalIdBase = 30000000;
     public const int ContractDetailsId = InstrumentIdBase + 1;
     public const int FundamentalsId = InstrumentIdBase + 2;
-    public const int IntraRequestSleep = 25; //sleep time between requests in milliseconds - set limit to be under 50 requests per second https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requests-limitations
+    //sleep time between requests in milliseconds - set limit to be under 50 requests per second https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requests-limitations
+    //NOTE: If you set this too short it looks like the IB API starts failing and some responses are not properly processed.
+    public const int IntraRequestSleep = 50; 
 
     //enums
 
@@ -211,7 +213,7 @@ namespace TradeSharp.InteractiveBrokers
       }
 
       //compute the end date/time as UTC - IB requires the format yyyymmdd hh:mm:ss xx/xxxx where yyyymmdd and xx/xxxx are optional. E.g.: 20031126 15:59:00 US/Eastern OR
-      //yyyymmddd-hh:mm:ss time is in UTC
+      //yyyymmddd-hh:mm:ss time is in UTC - valid IB time zones defined here - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#contract-details
       string endDateTimeStr = endDateTime.ToUniversalTime().ToString("yyyyMMdd-HH:mm:ss");
 
       //compute the duration string based on the resolution and start date
