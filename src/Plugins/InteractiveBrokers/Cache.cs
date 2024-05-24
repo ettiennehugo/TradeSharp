@@ -4,10 +4,20 @@ using TradeSharp.Common;
 using IBApi;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using TradeSharp.Data;
 
 namespace TradeSharp.InteractiveBrokers
 {
+  /// <summary>
+  /// Meta-data stored for the contract scanner.
+  /// NOTE: This is needed to "discover" contracts defined on the Interactive Brokers system since they do not have an explicit API to just
+  ///       get the contract definitions. If such an explicit API becomes available this class, its associated data table and API's can be removed.
+  /// </summary>
+  public sealed class ContractScannerMetaData
+  {
+    public string Ticker { get; set; } = "";
+    public DateTime LastScanDateTime { get; set; } = DateTime.Now;
+  }
+
   /// <summary>
   /// Database to locally store data specific to Interactive Brokers, e.g. contract details.
   /// </summary>
@@ -19,6 +29,7 @@ namespace TradeSharp.InteractiveBrokers
     /// </summary>
     public const string TableContracts = "Contracts";              //contract definition table
     public const string TableContractDetails = "ContractDetails";  //contract details table in cache
+    public const string TableContractScannerMetaData = "ContractScannerMetaData";  //contract scanner meta-data table
 
     //enums
 
@@ -110,6 +121,28 @@ namespace TradeSharp.InteractiveBrokers
       using (var reader = ExecuteReader($"SELECT Symbol FROM {TableContracts}"))
         while (reader.Read())
           result.Add(reader.GetString(0));
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the meta-data for the contract scanner.
+    /// </summary>
+    public List<ContractScannerMetaData> GetContractScannerMetaData()
+    {
+      List<ContractScannerMetaData> result = new List<ContractScannerMetaData>();
+
+      using (var reader = ExecuteReader($"SELECT * FROM {TableContractScannerMetaData}"))
+        while (reader.Read())
+        {
+          ContractScannerMetaData metaData = new ContractScannerMetaData
+          {
+            Ticker = reader.GetString(0),
+            LastScanDateTime = DateTime.Parse(reader.GetString(1))
+          };
+
+          result.Add(metaData);
+        }
+
       return result;
     }
 
@@ -305,6 +338,20 @@ namespace TradeSharp.InteractiveBrokers
       return contract;
     }
 
+    public void UpdateContractScannerMetaData(ContractScannerMetaData metaData)
+    {
+      lock (this)
+      {
+        ExecuteCommand(
+          $"INSERT OR REPLACE INTO {TableContractScannerMetaData} (Ticker, LastScanDateTime) " +
+            $"VALUES (" +
+              $"'{metaData.Ticker}', " +
+              $"'{metaData.LastScanDateTime.ToString("yyyy-MM-dd HH:mm:ss")}' " +
+            $")"
+        );
+      }
+    }
+
     public void UpdateContract(IBApi.Contract contract)
     {
       lock (this)
@@ -459,6 +506,7 @@ namespace TradeSharp.InteractiveBrokers
       {
         CreateContractsTable();
         CreateStockContractDetails();
+        CreateContractScannerTable();
       }
     }
 
@@ -505,5 +553,16 @@ namespace TradeSharp.InteractiveBrokers
         Notes TEXT
       ");
     }
+
+    private void CreateContractScannerTable()
+    {
+      CreateTable(TableContractScannerMetaData,
+        @"
+        Ticker TEXT,
+        LastScanDateTime TEXT,
+        PRIMARY KEY (Ticker)
+      ");
+    }
+
   }
 }

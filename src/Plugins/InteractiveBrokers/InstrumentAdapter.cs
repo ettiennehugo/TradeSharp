@@ -20,7 +20,7 @@ namespace TradeSharp.InteractiveBrokers
     public const int FundamentalsId = InstrumentIdBase + 2;
     //sleep time between requests in milliseconds - set limit to be under 50 requests per second https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requests-limitations
     //NOTE: If you set this too short it looks like the IB API starts failing and some responses are not properly processed.
-    public const int IntraRequestSleep = 50; 
+    public const int IntraRequestSleep = 45; 
 
     //enums
 
