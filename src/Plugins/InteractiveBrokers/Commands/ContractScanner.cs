@@ -15,7 +15,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
   public class ContractScanner
   {
     //constants
-    private const int MaxLength = 4;
+    private const int MaxLength = 4;                    //Maximum length of the tickers generated to scan, this increases EXPONENTIALLY so lengths beyond 4 is probably not feasible within a reasonable time to download
     private const int PersistBlockInterval = 100;       //interval at which contracts would be persisted to the local cache
     private const int RefreshScanIntervalDays = 183;    //recheck an instrument every 6-months of so for existance
     public const int ScannerIdBase = 100000000;
@@ -66,7 +66,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
     public void Run()
     {
       m_progress = m_adapter.m_dialogService.CreateProgressDialog("Scanning for Contracts", m_adapter.m_logger);
-      m_progress.StatusMessage = "Generating tickers to scan";
+      m_progress.StatusMessage = "Generating tickers to scan, please wait.";
       m_progress.Progress = 0;
       m_progress.Minimum = 0;
       m_contractsToScan = generateTickersToScan(MaxLength);
@@ -74,20 +74,16 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
       m_progress.LogInformation($"Generated {m_contractsToScan.Count} potential tickers of up to length {MaxLength}...removing tickers already cached");
 
-      //remove contracts already defined in the cache
-      foreach (string ticker in m_contractsDefined)
-        m_contractsToScan.Remove(ticker);
-      m_progress.LogInformation($"{m_contractsToScan.Count} contracts after removing contracts already defined");
-
       //remove contracts not required for scanning based on the meta data
       m_progress.LogInformation($"{m_contractScannerMetaData.Count} tickers previously scanned in the meta-data cache, removing tickers already scanned within the last {RefreshScanIntervalDays} days");
       var now = DateTime.Now;
-      var refreshInterval = TimeSpan.FromDays(RefreshScanIntervalDays);
       foreach (var metaData in m_contractScannerMetaData)
-        if ((now - metaData.LastScanDateTime) < refreshInterval)
-        {
-          m_contractsToScan.Remove(metaData.Ticker);
-        }
+        if ((now - metaData.LastScanDateTime).Days < RefreshScanIntervalDays) m_contractsToScan.Remove(metaData.Ticker);
+
+      //remove contracts already defined in the cache
+      foreach (string ticker in m_contractsDefined)
+        m_contractsToScan.Remove(ticker);
+      m_progress.LogInformation($"{m_contractsToScan.Count} contracts after removing {m_contractsDefined.Count} contracts already defined");
 
       //scan for contracts from Interactive Brokers
       m_progress.Maximum = m_contractsToScan.Count;   //update Maximum after removing contracts already defined and not required for scan
@@ -129,7 +125,13 @@ namespace TradeSharp.InteractiveBrokers.Commands
             int endIndex = blockIndex * PersistBlockInterval - 1; //-1 since it will be included in the next block persistenace, also makes sure the index stays in bounds of the m_contractsFound list
             m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache from index {startIndex} to {endIndex}");
             for (int i = startIndex; i <= endIndex; i++)
+            {
+              m_contractsNotProcessed.Remove(m_contractsFound[i].Symbol);
               m_adapter.m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
+              var metaData = new ContractScannerMetaData { Ticker = m_contractsFound[i].Symbol };
+              metaData.LastScanDateTime = DateTime.Now;
+              m_adapter.m_serviceHost.Cache.UpdateContractScannerMetaData(metaData);
+            }
             m_persistBlockIndex++;
           }
 
@@ -144,32 +146,21 @@ namespace TradeSharp.InteractiveBrokers.Commands
       int lastPersistedIndex = m_persistBlockIndex * PersistBlockInterval;
       if (m_contractsFound.Count > lastPersistedIndex)
       {
-        m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache from index {lastPersistedIndex} to {m_contractsFound.Count - 1}");
+        m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache from index {lastPersistedIndex} to {m_contractsFound.Count}");
         for (int i = lastPersistedIndex; i < m_contractsFound.Count; i++)
-          m_adapter.m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
-      }
-
-      //update the meta data timestamps of scanned tickers (this would include if the process was cancelled since some tickers might have
-      //been scanned)
-      //NOTE: This allows the scanning process to be run incrementally over multiple days without having to rescan the same tickers.
-      if (scannedCount > 0)
-      {
-        m_progress.LogInformation($"Operation cancelled - found {m_contractsFound.Count} new contracts scanning after scanning {scannedCount} generated tickers (this number can be smaller, IB can return multiple contracts per ticker scanned), refreshing meta-data cache for scanner");
-
-        for (int i = 0; i < scannedCount; i++)
         {
-          var ticker = m_contractsToScan[i];
-          var metaData = m_contractScannerMetaData.FirstOrDefault(m => m.Ticker == ticker);
-          if (metaData == null)
-            metaData = new ContractScannerMetaData { Ticker = ticker };
+          m_adapter.m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
+          var metaData = new ContractScannerMetaData { Ticker = m_contractsFound[i].Symbol };
           metaData.LastScanDateTime = DateTime.Now;
           m_adapter.m_serviceHost.Cache.UpdateContractScannerMetaData(metaData);
         }
       }
+      m_progress.LogInformation($"Found {m_contractsFound.Count} new contracts after scanning {scannedCount} generated tickers (this number can be smaller, IB can return multiple contracts per ticker scanned), refreshing meta-data cache for scanner");
 
-      if (m_contractsFound.Count == 0)
-        m_progress.LogInformation("No new contracts were found");
-
+      if (!m_progress.CancellationTokenSource.IsCancellationRequested)
+        m_progress.StatusMessage = $"Scan completed - found {m_contractsFound.Count} new contracts";
+      else
+        m_progress.StatusMessage = $"Scan cancelled - found {m_contractsFound.Count} new contracts";
       m_progress.Complete = true;
     }
     

@@ -125,6 +125,7 @@ namespace TradeSharp.WinCoreUI.Views
     public IncrementalObservableCollection<LogEntryDecorator> Entries { get; set; }  //observable collection of log entries for display
     public bool HasMoreItems { get; internal set; }
     public bool IsLoading;
+    public int UnfilteredEntryCount { get => m_entries.Count; }
 
     //methods
     /// <summary>

@@ -46,6 +46,7 @@ namespace TradeSharp.WinCoreUI.Views
     private bool m_parentWindowSizeInit;
     private ILogger? m_logger;
     private bool m_logViewVisible;
+    private bool m_closeOnCancelClick;
 
     //constructors
     public ProgressDialogView()
@@ -66,6 +67,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_logger = null;
       m_logViewVisible = false;
       m_parentWindowSizeInit = false;
+      m_closeOnCancelClick = false;
       InitializeComponent();
     }
 
@@ -138,7 +140,7 @@ namespace TradeSharp.WinCoreUI.Views
         {
           m_complete = value;
           if (m_complete)
-            DispatcherQueue.TryEnqueue(() => { m_cancelBtn.Content = "Close"; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
+            DispatcherQueue.TryEnqueue(() => { m_cancelBtn.Content = "Close"; m_closeOnCancelClick = true; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
         }
       }
     }
@@ -182,8 +184,22 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_cancelBtn_Click(object sender, RoutedEventArgs e)
     {
-      if (Progress != Maximum) m_cancellationTokenSource.Cancel();  //only cancel run if process is not already completed.
-      ParentWindow.Close();
+      //transition "cancel" button to "close" state or close if already in that state - the transition only happens if there are log entries
+      //present otherwise the user does not have a chance to see the log entries.
+      if (!m_closeOnCancelClick)
+      {
+        if (m_loggerView.UnfilteredEntryCount > 0)
+        {
+          if (Progress != Maximum) m_cancellationTokenSource.Cancel();  //only cancel run if process is not already completed.
+          m_cancelBtn.Content = "Close";
+          ToolTipService.SetToolTip(m_cancelBtn, "Close dialog");
+          m_closeOnCancelClick = true;
+        }
+        else
+          ParentWindow.Close(); //no log to view (user was viewing only the progress) so just close the dialog
+      }
+      else
+        ParentWindow.Close();
     }
 
     public IDisposable BeginScope(string message)
