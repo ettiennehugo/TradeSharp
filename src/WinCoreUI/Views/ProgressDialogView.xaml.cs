@@ -259,7 +259,7 @@ namespace TradeSharp.WinCoreUI.Views
       {
         //resize the controls and window to accomodate the larger log view
         m_progressBar.Width = 1060;
-        ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2230, 1280));
+        ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2230, 1285));
         m_loggerView.Visibility = Visibility.Visible;
         m_parentWindowSizeInit = true;
       });

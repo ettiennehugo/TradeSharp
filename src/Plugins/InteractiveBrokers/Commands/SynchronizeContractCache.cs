@@ -50,9 +50,11 @@ namespace TradeSharp.InteractiveBrokers.Commands
       m_adapter.m_serviceHost.Client.Error += HandleError;
       m_adapter.m_contractRequestActive = true;
 
+      int updated = 0;
       foreach (var contract in contracts)
       {
         m_progress.Progress++;
+        updated++;
         //NOTE: InstrumentAdapter.HandleContractDetails is called when the contract details are received.
         m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentAdapter.InstrumentIdBase, contract);
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
@@ -60,6 +62,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
       }
 
       m_adapter.m_serviceHost.Client.Error -= HandleError;
+
+      m_progress.StatusMessage = $"Synchronized {updated} contracts of {contracts.Count}";
       m_progress.Complete = true;
     }
 
