@@ -206,6 +206,11 @@ namespace TradeSharp.WinCoreUI.Views
 
         //update the incremental loading state
         HasMoreItems = m_lastReturnedIndex < m_entries.Count;
+
+        //need to force a refresh to make sure log view remains in sync with new entries
+        //being added to the collection otherwise log view goes out of sync with m_entries
+        //collection
+        DispatcherQueue.TryEnqueue(() => m_logView.LoadMoreItemsAsync());
       }
 
       return entry.Corrections;
@@ -343,7 +348,6 @@ namespace TradeSharp.WinCoreUI.Views
         lock (this)
         {
           IsLoading = true;
-          HasMoreItems = m_entries.Count > 0;
 
           if (HasMoreItems)
           {

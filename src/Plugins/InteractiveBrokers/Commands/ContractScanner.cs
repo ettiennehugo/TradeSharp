@@ -16,7 +16,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
   {
     //constants
     private const int MaxLength = 4;
-    private const int PersistInterval = 100;
+    private const int PersistBlockInterval = 100;       //interval at which contracts would be persisted to the local cache
     private const int RefreshScanIntervalDays = 183;    //recheck an instrument every 6-months of so for existance
     public const int ScannerIdBase = 100000000;
 
@@ -36,6 +36,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
     private List<string> m_basicList;
     private List<ContractScannerMetaData> m_contractScannerMetaData;
     private int m_requestId;
+    private int m_persistBlockIndex;
 
     //constructors
     public ContractScanner(InstrumentAdapter adapter)
@@ -49,6 +50,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       m_basicList = new List<string>();
       for (char ticker = 'A'; ticker <= 'Z'; ticker++) m_basicList.Add(ticker.ToString());
       m_requestId = -1;
+      m_persistBlockIndex = 0;
     }
 
     //finalizers
@@ -68,17 +70,17 @@ namespace TradeSharp.InteractiveBrokers.Commands
       m_progress.Progress = 0;
       m_progress.Minimum = 0;
       m_contractsToScan = generateTickersToScan(MaxLength);
-      m_progress.Maximum = m_contractsToScan.Count;
       m_progress.ShowAsync();
 
-      m_progress.LogInformation($"Generated {m_contractsToScan.Count} potential ticker combinations up to length {MaxLength}");
+      m_progress.LogInformation($"Generated {m_contractsToScan.Count} potential tickers of up to length {MaxLength}...removing tickers already cached");
 
       //remove contracts already defined in the cache
       foreach (string ticker in m_contractsDefined)
         m_contractsToScan.Remove(ticker);
       m_progress.LogInformation($"{m_contractsToScan.Count} contracts after removing contracts already defined");
 
-      //remove contracts not required for scanning given the meta data
+      //remove contracts not required for scanning based on the meta data
+      m_progress.LogInformation($"{m_contractScannerMetaData.Count} tickers previously scanned in the meta-data cache, removing tickers already scanned within the last {RefreshScanIntervalDays} days");
       var now = DateTime.Now;
       var refreshInterval = TimeSpan.FromDays(RefreshScanIntervalDays);
       foreach (var metaData in m_contractScannerMetaData)
@@ -89,12 +91,11 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
       //scan for contracts from Interactive Brokers
       m_progress.Maximum = m_contractsToScan.Count;   //update Maximum after removing contracts already defined and not required for scan
-      int foundPersistedIndex = 0;
       int scannedCount = 0;
       if (!m_progress.CancellationTokenSource.IsCancellationRequested)
       {
         m_progress.LogInformation($"{m_contractsToScan.Count} contracts after removing contracts not within the refresh interval of {RefreshScanIntervalDays} days");
-        m_progress.LogInformation($"Scanning {m_contractsToScan.Count} potential tickers");
+        m_progress.LogInformation($"Scanning remaining {m_contractsToScan.Count} tickers");
 
         m_adapter.m_serviceHost.Client.SymbolSamples += HandleSymbolSamples;
 
@@ -118,12 +119,18 @@ namespace TradeSharp.InteractiveBrokers.Commands
             Thread.Sleep(InstrumentAdapter.IntraRequestSleep);   //throttle requests to avoid exceeding the hard limit imposed by IB
 
           //persist found contracts at specific intervals so ensure we don't lose them if the program crashes
-          if (m_contractsFound.Count > 0 && m_contractsFound.Count % PersistInterval == 0)
+          //NOTE: This can have a race condition on m_contractsFound.Count with the receiving thread and handler method (HandleSymbolSamples)
+          //      so we rather capture the persistence in blocks using a block index than directly trying to base this persistence on the
+          //      m_contarctsFound.Count variable.
+          int blockIndex = m_contractsFound.Count / PersistBlockInterval;
+          if (m_contractsFound.Count > 0 && blockIndex != m_persistBlockIndex)
           {
-            m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache");
-            for (int i = foundPersistedIndex; i < m_contractsFound.Count; i++)
+            int startIndex = m_persistBlockIndex * PersistBlockInterval;
+            int endIndex = blockIndex * PersistBlockInterval - 1; //-1 since it will be included in the next block persistenace, also makes sure the index stays in bounds of the m_contractsFound list
+            m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache from index {startIndex} to {endIndex}");
+            for (int i = startIndex; i <= endIndex; i++)
               m_adapter.m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
-            foundPersistedIndex = m_contractsFound.Count;
+            m_persistBlockIndex++;
           }
 
           scannedCount++;
@@ -134,10 +141,11 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
       //store left over contracts to the cache
       //NOTE: We always update the cache even if the operation is cancelled so we don't have to rescan the same tickers again.
-      if (m_contractsFound.Count != foundPersistedIndex)
+      int lastPersistedIndex = m_persistBlockIndex * PersistBlockInterval;
+      if (m_contractsFound.Count > lastPersistedIndex)
       {
-        m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache");
-        for (int i = foundPersistedIndex; i < m_contractsFound.Count; i++)
+        m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache from index {lastPersistedIndex} to {m_contractsFound.Count - 1}");
+        for (int i = lastPersistedIndex; i < m_contractsFound.Count; i++)
           m_adapter.m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
       }
 
@@ -146,7 +154,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       //NOTE: This allows the scanning process to be run incrementally over multiple days without having to rescan the same tickers.
       if (scannedCount > 0)
       {
-        m_progress.LogInformation($"Operation cancelled - found {m_contractsFound.Count} new contracts scanning after {scannedCount} tickers, refreshing meta-data cache for scanner");
+        m_progress.LogInformation($"Operation cancelled - found {m_contractsFound.Count} new contracts scanning after scanning {scannedCount} generated tickers (this number can be smaller, IB can return multiple contracts per ticker scanned), refreshing meta-data cache for scanner");
 
         for (int i = 0; i < scannedCount; i++)
         {
@@ -186,8 +194,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
     public void HandleSymbolSamples(SymbolSamplesMessage symbols)
     {
-      //NOTE: The contract data returned here contains only the basic information in order to retrieve the rest of the
-      //      contract data and contract details.
+      //NOTE: If the contract data returned here has exchanges missing then the call above to reqMatchingSymbols is being done too
+      //      quickly so the IB server does not fill these fields for whatever reason.
       foreach (var symbol in symbols.ContractDescriptions)
         if (symbol.Contract != null && m_contractsNotProcessed.Remove(symbol.Contract.Symbol))
           m_contractsFound.Add(symbol.Contract);
