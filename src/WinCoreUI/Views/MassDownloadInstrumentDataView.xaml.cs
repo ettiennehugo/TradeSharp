@@ -76,7 +76,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_massDownloadInstrumentDataService.Logger = null;
       IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Download Progress", m_massDownloadInstrumentDataService.Logger);
-      m_massDownloadInstrumentDataService.StartAsync(progressDialog);
+      m_massDownloadInstrumentDataService.StartAsync(progressDialog, m_instrumentSelectionView.SelectedItems);
       ParentWindow.Close();
     }
 

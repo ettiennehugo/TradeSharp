@@ -28,6 +28,6 @@ namespace TradeSharp.CoreUI.Services
     public bool IsRunning { get; }
 
     //methods
-    Task StartAsync(IProgressDialog progressDialog);
+    Task StartAsync(IProgressDialog progressDialog, IList<Instrument> instruments);
   }
 }

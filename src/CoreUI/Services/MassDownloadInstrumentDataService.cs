@@ -47,7 +47,7 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] public bool m_isRunning;
 
     //methods
-    public Task StartAsync(IProgressDialog progressDialog)
+    public Task StartAsync(IProgressDialog progressDialog, IList<Instrument> instruments)
     {
       if (DataProvider == null)
       {
@@ -61,12 +61,18 @@ namespace TradeSharp.CoreUI.Services
         return Task.CompletedTask;
       }
 
+      if (instruments.Count == 0)
+      {
+        if (Debugging.MassInstrumentDataDownload) m_logger.LogWarning("Failed to start mass download, no instruments were provided");
+        return Task.CompletedTask;
+      }
+
       return Task.Run(() =>
       {
         try
         {
           Queue<Tuple<Resolution, Instrument>> downloadCombinations = new Queue<Tuple<Resolution, Instrument>>();
-          foreach (Instrument instrument in m_instrumentService.Items)
+          foreach (Instrument instrument in instruments)
           {
             if (Settings.ResolutionMinute) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Minute, instrument));
             if (Settings.ResolutionHour) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Hour, instrument));
@@ -85,7 +91,7 @@ namespace TradeSharp.CoreUI.Services
           object failureCountLock = new object();
           int failureCount = 0;
 
-          progressDialog.StatusMessage = $"Requesting data for {m_instrumentService.Items.Count} instruments";
+          progressDialog.StatusMessage = $"Requesting data for {instruments.Count} instruments";
           progressDialog.Progress = 0;
           progressDialog.Minimum = 0;
           progressDialog.Maximum = downloadCombinations.Count;
