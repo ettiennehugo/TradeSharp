@@ -620,7 +620,8 @@ namespace TradeSharp.WinDataManager.Services
       downloadView.ParentWindow = window;   //set so view can close the window
       downloadView.DataProvider = dataProvider;
       window.Content = downloadView;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 660));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      //window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 660));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
       window.Activate();
       return Task.CompletedTask;

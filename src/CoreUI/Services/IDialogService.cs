@@ -40,14 +40,15 @@ namespace TradeSharp.CoreUI.Services
   }
 
   /// <summary>
-  /// Instrument selection view control modes.
+  /// Instrument selection view controls visible encodings.
   /// </summary>
   [Flags]
   public enum InstrumentSelectionViewMode
   {
     SelectSingle = 1,
     SelectMulti = 2,
-    Add = 4,
+    Refresh = 4, 
+    Add = 8,
     Edit = 16,
     Delete = 32,
     Import = 64,

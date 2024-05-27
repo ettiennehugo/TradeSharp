@@ -1,8 +1,11 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using System.Collections.ObjectModel;
+using System;
 using System.Linq;
 using System.ComponentModel;
+using System.Collections.Generic;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using System.Collections.ObjectModel;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
@@ -16,7 +19,7 @@ namespace TradeSharp.WinCoreUI.Views
   public sealed partial class InstrumentSelectionView : UserControl, INotifyPropertyChanged
   {
     //constants
-    public InstrumentSelectionViewMode DefaultInstrumentSelectionViewMode = InstrumentSelectionViewMode.SelectSingle | InstrumentSelectionViewMode.Add | InstrumentSelectionViewMode.Edit | InstrumentSelectionViewMode.Delete | InstrumentSelectionViewMode.Import | InstrumentSelectionViewMode.Export;
+    public InstrumentSelectionViewMode DefaultInstrumentSelectionViewMode = InstrumentSelectionViewMode.SelectSingle | InstrumentSelectionViewMode.Refresh | InstrumentSelectionViewMode.Add | InstrumentSelectionViewMode.Edit | InstrumentSelectionViewMode.Delete | InstrumentSelectionViewMode.Import | InstrumentSelectionViewMode.Export;
 
     //enums
     private enum FilterField
@@ -33,6 +36,7 @@ namespace TradeSharp.WinCoreUI.Views
     //attributes
     InstrumentSelectionViewMode m_instrumentSelectionViewMode;
     ListViewSelectionMode m_selectionMode = ListViewSelectionMode.Single;
+    Visibility m_refreshVisible = Visibility.Visible;
     Visibility m_addVisible = Visibility.Visible;
     Visibility m_editVisible = Visibility.Visible;
     Visibility m_deleteVisible = Visibility.Visible;
@@ -40,6 +44,7 @@ namespace TradeSharp.WinCoreUI.Views
     Visibility m_importVisible = Visibility.Visible;
     Visibility m_exportVisible = Visibility.Visible;
     Visibility m_importExportSeparatorVisible = Visibility.Visible;
+    Visibility m_multiSelectVisible = Visibility.Visible;
 
     //constructors
     public InstrumentSelectionView()
@@ -62,6 +67,23 @@ namespace TradeSharp.WinCoreUI.Views
     public IInstrumentViewModel ViewModel { get; }
     public ObservableCollection<Instrument> Instruments;
     public ListViewSelectionMode SelectionMode { get => m_selectionMode; }
+
+    public IList<Instrument> SelectedItems { 
+      get { 
+        if (m_instruments != null)
+        {
+          if (m_selectionMode == ListViewSelectionMode.Single)
+            return new List<Instrument> { m_instruments.SelectedItem as Instrument };
+          else
+            return m_instruments.SelectedItems.Cast<Instrument>().ToList();
+        }
+        else
+          //this is most likely an incorrect access of the selected items
+          return Array.Empty<Instrument>();
+      } 
+    }
+
+    public Visibility RefreshVisible { get => m_refreshVisible; }
     public Visibility AddVisible { get => m_addVisible; }
     public Visibility EditVisible { get => m_editVisible;}
     public Visibility DeleteVisible { get => m_deleteVisible;}
@@ -69,49 +91,56 @@ namespace TradeSharp.WinCoreUI.Views
     public Visibility ImportVisible { get => m_importVisible; }
     public Visibility ExportVisible { get => m_exportVisible; }
     public Visibility ImportExportSeparatorVisible { get => m_importExportSeparatorVisible; }
+    public Visibility MultiSelectVisible { get => m_multiSelectVisible; }
 
     //events
     public event PropertyChangedEventHandler PropertyChanged;
 
     //methods
+    private void UserControl_Loaded(object sender, RoutedEventArgs e)
+    {
+      updateScreenControlFlags(true, true);
+    }
+
     private void notifyPropertyChanged(string propertyName)
     {
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    private void updateVisible(ref Visibility visibility, string propertyName, InstrumentSelectionViewMode modeFlag, bool raiseChangeNotification)
+    private void updateVisible(ref Visibility visibility, string propertyName, InstrumentSelectionViewMode modeFlag, bool raiseChangeNotification, bool forceRefresh)
     {
       Visibility oldValue = visibility;
       visibility = (InstrumentSelectionViewMode & modeFlag) == modeFlag ? Visibility.Visible : Visibility.Collapsed;
-      if (raiseChangeNotification && oldValue != visibility) notifyPropertyChanged(propertyName);
+      if (raiseChangeNotification && (oldValue != visibility || forceRefresh)) notifyPropertyChanged(propertyName);
     }
 
-    private void updateVisible(ref Visibility visibility, string propertyName, bool visible, bool raiseChangeNotification)
+    private void updateVisible(ref Visibility visibility, string propertyName, bool visible, bool raiseChangeNotification, bool forceRefresh)
     {
       Visibility oldValue = visibility;
       visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-      if (raiseChangeNotification && oldValue != visibility) notifyPropertyChanged(propertyName);
+      if (raiseChangeNotification && (oldValue != visibility || forceRefresh)) notifyPropertyChanged(propertyName);
     }
 
-    private void updateScreenControlFlags(bool raiseChangeNotification)
+    private void updateScreenControlFlags(bool raiseChangeNotification, bool forceRefresh = false)
     {
       ListViewSelectionMode oldSelectionMode = m_selectionMode;
       if ((InstrumentSelectionViewMode & InstrumentSelectionViewMode.SelectSingle) == InstrumentSelectionViewMode.SelectSingle)
         m_selectionMode = ListViewSelectionMode.Single;
       else if ((InstrumentSelectionViewMode & InstrumentSelectionViewMode.SelectMulti) == InstrumentSelectionViewMode.SelectMulti)
-        m_selectionMode = ListViewSelectionMode.Multiple;
+        m_selectionMode = ListViewSelectionMode.Extended; //extended allows non-contigious multiseletion, multiselect only allows selecting contigious elements from the list
       else
         m_selectionMode = ListViewSelectionMode.Single;
-      m_selectionMode = (InstrumentSelectionViewMode & InstrumentSelectionViewMode.SelectSingle) == InstrumentSelectionViewMode.SelectSingle ? ListViewSelectionMode.Single : ListViewSelectionMode.None;
-      if (raiseChangeNotification && oldSelectionMode != m_selectionMode) notifyPropertyChanged("SelectionMode");
+      if (raiseChangeNotification && (oldSelectionMode != m_selectionMode || forceRefresh)) notifyPropertyChanged("SelectionMode");
 
-      updateVisible(ref m_addVisible, "AddVisible", InstrumentSelectionViewMode.Add, raiseChangeNotification);
-      updateVisible(ref m_editVisible, "EditVisible", InstrumentSelectionViewMode.Edit, raiseChangeNotification);
-      updateVisible(ref m_deleteVisible, "DeleteVisible", InstrumentSelectionViewMode.Delete, raiseChangeNotification);
-      updateVisible(ref m_addEditDeleteSeparatorVisible, "AddEditDeleteSeparatorVisible", m_addVisible == Visibility.Visible | m_editVisible == Visibility.Visible | m_deleteVisible == Visibility.Visible, raiseChangeNotification);
-      updateVisible(ref m_importVisible, "ImportVisible", InstrumentSelectionViewMode.Import, raiseChangeNotification);
-      updateVisible(ref m_exportVisible, "ExportVisible", InstrumentSelectionViewMode.Export, raiseChangeNotification);
-      updateVisible(ref m_importExportSeparatorVisible, "ImportExportSeparatorVisible", m_importVisible == Visibility.Visible | m_exportVisible == Visibility.Visible, raiseChangeNotification);
+      updateVisible(ref m_multiSelectVisible, "MultiSelectVisible", InstrumentSelectionViewMode.SelectMulti, raiseChangeNotification, forceRefresh);
+      updateVisible(ref m_refreshVisible, "RefreshVisible", InstrumentSelectionViewMode.Refresh, raiseChangeNotification, forceRefresh);
+      updateVisible(ref m_addVisible, "AddVisible", InstrumentSelectionViewMode.Add, raiseChangeNotification, forceRefresh);
+      updateVisible(ref m_editVisible, "EditVisible", InstrumentSelectionViewMode.Edit, raiseChangeNotification, forceRefresh);
+      updateVisible(ref m_deleteVisible, "DeleteVisible", InstrumentSelectionViewMode.Delete, raiseChangeNotification, forceRefresh);
+      updateVisible(ref m_addEditDeleteSeparatorVisible, "AddEditDeleteSeparatorVisible", m_addVisible == Visibility.Visible | m_editVisible == Visibility.Visible | m_deleteVisible == Visibility.Visible, raiseChangeNotification, forceRefresh);
+      updateVisible(ref m_importVisible, "ImportVisible", InstrumentSelectionViewMode.Import, raiseChangeNotification, forceRefresh);
+      updateVisible(ref m_exportVisible, "ExportVisible", InstrumentSelectionViewMode.Export, raiseChangeNotification, forceRefresh);
+      updateVisible(ref m_importExportSeparatorVisible, "ImportExportSeparatorVisible", m_importVisible == Visibility.Visible | m_exportVisible == Visibility.Visible, raiseChangeNotification, forceRefresh);
     }
     
     private bool filterInstrument(Instrument instrument)
@@ -167,6 +196,16 @@ namespace TradeSharp.WinCoreUI.Views
       ViewModel.DeleteCommand.Execute(ViewModel.SelectedItem);
       Instruments.Remove(ViewModel.SelectedItem);
       ViewModel.SelectedItem = ViewModel.Items.FirstOrDefault();
+    }
+
+    private void m_selectAll_Click(object sender, RoutedEventArgs e)
+    {
+      m_instruments.SelectAll();
+    }
+
+    private void m_deselectAll_Click(object sender, RoutedEventArgs e)
+    {
+      m_instruments.DeselectRange(new ItemIndexRange(0, (uint)Instruments.Count));
     }
   }
 }
