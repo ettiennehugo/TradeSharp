@@ -36,6 +36,7 @@
     <None Remove="Views\InstrumentDataView.xaml" />
     <None Remove="Views\InstrumentGroupsView.xaml" />
     <None Remove="Views\InstrumentGroupView.xaml" />
+    <None Remove="Views\InstrumentSelectionView.xaml" />
     <None Remove="Views\InstrumentsView.xaml" />
     <None Remove="Views\InstrumentView.xaml" />
     <None Remove="Views\LoggerView.xaml" />

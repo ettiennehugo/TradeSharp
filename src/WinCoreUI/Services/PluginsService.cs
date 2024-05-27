@@ -3,10 +3,7 @@ using TradeSharp.Data;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Reflection;
-using System.Runtime.Remoting;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -85,7 +82,7 @@ namespace TradeSharp.CoreUI.Services
 
       plugin = (IPlugin)new TradeSharp.InteractiveBrokers.BrokerPlugin();
       plugin.ServiceHost = Host;
-      plugin.Configuration = m_configurationService.DataProviders[plugin.Name];
+      plugin.Configuration = m_configurationService.Brokers[plugin.Name];
       plugin.Create(m_logger);
       Items.Add(plugin);
 

@@ -40,6 +40,21 @@ namespace TradeSharp.CoreUI.Services
   }
 
   /// <summary>
+  /// Instrument selection view control modes.
+  /// </summary>
+  [Flags]
+  public enum InstrumentSelectionViewMode
+  {
+    SelectSingle = 1,
+    SelectMulti = 2,
+    Add = 4,
+    Edit = 16,
+    Delete = 32,
+    Import = 64,
+    Export = 128,
+  }
+
+  /// <summary>
   /// Timezone of the date/time values specified in a instrument data file being imported.
   /// </summary>
   public enum ImportExportDataDateTimeTimeZone
@@ -270,6 +285,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //methods
+    void PostUIUpdate(Action updateAction);
     Task ShowPopupMessageAsync(string message);
     Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
     IProgressDialog CreateProgressDialog(string title, ILogger? logger);

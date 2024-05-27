@@ -150,6 +150,8 @@ namespace TradeSharp.WinDataManager
       var instrumentBarDataViewModel = (IInstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
       ((WinCoreUI.ViewModels.InstrumentBarDataViewModel)instrumentBarDataViewModel).UIDispatcherQueue = dispatcherQueue;
       ((WinCoreUI.ViewModels.InstrumentGroupViewModel)instrumentGroupViewModel).UIDispatcherQueue = dispatcherQueue;
+      var dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
+      ((DialogService)dialogService).UIDispatcherQueue = dispatcherQueue;
 
       //setup plugin service host and start caching plugins
       var pluginsService = m_host.Services.GetService<IPluginsService>();

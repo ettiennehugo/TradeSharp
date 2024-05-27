@@ -62,6 +62,11 @@ namespace TradeSharp.WinDataManager.Services
     extern private static int SetWindowLong(IntPtr hwnd, int index, int value);
 
     //interface implementations
+    public void PostUIUpdate(Action updateAction)
+    {
+      UIDispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => { updateAction(); });
+    }
+
     public async Task ShowPopupMessageAsync(string message)
     {
       MessageDialog dlg = new(message);

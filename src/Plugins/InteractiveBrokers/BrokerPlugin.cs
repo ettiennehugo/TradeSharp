@@ -1,18 +1,46 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using System.Text.RegularExpressions;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using System.Runtime.InteropServices;
 using TradeSharp.InteractiveBrokers.Messages;
+using Microsoft.Extensions.FileSystemGlobbing.Internal;
 
 namespace TradeSharp.InteractiveBrokers
 {
+  /// <summary>
+  /// Entry for the Interactive Brokers server maintenance schedule.
+  /// </summary>
+  public class MaintenanceScheduleEntry
+  {
+    public MaintenanceScheduleEntry(DayOfWeek startDay, TimeOnly startTime, TimeOnly endTime, TimeZoneInfo timeZone) 
+    {
+      StartDay = startDay;
+      StartTime = startTime;
+
+      if (endTime < startTime)
+        EndDay = startDay + 1;  //end time is on the next day
+      else
+        EndDay = startDay;
+      
+      EndTime = endTime;
+      TimeZone = timeZone;
+    }
+
+    public DayOfWeek StartDay { get;}
+    public TimeOnly StartTime { get; }
+    public DayOfWeek EndDay { get; }
+    public TimeOnly EndTime { get; }
+    public TimeZoneInfo TimeZone { get; } = TimeZoneInfo.Local;
+  }
+
   /// <summary>
   /// Implementation of a broker plugin for Interactive Brokers, this is typically an adapter between TradeSharp and Interactive Brokers.
   /// </summary>
   [ComVisible(true)]
   [Guid("617D70F7-F0D8-4BCD-8FCF-DAF41135EF16")]
-  public class BrokerPlugin : TradeSharp.Data.BrokerPlugin, IInteractiveBrokersPlugin
+  public class BrokerPlugin : TradeSharp.Data.BrokerPlugin
   {
     //constants
 
@@ -28,9 +56,20 @@ namespace TradeSharp.InteractiveBrokers
     protected ServiceHost m_ibServiceHost;
     protected string m_ip;
     protected int m_port;
+    protected bool m_autoReconnect;
+    protected List<MaintenanceScheduleEntry> m_maintenanceSchedule;
+    protected TimeSpan m_autoReconnectInterval;
+    protected bool m_manuallyDisconnected;
+    protected Timer? m_autoReconnectTimer;
 
     //constructors
-    public BrokerPlugin() : base(Constants.DefaultName) { }
+    public BrokerPlugin() : base(Constants.DefaultName, Constants.DefaultName) 
+    {
+      m_maintenanceSchedule = new List<MaintenanceScheduleEntry>();
+      m_autoReconnect = InteractiveBrokers.Constants.DefaultAutoReconnect;
+      m_autoReconnectInterval = new TimeSpan(0, InteractiveBrokers.Constants.DefaultAutoReconnectIntervalMinutes, 0);
+      m_manuallyDisconnected = false;
+    }
 
     //finalizers
 
@@ -40,8 +79,11 @@ namespace TradeSharp.InteractiveBrokers
     {
       base.Create(logger);
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
-      m_ip = (string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.IpKey];
-      m_port = int.Parse((string)Configuration!.Configuration[TradeSharp.InteractiveBrokers.Constants.PortKey]);
+      m_ip = (string)Configuration!.Configuration[InteractiveBrokers.Constants.IpKey];
+      m_port = int.Parse((string)Configuration!.Configuration[InteractiveBrokers.Constants.PortKey]);
+      m_autoReconnect = Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.AutoReconnectKey) ? bool.Parse((string)Configuration!.Configuration[InteractiveBrokers.Constants.AutoReconnectKey]) : InteractiveBrokers.Constants.DefaultAutoReconnect;
+      parseAutoReconnectInterval();
+      parseMaintenanceSchedule();
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
       Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) } );
@@ -56,6 +98,7 @@ namespace TradeSharp.InteractiveBrokers
       Commands.Add(new PluginCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
       Commands.Add(new PluginCommand { Name = "Copy Contracts to Instruments", Tooltip = "Copy the Interactive Brokers contracts to Instruments", Icon = "\uE8C8", Command = new AsyncRelayCommand(OnCopyContractsToInstrumentsAsync) } );
       raiseUpdateCommands();
+      updateDescription();
     }
 
     public override void Dispose()
@@ -68,6 +111,7 @@ namespace TradeSharp.InteractiveBrokers
     public Task OnConnectAsync()
     {
       return Task.Run(() => {
+        m_manuallyDisconnected = false;   //enusre auto-reconnect works if not manually disconnected
         m_ibServiceHost.Client.Connect(m_ip, m_port);
         raiseUpdateCommands();
       });
@@ -77,6 +121,7 @@ namespace TradeSharp.InteractiveBrokers
     {
       return Task.Run(() =>
       {
+        m_manuallyDisconnected = true;  //ensure auto-reconnect does not kick in when manually disconnected
         m_ibServiceHost.Client.Disconnect();
         raiseUpdateCommands();
       });
@@ -119,7 +164,11 @@ namespace TradeSharp.InteractiveBrokers
 
     //properties
     public bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
-    public override IList<TradeSharp.Data.Account> Accounts { get => m_ibServiceHost.Accounts.Accounts; }
+    public override IList<Data.Account> Accounts { get => m_ibServiceHost.Accounts.Accounts; }
+    public string IP { get => m_ip; }
+    public int Port { get => m_port; }
+    public bool AutoReconnect { get => m_autoReconnect; }
+    public List<MaintenanceScheduleEntry> MaintenanceSchedule { get => m_maintenanceSchedule; }
 
     //delegates
     public event EventHandler? Connected;                      //event raised when the plugin connects to the remote service
@@ -149,13 +198,115 @@ namespace TradeSharp.InteractiveBrokers
     public void HandleConnectionStatus(ConnectionStatusMessage connectionStatusMessage)
     {
       if (connectionStatusMessage.IsConnected)
+      {
         raiseConnected();
+        m_autoReconnectTimer?.Dispose();  //cleanup the auto reconnect timer if it was setup
+      }
       else
+      {
         raiseDisconnected();
+        setupAutoReconnectTimer();
+      }
       raiseUpdateCommands();
     }
 
     protected void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }
     protected void raiseDisconnected() { if (Disconnected != null) Disconnected(this, new EventArgs()); }
+
+    protected void parseAutoReconnectInterval()
+    {
+      if (Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.AutoReconnectIntervalKey))
+      {
+        if (TimeSpan.TryParse((string)Configuration!.Configuration[InteractiveBrokers.Constants.AutoReconnectIntervalKey], out TimeSpan autoReconnectInterval))
+          m_autoReconnectInterval = autoReconnectInterval;
+        else
+          m_logger.LogError($"Failed to parse AutoReconnectInterval: {Configuration!.Configuration[InteractiveBrokers.Constants.AutoReconnectIntervalKey]}");
+      }
+    }
+
+    protected void parseMaintenanceSchedule()
+    {
+      if (!Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.MaintenanceScheduleKey)) return;      
+      string[] entries = ((string)Configuration!.Configuration[InteractiveBrokers.Constants.MaintenanceScheduleKey]).Split(',');
+      foreach (var entry in entries)
+      {
+        Match match = Regex.Match(entry, InteractiveBrokers.Constants.MaintenanceScheduleEntryRegex);
+        if (match.Success)
+        {
+          string dayStr = match.Groups[1].Value;
+          string startTimeStr = match.Groups[2].Value;
+          string endTimeStr = match.Groups[3].Value;
+          string timezoneStr = match.Groups[4].Value;
+
+          if (!Enum.TryParse<DayOfWeek>(dayStr, true, out DayOfWeek day))
+          {
+            m_logger.LogError($"Failed to parse maintenance schedule entry Day: {entry}");
+            continue;
+          }
+
+          if (!TimeOnly.TryParse(startTimeStr, out TimeOnly startTime))
+          {
+            m_logger.LogError($"Failed to parse maintenance schedule entry Start Time: {entry}");
+            continue;
+          }
+
+          if (!TimeOnly.TryParse(endTimeStr, out TimeOnly endTime))
+          {
+            m_logger.LogError($"Failed to parse maintenance schedule entry End Time: {entry}");
+            continue;
+          }
+
+          if (!TimeZoneInfo.TryFindSystemTimeZoneById(timezoneStr, out TimeZoneInfo? timezone))
+          {
+            m_logger.LogError($"Failed to parse maintenance schedule entry or find TimeZone: {entry}");
+            continue;
+          }
+
+          m_maintenanceSchedule.Add(new MaintenanceScheduleEntry(day, startTime, endTime, timezone));
+        }
+        else
+          m_logger.LogError($"Failed to parse maintenance schedule entry: {entry}");
+      }
+    }
+
+    protected void setupAutoReconnectTimer()
+    {
+      if (m_autoReconnect && !m_manuallyDisconnected)   
+      {
+        TimeOnly currentTime = TimeOnly.FromDateTime(DateTime.Now);
+        TimeSpan startTime = m_autoReconnectInterval;   //per default try to reconnect again after the auto reconnect interval
+        
+        //check whether we should respect the maintenance schedule
+        if (MaintenanceSchedule.Count > 0)
+        {
+          //TBD: This might not be good for Forex instruments that trade 24/7 - might need to reconsider this.
+          DayOfWeek day = DateTime.Now.DayOfWeek;
+          foreach (var entry in MaintenanceSchedule)
+            if (entry.StartDay == day && currentTime >= entry.StartTime && (day < entry.EndDay || currentTime <= entry.EndTime))
+            {
+              startTime = entry.EndTime - currentTime;  //wait until the end of the maintenance window before trying reconnect
+              break;
+            }
+        }
+
+        m_autoReconnectTimer = new Timer((state) => OnConnectAsync(), null, startTime, m_autoReconnectInterval);  //setup reconnection to start firing and periodically try the reconnection interval
+      }
+    }
+
+    protected void updateDescription()
+    {
+      Description = $"TWS API Connection {m_ip}:{m_port}";
+      Description += m_autoReconnect ? "; Auto-reconnect enabled" : "; Auto-reconnect disabled";
+      Description += $"; Auto-reconnect interval: {m_autoReconnectInterval}";
+      if (MaintenanceSchedule.Count > 0)
+      {
+        Description += "; Maintenance Schedule: ";
+        foreach (var entry in MaintenanceSchedule)
+          Description += $"{entry.StartDay} {entry.StartTime}-{entry.EndTime} {entry.TimeZone.Id}, ";
+        Description = Description.Substring(0, base.Description.Length - 2);  //remove the last comma and space
+      }
+      else
+        Description += "; No maintenance schedule";
+    }
   }
 }

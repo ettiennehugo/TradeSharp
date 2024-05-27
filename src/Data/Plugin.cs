@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TradeSharp.Common;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TradeSharp.Data
 {
@@ -10,7 +11,7 @@ namespace TradeSharp.Data
   /// </summary>
   [ComVisible(true)]
   [Guid("C82F2509-7A77-467E-B6DD-7FD42AEE449D")]
-  public class Plugin : IPlugin, IDisposable
+  public partial class Plugin : IPlugin, IDisposable
   {
     //constants
 
@@ -25,9 +26,10 @@ namespace TradeSharp.Data
     protected ILogger m_logger;
 
     //constructors
-    public Plugin(string name)
+    public Plugin(string name, string description) : base()
     {
       Name = name;
+      Description = description;
       Commands = new List<PluginCommand>();
     }
 
@@ -43,7 +45,8 @@ namespace TradeSharp.Data
     public virtual void Dispose() { }
 
     //properties
-    public string Name { get; internal set; }
+    public string Name { get; protected set; }
+    public string Description { get; protected set; }
     public IHost ServiceHost { get; set; }
     public IPluginConfiguration Configuration { get; set; }
     public IList<PluginCommand> Commands { get; protected set; }

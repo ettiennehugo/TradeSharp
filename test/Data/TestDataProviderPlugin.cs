@@ -17,13 +17,11 @@ namespace TradeSharp.Data.Testing
 
 
     //attributes
-    string m_name;
     List<string> m_tickers;
 
     //constructors
     public TestDataProviderPlugin()
     {
-      m_name = "";
       m_tickers = new List<string>();
       Commands = new List<PluginCommand>();
     }
@@ -34,7 +32,6 @@ namespace TradeSharp.Data.Testing
     //interface implementations
     public void Create(ILogger logger)
     {
-      m_name = "TestDataProvider";
       HasSettings = false;
       Commands = new List<PluginCommand>();
     }
@@ -48,7 +45,8 @@ namespace TradeSharp.Data.Testing
     public bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end) { return true; }
 
     //properties
-    public string Name => m_name;
+    public string Name => "TestDataProvider";
+    public string Description => "Test Data Provider";
     public IList<string> Tickers => m_tickers;
     public int ConnectionCountMax => Environment.ProcessorCount;
     public IPluginConfiguration Configuration { get; set; }

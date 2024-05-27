@@ -15,6 +15,7 @@
     <winui:DataGrid x:Name="m_pluginsGrid" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserResizeColumns="True" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Grid.Row="2" Grid.Column="0">
       <winui:DataGrid.Columns>
         <winui:DataGridTextColumn x:Name="m_columnName" Width="300" Header="Name" Binding="{Binding Name, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnDescription" MinWidth="500" Header="Description" Binding="{Binding Description, Mode=OneWay}" IsReadOnly="True"/>
       </winui:DataGrid.Columns>
     </winui:DataGrid>
   </Grid>

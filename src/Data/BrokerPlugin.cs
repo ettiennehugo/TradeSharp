@@ -24,7 +24,7 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public BrokerPlugin(string name): base(name)  { }
+    public BrokerPlugin(string name, string description): base(name, description)  { }
 
     //finalizers
 

@@ -7,9 +7,17 @@
   {
     //Configuration constants
     public const string DefaultName = "InteractiveBrokers";    //name used for any identifiers related to the plugin name 
-    public const string IpKey = "IP";
-    public const string PortKey = "Port";
-    public const string CacheKey = "Cache";
+    public const string IpKey = "IP";                          //IP address of the IB TWS API connection
+    public const string PortKey = "Port";                      //port of the IB TWS API connection
+    public const string CacheKey = "Cache";                    //name of the IB local cache database under the config directory
+    public const string AutoReconnectKey = "AutoReconnect";    //try to automatically reconnect when the IB connection is dropped
+    public const string AutoReconnectIntervalKey = "AutoReconnectInterval";  //interval at which reconnection is tried - see TimeSpan.Parse on valid values https://learn.microsoft.com/en-us/dotnet/api/system.timespan.parse?view=net-8.0
+    public const string MaintenanceScheduleKey = "MaintenanceSchedule";    //comma separated list of <day> <start-time>:<end-time> <timezone> schedule for when to run maintenance tasks
+    
+    //Auto-reconnect constants
+    public const string MaintenanceScheduleEntryRegex = @"(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})\s+(\w+)"; //Regex pattern to parse the maintenance schedule entries    
+    public const bool DefaultAutoReconnect = true;           //default to automatically reconnect to the IB TWS API when the connection is dropped
+    public const int DefaultAutoReconnectIntervalMinutes = 5;     //default interval in minutes to wait before attempting to reconnect to the IB TWS API
 
     //Miscellaneous other constants
     public const string DefaultExchange = "SMART";    //by default we check everything against the SMART exchange that would route to the appropriate exchange - NOTE need to remain upper case for comparisons
