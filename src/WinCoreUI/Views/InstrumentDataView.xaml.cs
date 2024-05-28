@@ -22,13 +22,7 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //enums
-    private enum FilterField
-    {
-      Ticker = 0,
-      Name,
-      Description,
-      Any
-    }
+
 
     //types
 
@@ -44,7 +38,6 @@ namespace TradeSharp.WinCoreUI.Views
       m_pluginViewModel.PluginsToDisplay = PluginsToDisplay.DataProviders;
       InstrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       m_dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
-      Instruments = new ObservableCollection<Instrument>(InstrumentViewModel.Items);
       this.InitializeComponent();
     }
 
@@ -57,68 +50,12 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public IPlugin SelectedDataProvider { get; set; }
     public IList<IPlugin> DataProviders { get => m_pluginViewModel.Items; }
-    public ObservableCollection<Instrument> Instruments { get; set; }
     public IInstrumentViewModel InstrumentViewModel { get; set; }
 
     //methods
-    private bool filterInstrument(Instrument instrument)
-    {
-      if (m_instrumentFilter.Text.Length == 0) return true;
-
-      switch ((FilterField)m_filterMatchFields.SelectedIndex)
-      {
-        case FilterField.Ticker:
-          return instrument.Ticker.Contains(m_instrumentFilter.Text);
-        case FilterField.Name:
-          return instrument.Name.Contains(m_instrumentFilter.Text);
-        case FilterField.Description:
-          return instrument.Description.Contains(m_instrumentFilter.Text);
-        case FilterField.Any:
-          return instrument.Ticker.Contains(m_instrumentFilter.Text) || instrument.Name.Contains(m_instrumentFilter.Text) || instrument.Description.Contains(m_instrumentFilter.Text);
-        default:
-          return false;
-      }
-    }
-
-    private void refreshFilter()
-    {
-      if (m_instrumentFilter == null) return;
-      var filteredResult = from instrument in InstrumentViewModel.Items where filterInstrument(instrument) select instrument;
-      Instruments.Clear();
-      foreach (var instrument in filteredResult) Instruments.Add(instrument);
-      InstrumentViewModel.SelectedItem = Instruments.FirstOrDefault();
-
-      //when the filter is cleared the selected instrument is unselected, so we need to reflect that to the bar data displays
-      m_minuteBarsData.Instrument = InstrumentViewModel.SelectedItem;
-      m_hoursBarsData.Instrument = InstrumentViewModel.SelectedItem;
-      m_daysBarsData.Instrument = InstrumentViewModel.SelectedItem;
-      m_weeksBarsData.Instrument = InstrumentViewModel.SelectedItem;
-      m_monthsBarsData.Instrument = InstrumentViewModel.SelectedItem;
-    }
-
-    private void resetFilter()
-    {
-      m_instrumentFilter.ClearValue(TextBox.TextProperty);
-      m_filterMatchFields.SelectedIndex = (int)FilterField.Any;
-      Instruments.Clear();
-      foreach (var instrument in InstrumentViewModel.Items) Instruments.Add(instrument);
-      InstrumentViewModel.SelectedItem = Instruments.FirstOrDefault();
-    }
-
-    private void m_instrumentFilter_TextChanged(object sender, TextChangedEventArgs e)
-    {
-      refreshFilter();
-    }
-
-    private void m_filterMatchFields_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-      refreshFilter();
-    }
-
     private void m_refreshCommand_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
       InstrumentViewModel.RefreshCommandAsync.Execute(this);
-      resetFilter();
     }
 
     private void m_dataProviders_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -135,15 +72,6 @@ namespace TradeSharp.WinCoreUI.Views
         m_weeksBarsData.DataProvider = SelectedDataProvider.Name;
         m_monthsBarsData.DataProvider = SelectedDataProvider.Name;
       }
-    }
-
-    private void m_instrumentsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-      m_minuteBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
-      m_hoursBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
-      m_daysBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
-      m_weeksBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
-      m_monthsBarsData.Instrument = (Instrument)m_instrumentsGrid.SelectedItem;
     }
 
     private async void m_massImport_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -164,6 +92,15 @@ namespace TradeSharp.WinCoreUI.Views
     private async void m_massDownload_Click(object sender, RoutedEventArgs e)
     {
       await m_dialogService.ShowMassDataDownloadAsync(SelectedDataProvider.Name);
+    }
+
+    private void m_instrumentSelectionView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      m_minuteBarsData.Instrument = m_instrumentSelectionView.SelectedItems.Count > 0 ? m_instrumentSelectionView.SelectedItems[0] : null;
+      m_hoursBarsData.Instrument = m_instrumentSelectionView.SelectedItems.Count > 0 ? m_instrumentSelectionView.SelectedItems[0] : null;
+      m_daysBarsData.Instrument = m_instrumentSelectionView.SelectedItems.Count > 0 ? m_instrumentSelectionView.SelectedItems[0] : null;
+      m_weeksBarsData.Instrument = m_instrumentSelectionView.SelectedItems.Count > 0 ? m_instrumentSelectionView.SelectedItems[0] : null;
+      m_monthsBarsData.Instrument = m_instrumentSelectionView.SelectedItems.Count > 0 ? m_instrumentSelectionView.SelectedItems[0] : null;
     }
   }
 }

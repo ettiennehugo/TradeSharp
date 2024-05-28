@@ -45,12 +45,14 @@ namespace TradeSharp.WinCoreUI.Views
     Visibility m_exportVisible = Visibility.Visible;
     Visibility m_importExportSeparatorVisible = Visibility.Visible;
     Visibility m_multiSelectVisible = Visibility.Visible;
+    List<Instrument> m_selectedItems;
 
     //constructors
     public InstrumentSelectionView()
     {
       ViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       Instruments = new ObservableCollection<Instrument>(ViewModel.Items);
+      m_selectedItems = new List<Instrument>();
       m_instrumentSelectionViewMode = DefaultInstrumentSelectionViewMode;
       updateScreenControlFlags(false);
       this.InitializeComponent();
@@ -67,22 +69,7 @@ namespace TradeSharp.WinCoreUI.Views
     public IInstrumentViewModel ViewModel { get; }
     public ObservableCollection<Instrument> Instruments;
     public ListViewSelectionMode SelectionMode { get => m_selectionMode; }
-
-    public IList<Instrument> SelectedItems { 
-      get { 
-        if (m_instruments != null)
-        {
-          if (m_selectionMode == ListViewSelectionMode.Single)
-            return new List<Instrument> { m_instruments.SelectedItem as Instrument };
-          else
-            return m_instruments.SelectedItems.Cast<Instrument>().ToList();
-        }
-        else
-          //this is most likely an incorrect access of the selected items
-          return Array.Empty<Instrument>();
-      } 
-    }
-
+    public IList<Instrument> SelectedItems { get => m_selectedItems; }
     public Visibility RefreshVisible { get => m_refreshVisible; }
     public Visibility AddVisible { get => m_addVisible; }
     public Visibility EditVisible { get => m_editVisible;}
@@ -95,6 +82,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     //events
     public event PropertyChangedEventHandler PropertyChanged;
+    public event SelectionChangedEventHandler SelectionChanged;
 
     //methods
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -201,11 +189,27 @@ namespace TradeSharp.WinCoreUI.Views
     private void m_selectAll_Click(object sender, RoutedEventArgs e)
     {
       m_instruments.SelectAll();
+      m_selectedItems = new List<Instrument>(ViewModel.Items);
+      IList<object> itemsAdded = new List<object>(m_selectedItems);
+      SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(Array.Empty<object>().ToList(), itemsAdded));
     }
 
     private void m_deselectAll_Click(object sender, RoutedEventArgs e)
     {
       m_instruments.DeselectRange(new ItemIndexRange(0, (uint)Instruments.Count));
+      IList<object> itemsRemoved = new List<object>(m_selectedItems);
+      m_selectedItems.Clear();
+      SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(itemsRemoved, Array.Empty<object>().ToList()));
+    }
+
+    private void m_instruments_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      IList<object> itemsRemoved = new List<object>(m_selectedItems);
+      m_selectedItems.Clear();
+      foreach (var item in m_instruments.SelectedItems) m_selectedItems.Add(item as Instrument);
+      foreach (var item in itemsRemoved) if (m_selectedItems.Contains(item as Instrument)) itemsRemoved.Remove(item as Instrument); //need to compute the correct delta for removed items if item is still selected
+      IList<object> itemsAdded = new List<object>(m_selectedItems);
+      SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(itemsRemoved, itemsAdded));
     }
   }
 }
