@@ -156,7 +156,6 @@ namespace TradeSharp.WinDataManager
       //setup plugin service host and start caching plugins
       var pluginsService = m_host.Services.GetService<IPluginsService>();
       pluginsService.Host = m_host;
-      pluginsService.Refresh();
       var pluginsViewModel = m_host.Services.GetService<IPluginsViewModel>();
       pluginsViewModel.RefreshCommandAsync.ExecuteAsync(null);    //this is the only refresh that should be called since during run-time these services are not expected to change
     }

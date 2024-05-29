@@ -72,7 +72,7 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //properties
-    public bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
+    public override bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
     public override int ConnectionCountMax => 1;  //IB limits the number of connections to 1 and it's also limited by 50 calls per second (9 April 2024)
 
     //delegates

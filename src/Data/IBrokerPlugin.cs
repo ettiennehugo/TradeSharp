@@ -27,7 +27,9 @@ namespace TradeSharp.Data
     //events
 
 
-    //TODO:: Add events for account changes - order, position, balance changes.
+    //TODO:
+    // - Add events for account changes - order, position, balance changes.
+    // - Add events for data changes - instrument, price, news, etc.
 
 
     //methods

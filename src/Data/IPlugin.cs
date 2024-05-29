@@ -43,6 +43,7 @@ namespace TradeSharp.Data
     IHost ServiceHost { get; set; }                     //service host for TradeSharp
     IPluginConfiguration Configuration { get; set; }    //configuration profile for the broker plugin
     IList<PluginCommand> Commands { get; }              //custom commands supported by the plugin
+    bool IsConnected { get; }                           //flag indicating if the plugin is connected to the broker/data provider
 
     //delegates
     event EventHandler? UpdateCommands;                 //event raised when the plugin needs to update the command list

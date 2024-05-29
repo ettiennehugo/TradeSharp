@@ -309,7 +309,6 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleHistoricalData(HistoricalDataMessage historicalDataMessage)
     {
-      
       if (m_activeHistoricalRequests.TryGetValue(historicalDataMessage.RequestId, out HistoricalDataRequest? request))
       { 
         //NOTE: Historical data requests must be done in UTC since we assume it is in UTC here.

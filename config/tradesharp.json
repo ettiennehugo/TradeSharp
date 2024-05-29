@@ -20,6 +20,7 @@
       "IP": "127.0.0.1",
       "Port": "4002",
       "Cache": "InteractiveBrokers.db",
+      "AutoConnect": "true",
       "AutoReconnect": "true",
       "AutoReconnectInterval": "0:06",
       "MaintenanceSchedule": "Monday 23:35-0:45 EST, Tuesday 23:35-0:45 EST, Wednesday 23:35-0:45 EST, Thursday 23:35-0:45 EST, Friday 23:00-3:00 EST, Saturday 23:35-0:45 EST, Sunday 23:35-0:45 EST"

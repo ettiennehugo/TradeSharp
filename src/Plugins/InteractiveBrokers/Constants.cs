@@ -10,12 +10,14 @@
     public const string IpKey = "IP";                          //IP address of the IB TWS API connection
     public const string PortKey = "Port";                      //port of the IB TWS API connection
     public const string CacheKey = "Cache";                    //name of the IB local cache database under the config directory
+    public const string AutoConnectKey = "AutoConnect";        //try to automatically connect when broker plugin is loaded
     public const string AutoReconnectKey = "AutoReconnect";    //try to automatically reconnect when the IB connection is dropped
     public const string AutoReconnectIntervalKey = "AutoReconnectInterval";  //interval at which reconnection is tried - see TimeSpan.Parse on valid values https://learn.microsoft.com/en-us/dotnet/api/system.timespan.parse?view=net-8.0
     public const string MaintenanceScheduleKey = "MaintenanceSchedule";    //comma separated list of <day> <start-time>:<end-time> <timezone> schedule for when to run maintenance tasks
     
     //Auto-reconnect constants
     public const string MaintenanceScheduleEntryRegex = @"(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})\s+(\w+)"; //Regex pattern to parse the maintenance schedule entries    
+    public const bool DefaultAutoConnect = false;             //default to automatically connect to the IB TWS API when plugin is loaded
     public const bool DefaultAutoReconnect = true;           //default to automatically reconnect to the IB TWS API when the connection is dropped
     public const int DefaultAutoReconnectIntervalMinutes = 5;     //default interval in minutes to wait before attempting to reconnect to the IB TWS API
 

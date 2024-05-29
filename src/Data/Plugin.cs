@@ -31,6 +31,7 @@ namespace TradeSharp.Data
       Name = name;
       Description = description;
       Commands = new List<PluginCommand>();
+      IsConnected = true;   //per default assume we don't need any connection - will just work
     }
 
     //finalizers
@@ -50,6 +51,7 @@ namespace TradeSharp.Data
     public IHost ServiceHost { get; set; }
     public IPluginConfiguration Configuration { get; set; }
     public IList<PluginCommand> Commands { get; protected set; }
+    public virtual bool IsConnected { get; protected set; }
 
     //delegates
     public virtual event EventHandler? UpdateCommands;                 //event raised when the plugin needs to update the command list

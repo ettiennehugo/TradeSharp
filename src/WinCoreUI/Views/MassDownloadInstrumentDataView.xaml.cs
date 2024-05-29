@@ -65,7 +65,11 @@ namespace TradeSharp.WinCoreUI.Views
 
     private bool enableDownloadButton()
     {
-      return m_startDateTime != null && DateTime.TryParse(m_startDateTime.Text, out DateTime startDateTime) && DateTime.TryParse(m_endDateTime.Text, out DateTime endDateTime) && startDateTime < endDateTime &&
+      return m_startDateTime != null &&
+        DateTime.TryParse(m_startDateTime.Text, out DateTime startDateTime) &&
+        DateTime.TryParse(m_endDateTime.Text, out DateTime endDateTime) && 
+        startDateTime < endDateTime &&
+        m_instrumentSelectionView.SelectedItems.Count > 0 &&
         ((bool)m_resolutionMinute.IsChecked || (bool)m_resolutionHour.IsChecked || (bool)m_resolutionDay.IsChecked || (bool)m_resolutionWeek.IsChecked || (bool)m_resolutionMonth.IsChecked);
     }
 
@@ -103,6 +107,11 @@ namespace TradeSharp.WinCoreUI.Views
     }
 
     private void m_resolutionCheckBox_Unchecked(object sender, RoutedEventArgs e)
+    {
+      m_downloadBtn.IsEnabled = enableDownloadButton();
+    }
+
+    private void m_instrumentSelectionView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
       m_downloadBtn.IsEnabled = enableDownloadButton();
     }

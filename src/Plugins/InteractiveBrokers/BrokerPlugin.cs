@@ -56,6 +56,7 @@ namespace TradeSharp.InteractiveBrokers
     protected ServiceHost m_ibServiceHost;
     protected string m_ip;
     protected int m_port;
+    protected bool m_autoConnect;
     protected bool m_autoReconnect;
     protected List<MaintenanceScheduleEntry> m_maintenanceSchedule;
     protected TimeSpan m_autoReconnectInterval;
@@ -66,6 +67,7 @@ namespace TradeSharp.InteractiveBrokers
     public BrokerPlugin() : base(Constants.DefaultName, Constants.DefaultName) 
     {
       m_maintenanceSchedule = new List<MaintenanceScheduleEntry>();
+      m_autoConnect = InteractiveBrokers.Constants.DefaultAutoConnect;
       m_autoReconnect = InteractiveBrokers.Constants.DefaultAutoReconnect;
       m_autoReconnectInterval = new TimeSpan(0, InteractiveBrokers.Constants.DefaultAutoReconnectIntervalMinutes, 0);
       m_manuallyDisconnected = false;
@@ -81,6 +83,7 @@ namespace TradeSharp.InteractiveBrokers
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
       m_ip = (string)Configuration!.Configuration[InteractiveBrokers.Constants.IpKey];
       m_port = int.Parse((string)Configuration!.Configuration[InteractiveBrokers.Constants.PortKey]);
+      m_autoConnect = Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.AutoConnectKey) ? bool.Parse((string)Configuration!.Configuration[InteractiveBrokers.Constants.AutoConnectKey]) : InteractiveBrokers.Constants.DefaultAutoConnect;
       m_autoReconnect = Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.AutoReconnectKey) ? bool.Parse((string)Configuration!.Configuration[InteractiveBrokers.Constants.AutoReconnectKey]) : InteractiveBrokers.Constants.DefaultAutoReconnect;
       parseAutoReconnectInterval();
       parseMaintenanceSchedule();
@@ -97,8 +100,11 @@ namespace TradeSharp.InteractiveBrokers
       Commands.Add(new PluginCommand { Name = "Copy Classifications to Instrument Groups", Tooltip = "Copy the Interactive Brokers classifications to Instrument Groups", Icon = "\uF413", Command = new AsyncRelayCommand(OnCopyIBClassesToInstrumentGroupsAsync) } );
       Commands.Add(new PluginCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
       Commands.Add(new PluginCommand { Name = "Copy Contracts to Instruments", Tooltip = "Copy the Interactive Brokers contracts to Instruments", Icon = "\uE8C8", Command = new AsyncRelayCommand(OnCopyContractsToInstrumentsAsync) } );
-      raiseUpdateCommands();
       updateDescription();
+      if (m_autoConnect) 
+        OnConnectAsync();  //auto connect if enabled, auto-connect will call raiseUpdateCommands
+      else
+        raiseUpdateCommands();
     }
 
     public override void Dispose()
@@ -111,7 +117,7 @@ namespace TradeSharp.InteractiveBrokers
     public Task OnConnectAsync()
     {
       return Task.Run(() => {
-        m_manuallyDisconnected = false;   //enusre auto-reconnect works if not manually disconnected
+        m_manuallyDisconnected = false;   //ensure auto-reconnect works if not manually disconnected
         m_ibServiceHost.Client.Connect(m_ip, m_port);
         raiseUpdateCommands();
       });
@@ -163,7 +169,7 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //properties
-    public bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
+    public override bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
     public override IList<Data.Account> Accounts { get => m_ibServiceHost.Accounts.Accounts; }
     public string IP { get => m_ip; }
     public int Port { get => m_port; }
@@ -296,6 +302,7 @@ namespace TradeSharp.InteractiveBrokers
     protected void updateDescription()
     {
       Description = $"TWS API Connection {m_ip}:{m_port}";
+      Description += m_autoConnect ? "; Auto-connect enabled" : "; Auto-connect disabled";
       Description += m_autoReconnect ? "; Auto-reconnect enabled" : "; Auto-reconnect disabled";
       Description += $"; Auto-reconnect interval: {m_autoReconnectInterval}";
       if (MaintenanceSchedule.Count > 0)

@@ -71,7 +71,12 @@ namespace TradeSharp.CoreUI.Services
     //     only lists the available plugins and instantiates them when they are needed.
     public void Refresh()
     {
-      Items.Clear();
+      //NOTE: Plugins should always just loaded only once-off, we do not run refresh again after the first refresh.
+      if (Items.Count > 0)
+      {
+        m_logger.LogWarning($"Plugin service refresh called multiple times, only one refresh should be done.");
+        return;
+      }
 
       //InteractiveBrokers
       IPlugin plugin = (IPlugin)new TradeSharp.InteractiveBrokers.DataProviderPlugin();
