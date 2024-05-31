@@ -22,9 +22,10 @@
     public const int DefaultAutoReconnectIntervalMinutes = 5;     //default interval in minutes to wait before attempting to reconnect to the IB TWS API
 
     //Miscellaneous other constants
-    public const string DefaultExchange = "SMART";    //by default we check everything against the SMART exchange that would route to the appropriate exchange - NOTE need to remain upper case for comparisons
+    public const string DefaultExchange = "SMART";        //by default we check everything against the SMART exchange that would route to the appropriate exchange - NOTE need to remain upper case for comparisons
     public const string DefaultRootInstrumentGroupName = "Interactive Brokers Classifications";    //default root instrument group used when copying IB industries and categories into TradeSharp 
     public const string DefaultRootInstrumentGroupTag = "IBIndustriesRoot";    //tag used for IB classifications root instrument group
+    public const int DisconnectedSleepInterval = 30000;   //interval in milliseconds to wait between checks when the IB connection is disconnected - typically used for long running processes
 
     /// <summary>
     /// Supported contract types.
@@ -41,7 +42,6 @@
     public const string ContractTypeMutualFund = "FUND";
     public const string ContractTypeFutureCombo = "BAG";
     public const string ContractTypeStockCombo = "CS";
-    public const string ContractTypeIndexCombo = "IND";
     public const string ContractTypeCommodity = "CMDTY";
 
     /// <summary>

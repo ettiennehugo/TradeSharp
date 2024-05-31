@@ -113,11 +113,11 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     /// <summary>
-    /// Returns the set of defined symbols in the contract cache.
+    /// Returns the set of defined symbols in the contract cache as a hash set to enable fast lookup.
     /// </summary>
-    public List<string> GetDefinedSymbols()
+    public HashSet<string> GetDefinedSymbols()
     {
-      List<string> result = new List<string>();
+      HashSet<string> result = new HashSet<string>();
       using (var reader = ExecuteReader($"SELECT Symbol FROM {TableContracts}"))
         while (reader.Read())
           result.Add(reader.GetString(0));
@@ -456,6 +456,18 @@ namespace TradeSharp.InteractiveBrokers
     public string FromSqlSafeString(string value)
     {
       return value.Replace("\'\'", "\'");
+    }
+
+    public void BeginTransaction() {
+      ExecuteCommand("BEGIN TRANSACTION");
+    }
+
+    public void CommitTransaction() {
+      ExecuteCommand("COMMIT TRANSACTION");
+    }
+
+    public void RollbackTransaction() {
+      ExecuteCommand("ROLLBACK TRANSACTION");
     }
 
     private void CreateTable(string name, string columns)

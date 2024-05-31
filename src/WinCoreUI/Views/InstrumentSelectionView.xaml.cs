@@ -186,24 +186,31 @@ namespace TradeSharp.WinCoreUI.Views
       ViewModel.SelectedItem = ViewModel.Items.FirstOrDefault();
     }
 
+    bool m_ignoreSelectionChanged = false;
+
     private void m_selectAll_Click(object sender, RoutedEventArgs e)
     {
-      m_instruments.SelectAll();
+      m_ignoreSelectionChanged = true;
+      m_instruments.SelectRange(new ItemIndexRange(0, (uint)Instruments.Count));
       m_selectedItems = new List<Instrument>(ViewModel.Items);
       IList<object> itemsAdded = new List<object>(m_selectedItems);
+      m_ignoreSelectionChanged = false;
       SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(Array.Empty<object>().ToList(), itemsAdded));
     }
 
     private void m_deselectAll_Click(object sender, RoutedEventArgs e)
     {
+      m_ignoreSelectionChanged = true;
       m_instruments.DeselectRange(new ItemIndexRange(0, (uint)Instruments.Count));
       IList<object> itemsRemoved = new List<object>(m_selectedItems);
       m_selectedItems.Clear();
+      m_ignoreSelectionChanged = false;
       SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(itemsRemoved, Array.Empty<object>().ToList()));
     }
 
     private void m_instruments_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+      if (m_ignoreSelectionChanged) return;
       IList<object> itemsRemoved = new List<object>(m_selectedItems);
       m_selectedItems.Clear();
       foreach (var item in m_instruments.SelectedItems) m_selectedItems.Add(item as Instrument);

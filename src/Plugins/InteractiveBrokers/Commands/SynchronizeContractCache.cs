@@ -53,8 +53,24 @@ namespace TradeSharp.InteractiveBrokers.Commands
       int updated = 0;
       foreach (var contract in contracts)
       {
+        //this can be a very long running process, check whether we have a connection and wait for the connection to come alive or exit
+        //if the user cancels the operation
+        bool disconnectDetected = false;
+        while (!m_adapter.m_serviceHost.Client.ClientSocket.IsConnected() && !m_progress.CancellationTokenSource.IsCancellationRequested)
+        {
+          if (!disconnectDetected)
+          {
+            m_progress.LogWarning($"Connection to Interactive Brokers lost at {DateTime.Now}, waiting for connection to be re-established");
+            disconnectDetected = true;
+          }
+          Thread.Sleep(Constants.DisconnectedSleepInterval);
+        }
+        if (m_progress.CancellationTokenSource.IsCancellationRequested) break;
+
+        //update progress
         m_progress.Progress++;
         updated++;
+
         //NOTE: InstrumentAdapter.HandleContractDetails is called when the contract details are received.
         m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentAdapter.InstrumentIdBase, contract);
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled

@@ -62,6 +62,7 @@ namespace TradeSharp.InteractiveBrokers
     internal int m_historicalRequestCounter = 0;
     private Dictionary<int, HistoricalDataRequest> m_activeHistoricalRequests;
     internal Dictionary<int, Contract> m_activeRealTimeRequests;
+    private HistoricalDataRequest? m_lastHistoricalDataRequest;
 
     //constructors
     public static InstrumentAdapter GetInstance(ServiceHost serviceHost)
@@ -309,12 +310,21 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleHistoricalData(HistoricalDataMessage historicalDataMessage)
     {
-      if (m_activeHistoricalRequests.TryGetValue(historicalDataMessage.RequestId, out HistoricalDataRequest? request))
-      { 
+      //retrieve the historical request data
+      HistoricalDataRequest? request = m_lastHistoricalDataRequest;
+      if (request == null || request.RequestId != historicalDataMessage.RequestId)
+        request = m_activeHistoricalRequests.TryGetValue(historicalDataMessage.RequestId, out request) ? request : null;
+
+      //process the data response based on the request
+      if (request != null)
+      {
+        m_lastHistoricalDataRequest = request;
         //NOTE: Historical data requests must be done in UTC since we assume it is in UTC here.
         if (DateTime.TryParseExact(historicalDataMessage.Date, Constants.DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dateTime))
         {
-          //NOTE: Requests must be done as whole units of days, week, months or years so we need to make sure that the response date is within the specific requested date range.
+          //NOTES:
+          // - Requests must be done as whole units of days, week, months or years so we need to make sure that the response date is within the specific requested date range.
+          // - Volume returned is the numner of trades and not the volume in terms of total stocks that changed hands - this is NOT a good indicator of volume.
           if (dateTime >= request.FromDateTime && dateTime <= request.ToDateTime)
             m_database.UpdateData(Constants.DefaultName, request.Contract.Symbol, request.Resolution, dateTime, historicalDataMessage.Open, historicalDataMessage.High, historicalDataMessage.Low, historicalDataMessage.Close, historicalDataMessage.Volume);
         }
@@ -328,6 +338,7 @@ namespace TradeSharp.InteractiveBrokers
     public void HandleHistoricalDataEnd(HistoricalDataEndMessage historicalDataEndMessage)
     {
       m_activeHistoricalRequests.Remove(historicalDataEndMessage.RequestId);
+      m_lastHistoricalDataRequest = null;
     }
 
     public void HandleUpdateMktDepth(DeepBookMessage updateMktDepthMessage)
