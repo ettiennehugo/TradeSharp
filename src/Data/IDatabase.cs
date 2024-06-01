@@ -481,7 +481,7 @@ namespace TradeSharp.Data
       BigPointValue = bigPointValue;
       PrimaryExchangeId = primaryExhangeId;
       SecondaryExchangeIds = secondaryExchangeIds;
-      m_extendedProperties = extendedProperties;    //JSON data for extended properties
+      m_extendedProperties = extendedProperties;    //JSON data for dynamic extended properties
     }
 
     //finalizers
@@ -821,7 +821,7 @@ namespace TradeSharp.Data
       High = new double[count];
       Low = new double[count];
       Close = new double[count];
-      Volume = new long[count];
+      Volume = new double[count];
     }
 
     public int Count;
@@ -830,7 +830,7 @@ namespace TradeSharp.Data
     public IList<double> High;
     public IList<double> Low;
     public IList<double> Close;
-    public IList<long> Volume;
+    public IList<double> Volume;
   }
 
   /// <summary>
@@ -846,21 +846,21 @@ namespace TradeSharp.Data
       Count = count;
       DateTime = new DateTime[count];
       Bid = new double[count];
-      BidSize = new long[count];
+      BidSize = new double[count];
       Ask = new double[count];
-      AskSize = new long[count];
+      AskSize = new double[count];
       Last = new double[count];
-      LastSize = new long[count];
+      LastSize = new double[count];
     }
 
     public int Count;
     public IList<DateTime> DateTime;
     public IList<double> Bid;
-    public IList<long> BidSize;
+    public IList<double> BidSize;
     public IList<double> Ask;
-    public IList<long> AskSize;
+    public IList<double> AskSize;
     public IList<double> Last;
-    public IList<long> LastSize;
+    public IList<double> LastSize;
   }
 
   /// <summary>
@@ -1039,8 +1039,8 @@ namespace TradeSharp.Data
     /// <summary>
     /// Create/update price data from a given DataProvider for a given instrument. Paged functions are provided to allow incremental loading of large amounts of data.
     /// </summary>
-    void UpdateData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume);
-    void UpdateData(string dataProviderName, string ticker, DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize);
+    void UpdateData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, double volume);
+    void UpdateData(string dataProviderName, string ticker, DateTime dateTime, double bid, double bidSize, double ask, double askSize, double last, double lastSize);
     void UpdateData(string dataProviderName, string ticker, Resolution resolution, DataCacheBars bars);
     void UpdateData(string dataProviderName, string ticker, Resolution resolution, IList<IBarData> bars);
     void UpdateData(string dataProviderName, string ticker, Resolution resolution, IList<ILevel1Data> bars);

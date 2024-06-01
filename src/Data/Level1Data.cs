@@ -24,14 +24,14 @@ namespace TradeSharp.Data
     {
       DateTime = DateTime.MinValue;
       Bid = double.MinValue;
-      BidSize = long.MinValue;
+      BidSize = double.MinValue;
       Ask = double.MinValue;
-      AskSize = long.MinValue;
+      AskSize = double.MinValue;
       Last = double.MinValue;
-      LastSize = long.MinValue;
+      LastSize = double.MinValue;
     }
 
-    public Level1Data(DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize)
+    public Level1Data(DateTime dateTime, double bid, double bidSize, double ask, double askSize, double last, double lastSize)
     {
       DateTime = dateTime;
       Bid = bid;
@@ -51,11 +51,11 @@ namespace TradeSharp.Data
     //properties
     [ObservableProperty] DateTime m_dateTime;
     [ObservableProperty] double m_bid;
-    [ObservableProperty] long m_bidSize;
+    [ObservableProperty] double m_bidSize;
     [ObservableProperty] double m_ask;
-    [ObservableProperty] long m_askSize;
+    [ObservableProperty] double m_askSize;
     [ObservableProperty] double m_last;
-    [ObservableProperty] long m_lastSize;
+    [ObservableProperty] double m_lastSize;
 
     //methods
 

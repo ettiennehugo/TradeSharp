@@ -42,13 +42,13 @@
     IDataStream<double> High { get; }
     IDataStream<double> Low { get; }
     IDataStream<double> Close { get; }
-    IDataStream<long> Volume { get; }
+    IDataStream<double> Volume { get; }
     IDataStream<double> BidPrice { get; }
-    IDataStream<long> BidVolume { get; }
+    IDataStream<double> BidVolume { get; }
     IDataStream<double> AskPrice { get; }
-    IDataStream<long> AskVolume { get; }
+    IDataStream<double> AskVolume { get; }
     IDataStream<double> LastPrice { get; }
-    IDataStream<long> LastVolume { get; }
+    IDataStream<double> LastVolume { get; }
 
     //methods
 

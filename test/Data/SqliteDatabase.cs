@@ -332,7 +332,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND MarketCap = 0")
+        $"AND MarketCap = 987654321.0")
         , "Instrument MarketCap not persisted or not set correctly");
     }
 
@@ -598,7 +598,7 @@ namespace TradeSharp.Data.Testing
       double high = 2.0;
       double low = 3.0;
       double close = 4.0;
-      long volume = 5;
+      double volume = 5.0;
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, open, high, low, close, volume);
 
@@ -619,11 +619,11 @@ namespace TradeSharp.Data.Testing
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       DateTime dateTime = DateTime.Now.ToUniversalTime();
       double bid = 1.0;
-      long bidSize = 2;
+      double bidSize = 2.0;
       double ask = 3.0;
-      long askSize = 4;
+      double askSize = 4.0;
       double last = 5.0;
-      long lastSize = 6;
+      double lastSize = 6.0;
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, dateTime, bid, bidSize, ask, askSize, last, lastSize);
 
@@ -696,7 +696,7 @@ namespace TradeSharp.Data.Testing
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0 };
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 155 };
+      barData.Volume = new List<double> { 115.0, 125.0, 135.0, 145.0, 155.0 };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
@@ -729,7 +729,7 @@ namespace TradeSharp.Data.Testing
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0 };
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 155 };
+      barData.Volume = new List<double> { 115.0, 125.0, 135.0, 145.0, 155.0 };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
@@ -752,7 +752,7 @@ namespace TradeSharp.Data.Testing
       barData.High = new List<double> { 112.0, 222.0, 132.0, 142.0, 152.0 };
       barData.Low = new List<double> { 113.0, 123.0, 233.0, 143.0, 153.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 244.0, 154.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 555 };
+      barData.Volume = new List<double> { 115.0, 125.0, 135.0, 145.0, 555.0 };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
@@ -1583,7 +1583,7 @@ namespace TradeSharp.Data.Testing
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
+      barData.Volume = new List<double> { 115.0, 125.0, 135.0, 145.0, 155.0, 215.0, 225.0, 235.0, 245.0, 255.0 };
 
       InstrumentGroup instrumentGroup = new InstrumentGroup(Guid.NewGuid(), InstrumentGroup.DefaultAttributeSet, "TagValue", InstrumentGroup.InstrumentGroupRoot, "TestInstrumentGroupName", Array.Empty<string>(), "TestInstrumentGroupDescription", "TestInstrumentGroupUserId", new List<string> { m_instrument.Ticker });
 
@@ -2412,7 +2412,7 @@ namespace TradeSharp.Data.Testing
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
+      barData.Volume = new List<double> { 115.0, 125.0, 135.0, 145.0, 155.0, 215.0, 225.0, 235.0, 245.0, 255.0 };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
@@ -2499,7 +2499,7 @@ namespace TradeSharp.Data.Testing
       barData.High = new List<double> { 112.0, 122.0, 132.0, 142.0, 152.0, 212.0, 222.0, 232.0, 242.0, 252.0 };
       barData.Low = new List<double> { 113.0, 123.0, 133.0, 143.0, 153.0, 213.0, 223.0, 233.0, 243.0, 253.0 };
       barData.Close = new List<double> { 114.0, 124.0, 134.0, 144.0, 154.0, 214.0, 224.0, 234.0, 244.0, 254.0 };
-      barData.Volume = new List<long> { 115, 125, 135, 145, 155, 215, 225, 235, 245, 255 };
+      barData.Volume = new List<double> { 115.0, 125.0, 135.0, 145.0, 155.0, 215.0, 225.0, 235.0, 245.0, 255.0 };
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 

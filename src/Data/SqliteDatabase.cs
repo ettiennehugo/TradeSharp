@@ -570,7 +570,7 @@ namespace TradeSharp.Data
       {
         //update common instrument elements
         ExecuteCommand(
-          $"INSERT OR REPLACE INTO {TableInstrument} (Ticker, AttributeSet, Tag, Type, Name, Description, PrimaryExchangeId, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, AlternateTickers) " +
+          $"INSERT OR REPLACE INTO {TableInstrument} (Ticker, AttributeSet, Tag, Type, Name, Description, PrimaryExchangeId, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, AlternateTickers, ExtendedProperties) " +
             $"VALUES (" +
               $"'{instrument.Ticker}', " +
               $"{(long)instrument.AttributeSet}, " +
@@ -583,7 +583,8 @@ namespace TradeSharp.Data
               $"{instrument.PriceDecimals}, " +
               $"{instrument.MinimumMovement}, " +
               $"{instrument.BigPointValue}," +
-              $"'{ToSqlSafeString(string.Join(',', instrument.AlternateTickers))}'" +
+              $"'{ToSqlSafeString(string.Join(',', instrument.AlternateTickers))}'," +
+              $"'{ToSqlSafeString(instrument.ExtendedProperties)}'" +
             $")"
         );
 
@@ -1276,7 +1277,8 @@ namespace TradeSharp.Data
                 $"PriceDecimals = {instrument.PriceDecimals}, " +
                 $"MinimumMovement = {instrument.MinimumMovement}, " +
                 $"BigPointValue = {instrument.BigPointValue}, " +
-                $"AlternateTickers = '{ToSqlSafeString(string.Join(',', instrument.AlternateTickers))}' " +
+                $"AlternateTickers = '{ToSqlSafeString(string.Join(',', instrument.AlternateTickers))}', " +
+                $"ExtendedProperties = '{ToSqlSafeString(instrument.ExtendedProperties)}' " +
             $"WHERE Ticker = '{instrument.Ticker}'"
         );
 
@@ -1615,7 +1617,7 @@ namespace TradeSharp.Data
       return result;
     }
 
-    public void UpdateData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume)
+    public void UpdateData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime, double open, double high, double low, double close, double volume)
     {
       //level 1 data can not be updated by his method
       if (resolution == Resolution.Level1) throw new ArgumentException("Update for bar data can not update Level 1 data.");
@@ -1640,7 +1642,7 @@ namespace TradeSharp.Data
       lock (this) ExecuteCommand(command);
     }
 
-    public void UpdateData(string dataProviderName, string ticker, DateTime dateTime, double bid, long bidSize, double ask, long askSize, double last, long lastSize)
+    public void UpdateData(string dataProviderName, string ticker, DateTime dateTime, double bid, double bidSize, double ask, double askSize, double last, double lastSize)
     {
       //create database command
       string command;
@@ -1885,8 +1887,7 @@ namespace TradeSharp.Data
       }
 
       //create database command
-      List<Tuple<DateTime, double, double, double, double, long, bool>> list = new List<Tuple<DateTime, double, double, double, double, long, bool>>();
-
+      List<Tuple<DateTime, double, double, double, double, double, bool>> list = new List<Tuple<DateTime, double, double, double, double, double, bool>>();
       string command;
 
       //load data
@@ -1903,7 +1904,7 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
-          list.Add(new Tuple<DateTime, double, double, double, double, long, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6), false));
+          list.Add(new Tuple<DateTime, double, double, double, double, double, bool>(dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6), false));
         }
       }
 
@@ -1933,11 +1934,11 @@ namespace TradeSharp.Data
     {
       public DateTime DateTime;
       public double Bid;
-      public long BidSize;
+      public double BidSize;
       public double Ask;
-      public long AskSize;
+      public double AskSize;
       public double Last;
-      public long LastSize;
+      public double LastSize;
     }
 
     private static int compareLevel1Data(Level1DBRecord x, Level1DBRecord y)
@@ -1976,11 +1977,11 @@ namespace TradeSharp.Data
           Level1DBRecord level1DB = new Level1DBRecord();
           level1DB.DateTime = DateTime.FromBinary(reader.GetInt64(0));
           level1DB.Bid = reader.GetDouble(1);
-          level1DB.BidSize = reader.GetInt64(2);
+          level1DB.BidSize = reader.GetDouble(2);
           level1DB.Ask = reader.GetDouble(3);
-          level1DB.AskSize = reader.GetInt64(4);
+          level1DB.AskSize = reader.GetDouble(4);
           level1DB.Last = reader.GetDouble(5);
-          level1DB.LastSize = reader.GetInt64(6);
+          level1DB.LastSize = reader.GetDouble(6);
           list.Add(level1DB);
         }
       }
@@ -2032,7 +2033,7 @@ namespace TradeSharp.Data
 
       using (SqliteDataReader reader = ExecuteReader(command))
         if (reader.Read())
-          return new BarData(resolution, convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6));
+          return new BarData(resolution, convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6));
 
       return null;
     }
@@ -2110,7 +2111,7 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
-          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6)));
+          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
         }
       }
 
@@ -2152,7 +2153,7 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
-          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6)));
+          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
         }
       }
 
@@ -2200,7 +2201,7 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
-          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetInt64(6)));
+          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
         }
       }
 
@@ -2234,7 +2235,7 @@ namespace TradeSharp.Data
 
       using (SqliteDataReader reader = ExecuteReader(command))
         if (reader.Read())
-          return new Level1Data(convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6));
+          return new Level1Data(convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6));
 
       return null;
     }
@@ -2279,7 +2280,7 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           DateTime dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange);
-          result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetInt64(2), reader.GetDouble(3), reader.GetInt64(4), reader.GetDouble(5), reader.GetInt64(6)));
+          result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
         }
 
       return result;
@@ -2539,7 +2540,8 @@ namespace TradeSharp.Data
         PriceDecimals INTEGER,
         MinimumMovement INTEGER,
         BigPointValue INTERGER,
-        AlternateTickers TEXT
+        AlternateTickers TEXT,
+        ExtendedProperties TEXT
       ");
     }
 
@@ -2658,7 +2660,7 @@ namespace TradeSharp.Data
             High REAL,
             Low REAL,
             Close REAL,
-            Volume INTEGER,
+            Volume REAL,
             PRIMARY KEY(Ticker, DateTime) ON CONFLICT REPLACE
           ");
           CreateIndex(indexName, tableName, true, "Ticker,DateTime");
@@ -2670,11 +2672,11 @@ namespace TradeSharp.Data
             Ticker TEXT,
             DateTime INTEGER,
             Bid REAL,
-            BidSize INTEGER,
+            BidSize REAL,
             Ask REAL,
-            AskSize INTEGER,
+            AskSize REAL,
             Last REAL,
-            LastSize INTEGER,
+            LastSize REAL,
             PRIMARY KEY(Ticker, DateTime) ON CONFLICT REPLACE
           ");
           CreateIndex(indexName, tableName, true, "Ticker,DateTime");
@@ -2815,9 +2817,7 @@ namespace TradeSharp.Data
       command.CommandText = $"SELECT * FROM {tableName} WHERE {where}";
 
       using (var reader = command.ExecuteReader())
-      {
         while (reader.Read()) count++;
-      }
 
       return count;
     }

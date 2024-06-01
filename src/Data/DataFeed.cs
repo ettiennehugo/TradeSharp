@@ -45,20 +45,20 @@ namespace TradeSharp.Data
     protected double[] m_lowData;
     protected DataStream<double> m_close;
     protected double[] m_closeData;
-    protected DataStream<long> m_volume;
-    protected long[] m_volumeData;
+    protected DataStream<double> m_volume;
+    protected double[] m_volumeData;
     protected DataStream<double> m_bidPrice;
     protected double[] m_bidPriceData;
-    protected DataStream<long> m_bidVolume;
-    protected long[] m_bidVolumeData;
+    protected DataStream<double> m_bidVolume;
+    protected double[] m_bidVolumeData;
     protected DataStream<double> m_askPrice;
     protected double[] m_askPriceData;
-    protected DataStream<long> m_askVolume;
-    protected long[] m_askVolumeData;
+    protected DataStream<double> m_askVolume;
+    protected double[] m_askVolumeData;
     protected DataStream<double> m_lastPrice;
     protected double[] m_lastPriceData;
-    protected DataStream<long> m_lastVolume;
-    protected long[] m_lastVolumeData;
+    protected DataStream<double> m_lastVolume;
+    protected double[] m_lastVolumeData;
 
     //constructors
     public DataFeed(IConfigurationService configuration, IDatabase database, IDataProviderPlugin dataProvider, Instrument instrument, Resolution resolution, int interval, DateTime from, DateTime to, ToDateMode toDateMode) : base()
@@ -89,20 +89,20 @@ namespace TradeSharp.Data
       m_lowData = Array.Empty<double>();
       m_close = new DataStream<double>();
       m_closeData = Array.Empty<double>();
-      m_volume = new DataStream<long>();
-      m_volumeData = Array.Empty<long>();
+      m_volume = new DataStream<double>();
+      m_volumeData = Array.Empty<double>();
       m_bidPrice = new DataStream<double>();
       m_bidPriceData = Array.Empty<double>();
-      m_bidVolume = new DataStream<long>();
-      m_bidVolumeData = Array.Empty<long>();
+      m_bidVolume = new DataStream<double>();
+      m_bidVolumeData = Array.Empty<double>();
       m_askPrice = new DataStream<double>();
       m_askPriceData = Array.Empty<double>();
-      m_askVolume = new DataStream<long>();
-      m_askVolumeData = Array.Empty<long>();
+      m_askVolume = new DataStream<double>();
+      m_askVolumeData = Array.Empty<double>();
       m_lastPrice = new DataStream<double>();
       m_lastPriceData = Array.Empty<double>();
-      m_lastVolume = new DataStream<long>();
-      m_lastVolumeData = Array.Empty<long>();
+      m_lastVolume = new DataStream<double>();
+      m_lastVolumeData = Array.Empty<double>();
 
       //load the data values based on inputs
       refreshDataCache();
@@ -189,13 +189,13 @@ namespace TradeSharp.Data
     public IDataStream<double> High => m_high;
     public IDataStream<double> Low => m_low;
     public IDataStream<double> Close => m_close;
-    public IDataStream<long> Volume => m_volume;
+    public IDataStream<double> Volume => m_volume;
     public IDataStream<double> BidPrice => m_bidPrice;
-    public IDataStream<long> BidVolume => m_bidVolume;
+    public IDataStream<double> BidVolume => m_bidVolume;
     public IDataStream<double> AskPrice => m_askPrice;
-    public IDataStream<long> AskVolume => m_askVolume;
+    public IDataStream<double> AskVolume => m_askVolume;
     public IDataStream<double> LastPrice => m_lastPrice;
-    public IDataStream<long> LastVolume => m_lastVolume;
+    public IDataStream<double> LastVolume => m_lastVolume;
 
     //methods
     protected void refreshDataCache()
@@ -223,7 +223,7 @@ namespace TradeSharp.Data
             m_highData = new double[Count];
             m_lowData = new double[Count];
             m_closeData = new double[Count];
-            m_volumeData = new long[Count];
+            m_volumeData = new double[Count];
 
             int index = 0;
             int subBarIndex = 0;  //if interval is larger than 1 this would be the sub-bar index in the original bar data that needs to be merged into the current bar of the output data
@@ -284,11 +284,11 @@ namespace TradeSharp.Data
 
             m_bidPriceData = Array.Empty<double>();
             m_bidPrice.Data = m_bidPriceData;
-            m_bidVolumeData = Array.Empty<long>();
+            m_bidVolumeData = Array.Empty<double>();
             m_bidVolume.Data = m_bidVolumeData;
             m_askPriceData = Array.Empty<double>();
             m_askPrice.Data = m_askPriceData;
-            m_askVolumeData = Array.Empty<long>();
+            m_askVolumeData = Array.Empty<double>();
             m_askVolume.Data = m_askVolumeData;
           }
           break;
@@ -316,7 +316,7 @@ namespace TradeSharp.Data
               m_highData = new double[Count];
               m_lowData = new double[Count];
               m_closeData = new double[Count];
-              m_volumeData = new long[Count];
+              m_volumeData = new double[Count];
 
               int index = 0;
               int subBarIndex = 0;

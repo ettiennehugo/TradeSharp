@@ -20,11 +20,13 @@ namespace TradeSharp.InteractiveBrokers.Commands
     //attributes
     private InstrumentAdapter m_adapter;
     private IProgressDialog m_progress;
+    private int m_requestId;
 
     //constructors
     public SynchronizeContractCache(InstrumentAdapter adapter) 
     {
       m_adapter = adapter;
+      m_requestId = InstrumentAdapter.InstrumentIdBase;
     }
 
     //finalizers
@@ -72,7 +74,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
         updated++;
 
         //NOTE: InstrumentAdapter.HandleContractDetails is called when the contract details are received.
-        m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(InstrumentAdapter.InstrumentIdBase, contract);
+        m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(m_requestId, contract);
+        m_requestId++;
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
         Thread.Sleep(InstrumentAdapter.IntraRequestSleep);    //throttle requests to avoid exceeding the hard limit imposed by IB
       }

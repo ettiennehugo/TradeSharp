@@ -31,7 +31,7 @@ namespace TradeSharp.Data
       Volume = long.MinValue;
     }
 
-    public BarData(Resolution resolution, DateTime dateTime, double open, double high, double low, double close, long volume)
+    public BarData(Resolution resolution, DateTime dateTime, double open, double high, double low, double close, double volume)
     {
       Resolution = resolution; 
       DateTime = dateTime;
@@ -55,7 +55,7 @@ namespace TradeSharp.Data
     [ObservableProperty] private double m_high;
     [ObservableProperty] private double m_low;
     [ObservableProperty] private double m_close;
-    [ObservableProperty] private long m_volume;
+    [ObservableProperty] private double m_volume;
 
     //methods
     public IBarData Clone()

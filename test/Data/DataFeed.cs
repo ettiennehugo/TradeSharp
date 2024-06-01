@@ -105,11 +105,11 @@ namespace TradeSharp.Data.Testing
       m_level1TestData.Count = count;
       m_level1TestData.DateTime = new List<DateTime>(m_level1TestData.Count); for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.DateTime.Add(m_fromDateTime.AddSeconds(i)); }
       m_level1TestData.Bid = new List<double>(m_level1TestData.Count); price = 100.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Bid.Add(price); price += 1.0; }
-      m_level1TestData.BidSize = new List<long>(m_level1TestData.Count); size = 200; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.BidSize.Add(size); size += 1; }
+      m_level1TestData.BidSize = new List<double>(m_level1TestData.Count); size = 200; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.BidSize.Add(size); size += 1; }
       m_level1TestData.Ask = new List<double>(m_level1TestData.Count); price = 300.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Ask.Add(price); price += 1.0; }
-      m_level1TestData.AskSize = new List<long>(m_level1TestData.Count); size = 400; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.AskSize.Add(size); size += 1; }
+      m_level1TestData.AskSize = new List<double>(m_level1TestData.Count); size = 400; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.AskSize.Add(size); size += 1; }
       m_level1TestData.Last = new List<double>(m_level1TestData.Count); price = 500.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Last.Add(price); price += 1.0; }
-      m_level1TestData.LastSize = new List<long>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
+      m_level1TestData.LastSize = new List<double>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
 
       m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Ticker, m_level1TestData);
 
@@ -155,7 +155,7 @@ namespace TradeSharp.Data.Testing
         barData.High = new List<double>(barData.Count); price = 400.0; for (int i = 0; i < barData.Count; i++) { barData.High.Add(price); price += 1.0; }
         barData.Low = new List<double>(barData.Count); price = 100.0; for (int i = 0; i < barData.Count; i++) { barData.Low.Add(price); price += 1.0; }
         barData.Close = new List<double>(barData.Count); price = 300.0; for (int i = 0; i < barData.Count; i++) { barData.Close.Add(price); price += 1.0; }
-        barData.Volume = new List<long>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1; }
+        barData.Volume = new List<double>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1; }
 
         m_toDateTime = m_fromDateTime.AddMonths(count); //just use the longest resolution for the to-date time
         m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Ticker, resolution, barData);
@@ -189,11 +189,11 @@ namespace TradeSharp.Data.Testing
       m_level1TestData.Count = count;
       m_level1TestData.DateTime = new List<DateTime>(m_level1TestData.Count); for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.DateTime.Add(m_fromDateTime.AddSeconds(i)); }
       m_level1TestData.Bid = new List<double>(m_level1TestData.Count); price = 100.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Bid.Add(price); price += 1.0; }
-      m_level1TestData.BidSize = new List<long>(m_level1TestData.Count); size = 200; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.BidSize.Add(size); size += 1; }
+      m_level1TestData.BidSize = new List<double>(m_level1TestData.Count); size = 200; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.BidSize.Add(size); size += 1; }
       m_level1TestData.Ask = new List<double>(m_level1TestData.Count); price = 300.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Ask.Add(price); price += 1.0; }
-      m_level1TestData.AskSize = new List<long>(m_level1TestData.Count); size = 400; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.AskSize.Add(size); size += 1; }
+      m_level1TestData.AskSize = new List<double>(m_level1TestData.Count); size = 400; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.AskSize.Add(size); size += 1; }
       m_level1TestData.Last = new List<double>(m_level1TestData.Count); price = 500.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Last.Add(price); price += 1.0; }
-      m_level1TestData.LastSize = new List<long>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
+      m_level1TestData.LastSize = new List<double>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
 
       //data feed would reverse the data according to date/time so we need to reverse it here to match
       m_level1TestDataReversed = new DataCacheLevel1(0);
@@ -237,7 +237,7 @@ namespace TradeSharp.Data.Testing
         barData.High = new List<double>(barData.Count); price = 400.0; for (int i = 0; i < barData.Count; i++) { barData.High.Add(price); price += 1.0; }
         barData.Low = new List<double>(barData.Count); price = 100.0; for (int i = 0; i < barData.Count; i++) { barData.Low.Add(price); price += 1.0; }
         barData.Close = new List<double>(barData.Count); price = 300.0; for (int i = 0; i < barData.Count; i++) { barData.Close.Add(price); price += 1.0; }
-        barData.Volume = new List<long>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1; }
+        barData.Volume = new List<double>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1; }
 
         m_toDateTime = m_fromDateTime.AddMonths(count); //just use the longest resolution for the to-date time
         m_testBarData.Add(resolution, barData);
@@ -259,7 +259,7 @@ namespace TradeSharp.Data.Testing
     /// <summary>
     /// Merges the data from the barData into a new set of bars up to the given count using the given interval. and returns the expected results.
     /// </summary>
-    protected (int, DateTime[], double[], double[], double[], double[], long[]) mergeBarTestData(Resolution resolution, int count, int interval)
+    protected (int, DateTime[], double[], double[], double[], double[], double[]) mergeBarTestData(Resolution resolution, int count, int interval)
     {
       int expectedBarCount = (int)Math.Ceiling((double)count / interval);
       if (resolution == Resolution.Minute && m_fromDateTime.Minute % interval != 0) expectedBarCount++; //add additional bar for the partial bar generated when the fromDateTime does not align by an exact minute boundary
@@ -273,7 +273,7 @@ namespace TradeSharp.Data.Testing
       double[] expectedHigh = new double[expectedBarCount];
       double[] expectedLow = new double[expectedBarCount];
       double[] expectedClose = new double[expectedBarCount];
-      long[] expectedVolume = new long[expectedBarCount];
+      double[] expectedVolume = new double[expectedBarCount];
       int index = 0;
       int subBarIndex = 0;
 
@@ -346,7 +346,7 @@ namespace TradeSharp.Data.Testing
     /// <summary>
     /// Merges the data from the barData into a new set of bars up to the given count using the given interval. and returns the expected results.
     /// </summary>
-    protected (int, DateTime[], double[], double[], double[], double[], long[]) mergeL1TestData(int count, int interval)
+    protected (int, DateTime[], double[], double[], double[], double[], double[]) mergeL1TestData(int count, int interval)
     {
       Assert.IsTrue(count <= m_level1TestDataReversed.Count, "Count should be less than generated set of bars.");
 
@@ -358,7 +358,7 @@ namespace TradeSharp.Data.Testing
       double[] expectedHigh = new double[expectedBarCount];
       double[] expectedLow = new double[expectedBarCount];
       double[] expectedClose = new double[expectedBarCount];
-      long[] expectedVolume = new long[expectedBarCount];
+      double[] expectedVolume = new double[expectedBarCount];
       int index = 0;
       int subBarIndex = 0;
 
@@ -632,7 +632,7 @@ namespace TradeSharp.Data.Testing
       double[] expectedHigh;
       double[] expectedLow;
       double[] expectedClose;
-      long[] expectedVolume;
+      double[] expectedVolume;
 
       (expectedBarCount, expectedDateTime, expectedOpen, expectedHigh, expectedLow, expectedClose, expectedVolume) = mergeBarTestData(resolution, generatedBarCount, interval);
 
@@ -775,7 +775,7 @@ namespace TradeSharp.Data.Testing
       double[] expectedHigh;
       double[] expectedLow;
       double[] expectedClose;
-      long[] expectedVolume;
+      double[] expectedVolume;
 
       (expectedBarCount, expectedDateTime, expectedOpen, expectedHigh, expectedLow, expectedClose, expectedVolume) = mergeBarTestData(resolution, generatedBarCount, interval);
 
@@ -829,7 +829,7 @@ namespace TradeSharp.Data.Testing
       double[] expectedHigh;
       double[] expectedLow;
       double[] expectedClose;
-      long[] expectedVolume;
+      double[] expectedVolume;
 
       (expectedBarCount, expectedDateTime, expectedOpen, expectedHigh, expectedLow, expectedClose, expectedVolume) = mergeL1TestData(generatedBarCount, interval);
 

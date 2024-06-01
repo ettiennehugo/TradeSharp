@@ -25,7 +25,7 @@
     double High { get; set; }
     double Low { get; set; }
     double Close { get; set; }
-    long Volume { get; set; }
+    double Volume { get; set; }
 
     //methods
     IBarData Clone();
