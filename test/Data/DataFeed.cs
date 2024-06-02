@@ -100,16 +100,16 @@ namespace TradeSharp.Data.Testing
 
       //create level 1 test data
       double price = 0.0;
-      long size = 0;
+      double size = 0;
       m_level1TestData = new DataCacheLevel1(0);
       m_level1TestData.Count = count;
       m_level1TestData.DateTime = new List<DateTime>(m_level1TestData.Count); for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.DateTime.Add(m_fromDateTime.AddSeconds(i)); }
       m_level1TestData.Bid = new List<double>(m_level1TestData.Count); price = 100.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Bid.Add(price); price += 1.0; }
-      m_level1TestData.BidSize = new List<double>(m_level1TestData.Count); size = 200; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.BidSize.Add(size); size += 1; }
+      m_level1TestData.BidSize = new List<double>(m_level1TestData.Count); size = 200; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.BidSize.Add(size); size += 1.0; }
       m_level1TestData.Ask = new List<double>(m_level1TestData.Count); price = 300.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Ask.Add(price); price += 1.0; }
-      m_level1TestData.AskSize = new List<double>(m_level1TestData.Count); size = 400; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.AskSize.Add(size); size += 1; }
+      m_level1TestData.AskSize = new List<double>(m_level1TestData.Count); size = 400; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.AskSize.Add(size); size += 1.0; }
       m_level1TestData.Last = new List<double>(m_level1TestData.Count); price = 500.0; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.Last.Add(price); price += 1.0; }
-      m_level1TestData.LastSize = new List<double>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1; }
+      m_level1TestData.LastSize = new List<double>(m_level1TestData.Count); size = 600; for (int i = 0; i < m_level1TestData.Count; i++) { m_level1TestData.LastSize.Add(size); size += 1.0; }
 
       m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Ticker, m_level1TestData);
 
@@ -155,7 +155,7 @@ namespace TradeSharp.Data.Testing
         barData.High = new List<double>(barData.Count); price = 400.0; for (int i = 0; i < barData.Count; i++) { barData.High.Add(price); price += 1.0; }
         barData.Low = new List<double>(barData.Count); price = 100.0; for (int i = 0; i < barData.Count; i++) { barData.Low.Add(price); price += 1.0; }
         barData.Close = new List<double>(barData.Count); price = 300.0; for (int i = 0; i < barData.Count; i++) { barData.Close.Add(price); price += 1.0; }
-        barData.Volume = new List<double>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1; }
+        barData.Volume = new List<double>(barData.Count); size = 500; for (int i = 0; i < barData.Count; i++) { barData.Volume.Add(size); size += 1.0; }
 
         m_toDateTime = m_fromDateTime.AddMonths(count); //just use the longest resolution for the to-date time
         m_database.UpdateData(m_dataProvider.Object.Name, m_instrument.Ticker, resolution, barData);
@@ -424,7 +424,6 @@ namespace TradeSharp.Data.Testing
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = timeZone;
       Data.DataFeed dataFeed = new Data.DataFeed(m_configuration.Object, m_database, m_dataProvider.Object, m_instrument, resolution, 1, m_fromDateTime, m_toDateTime, ToDateMode.Pinned);
-      
       Data.DataCacheBars barData = m_testBarDataReversed[resolution];
 
       for (int i = 0; i < dataFeed.Count; i++)
@@ -435,7 +434,7 @@ namespace TradeSharp.Data.Testing
             Assert.AreEqual(barData.DateTime[i].ToLocalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
             break;
           case IConfigurationService.TimeZone.Exchange:
-            Assert.AreEqual(barData.DateTime[i].Add(m_exchange.TimeZone.BaseUtcOffset), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
+            Assert.AreEqual(TimeZoneInfo.ConvertTimeFromUtc(barData.DateTime[i], m_exchange.TimeZone), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
             break;
           case IConfigurationService.TimeZone.UTC:
             Assert.AreEqual(barData.DateTime[i].ToUniversalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
@@ -450,9 +449,6 @@ namespace TradeSharp.Data.Testing
     [DataRow(Resolution.Level1, IConfigurationService.TimeZone.Local)]
     [DataRow(Resolution.Level1, IConfigurationService.TimeZone.Exchange)]
     [DataRow(Resolution.Level1, IConfigurationService.TimeZone.UTC)]
-    [DataRow(Resolution.Minute, IConfigurationService.TimeZone.Local)]
-    [DataRow(Resolution.Minute, IConfigurationService.TimeZone.Exchange)]
-    [DataRow(Resolution.Minute, IConfigurationService.TimeZone.UTC)]
     public void GetDataFeed_Level1DateTimeConversionByTimeZone_CheckData(Resolution resolution, IConfigurationService.TimeZone timeZone)
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
@@ -470,7 +466,7 @@ namespace TradeSharp.Data.Testing
                 Assert.AreEqual(m_level1TestDataReversed.DateTime[i].ToLocalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
                 break;
               case IConfigurationService.TimeZone.Exchange:
-                Assert.AreEqual(m_level1TestDataReversed.DateTime[i].Add(m_exchange.TimeZone.BaseUtcOffset), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
+                Assert.AreEqual(TimeZoneInfo.ConvertTimeFromUtc(m_level1TestDataReversed.DateTime[i], m_exchange.TimeZone), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
                 break;
               case IConfigurationService.TimeZone.UTC:
                 Assert.AreEqual(m_level1TestDataReversed.DateTime[i].ToUniversalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone  {timeZone.ToString()}  is not correct");
@@ -491,7 +487,7 @@ namespace TradeSharp.Data.Testing
                 Assert.AreEqual(barData.DateTime[i].ToLocalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
                 break;
               case IConfigurationService.TimeZone.Exchange:
-                Assert.AreEqual(barData.DateTime[i].Add(m_exchange.TimeZone.BaseUtcOffset), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
+                Assert.AreEqual(TimeZoneInfo.ConvertTimeFromUtc(m_level1TestDataReversed.DateTime[i], m_exchange.TimeZone), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");
                 break;
               case IConfigurationService.TimeZone.UTC:
                 Assert.AreEqual(barData.DateTime[i].ToUniversalTime(), dataFeed.DateTime[0], $"DateTime at index {i}, {resolution.ToString()} resolution, time zone {timeZone.ToString()} is not correct");

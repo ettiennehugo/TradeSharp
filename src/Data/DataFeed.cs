@@ -303,7 +303,7 @@ namespace TradeSharp.Data
                   level1Data.DateTime[i] = level1Data.DateTime[i].ToLocalTime();
                   break;
                 case IConfigurationService.TimeZone.Exchange:
-                  level1Data.DateTime[i] = level1Data.DateTime[i].Add(exchange!.TimeZone.BaseUtcOffset);
+                  level1Data.DateTime[i] = TimeZoneInfo.ConvertTimeFromUtc(level1Data.DateTime[i], exchange!.TimeZone);   //ConvertTimeFromUtc takes into account daylight savings, can't just add offset hours
                   break;
               }
 

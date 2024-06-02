@@ -1861,7 +1861,7 @@ namespace TradeSharp.Data
           return utcDateTime.ToLocalTime();
         case IConfigurationService.TimeZone.Exchange:
           if (exchange == null) throw new ArgumentException("Exchange must be specified when using Exchange time zone.");
-          return utcDateTime.Add(exchange.TimeZone.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
+          return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, exchange.TimeZone); //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
       }
 
       return utcDateTime; //default to UTC
