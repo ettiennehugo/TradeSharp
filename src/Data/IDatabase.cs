@@ -667,7 +667,15 @@ namespace TradeSharp.Data
 
     public bool Equals(InstrumentGroup? other)
     {
-      return other == this;
+      if (other == null) return false;
+      if (other == this) return true;
+      if (other.Id == Id) return true;
+      string nameUpper = Name.ToUpper();
+      string otherUpper = other.Name.ToUpper();
+      if (otherUpper == nameUpper) return true;
+      if (other.AlternateNames.FirstOrDefault(x => x.ToUpper() == nameUpper) != null) return true;
+      if (AlternateNames.FirstOrDefault(x => x.ToUpper() == otherUpper) != null) return true;
+      return false;
     }
 
     public object Clone()

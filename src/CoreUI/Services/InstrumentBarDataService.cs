@@ -689,7 +689,7 @@ namespace TradeSharp.CoreUI.Services
             double high = 0.0;
             double low = 0.0;
             double close = 0.0;
-            long volume = 0;
+            double volume = 0.0;
 
             lineNo++;
             bool filterBar = false;
@@ -738,7 +738,7 @@ namespace TradeSharp.CoreUI.Services
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvClose)
                     close = double.Parse(columnValue!);
                   else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvVolume)
-                    volume = long.Parse(columnValue!);
+                    volume = double.Parse(columnValue!);
                 }
               }
 
@@ -848,7 +848,7 @@ namespace TradeSharp.CoreUI.Services
             double high = barDataJson![tokenJsonHigh]!.AsValue().Deserialize<double>();
             double low = barDataJson![tokenJsonLow]!.AsValue().Deserialize<double>();
             double close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
-            long volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<long>();
+            double volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<double>();
 
             bars.Add(new BarData(Resolution, dateTime, open, high, low, close, volume));
             barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly

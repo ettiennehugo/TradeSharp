@@ -28,7 +28,7 @@ namespace TradeSharp.Data
       High = double.MinValue;
       Low = double.MinValue;
       Close = double.MinValue;
-      Volume = long.MinValue;
+      Volume = double.MinValue;
     }
 
     public BarData(Resolution resolution, DateTime dateTime, double open, double high, double low, double close, double volume)
