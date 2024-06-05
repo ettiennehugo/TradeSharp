@@ -322,5 +322,8 @@ namespace TradeSharp.CoreUI.Services
     Task ShowMassDataExportAsync(string dataProvider);
     Task ShowMassDataCopyAsync(string dataProvider);
     Task ShowMassDataDownloadAsync(string dataProvider);
+
+    Task ShowAccountDialogAsync();
+    Task ShowAccountDialogAsync(Account account);
   }
 }

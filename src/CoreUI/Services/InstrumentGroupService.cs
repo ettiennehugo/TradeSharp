@@ -870,10 +870,10 @@ namespace TradeSharp.CoreUI.Services
       if (SelectedNode != null)
       {
         //when we have a selected node we export from that node on with it's children
-        foreach (InstrumentGroup instrumentGroup in Nodes)
-          if (instrumentGroup.Id == SelectedNode.Id)
+        foreach (var instrumentGroupNode in Nodes)
+          if (instrumentGroupNode.Item.Id == SelectedNode.Id)
           {
-            rootNodes.Add(writeJsonNode(InstrumentGroup.InstrumentGroupRoot, instrumentGroup, ref exportCount));
+            rootNodes.Add(writeJsonNode(InstrumentGroup.InstrumentGroupRoot, instrumentGroupNode.Item, ref exportCount));
             break;
           }
       }

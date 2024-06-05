@@ -8,7 +8,6 @@ using TradeSharp.CoreUI.ViewModels;
 using Microsoft.UI.Xaml;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
-using TradeSharp.WinCoreUI.ViewModels;
 
 namespace TradeSharp.WinCoreUI.Views
 {

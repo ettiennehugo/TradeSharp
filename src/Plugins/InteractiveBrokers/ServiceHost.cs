@@ -38,6 +38,7 @@ namespace TradeSharp.InteractiveBrokers
       Instruments = InstrumentAdapter.GetInstance(this);
 
       //setup callback handlers for the client to the adapters
+      Client.ConnectionStatus += Accounts.HandleConnectionStatus;
       Client.AccountSummary += Accounts.HandleAccountSummary;
       Client.AccountSummaryEnd += Accounts.HandleAccountSummaryEnd;
       Client.UpdateAccountValue += Accounts.HandleUpdateAccountValue;

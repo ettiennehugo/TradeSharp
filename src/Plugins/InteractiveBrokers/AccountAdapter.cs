@@ -58,7 +58,11 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //finalizers
-
+    ~AccountAdapter()
+    {
+      if (m_serviceHost.Client.IsConnected)
+        UnsubscribeUpdatesAllAccounts();
+    }
 
     //interface implementations
     public void RequestAccountSummary()
@@ -126,6 +130,16 @@ namespace TradeSharp.InteractiveBrokers
       m_serviceHost.Client.ClientSocket.reqPositions();
     }
 
+    public void RequestOpenOrders()
+    {
+      m_serviceHost.Client.ClientSocket.reqAllOpenOrders();
+    }
+
+    public void RequestCompletedOrders()
+    {
+      m_serviceHost.Client.ClientSocket.reqCompletedOrders(false);  //we retrieve all orders, both submitted to the API and via TWS - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#req-completed-orders
+    }
+
     public Instrument? From(Contract contract)
     {
       return m_instrumentService.Items.FirstOrDefault(x => x.Ticker == contract.Symbol.ToUpper());
@@ -141,6 +155,28 @@ namespace TradeSharp.InteractiveBrokers
     public ObservableCollection<Data.Account> Accounts { get; protected set; }
 
     //methods
+    //Refresh the accounts, positions and orders when the connection is established.
+    public void HandleConnectionStatus(ConnectionStatusMessage connectionStatusMessage)
+    {
+      if (connectionStatusMessage.IsConnected)
+      {
+        //we're going to reconstruct the broker accounts, positions and orders from scratch
+        Accounts.Clear();
+
+        //request all account data - we include completed orders as well as open orders
+        RequestAccountSummary();
+        Thread.Sleep(Constants.IntraRequestSleep);
+        RequestPositions();
+        Thread.Sleep(Constants.IntraRequestSleep);
+        SubscribeUpdatesAllAccounts();
+        Thread.Sleep(Constants.IntraRequestSleep);
+        RequestOpenOrders();
+        Thread.Sleep(Constants.IntraRequestSleep);
+        RequestCompletedOrders();
+        Thread.Sleep(Constants.IntraRequestSleep);
+      }
+    }
+
     public void HandleAccountSummary(AccountSummaryMessage summaryMessage)
     {
       setAccountValue("HandleAccountSummary", summaryMessage.RequestId, summaryMessage.Account, summaryMessage.Tag, summaryMessage.Value, summaryMessage.Currency); 
@@ -196,8 +232,24 @@ namespace TradeSharp.InteractiveBrokers
         return;
       }
 
-      order.Status = orderStatusMessage.Status == "Submitted" ? Data.Order.OrderStatus.Open : Data.Order.OrderStatus.Filled;
-      order.Filled += orderStatusMessage.Filled;
+      //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#order-status-message
+      string orderStatus = orderStatusMessage.Status.ToUpper();
+      if (orderStatus == Constants.OrderStatusPendingSubmit)
+        order.Status = Data.Order.OrderStatus.PendingSubmit;
+      else if (orderStatus == Constants.OrderStatusPendingCancel)
+        order.Status = Data.Order.OrderStatus.PendingCancel;
+      else if (orderStatus == Constants.OrderStatusSubmitted)
+        order.Status = Data.Order.OrderStatus.Open;
+      else if (orderStatus == Constants.OrderStatusInactive)
+        order.Status = Data.Order.OrderStatus.Inactive;
+      else if (orderStatus == Constants.OrderStatusFilled)
+        order.Status = Data.Order.OrderStatus.Filled;
+      else if (orderStatus == Constants.OrderStatusCancelled)
+        order.Status = Data.Order.OrderStatus.Cancelled;
+      else
+        m_logger.LogWarning($"HandleOrderStatus - unknown order status - {orderStatusMessage.Status}");
+      
+      order.Filled = orderStatusMessage.Filled;
       order.Remaining = orderStatusMessage.Remaining;
       order.AverageFillPrice = orderStatusMessage.AvgFillPrice;
       order.LastFillPrice = orderStatusMessage.LastFillPrice;
@@ -205,19 +257,19 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleOpenOrder(OpenOrderMessage openOrderMessage)
     {
-      m_logger.LogInformation("TODO - HandleOpenOrder not implemented.");
+      Account? account = resolveAccount(openOrderMessage.Order.Account);
+      if (account == null)
+      {
+        m_logger.LogWarning($"HandleOpenOrder - account not found - {openOrderMessage.Order.Account}");
+        return;
+      }
 
-      //Order order = resolveOrder(openOrderMessage.OrderId);
-      
-      //order.Status = openOrderMessage.OrderState.Status == "" ? Data.Order.OrderStatus.Filled : Data.Order.OrderStatus.Open;   //TODO - need to complete this
-      //order.Size = openOrderMessage.Order. .TotalQuantity;
-      //order.
-      //order.Filled += openOrderMessage.Order.FilledQuantity;
-      //order.Remaining = openOrderMessage.Order.TotalQuantity - openOrderMessage.Order.FilledQuantity;
-      //order.AverageFillPrice = openOrderMessage.Order.AverageFillPrice;
-      //order.LastFillPrice = openOrderMessage.OrderState.LastFilledPrice;
-
-
+      Order order = resolveOrder(account, openOrderMessage.OrderId);
+      order.Status = openOrderMessage.OrderState.Status == "" ? Data.Order.OrderStatus.Filled : Data.Order.OrderStatus.Open;   //TODO - need to complete this
+      order.Quantity = openOrderMessage.Order.FilledQuantity;
+      order.Filled = openOrderMessage.Order.FilledQuantity;
+      order.Remaining = openOrderMessage.Order.TotalQuantity - openOrderMessage.Order.FilledQuantity;
+      //NOTE: AverageFillPrice and LastFillPrice are not available in the OpenOrderMessage, need to check if they are available in the OrderState.
     }
 
     protected Account resolveAccount(string accountName)
@@ -257,7 +309,6 @@ namespace TradeSharp.InteractiveBrokers
 
       return order;
     }
-
 
     protected Order? resolveOrder(int orderId)
     {

@@ -21,6 +21,7 @@
   <ItemGroup>
     <None Remove="Styles\ColorStyles.xaml" />
     <None Remove="Templates\ControlTemplates.xaml" />
+    <None Remove="Views\AccountView.xaml" />
     <None Remove="Views\BrokersView.xaml" />
     <None Remove="Views\CountriesView.xaml" />
     <None Remove="Views\CountrySelectorView.xaml" />
@@ -224,5 +225,11 @@
     <Page Update="Views\ProgressDialogView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomAdditionalCompileInputs Remove="Views\AccountView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Remove="Views\AccountView.xaml" />
   </ItemGroup>
 </Project>

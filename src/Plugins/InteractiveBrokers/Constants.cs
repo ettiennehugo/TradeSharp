@@ -5,6 +5,10 @@
   /// </summary>
   public class Constants
   {
+    //sleep time between requests in milliseconds - set limit to be under 50 requests per second https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requests-limitations
+    //NOTE: If you set this too short it looks like the IB API starts failing and some responses are not properly processed.
+    public const int IntraRequestSleep = 45;
+
     //Configuration constants
     public const string DefaultName = "InteractiveBrokers";    //name used for any identifiers related to the plugin name 
     public const string IpKey = "IP";                          //IP address of the IB TWS API connection
@@ -26,6 +30,18 @@
     public const string DefaultRootInstrumentGroupName = "Interactive Brokers Classifications";    //default root instrument group used when copying IB industries and categories into TradeSharp 
     public const string DefaultRootInstrumentGroupTag = "IBIndustriesRoot";    //tag used for IB classifications root instrument group
     public const int DisconnectedSleepInterval = 30000;   //interval in milliseconds to wait between checks when the IB connection is disconnected - typically used for long running processes
+
+    //Order status constants
+    //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#order-status-message
+    //NOTE: We make these constants upper case to ensure that they are case insensitive when comparing.
+    public const string OrderStatusPendingSubmit = "PENDINGSUBMIT";
+    public const string OrderStatusPendingCancel = "PENDINGCANCEL";
+    public const string OrderStatusPreSubmitted = "PRESUBMITTED";
+    public const string OrderStatusSubmitted = "SUBMITTED";
+    public const string OrderStatusApiCancelled = "APICANCELLED";
+    public const string OrderStatusCancelled = "CANCELLED";
+    public const string OrderStatusFilled = "FILLED";
+    public const string OrderStatusInactive = "INACTIVE";
 
     /// <summary>
     /// Supported contract types.

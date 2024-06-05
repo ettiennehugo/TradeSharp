@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Microsoft.Extensions.Logging;
+using System.Linq;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.InteractiveBrokers.Messages;
 
@@ -75,6 +76,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
       m_contractsToScan = generateTickersToScan(MaxLength);
       m_progress.ShowAsync();
 
+      m_adapter.m_serviceHost.Client.Error += HandleError;
+
       m_progress.LogInformation($"Generated {m_contractsToScan.Count} potential tickers of up to length {MaxLength}...removing tickers already cached");
 
       //remove contracts not required for scanning based on the meta data
@@ -134,7 +137,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
           //wait for the response to be handled
           var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
           while (m_requestId != -1 && !cancellationTokenSource.Token.IsCancellationRequested)
-            Thread.Sleep(InstrumentAdapter.IntraRequestSleep);   //throttle requests to avoid exceeding the hard limit imposed by IB
+            Thread.Sleep(Constants.IntraRequestSleep);   //throttle requests to avoid exceeding the hard limit imposed by IB
 
           //persist found contracts at specific intervals so ensure we don't lose them if the program crashes
           //NOTE: This can have a race condition on m_contractsFound.Count with the receiving thread and handler method (HandleSymbolSamples)
@@ -161,6 +164,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
           scannedCount++;
         }
 
+        m_adapter.m_serviceHost.Client.Error -= HandleError;
         m_adapter.m_serviceHost.Client.SymbolSamples -= HandleSymbolSamples;
       }
 
@@ -231,6 +235,24 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
       //signal to request code that response was handled
       m_requestId = -1;
+    }
+
+    public void HandleError(int id, int errorCode, string errorMessage, string unknown, Exception e)
+    {
+      if (m_progress != null)
+      {
+        if (e == null)
+          m_progress.LogError($"Error {errorCode} - {errorMessage ?? ""}");
+        else
+          m_progress.LogError($"Error - {e.Message}");
+      }
+      else
+      {
+        if (e == null)
+          m_adapter.m_logger.LogError($"Error {errorCode} - {errorMessage ?? ""}");
+        else
+          m_adapter.m_logger.LogError($"Error - {e.Message}");
+      }
     }
   }
 }

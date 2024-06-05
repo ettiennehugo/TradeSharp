@@ -627,6 +627,16 @@ namespace TradeSharp.WinDataManager.Services
       return Task.CompletedTask;
     }
 
+    public Task ShowAccountDialogAsync()
+    {
+      return Task.CompletedTask;
+    }
+
+    public Task ShowAccountDialogAsync(Account account)
+    {
+      return Task.CompletedTask;
+    }
+
     //properties
     public FontIcon StatusBarIcon { get; set; }
     public TextBlock StatusBarText { get; set; }

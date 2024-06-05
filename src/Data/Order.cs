@@ -20,9 +20,12 @@ namespace TradeSharp.Data
     /// </summary>
     public enum OrderStatus
     {
-      Open,
-      Filled,
-      Cancelled
+      PendingSubmit,  //order is pending submission
+      PendingCancel,  //order is pending cancellation
+      Inactive,       //order was received but was rejected or cancelled
+      Open,           //order is open/waiting to be filled
+      Filled,         //order is filled
+      Cancelled       //order is cancelled
     }
 
     //types

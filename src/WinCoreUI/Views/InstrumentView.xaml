@@ -32,6 +32,7 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
     <TextBlock x:Name="m_typeLabel" Text="Type" Grid.Column="0" Grid.Row="0"/>
     <TextBlock x:Name="m_tickerLabel" Text="Ticker" Grid.Column="0" Grid.Row="1"/>
@@ -44,6 +45,7 @@
     <TextBlock x:Name="m_minimumMovementLabel" Text="Minimum Movement" Grid.Column="0" Grid.Row="8"/>
     <TextBlock x:Name="m_bigPointValueLabel" Text="Big Point Value" Grid.Column="0" Grid.Row="9"/>
     <TextBlock x:Name="m_tagLabel" Text="Tag" Grid.Column="0" Grid.Row="10"/>
+    <TextBlock x:Name="m_extendedPropertiesLabel" Text="Tag" Grid.Column="0" Grid.Row="11"/>
     <ComboBox x:Name="m_type" SelectedIndex="{x:Bind Instrument.Type, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="0"/>
     <TextBox x:Name="m_ticker" Text="{x:Bind Instrument.Ticker, Mode=TwoWay}" PlaceholderText="TICKER" CharacterCasing="Upper" Grid.Column="1" Grid.Row="1"/>
     <TextBox x:Name="m_alternateTicker" Text="{x:Bind Instrument.AlternateTickers, Mode=TwoWay, Converter={StaticResource StringListToStringConverter}}" PlaceholderText="TICKERS" CharacterCasing="Upper" Grid.Column="1" Grid.Row="2"/>
@@ -55,5 +57,6 @@
     <NumberBox x:Name="m_minimumMovement" Text="{x:Bind Instrument.MinimumMovement, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Maximum="100" Grid.Column="1" Grid.Row="8"/>
     <NumberBox x:Name="m_bigPointValue" Text="{x:Bind Instrument.BigPointValue, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Grid.Column="1" Grid.Row="9"/>
     <TextBox x:Name="m_tag" Text="{x:Bind Instrument.Tag, Mode=TwoWay}" PlaceholderText="Tag value" Grid.Column="1" Grid.Row="10"/>
+    <TextBox x:Name="m_extendedProperties" Text="{x:Bind Instrument.ExtendedProperties, Mode=TwoWay}" PlaceholderText="Extended Properties JSON" Grid.Column="1" Grid.Row="11"/>
   </Grid>
 </Page>

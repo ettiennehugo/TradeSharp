@@ -77,7 +77,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(m_requestId, contract);
         m_requestId++;
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
-        Thread.Sleep(InstrumentAdapter.IntraRequestSleep);    //throttle requests to avoid exceeding the hard limit imposed by IB
+        Thread.Sleep(Constants.IntraRequestSleep);
       }
 
       m_adapter.m_serviceHost.Client.Error -= HandleError;
@@ -103,6 +103,5 @@ namespace TradeSharp.InteractiveBrokers.Commands
           m_adapter.m_logger.LogError($"Error - {e.Message}");
       }
     }
-
   }
 }
