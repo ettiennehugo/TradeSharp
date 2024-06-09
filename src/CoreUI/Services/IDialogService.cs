@@ -324,6 +324,7 @@ namespace TradeSharp.CoreUI.Services
     Task ShowMassDataDownloadAsync(string dataProvider);
 
     Task ShowAccountDialogAsync();
+    Task ShowAccountDialogAsync(IBrokerPlugin broker);
     Task ShowAccountDialogAsync(Account account);
   }
 }

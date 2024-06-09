@@ -92,6 +92,7 @@ namespace TradeSharp.InteractiveBrokers
       Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
+      Commands.Add(new PluginCommand { Name = "Accounts", Tooltip = "View accounts", Icon = "\uE923", Command = new AsyncRelayCommand(OnShowAccountsAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Scan for Contracts", Tooltip = "Run an exhaustive search for new contracts supported by Interactive Brokers", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScanForContractsAsync, () => IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Download Contracts", Tooltip = "Download the rest of the contract and contract details based off contract headers", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) });
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
@@ -131,6 +132,11 @@ namespace TradeSharp.InteractiveBrokers
         m_ibServiceHost.Client.Disconnect();
         raiseUpdateCommands();
       });
+    }
+
+    public Task OnShowAccountsAsync()
+    {
+      return m_dialogService.ShowAccountDialogAsync(this);
     }
 
     public Task OnScanForContractsAsync()

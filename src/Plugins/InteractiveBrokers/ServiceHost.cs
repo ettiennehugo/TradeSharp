@@ -40,13 +40,12 @@ namespace TradeSharp.InteractiveBrokers
       //setup callback handlers for the client to the adapters
       Client.ConnectionStatus += Accounts.HandleConnectionStatus;
       Client.AccountSummary += Accounts.HandleAccountSummary;
-      Client.AccountSummaryEnd += Accounts.HandleAccountSummaryEnd;
       Client.UpdateAccountValue += Accounts.HandleUpdateAccountValue;
       Client.UpdatePortfolio += Accounts.HandleUpdatePortfolio;
       Client.Position += Accounts.HandlePosition;
-      Client.PositionEnd += Accounts.HandlePositionEnd;
       Client.OrderStatus += Accounts.HandleOrderStatus;
       Client.OpenOrder += Accounts.HandleOpenOrder;
+
       Client.ScannerParameters += Instruments.HandleScannerParameters;
       Client.ContractDetails += Instruments.HandleContractDetails;
       Client.ContractDetailsEnd += Instruments.HandleContractDetailsEnd;

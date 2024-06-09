@@ -4,6 +4,16 @@ using System.Runtime.InteropServices;
 namespace TradeSharp.Data
 {
   /// <summary>
+  /// Direction of the position held.
+  /// </summary>
+  public enum PositionDirection
+  {
+    Flat,
+    Long,
+    Short
+  }
+
+  /// <summary>
   /// Trading position held within a specific account at a broker.
   /// </summary>
   [ComVisible(true)]
@@ -14,14 +24,6 @@ namespace TradeSharp.Data
 
 
     //enums
-    /// <summary>
-    /// Direction of the position held.
-    /// </summary>
-    public enum PositionDirection
-    {
-      Long,
-      Short
-    }
 
 
     //types

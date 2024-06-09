@@ -30,7 +30,7 @@ namespace TradeSharp.InteractiveBrokers
     protected CancellationTokenSource? m_cancelResponseReaderThread;
     protected Thread? m_responseReaderThread;
     protected EReaderSignal? m_readerSignal;
-    protected EReader m_responseReader;
+    protected EReader? m_responseReader;
     protected int m_nextRequestId;
     protected int m_nextOrderId;
     protected ILogger m_logger;
@@ -53,8 +53,6 @@ namespace TradeSharp.InteractiveBrokers
       //setup basic attributes
       m_serviceHost = serviceHost;
       m_logger = serviceHost.Host.Services.GetRequiredService<ILogger<Cache>>();
-      m_readerSignal = new EReaderMonitorSignal();
-      ClientSocket = new EClientSocket(this, m_readerSignal);
       m_connected = false;
       m_ip = "";
       m_port = -1;
@@ -65,14 +63,7 @@ namespace TradeSharp.InteractiveBrokers
 
     public void Dispose()
     {
-      if (ClientSocket.IsConnected()) ClientSocket.eDisconnect();
-
-      //shutdown the response reader thread - we need to set the cancellation token then issue a dummy signal before
-      //deallocating the response components
-      if (m_cancelResponseReaderThread != null) m_cancelResponseReaderThread.Cancel();      
-      
-      m_readerSignal!.issueSignal();  //this will signal a response in the processing loop of ResponseReaderMain to unblock the thread
-      m_readerSignal = null;
+      if (IsConnected) Disconnect();
     }
 
     //finalizers
@@ -82,8 +73,8 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //properties
-    public EClientSocket ClientSocket { get; private set; }
-    public bool IsConnected { get => m_connected && ClientSocket.IsConnected(); } //this client must be connected to TWS and TWS needs to be connected to the server
+    public EClientSocket? ClientSocket { get; private set; }
+    public bool IsConnected { get => m_connected && ClientSocket != null && ClientSocket.IsConnected(); } //this client must be connected to TWS and TWS needs to be connected to the server
     public int NextRequestId { get => m_nextRequestId++; }
     public int NextOrderId { get => m_nextOrderId++; }
     public string IP { get => m_ip; }
@@ -92,7 +83,7 @@ namespace TradeSharp.InteractiveBrokers
     //methods
     public void Connect(string ip, int port)
     {
-      if (!ClientSocket.IsConnected())
+      if (!IsConnected)
       {
         m_ip = ip;
         m_port = port;
@@ -100,8 +91,25 @@ namespace TradeSharp.InteractiveBrokers
         try
         {
           m_nextOrderId = -1; //make sure we wait for the next valid order ID from IB before continueing
+
+          m_readerSignal = new EReaderMonitorSignal();
+          ClientSocket = new EClientSocket(this, m_readerSignal);
           ClientSocket.eConnect(m_ip, m_port, 0); //this call should be synchronous to ensure handshake is done before creating the reader thread below, if this is done too quickly the TWS API immediately disconnects
-          Thread.Sleep(1000); //wait for the connection to be established before continuing otherwise the TWS API will disconnect/enter an error state
+          Thread.Sleep(1000); //NOTE: We need to wait for the connection here before continuing otherwise the TWS API will disconnect/enter an error state.
+
+          //creates the response reader that would wait for responses and queue them to the EWrapper
+          //NOTE: The response reader MUST be created after the initial handshake above otherwise none of the callbacks will work.
+          m_responseReader = new EReader(ClientSocket, m_readerSignal);
+          m_responseReader.Start();
+
+          //create the response reader thread that would loop the above response reader
+          m_cancelResponseReaderThread = new CancellationTokenSource();   //NOTE: Response thread is terminated using this cancellation token, cancellation is done when this client is disposed.
+          m_responseReaderThread = new Thread(ResponseReaderMain);
+          m_responseReaderThread.Name = "IBApi Response Reader";
+          m_responseReaderThread.IsBackground = true;
+          m_responseReaderThread.Start();   //NOTE: This thread keeps on running until TradeSharp is closed, we do not restart it between connections, when disconnected we just will not receive any messages.
+
+          //wait for the connection to be established before continuing
           var time = DateTime.Now;
           var waitTime = new TimeSpan(5000000000);  //wait 5-seconds
           while (NextOrderId <= 0) { if (DateTime.Now - time > waitTime) break; } //wait for initial handshake to complete, we need to limit the wait otherwise this thread will hang the application
@@ -116,28 +124,13 @@ namespace TradeSharp.InteractiveBrokers
         }
         catch (Exception e)
         {
+          m_readerSignal = null;
+          ClientSocket = null;
           m_logger.LogError($"Connection to IP {m_ip} and port {m_port} failed with exception - {e.Message}");
         }
 
-        //creates the response reader that would wait for responses and queue them to the EWrapper
-        //NOTE: The response reader MUST be created after the initial handshake above otherwise none of the callbacks will work.
-        if (m_responseReader == null)
-        {
-          m_responseReader = new EReader(ClientSocket, m_readerSignal);
-          m_responseReader.Start();
-        }
-
-        //create the response reader thread that would loop the above response reader
-        if (m_responseReaderThread == null)
-        {
-          m_cancelResponseReaderThread = new CancellationTokenSource();
-          m_responseReaderThread = new Thread(ResponseReaderMain);
-          m_responseReaderThread.Name = "IBApi Response Reader";
-          m_responseReaderThread.Start();
-        }
-
         //raise connected event
-        m_connected = ClientSocket.IsConnected();
+        m_connected = ClientSocket != null && ClientSocket!.IsConnected();
         if (m_connected)
         {
           var tmp = ConnectionStatus;
@@ -154,7 +147,16 @@ namespace TradeSharp.InteractiveBrokers
 
     public void Disconnect()
     {
-      ClientSocket.eDisconnect();
+      if (IsConnected)
+      {
+        ClientSocket!.eDisconnect();
+        //shutdown the response reader thread - we need to set the cancellation token then issue a dummy signal before
+        //deallocating the response components
+        if (m_cancelResponseReaderThread != null) m_cancelResponseReaderThread.Cancel();
+        m_readerSignal!.issueSignal();  //this will signal a response in the processing loop of ResponseReaderMain to unblock the thread
+        m_readerSignal = null;
+      }
+
       m_connected = false;
       var tmp = ConnectionStatus;
       if (tmp != null)
@@ -169,12 +171,13 @@ namespace TradeSharp.InteractiveBrokers
       while (!m_cancelResponseReaderThread!.IsCancellationRequested)
       {
         m_readerSignal!.waitForSignal();
-        m_responseReader.processMsgs();
+        m_responseReader!.processMsgs();
       }
 
       m_cancelResponseReaderThread.Dispose();
       m_cancelResponseReaderThread = null;
       m_responseReaderThread = null;
+      m_responseReader = null;
     }
 
     public Task<Contract> ResolveContractAsync(int conId, string exchange)

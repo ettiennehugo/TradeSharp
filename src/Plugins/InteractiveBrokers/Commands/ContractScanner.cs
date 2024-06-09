@@ -137,7 +137,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
           //wait for the response to be handled
           var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
           while (m_requestId != -1 && !cancellationTokenSource.Token.IsCancellationRequested)
-            Thread.Sleep(Constants.IntraRequestSleep);   //throttle requests to avoid exceeding the hard limit imposed by IB
+            Thread.Sleep(Constants.IntraRequestSleep);   //wait till request has been handled
 
           //persist found contracts at specific intervals so ensure we don't lose them if the program crashes
           //NOTE: This can have a race condition on m_contractsFound.Count with the receiving thread and handler method (HandleSymbolSamples)

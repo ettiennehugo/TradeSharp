@@ -9,7 +9,7 @@ namespace TradeSharp.Data
   /// </summary>
   [ComVisible(true)]
   [Guid("9EA66DAD-3B05-4C14-8635-138ED999A80C")]
-  public abstract partial class Account: ObservableObject
+  public abstract partial class Account : ObservableObject
   {
     //constants
 
@@ -21,14 +21,13 @@ namespace TradeSharp.Data
 
 
     //attributes
-    protected string m_name;
     protected ObservableCollection<Position> m_positions;
     protected ObservableCollection<Order> m_orders;
 
     //constructors
     public Account(string name)
     {
-      m_name = name;
+      Name = name;
       m_positions = new ObservableCollection<Position>();
       m_orders = new ObservableCollection<Order>();
       CustomProperties = new Dictionary<string, CustomProperty>();
@@ -41,7 +40,7 @@ namespace TradeSharp.Data
 
 
     //properties
-    public string Name { get => m_name; }
+    [ObservableProperty] private string m_name;               //name of the account
     [ObservableProperty] private bool m_default;              //if multiple accounts are present this flag will be set for the default account
     [ObservableProperty] private string m_accountType;        //type of account
     [ObservableProperty] private string m_baseCurrency;       //base currency of the account
@@ -65,5 +64,28 @@ namespace TradeSharp.Data
     public abstract SimpleOrder CreateOrder(string symbol, SimpleOrder.OrderType type, double quantity, double price);
     public abstract ComplexOrder CreateOrder(string symbol, ComplexOrder.OrderType type, double quantity);
     public abstract void CancelOrder(Order order);
+  }
+
+  /// <summary>
+  /// Empty account used when no account is selected, does not support order creation or cancellation.
+  /// </summary>
+  public class EmptyAccount : Account
+  {
+    public EmptyAccount() : base("No account selected") { }
+
+    public override void CancelOrder(Order order)
+    {
+      throw new NotImplementedException("Empty account does not support order cancellation.");
+    }
+
+    public override SimpleOrder CreateOrder(string symbol, SimpleOrder.OrderType type, double quantity, double price)
+    {
+      throw new NotImplementedException("Empty account does not support simple order creation.");
+    }
+
+    public override ComplexOrder CreateOrder(string symbol, ComplexOrder.OrderType type, double quantity)
+    {
+      throw new NotImplementedException("Empty account does not support complex order creation.");
+    }
   }
 }

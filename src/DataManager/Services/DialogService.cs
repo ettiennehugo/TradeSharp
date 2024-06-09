@@ -627,13 +627,36 @@ namespace TradeSharp.WinDataManager.Services
       return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Shows the account dialog with all the brokers and their associated accounts.
+    /// </summary>
     public Task ShowAccountDialogAsync()
     {
       return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Shows the account dialog for the specified broker.
+    /// </summary>
+    public Task ShowAccountDialogAsync(IBrokerPlugin broker)
+    {
+      //TEST CODE
+      return ShowAccountDialogAsync(broker.Accounts[0]);
+      //TEST CODE
+    }
+
+    /// <summary>
+    /// Shows the account dialog for the specified account.
+    /// </summary>
     public Task ShowAccountDialogAsync(Account account)
     {
+      Window window = new Window();
+      window.Title = $"Account - {account.Name}";
+      WinCoreUI.Views.AccountView accountView = new WinCoreUI.Views.AccountView(account);
+      accountView.ParentWindow = window;
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(800, 1000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      ResetSizeable(window);
+      window.Activate();
       return Task.CompletedTask;
     }
 

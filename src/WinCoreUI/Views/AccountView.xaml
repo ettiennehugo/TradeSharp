@@ -12,7 +12,7 @@
   <UserControl.Resources>
     <wincoreuicommon:EnumValueDescriptionConverter x:Key="EnumValueDescriptionConverter"/>
   </UserControl.Resources>
-  <Grid RowDefinitions="Auto,*">
+  <Grid RowDefinitions="Auto,*,Auto">
     <Grid x:Name="m_accountData" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto,Auto" Grid.Row="1" Grid.ColumnSpan="2">
       <TextBlock x:Name="m_accountNameLbl" Text="Account" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" FontWeight="Bold"/>
       <TextBlock x:Name="m_accountName" Text="{x:Bind Account.Name, Mode=OneWay}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" FontWeight="Bold"/>
@@ -143,6 +143,9 @@
           </ListView.ItemTemplate>
         </ListView>
       </TabViewItem>
-    </TabView>    
+    </TabView>
+    <StackPanel Margin="5,3" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{x:Bind ShowCloseBar, Mode=OneWay}">
+      <Button x:Name="m_closeBtn" Content="Close" Click="m_closeBtn_Click"/>
+    </StackPanel>
   </Grid>
 </UserControl>
