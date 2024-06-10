@@ -110,6 +110,7 @@ namespace TradeSharp.InteractiveBrokers
 
     public override void Dispose()
     {
+      m_manuallyDisconnected = true;  //edge case when application is shutdown and we're still connected we need to disable auto-reconnect
       m_ibServiceHost.Client.Dispose();
       m_ibServiceHost.Cache.Dispose();
       base.Dispose();
@@ -281,6 +282,9 @@ namespace TradeSharp.InteractiveBrokers
       }
     }
 
+    // NOTES:
+    //   * Auto-reconnect works best when the TWS API is setup to restart automatically under the "Lock and Exit" settings. Do not use the "Auto logoff" as that seems to raise and exception
+    //     that crashes the TWS API and TS.
     protected void setupAutoReconnectTimer()
     {
       if (m_autoReconnect && !m_manuallyDisconnected)   

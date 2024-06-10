@@ -21,7 +21,7 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private Window m_parentWindow;
+
 
     //constructors
     public AccountView()
@@ -46,14 +46,10 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public Account Account { get; set; } = null;
-    public Window ParentWindow { get => m_parentWindow; set { ShowCloseBar = value != null ? Visibility.Visible : Visibility.Collapsed; m_parentWindow = value; } }
-    public static readonly DependencyProperty s_showCloseBar = DependencyProperty.Register("ShowCloseBar", typeof(Visibility), typeof(AccountView), new PropertyMetadata(null));
-    public Visibility ShowCloseBar { get => (Visibility)GetValue(s_showCloseBar); set => SetValue(s_showCloseBar, value); }
+    public Window ParentWindow { get; set; }
 
     //methods
-    private void m_closeBtn_Click(object sender, RoutedEventArgs e)
-    {
-      ParentWindow.Close();
-    }
+
+
   }
 }

@@ -63,7 +63,7 @@ namespace TradeSharp.InteractiveBrokers
 
     public void Dispose()
     {
-      if (IsConnected) Disconnect();
+      Disconnect();
     }
 
     //finalizers

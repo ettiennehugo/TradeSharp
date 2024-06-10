@@ -21,6 +21,7 @@
   <ItemGroup>
     <None Remove="Styles\ColorStyles.xaml" />
     <None Remove="Templates\ControlTemplates.xaml" />
+    <None Remove="Views\AccountsView.xaml" />
     <None Remove="Views\AccountView.xaml" />
     <None Remove="Views\BrokersView.xaml" />
     <None Remove="Views\CountriesView.xaml" />
@@ -231,5 +232,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Remove="Views\AccountView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomAdditionalCompileInputs Remove="Views\AccountsView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Remove="Views\AccountsView.xaml" />
   </ItemGroup>
 </Project>

@@ -652,9 +652,10 @@ namespace TradeSharp.WinDataManager.Services
     {
       Window window = new Window();
       window.Title = $"Account - {account.Name}";
-      WinCoreUI.Views.AccountView accountView = new WinCoreUI.Views.AccountView(account);
-      accountView.ParentWindow = window;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(800, 1000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      WinCoreUI.Views.AccountView accountsView = new WinCoreUI.Views.AccountView(account);
+      accountsView.ParentWindow = window;
+      window.Content = accountsView;
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
       window.Activate();
       return Task.CompletedTask;
