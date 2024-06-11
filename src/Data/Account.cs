@@ -25,9 +25,19 @@ namespace TradeSharp.Data
     protected ObservableCollection<Order> m_orders;
 
     //constructors
-    public Account(string name)
+    public Account()
     {
-      Name = name;
+      Name = string.Empty;
+      AccountType = string.Empty;
+      BaseCurrency = string.Empty;
+      NetLiquidation = 0.0;
+      SettledCash = 0.0;
+      BuyingPower = 0.0;
+      MaintenanceMargin = 0.0;
+      PositionsValue = 0.0;
+      AvailableFunds = 0.0;
+      ExcessLiquidity = 0.0;
+      LastSyncDateTime = DateTime.MinValue;
       m_positions = new ObservableCollection<Position>();
       m_orders = new ObservableCollection<Order>();
       CustomProperties = new Dictionary<string, CustomProperty>();
@@ -64,6 +74,7 @@ namespace TradeSharp.Data
     public abstract SimpleOrder CreateOrder(string symbol, SimpleOrder.OrderType type, double quantity, double price);
     public abstract ComplexOrder CreateOrder(string symbol, ComplexOrder.OrderType type, double quantity);
     public abstract void CancelOrder(Order order);
+
   }
 
   /// <summary>
@@ -71,7 +82,7 @@ namespace TradeSharp.Data
   /// </summary>
   public class EmptyAccount : Account
   {
-    public EmptyAccount() : base("No account selected") { }
+    public EmptyAccount() : base() { Name = "No account selected"; LastSyncDateTime = DateTime.Now; }
 
     public override void CancelOrder(Order order)
     {
@@ -88,4 +99,5 @@ namespace TradeSharp.Data
       throw new NotImplementedException("Empty account does not support complex order creation.");
     }
   }
+
 }

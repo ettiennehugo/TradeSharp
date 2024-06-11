@@ -21,7 +21,7 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //constructors
-    public Account(string name) : base(name) { }
+    public Account() : base() { }
 
     //finalizers
 

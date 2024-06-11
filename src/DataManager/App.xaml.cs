@@ -13,7 +13,6 @@ using TradeSharp.WinCoreUI.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using TradeSharp.WinCoreUI.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -145,11 +144,8 @@ namespace TradeSharp.WinDataManager
       var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
       instrumentGroupViewModel.RefreshCommand.Execute(null);
 
-      //setup dispatcher queue for UI thread
+      //setup dispatcher queue for UI thread in the dialog service
       var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-      var instrumentBarDataViewModel = (IInstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
-      ((WinCoreUI.ViewModels.InstrumentBarDataViewModel)instrumentBarDataViewModel).UIDispatcherQueue = dispatcherQueue;
-      ((WinCoreUI.ViewModels.InstrumentGroupViewModel)instrumentGroupViewModel).UIDispatcherQueue = dispatcherQueue;
       var dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       ((DialogService)dialogService).UIDispatcherQueue = dispatcherQueue;
 

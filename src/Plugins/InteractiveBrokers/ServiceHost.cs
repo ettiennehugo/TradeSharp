@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using TradeSharp.Common;
+using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -21,16 +22,17 @@ namespace TradeSharp.InteractiveBrokers
     private static ServiceHost? s_instance;
 
     //constructors
-    public static ServiceHost GetInstance(IHost host, IPluginConfiguration configuration)
+    public static ServiceHost GetInstance(IHost host, IDialogService dialogService, IPluginConfiguration configuration)
     {
-      if (s_instance == null) s_instance = new ServiceHost(host, configuration);
+      if (s_instance == null) s_instance = new ServiceHost(host, dialogService, configuration);
       return s_instance;
     }
 
-    protected ServiceHost(IHost host, IPluginConfiguration configuration)
+    protected ServiceHost(IHost host, IDialogService dialogService, IPluginConfiguration configuration)
     {
       //allocate components
       Configuration = configuration;
+      DialogService = dialogService;
       Host = host;
       Client = Client.GetInstance(this);
       Cache = Cache.GetInstance(this);
@@ -64,6 +66,7 @@ namespace TradeSharp.InteractiveBrokers
 
     //properties
     public IPluginConfiguration Configuration { get; protected set; }
+    public IDialogService DialogService { get; protected set; }
     public IHost Host { get; protected set; }
     public Client Client { get; protected set; }
     public Cache Cache { get; protected set; }

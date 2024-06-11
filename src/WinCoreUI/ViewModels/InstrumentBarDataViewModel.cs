@@ -36,7 +36,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
     private DateTime m_oldToDateTime;
 
     //constructors
-    public InstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService, ILogger<InstrumentBarDataViewModel> logger) : base(itemService, navigationService, dialogService, logger) 
+    public InstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService, ILogger<InstrumentBarDataViewModel> logger) : base(itemService, navigationService, dialogService, logger)
     {
       IncrementalItems = new IncrementalObservableCollection<IBarData>(this);
       Items = IncrementalItems;
@@ -45,7 +45,6 @@ namespace TradeSharp.WinCoreUI.ViewModels
       IsLoading = false;
       m_oldFromDateTime = Constants.DefaultMinimumDateTime;
       m_oldToDateTime = Constants.DefaultMaximumDateTime;
-      UIDispatcherQueue = null;
     }
 
     //finalizers
@@ -93,7 +92,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
         {
           //can not read the control content asynchronously so must run on the UI thread
           //OPTIMIZATION: Can pack the dates to be deleted into a range table and delete the whole range asynchronously.
-          UIDispatcherQueue.TryEnqueue(() =>
+          m_dialogService.PostUIUpdate(() =>
           {
             IReadOnlyList<ItemIndexRange> ranges = (IReadOnlyList<ItemIndexRange>)target;
             IList<IBarData> itemsToDelete = new List<IBarData>();
@@ -132,7 +131,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
           //force refresh for incremental loading
           if (m_fromDateTime != m_oldFromDateTime || m_toDateTime != m_oldToDateTime)
           {
-            UIDispatcherQueue.TryEnqueue(() => IncrementalItems.Clear()); //must run on the UI thread
+            m_dialogService.PostUIUpdate(() => IncrementalItems.Clear()); //must run on the UI thread
             m_offsetIndex = 0;
             HasMoreItems = true;
             m_oldFromDateTime = m_fromDateTime;
@@ -162,11 +161,6 @@ namespace TradeSharp.WinCoreUI.ViewModels
     }
 
     //properties
-    /// <summary>
-    /// UI thread dispatcher queue to IncrementalItems collection in the UI thread.
-    /// </summary>
-    public DispatcherQueue UIDispatcherQueue { get; set; }
-
     /// <summary>
     /// Concrete definition of the list of incremental items, Items will be the generic definition.
     /// </summary>

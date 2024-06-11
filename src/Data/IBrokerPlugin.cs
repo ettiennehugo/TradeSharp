@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.Data
 {
@@ -22,14 +23,9 @@ namespace TradeSharp.Data
 
 
     //properties
-    IList<Account> Accounts { get; }
+    ObservableCollection<Account> Accounts { get; }
 
     //events
-
-
-    //TODO:
-    // - Add events for account changes - order, position, balance changes.
-    // - Add events for data changes - instrument, price, news, etc.
 
 
     //methods

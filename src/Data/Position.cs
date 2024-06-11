@@ -44,6 +44,7 @@ namespace TradeSharp.Data
       MarketPrice = marketPrice;
       UnrealizedPnl = unrealizedPnl;
       RealizedPnl = realizedPnl;
+      CustomProperties = new Dictionary<string, CustomProperty>();
     }
 
     //finalizers
@@ -62,9 +63,9 @@ namespace TradeSharp.Data
     [ObservableProperty] private double m_marketPrice;
     [ObservableProperty] private double m_unrealizedPnl;
     [ObservableProperty] private double m_realizedPnl;
+    public IDictionary<string, CustomProperty> CustomProperties { get; internal set; }
 
     //methods
-
 
 
   }

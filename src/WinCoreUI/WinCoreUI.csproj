@@ -10,49 +10,6 @@
     <AssemblyName>TradeSharp.WinCoreUI</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <Content Remove="LockScreenLogo.scale-200.png" />
-    <Content Remove="SplashScreen.scale-200.png" />
-    <Content Remove="Square150x150Logo.scale-200.png" />
-    <Content Remove="Square44x44Logo.scale-200.png" />
-    <Content Remove="Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Remove="StoreLogo.png" />
-    <Content Remove="Wide310x150Logo.scale-200.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Styles\ColorStyles.xaml" />
-    <None Remove="Templates\ControlTemplates.xaml" />
-    <None Remove="Views\AccountsView.xaml" />
-    <None Remove="Views\AccountView.xaml" />
-    <None Remove="Views\BrokersView.xaml" />
-    <None Remove="Views\CountriesView.xaml" />
-    <None Remove="Views\CountrySelectorView.xaml" />
-    <None Remove="Views\DataProvidersView.xaml" />
-    <None Remove="Views\ExchangesView.xaml" />
-    <None Remove="Views\ExchangeView.xaml" />
-    <None Remove="Views\ExportView.xaml" />
-    <None Remove="Views\ExtensionsView.xaml" />
-    <None Remove="Views\HolidaysView.xaml" />
-    <None Remove="Views\ImportView.xaml" />
-    <None Remove="Views\InstrumentBarDataView.xaml" />
-    <None Remove="Views\InstrumentBarsDataView.xaml" />
-    <None Remove="Views\InstrumentDataView.xaml" />
-    <None Remove="Views\InstrumentGroupsView.xaml" />
-    <None Remove="Views\InstrumentGroupView.xaml" />
-    <None Remove="Views\InstrumentSelectionView.xaml" />
-    <None Remove="Views\InstrumentsView.xaml" />
-    <None Remove="Views\InstrumentView.xaml" />
-    <None Remove="Views\LoggerView.xaml" />
-    <None Remove="Views\LoggerViewDialog.xaml" />
-    <None Remove="Views\MassCopyInstrumentDataView.xaml" />
-    <None Remove="Views\MassDownloadInstrumentDataView.xaml" />
-    <None Remove="Views\MassExportInstrumentDataView.xaml" />
-    <None Remove="Views\MassImportInstrumentDataView.xaml" />
-    <None Remove="Views\PluginsView.xaml" />
-    <None Remove="Views\ProgressDialogView.xaml" />
-    <None Remove="Views\SessionsView.xaml" />
-    <None Remove="Views\SessionView.xaml" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.Collections" Version="8.0.240109" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.HeaderedControls" Version="8.0.240109" />
@@ -63,7 +20,6 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.3233" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
@@ -73,7 +29,6 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
-
   <ItemGroup>
     <Page Update="Styles\ColorStyles.xaml">
       <Generator>MSBuild:Compile</Generator>

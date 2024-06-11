@@ -6,6 +6,7 @@ using TradeSharp.CoreUI.Services;
 using System.Runtime.InteropServices;
 using TradeSharp.InteractiveBrokers.Messages;
 using Microsoft.Extensions.FileSystemGlobbing.Internal;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -87,7 +88,7 @@ namespace TradeSharp.InteractiveBrokers
       m_autoReconnect = Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.AutoReconnectKey) ? bool.Parse((string)Configuration!.Configuration[InteractiveBrokers.Constants.AutoReconnectKey]) : InteractiveBrokers.Constants.DefaultAutoReconnect;
       parseAutoReconnectInterval();
       parseMaintenanceSchedule();
-      m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, Configuration);
+      m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, m_dialogService, Configuration);
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
       Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) } );
@@ -177,7 +178,7 @@ namespace TradeSharp.InteractiveBrokers
 
     //properties
     public override bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
-    public override IList<Data.Account> Accounts { get => m_ibServiceHost.Accounts.Accounts; }
+    public override ObservableCollection<Data.Account> Accounts { get => m_ibServiceHost.Accounts.Accounts; }
     public string IP { get => m_ip; }
     public int Port { get => m_port; }
     public bool AutoReconnect { get => m_autoReconnect; }

@@ -45,6 +45,5 @@ namespace TradeSharp.Data
     //methods
 
 
-
   }
 }

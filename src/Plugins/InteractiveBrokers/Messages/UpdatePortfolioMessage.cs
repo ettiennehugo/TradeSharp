@@ -4,7 +4,7 @@ namespace TradeSharp.InteractiveBrokers.Messages
 {
   public class UpdatePortfolioMessage
     {
-        public UpdatePortfolioMessage(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, string accountName)
+        public UpdatePortfolioMessage(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, string account)
         {
             Contract = contract;
             Position = position;
@@ -13,7 +13,7 @@ namespace TradeSharp.InteractiveBrokers.Messages
             AverageCost = averageCost;
             UnrealizedPNL = unrealizedPNL;
             RealizedPNL = realizedPNL;
-            AccountName = accountName;
+            Account = account;
         }
 
         public Contract Contract { get; set; }
@@ -30,6 +30,6 @@ namespace TradeSharp.InteractiveBrokers.Messages
 
         public double RealizedPNL { get; set; }
 
-        public string AccountName { get; set; }
+        public string Account { get; set; }
     }
 }

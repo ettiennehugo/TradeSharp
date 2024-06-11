@@ -144,15 +144,20 @@ namespace TradeSharp.InteractiveBrokers
     public ObservableCollection<string> AccountIds { get; protected set; }
     public ObservableCollection<Data.Account> Accounts { get; protected set; }
 
+    //events
+
+
     //methods
+
+
     //Refresh the accounts, positions and orders when the connection is established.
     public void HandleConnectionStatus(ConnectionStatusMessage connectionStatusMessage)
     {
       if (connectionStatusMessage.IsConnected)
-        lock(this)
+        lock (this)
         {
           //we're going to reconstruct the broker accounts, positions and orders from scratch
-          Accounts.Clear();
+          m_serviceHost.DialogService.PostUIUpdate(() => Accounts.Clear());
 
           //request all account data - we include completed orders as well as open orders
           RequestAccountSummary();
@@ -166,99 +171,104 @@ namespace TradeSharp.InteractiveBrokers
     //NOTE: Handle methods need to lock the account adapter to ensure exclusive access to the defined set of accounts.
     public void HandleAccountSummary(AccountSummaryMessage summaryMessage)
     {
-      lock(this) setAccountValue("HandleAccountSummary", summaryMessage.RequestId, summaryMessage.Account, summaryMessage.Tag, summaryMessage.Value, summaryMessage.Currency);
+      lock (this) m_serviceHost.DialogService.PostUIUpdate(() => setAccountValue("HandleAccountSummary", summaryMessage.RequestId, summaryMessage.Account, summaryMessage.Tag, summaryMessage.Value, summaryMessage.Currency));
     }
 
     public void HandleUpdateAccountValue(AccountValueMessage accountValueMessage)
     {
-      lock(this) setAccountValue("HandleAccountValue", -1 /* account value does not have a request id */, accountValueMessage.Account, accountValueMessage.Key, accountValueMessage.Value, accountValueMessage.Currency);
+      lock (this) m_serviceHost.DialogService.PostUIUpdate(() => setAccountValue("HandleAccountValue", -1 /* account value does not have a request id */, accountValueMessage.Account, accountValueMessage.Key, accountValueMessage.Value, accountValueMessage.Currency));
     }
 
     public void HandleUpdatePortfolio(UpdatePortfolioMessage updatePortfolioMessage)
     {
-      lock(this)
-      {
-        Account account = resolveAccount(updatePortfolioMessage.AccountName);
-        Contract contract = updatePortfolioMessage.Contract;
-        Position position = resolvePosition(account, contract);
-        position.Size = updatePortfolioMessage.Position;
-        position.MarketPrice = updatePortfolioMessage.MarketPrice;
-        position.MarketValue = updatePortfolioMessage.MarketValue;
-        position.AverageCost = updatePortfolioMessage.AverageCost;
-        position.UnrealizedPnl = updatePortfolioMessage.UnrealizedPNL;
-        position.RealizedPnl = updatePortfolioMessage.RealizedPNL;
-      }
+      lock (this)
+        m_serviceHost.DialogService.PostUIUpdate(() =>
+        {
+          Account account = resolveAccount(updatePortfolioMessage.Account);
+          Contract contract = updatePortfolioMessage.Contract;
+          Position position = resolvePosition(account, contract);
+          position.Size = updatePortfolioMessage.Position;
+          position.MarketPrice = updatePortfolioMessage.MarketPrice;
+          position.MarketValue = updatePortfolioMessage.MarketValue;
+          position.AverageCost = updatePortfolioMessage.AverageCost;
+          position.UnrealizedPnl = updatePortfolioMessage.UnrealizedPNL;
+          position.RealizedPnl = updatePortfolioMessage.RealizedPNL;
+        });
     }
 
     public void HandlePosition(PositionMessage positionMessage)
     {
-      lock(this)
-      {
-        Account account = resolveAccount(positionMessage.Account);
-        Contract contract = positionMessage.Contract;
-        Position position = resolvePosition(account, contract);
-        position.Size = positionMessage.Position;
-        position.MarketPrice = positionMessage.AverageCost;
-        position.MarketValue = positionMessage.AverageCost;
-        position.AverageCost = positionMessage.AverageCost;
-        position.UnrealizedPnl = 0;
-        position.RealizedPnl = 0;
-      }
+      lock (this)
+        m_serviceHost.DialogService.PostUIUpdate(() =>
+        {
+          Account account = resolveAccount(positionMessage.Account);
+          Contract contract = positionMessage.Contract;
+          Position position = resolvePosition(account, contract);
+          position.Size = positionMessage.Position;
+          position.MarketPrice = positionMessage.AverageCost;
+          position.MarketValue = positionMessage.AverageCost;
+          position.AverageCost = positionMessage.AverageCost;
+          position.UnrealizedPnl = 0;
+          position.RealizedPnl = 0;
+        });
     }
 
     public void HandleOrderStatus(OrderStatusMessage orderStatusMessage)
     {
-      lock(this)
-      {
-        Order? order = resolveOrder(orderStatusMessage.OrderId);
-        if (order == null)
+      lock (this)
+        m_serviceHost.DialogService.PostUIUpdate(() =>
         {
-          m_logger.LogWarning($"HandleOrderStatus - order not found - {orderStatusMessage.OrderId}");
-          return;
-        }
+          Order? order = resolveOrder(orderStatusMessage.OrderId);
+          if (order == null)
+          {
+            m_logger.LogWarning($"HandleOrderStatus - order not found - {orderStatusMessage.OrderId}");
+            return;
+          }
 
-        //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#order-status-message
-        string orderStatus = orderStatusMessage.Status.ToUpper();
-        if (orderStatus == Constants.OrderStatusPendingSubmit)
-          order.Status = Data.Order.OrderStatus.PendingSubmit;
-        else if (orderStatus == Constants.OrderStatusPendingCancel)
-          order.Status = Data.Order.OrderStatus.PendingCancel;
-        else if (orderStatus == Constants.OrderStatusSubmitted)
-          order.Status = Data.Order.OrderStatus.Open;
-        else if (orderStatus == Constants.OrderStatusInactive)
-          order.Status = Data.Order.OrderStatus.Inactive;
-        else if (orderStatus == Constants.OrderStatusFilled)
-          order.Status = Data.Order.OrderStatus.Filled;
-        else if (orderStatus == Constants.OrderStatusCancelled)
-          order.Status = Data.Order.OrderStatus.Cancelled;
-        else
-          m_logger.LogWarning($"HandleOrderStatus - unknown order status - {orderStatusMessage.Status}");
+          //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#order-status-message
+          string orderStatus = orderStatusMessage.Status.ToUpper();
+          if (orderStatus == Constants.OrderStatusPendingSubmit)
+            order.Status = Data.Order.OrderStatus.PendingSubmit;
+          else if (orderStatus == Constants.OrderStatusPendingCancel)
+            order.Status = Data.Order.OrderStatus.PendingCancel;
+          else if (orderStatus == Constants.OrderStatusSubmitted)
+            order.Status = Data.Order.OrderStatus.Open;
+          else if (orderStatus == Constants.OrderStatusInactive)
+            order.Status = Data.Order.OrderStatus.Inactive;
+          else if (orderStatus == Constants.OrderStatusFilled)
+            order.Status = Data.Order.OrderStatus.Filled;
+          else if (orderStatus == Constants.OrderStatusCancelled)
+            order.Status = Data.Order.OrderStatus.Cancelled;
+          else
+            m_logger.LogWarning($"HandleOrderStatus - unknown order status - {orderStatusMessage.Status}");
 
-        order.Filled = orderStatusMessage.Filled;
-        order.Remaining = orderStatusMessage.Remaining;
-        order.AverageFillPrice = orderStatusMessage.AvgFillPrice;
-        order.LastFillPrice = orderStatusMessage.LastFillPrice;
-      }
+          order.Filled = orderStatusMessage.Filled;
+          order.Remaining = orderStatusMessage.Remaining;
+          order.AverageFillPrice = orderStatusMessage.AvgFillPrice;
+          order.LastFillPrice = orderStatusMessage.LastFillPrice;
+        });
     }
 
     public void HandleOpenOrder(OpenOrderMessage openOrderMessage)
     {
-      lock(this)
-      {
-        Account? account = resolveAccount(openOrderMessage.Order.Account);
-        if (account == null)
+      lock (this)
+        m_serviceHost.DialogService.PostUIUpdate(() =>
         {
-          m_logger.LogWarning($"HandleOpenOrder - account not found - {openOrderMessage.Order.Account}");
-          return;
-        }
+          Account? account = resolveAccount(openOrderMessage.Order.Account);
+          if (account == null)
+          {
+            m_logger.LogWarning($"HandleOpenOrder - account not found - {openOrderMessage.Order.Account}");
+            return;
+          }
 
-        Order order = resolveOrder(account, openOrderMessage.OrderId);
-        order.Status = openOrderMessage.OrderState.Status == "" ? Data.Order.OrderStatus.Filled : Data.Order.OrderStatus.Open;   //TODO - need to complete this
-        order.Quantity = openOrderMessage.Order.FilledQuantity;
-        order.Filled = openOrderMessage.Order.FilledQuantity;
-        order.Remaining = openOrderMessage.Order.TotalQuantity - openOrderMessage.Order.FilledQuantity;
-        //NOTE: AverageFillPrice and LastFillPrice are not available in the OpenOrderMessage, need to check if they are available in the OrderState.
-      }
+          Order order = resolveOrder(account, openOrderMessage.OrderId);
+          order.Instrument = From(openOrderMessage.Contract)!;  //intrument should exist if we're receiving an open order on it
+          order.Status = openOrderMessage.OrderState.Status == "" ? Data.Order.OrderStatus.Filled : Data.Order.OrderStatus.Open;   //TODO - need to complete this
+          order.Filled = openOrderMessage.Order.FilledQuantity == double.MinValue ? 0.0 : openOrderMessage.Order.FilledQuantity;
+          order.Quantity = order.Filled;
+          order.Remaining = openOrderMessage.Order.TotalQuantity - openOrderMessage.Order.FilledQuantity;
+          //NOTE: AverageFillPrice and LastFillPrice are not available in the OpenOrderMessage, need to check if they are available in the OrderState.
+        });
     }
 
     protected Account resolveAccount(string accountName)
@@ -268,7 +278,7 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_logger.LogInformation($"Adding account - {accountName}");
         AccountIds.Add(accountName);
-        account = new Account(accountName);
+        account = new Account { Name = accountName };
         Accounts.Add(account);
       }
 

@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
 using TradeSharp.Data;
 
 namespace TradeSharp.WinCoreUI.Views
@@ -27,14 +26,16 @@ namespace TradeSharp.WinCoreUI.Views
     public AccountView()
     {
       ParentWindow = null;
+      BrokerPlugin = null;    //TBD: This will lead to a crash if not set.
       Account = new EmptyAccount { Name = "No account selected" };
       this.InitializeComponent();
     }
 
-    public AccountView(Account account)
+    public AccountView(IBrokerPlugin broker, Account account)
     {
       ParentWindow = null;
-      Account = account;
+      BrokerPlugin = broker;
+      Account = account;    // TBD - this needs to be some deep copy or something else.
       this.InitializeComponent();
     }
 
@@ -45,11 +46,16 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //properties
-    public Account Account { get; set; } = null;
     public Window ParentWindow { get; set; }
+    public IBrokerPlugin? BrokerPlugin { get; set; } = null;
+    public Account Account { get; set; } = null;
 
     //methods
+    private void UserControl_Loaded(object sender, RoutedEventArgs e)
+    {
 
+      //subscribe to account updates
 
+    }
   }
 }

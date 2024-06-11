@@ -1,6 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using TradeSharp.Common;
-using Microsoft.Extensions.Hosting;
+﻿using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 
 namespace TradeSharp.Data
 {
@@ -33,7 +32,10 @@ namespace TradeSharp.Data
 
 
     //properties
-    public abstract IList<Account> Accounts { get; }
+    public abstract ObservableCollection<Account> Accounts { get; }
+
+    //delegates
+
 
     //methods
 

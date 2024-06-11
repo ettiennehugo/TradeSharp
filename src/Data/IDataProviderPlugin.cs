@@ -33,6 +33,13 @@ namespace TradeSharp.Data
     IList<string> Tickers { get; }
     int ConnectionCountMax { get; }
 
+    //events
+
+  
+    //TODO
+    // - Add events for data changes - instrument, price, news, etc.
+
+
     //methods
     /// <summary>
     /// Request the data for a specific ticker with a given resolution and time range.

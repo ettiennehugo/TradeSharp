@@ -49,7 +49,6 @@ namespace TradeSharp.WinCoreUI.Views
       m_configurationService = (IConfigurationService)IApplication.Current.Services.GetService(typeof(IConfigurationService));
       m_exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
       ViewModel = (ViewModels.InstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
-      ViewModel.UIDispatcherQueue = DispatcherQueue.GetForCurrentThread();
       ViewModel.Resolution = Resolution;
       ViewModel.RefreshEvent += onViewModelRefresh;
       m_logger = (ILogger<InstrumentBarDataView>)IApplication.Current.Services.GetService(typeof(ILogger<InstrumentBarDataView>));

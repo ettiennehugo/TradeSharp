@@ -34,11 +34,6 @@ namespace TradeSharp.WinCoreUI.ViewModels
 
     //properties
     /// <summary>
-    /// UI thread dispatcher queue to signal UI state changes.
-    /// </summary>
-    public DispatcherQueue UIDispatcherQueue { get; set; }
-
-    /// <summary>
     /// Get/set the find text for the view model and associated items service and route notifications to the UI thread.
     /// </summary>
     public override string FindText
@@ -47,16 +42,11 @@ namespace TradeSharp.WinCoreUI.ViewModels
       set
       {
         m_findText = value;
-        if (UIDispatcherQueue != null) 
-          UIDispatcherQueue.TryEnqueue(() => {
-            OnPropertyChanged();
-            NotifyCanExecuteChanged();
-          });
-        else
+        m_dialogService.PostUIUpdate(() =>
         {
           OnPropertyChanged();
           NotifyCanExecuteChanged();
-        }
+        });
       }
     }
 
@@ -69,16 +59,11 @@ namespace TradeSharp.WinCoreUI.ViewModels
       set
       {
         m_itemsService.SelectedNode = value;
-        if (UIDispatcherQueue != null)
-          UIDispatcherQueue.TryEnqueue(() => {
-            OnPropertyChanged();
-            NotifyCanExecuteChanged();
-          });
-        else
+        m_dialogService.PostUIUpdate(() =>
         {
           OnPropertyChanged();
           NotifyCanExecuteChanged();
-        }
+        });
       }
     }
 
@@ -91,16 +76,11 @@ namespace TradeSharp.WinCoreUI.ViewModels
       set
       {
         m_itemsService.SelectedNodes = value;
-        if (UIDispatcherQueue != null)
-          UIDispatcherQueue.TryEnqueue(() => {
-            OnPropertyChanged();
-            NotifyCanExecuteChanged();
-          });
-        else
+        m_dialogService.PostUIUpdate(() =>
         {
           OnPropertyChanged();
           NotifyCanExecuteChanged();
-        }
+        });
       }
     }
 
@@ -110,10 +90,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
     /// </summary>
     protected override void expandToNode(ITreeNodeType<Guid, InstrumentGroup> node)
     {
-      if (UIDispatcherQueue != null)
-        UIDispatcherQueue.TryEnqueue(() => base.expandToNode(node));
-      else
-        base.expandToNode(node);
+      m_dialogService.PostUIUpdate(() => base.expandToNode(node));
     }
   }
 }
