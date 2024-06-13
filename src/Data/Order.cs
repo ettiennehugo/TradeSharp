@@ -53,8 +53,8 @@ namespace TradeSharp.Data
     [ObservableProperty] private double m_quantity;
     [ObservableProperty] private double m_filled;
     [ObservableProperty] private double m_remaining;
-    [ObservableProperty] private double m_averageFillPrice;
-    [ObservableProperty] private double m_lastFillPrice;
+    [ObservableProperty] private decimal m_averageFillPrice;
+    [ObservableProperty] private decimal m_lastFillPrice;
     public IDictionary<string, CustomProperty> CustomProperties { get; internal set; }
 
     //methods

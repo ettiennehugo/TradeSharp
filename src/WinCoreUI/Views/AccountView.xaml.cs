@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Data;
@@ -28,6 +29,7 @@ namespace TradeSharp.WinCoreUI.Views
       ParentWindow = null;
       BrokerPlugin = null;    //TBD: This will lead to a crash if not set.
       Account = new EmptyAccount { Name = "No account selected" };
+      CultureInfo = CultureInfo.CurrentCulture;
       this.InitializeComponent();
     }
 
@@ -35,7 +37,20 @@ namespace TradeSharp.WinCoreUI.Views
     {
       ParentWindow = null;
       BrokerPlugin = broker;
-      Account = account;    // TBD - this needs to be some deep copy or something else.
+      Account = account;
+
+      //try to find the CultureInfo that matches the account's currency - otherwise we default to the current culture
+      CultureInfo = CultureInfo.CurrentCulture;
+      foreach (var culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
+      {
+        var region = new RegionInfo(culture.Name);
+        if (region.ISOCurrencySymbol == Account.Currency)
+        {
+          CultureInfo = culture;
+          break;
+        }
+      }
+
       this.InitializeComponent();
     }
 
@@ -48,14 +63,11 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public Window ParentWindow { get; set; }
     public IBrokerPlugin? BrokerPlugin { get; set; } = null;
+    public CultureInfo CultureInfo { get; set; } = null;
     public Account Account { get; set; } = null;
 
     //methods
-    private void UserControl_Loaded(object sender, RoutedEventArgs e)
-    {
 
-      //subscribe to account updates
 
-    }
   }
 }

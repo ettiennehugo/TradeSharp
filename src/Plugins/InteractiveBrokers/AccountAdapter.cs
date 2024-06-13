@@ -188,11 +188,11 @@ namespace TradeSharp.InteractiveBrokers
           Contract contract = updatePortfolioMessage.Contract;
           Position position = resolvePosition(account, contract);
           position.Size = updatePortfolioMessage.Position;
-          position.MarketPrice = updatePortfolioMessage.MarketPrice;
-          position.MarketValue = updatePortfolioMessage.MarketValue;
-          position.AverageCost = updatePortfolioMessage.AverageCost;
-          position.UnrealizedPnl = updatePortfolioMessage.UnrealizedPNL;
-          position.RealizedPnl = updatePortfolioMessage.RealizedPNL;
+          position.MarketPrice = (decimal)updatePortfolioMessage.MarketPrice;
+          position.MarketValue = (decimal)updatePortfolioMessage.MarketValue;
+          position.AverageCost = (decimal)updatePortfolioMessage.AverageCost;
+          position.UnrealizedPnl = (decimal)updatePortfolioMessage.UnrealizedPNL;
+          position.RealizedPnl = (decimal)updatePortfolioMessage.RealizedPNL;
         });
     }
 
@@ -205,9 +205,9 @@ namespace TradeSharp.InteractiveBrokers
           Contract contract = positionMessage.Contract;
           Position position = resolvePosition(account, contract);
           position.Size = positionMessage.Position;
-          position.MarketPrice = positionMessage.AverageCost;
-          position.MarketValue = positionMessage.AverageCost;
-          position.AverageCost = positionMessage.AverageCost;
+          position.MarketPrice = (decimal)positionMessage.AverageCost;
+          position.MarketValue = (decimal)positionMessage.AverageCost;
+          position.AverageCost = (decimal)positionMessage.AverageCost;
           position.UnrealizedPnl = 0;
           position.RealizedPnl = 0;
         });
@@ -244,8 +244,8 @@ namespace TradeSharp.InteractiveBrokers
 
           order.Filled = orderStatusMessage.Filled;
           order.Remaining = orderStatusMessage.Remaining;
-          order.AverageFillPrice = orderStatusMessage.AvgFillPrice;
-          order.LastFillPrice = orderStatusMessage.LastFillPrice;
+          order.AverageFillPrice = (decimal)orderStatusMessage.AvgFillPrice;
+          order.LastFillPrice = (decimal)orderStatusMessage.LastFillPrice;
         });
     }
 
@@ -328,7 +328,7 @@ namespace TradeSharp.InteractiveBrokers
     {
       Account account = resolveAccount(accountName);
       account.LastSyncDateTime = DateTime.Now;
-      account.BaseCurrency = currency;    //NOTE: We assume account would have same currency for all values.
+      account.Currency = currency;    //NOTE: We assume account would have same currency for all values.
 
       if (key == AccountSummaryTags.AccountType)
       {
@@ -336,49 +336,49 @@ namespace TradeSharp.InteractiveBrokers
       }
       else if (key == AccountSummaryTags.NetLiquidation)
       {
-        if (double.TryParse(value, out double result))
+        if (decimal.TryParse(value, out decimal result))
           account.NetLiquidation = result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.SettledCash)
       {
-        if (double.TryParse(value, out double result))
+        if (decimal.TryParse(value, out decimal result))
           account.SettledCash = result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.BuyingPower)
       {
-        if (double.TryParse(value, out double result))
+        if (decimal.TryParse(value, out decimal result))
           account.BuyingPower = result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.MaintMarginReq)
       {
-        if (double.TryParse(value, out double result))
+        if (decimal.TryParse(value, out decimal result))
           account.MaintenanceMargin = result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.GrossPositionValue)
       {
-        if (double.TryParse(value, out double result))
+        if (decimal.TryParse(value, out decimal result))
           account.PositionsValue = result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.AvailableFunds)
       {
-        if (double.TryParse(value, out double result))
+        if (decimal.TryParse(value, out decimal result))
           account.AvailableFunds = result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.ExcessLiquidity)
       {
-        if (double.TryParse(value, out double result))
+        if (decimal.TryParse(value, out decimal result))
           account.ExcessLiquidity = result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");

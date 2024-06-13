@@ -33,7 +33,7 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public Position(Account account, Instrument instrument, PositionDirection direction, double size, double averageCost, double marketValue, double marketPrice, double unrealizedPnl, double realizedPnl)
+    public Position(Account account, Instrument instrument, PositionDirection direction, double size, decimal averageCost, decimal marketValue, decimal marketPrice, decimal unrealizedPnl, decimal realizedPnl)
     {
       Account = account;
       Instrument = instrument;
@@ -58,11 +58,11 @@ namespace TradeSharp.Data
     [ObservableProperty] private Instrument m_instrument;
     [ObservableProperty] private PositionDirection m_direction;
     [ObservableProperty] private double m_size;
-    [ObservableProperty] private double m_averageCost;
-    [ObservableProperty] private double m_marketValue;
-    [ObservableProperty] private double m_marketPrice;
-    [ObservableProperty] private double m_unrealizedPnl;
-    [ObservableProperty] private double m_realizedPnl;
+    [ObservableProperty] private decimal m_averageCost;
+    [ObservableProperty] private decimal m_marketValue;
+    [ObservableProperty] private decimal m_marketPrice;
+    [ObservableProperty] private decimal m_unrealizedPnl;
+    [ObservableProperty] private decimal m_realizedPnl;
     public IDictionary<string, CustomProperty> CustomProperties { get; internal set; }
 
     //methods

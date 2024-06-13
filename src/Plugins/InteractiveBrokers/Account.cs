@@ -27,14 +27,14 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //interface implementations
-    public override SimpleOrder CreateOrder(string symbol, SimpleOrder.OrderType type, double quantity, double price)
+    public override SimpleOrder CreateOrder(string symbol, SimpleOrder.OrderType type, double quantity, decimal price)
     {
 
       throw new NotImplementedException();
 
     }
 
-    public override ComplexOrder CreateOrder(string symbol, ComplexOrder.OrderType type, double quantity)
+    public override ComplexOrder CreateOrder(string symbol, ComplexOrder.OrderType type, decimal quantity)
     {
 
       throw new NotImplementedException();
