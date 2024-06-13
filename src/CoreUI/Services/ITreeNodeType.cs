@@ -26,7 +26,6 @@ namespace TradeSharp.CoreUI.Services
     TKey Id { get; set; }
     TItem Item { get; set; }
     bool Expanded { get; set; }
-    bool InstrumentsVisible { get; set; }
     ObservableCollection<ITreeNodeType<TKey, TItem>> Children { get; }
 
     //methods

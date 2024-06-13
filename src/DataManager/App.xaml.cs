@@ -104,9 +104,12 @@ namespace TradeSharp.WinDataManager
           services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddTransient<IInstrumentBarDataService, InstrumentBarDataService>(); //this service must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddTransient<IInstrumentBarDataViewModel, WinCoreUI.ViewModels.InstrumentBarDataViewModel>();  //windows implementation is used in order to support incremental loading
-          //NOTE: Plugins needs to be loaded last of all the services/view models since the base repositories/services/view models need to be in place to support the plugins.
+          //NOTE: Plugins needs to be loaded second to last of all the services/view models since the base repositories/services/view models need to be in place to support the plugins.
           services.AddSingleton<IPluginsService, PluginsService>();
           services.AddSingleton<IPluginsViewModel, PluginsViewModel>();
+          //NOTE: Broker accounts view model is last since it requires the broker plugins to be loaded first - no broker plugins should try to load this server and/or view model
+          services.AddSingleton<IBrokerAccountsService, BrokerAccountsService>();
+          services.AddSingleton<IBrokerAccountsViewModel, BrokerAccountsViewModel>();
         })
         .ConfigureLogging((context, logging) =>
         {

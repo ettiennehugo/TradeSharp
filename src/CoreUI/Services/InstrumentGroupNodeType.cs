@@ -49,7 +49,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Implementation of the instrument group nodes to manage instrument groups in a tree view model.
   /// </summary>
-  public partial class InstrumentGroupNodeType : ObservableObject, ITreeNodeType<Guid, InstrumentGroup>
+  public partial class InstrumentGroupNodeType : ObservableObject, IInstrumentGroupNodeType
   {
     //constants
 

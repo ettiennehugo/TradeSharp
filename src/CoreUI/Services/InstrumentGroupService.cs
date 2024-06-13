@@ -125,9 +125,6 @@ namespace TradeSharp.CoreUI.Services
     private ILogger<InstrumentGroupService> m_logger;
     private IInstrumentGroupRepository m_instrumentGroupRepository;
     private IInstrumentService m_instrumentService;
-    public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> SelectedNodes { get; set; }
-    public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> Nodes { get; internal set; }
-    public ObservableCollection<InstrumentGroup> Items { get; internal set; }
 
     //constructors
     public InstrumentGroupService(ILogger<InstrumentGroupService> logger, IDatabase database, IInstrumentGroupRepository instrumentGroupRepository, IInstrumentService instrumentService, IDialogService dialogService) : base(dialogService)
@@ -152,6 +149,9 @@ namespace TradeSharp.CoreUI.Services
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
     public Guid RootNodeId => InstrumentGroup.InstrumentGroupRoot;
     [ObservableProperty] ITreeNodeType<Guid, InstrumentGroup>? m_selectedNode;
+    public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> SelectedNodes { get; set; }
+    public ObservableCollection<ITreeNodeType<Guid, InstrumentGroup>> Nodes { get; internal set; }
+    public ObservableCollection<InstrumentGroup> Items { get; internal set; }
 
     //methods
     public bool Add(ITreeNodeType<Guid, InstrumentGroup> node)

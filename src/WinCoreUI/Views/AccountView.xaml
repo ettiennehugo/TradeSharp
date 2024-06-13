@@ -114,7 +114,7 @@
               <TextBlock Text="Avg Fill Price" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2, 0, 0, 0" Grid.Column="5"/>
               <TextBlock Text="Last Fill Price" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2, 0, 0, 0" Grid.Column="6"/>
               
-              <!-- Add actions button here, e.g. cancel, resend (if closed) etc. -->
+              <!-- TODO: Add actions button here, e.g. cancel, resend (if closed) etc. once TS is developed further along. -->
               
             </Grid>
           </ListView.Header>
