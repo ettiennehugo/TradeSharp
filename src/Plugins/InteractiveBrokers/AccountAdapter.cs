@@ -242,10 +242,10 @@ namespace TradeSharp.InteractiveBrokers
           else
             m_logger.LogWarning($"HandleOrderStatus - unknown order status - {orderStatusMessage.Status}");
 
-          order.Filled = orderStatusMessage.Filled;
-          order.Remaining = orderStatusMessage.Remaining;
-          order.AverageFillPrice = (decimal)orderStatusMessage.AvgFillPrice;
-          order.LastFillPrice = (decimal)orderStatusMessage.LastFillPrice;
+          order.Filled = orderStatusMessage.Filled == double.MaxValue ? 0.0 : orderStatusMessage.Filled;
+          order.Remaining = orderStatusMessage.Remaining == double.MaxValue ? 0.0 : orderStatusMessage.Remaining;
+          order.AverageFillPrice = orderStatusMessage.AvgFillPrice == double.MaxValue ? decimal.Zero : (decimal)orderStatusMessage.AvgFillPrice;
+          order.LastFillPrice = orderStatusMessage.LastFillPrice == double.MaxValue ? decimal.Zero : (decimal)orderStatusMessage.LastFillPrice;
         });
     }
 
@@ -264,7 +264,7 @@ namespace TradeSharp.InteractiveBrokers
           Order order = resolveOrder(account, openOrderMessage.OrderId);
           order.Instrument = From(openOrderMessage.Contract)!;  //intrument should exist if we're receiving an open order on it
           order.Status = openOrderMessage.OrderState.Status == "" ? Data.Order.OrderStatus.Filled : Data.Order.OrderStatus.Open;   //TODO - need to complete this
-          order.Filled = openOrderMessage.Order.FilledQuantity == double.MinValue ? 0.0 : openOrderMessage.Order.FilledQuantity;
+          order.Filled = openOrderMessage.Order.FilledQuantity == double.MaxValue ? 0.0 : openOrderMessage.Order.FilledQuantity;
           order.Quantity = order.Filled;
           order.Remaining = openOrderMessage.Order.TotalQuantity - openOrderMessage.Order.FilledQuantity;
           //NOTE: AverageFillPrice and LastFillPrice are not available in the OpenOrderMessage, need to check if they are available in the OrderState.
@@ -330,56 +330,58 @@ namespace TradeSharp.InteractiveBrokers
       account.LastSyncDateTime = DateTime.Now;
       account.Currency = currency;    //NOTE: We assume account would have same currency for all values.
 
+      //NOTE: The currency values received from IB are in double format so we need to parse them as such and convert them into
+      //      the internal decimal format used by TradeSharp.
       if (key == AccountSummaryTags.AccountType)
       {
         account.AccountType = value;
       }
       else if (key == AccountSummaryTags.NetLiquidation)
       {
-        if (decimal.TryParse(value, out decimal result))
-          account.NetLiquidation = result;
+        if (double.TryParse(value, out double result))
+          account.NetLiquidation = result == double.MaxValue ? decimal.Zero : (decimal)result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.SettledCash)
       {
-        if (decimal.TryParse(value, out decimal result))
-          account.SettledCash = result;
+        if (double.TryParse(value, out double result))
+          account.SettledCash = result == double.MaxValue ? decimal.Zero : (decimal)result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.BuyingPower)
       {
-        if (decimal.TryParse(value, out decimal result))
-          account.BuyingPower = result;
+        if (double.TryParse(value, out double result))
+          account.BuyingPower = result == double.MaxValue ? decimal.Zero : (decimal)result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.MaintMarginReq)
       {
-        if (decimal.TryParse(value, out decimal result))
-          account.MaintenanceMargin = result;
+        if (double.TryParse(value, out double result))
+          account.MaintenanceMargin = result == double.MaxValue ? decimal.Zero : (decimal)result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.GrossPositionValue)
       {
-        if (decimal.TryParse(value, out decimal result))
-          account.PositionsValue = result;
+        if (double.TryParse(value, out double result))
+          account.PositionsValue = result == double.MaxValue ? decimal.Zero : (decimal)result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.AvailableFunds)
       {
-        if (decimal.TryParse(value, out decimal result))
-          account.AvailableFunds = result;
+        if (double.TryParse(value, out double result))
+          account.AvailableFunds = result == double.MaxValue ? decimal.Zero : (decimal)result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
       else if (key == AccountSummaryTags.ExcessLiquidity)
       {
-        if (decimal.TryParse(value, out decimal result))
-          account.ExcessLiquidity = result;
+        if (double.TryParse(value, out double result))
+          account.ExcessLiquidity = result == double.MaxValue ? decimal.Zero : (decimal)result;
         else
           m_logger.LogWarning($"accountSummary {key} invalid value - {value}");
       }
