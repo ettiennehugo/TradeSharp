@@ -8,7 +8,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <Grid x:Name="m_mainLayout">
-      <local:PluginsView x:Name="m_pluginsView" PluginsToDisplay="Brokers"/>
-  </Grid>
+    <Grid x:Name="m_mainLayout" RowDefinitions="Auto,2*,Auto,3*">
+      <TextBlock x:Name="m_brokersHeader" Text="Brokers" Margin="10" FontWeight="Bold" Grid.Row="0"/>
+      <local:PluginsView x:Name="m_pluginsView" PluginsToDisplay="Brokers" Grid.Row="1"/>
+      <TextBlock x:Name="m_accountsHeader" Text="Accounts" Margin="10" FontWeight="Bold" Grid.Row="2"/>
+      <local:AccountsView x:Name="m_accountsView" Grid.Row="3"/>
+    </Grid>
 </Page>

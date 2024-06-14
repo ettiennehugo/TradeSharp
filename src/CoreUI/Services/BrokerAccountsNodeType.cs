@@ -42,7 +42,7 @@ namespace TradeSharp.CoreUI.Services
     public string ParentId { get; set; }
     public ITreeNodeType<string, object>? Parent { get; set; }
     public string Id { get; set; }
-    public object Item { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    public object Item { get; set; }
     public bool Expanded { get; set; }
     public ObservableCollection<ITreeNodeType<string, object>> Children { get; }
 

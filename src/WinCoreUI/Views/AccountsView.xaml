@@ -1,14 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Page
+<UserControl
     x:Class="TradeSharp.WinCoreUI.Views.AccountsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TradeSharp.WinCoreUI.Views"
+    xmlns:cui="using:TradeSharp.CoreUI.Services"  
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <Grid>
-      <local:AccountView x:Name="m_accountView" Account="{x:Bind Account}"/>
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="UserControl_Loaded">
+    <Grid x:Name="m_main" ColumnDefinitions="300, *">
+      <TreeView x:Name="m_brokerAccountsTree" ItemsSource="{x:Bind ViewModel.Nodes}" SelectionMode="Single" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}" SelectionChanged="m_brokerAccountsTree_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" Grid.Column="0">
+        <TreeView.ItemTemplate>
+          <DataTemplate x:Name="BrokerAccountsTemplate"  x:DataType="cui:BrokerAccountsNodeType">
+            <TextBlock Text="{x:Bind Id}"/>
+          </DataTemplate>
+        </TreeView.ItemTemplate>
+      </TreeView>
+      <local:AccountView x:Name="m_accountView" Account="{x:Bind Account, Mode=OneWay}" Grid.Column="1"/>
     </Grid>
-</Page>
+</UserControl>
