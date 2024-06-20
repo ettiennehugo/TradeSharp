@@ -2,6 +2,7 @@
 using Microsoft.UI.Dispatching;
 using System.Collections.ObjectModel;
 using System;
+using TradeSharp.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.WinCoreUI.ViewModels
@@ -44,7 +45,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
         m_findText = value;
         m_dialogService.PostUIUpdate(() =>
         {
-          OnPropertyChanged();
+          OnPropertyChanged(PropertyName.FindText);
           NotifyCanExecuteChanged();
         });
       }
@@ -61,7 +62,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
         m_itemsService.SelectedNode = value;
         m_dialogService.PostUIUpdate(() =>
         {
-          OnPropertyChanged();
+          OnPropertyChanged(PropertyName.SelectedNode);
           NotifyCanExecuteChanged();
         });
       }
@@ -78,7 +79,7 @@ namespace TradeSharp.WinCoreUI.ViewModels
         m_itemsService.SelectedNodes = value;
         m_dialogService.PostUIUpdate(() =>
         {
-          OnPropertyChanged();
+          OnPropertyChanged(PropertyName.SelectedNodes);
           NotifyCanExecuteChanged();
         });
       }

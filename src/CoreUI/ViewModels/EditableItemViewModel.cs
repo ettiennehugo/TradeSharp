@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using TradeSharp.Common;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TradeSharp.CoreUI.Services;
 
@@ -32,9 +33,9 @@ namespace TradeSharp.CoreUI.ViewModels
 
       PropertyChanged += (sender, e) =>
       {
-        if (e.PropertyName == nameof(Item))
+        if (e.PropertyName == PropertyName.Item)
         {
-          OnPropertyChanged(nameof(EditItem));
+          OnPropertyChanged(PropertyName.EditItem);
         }
       };
 
@@ -63,7 +64,7 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         if (SetProperty(ref m_isEditMode, value))
         {
-          OnPropertyChanged(nameof(IsReadMode));
+          OnPropertyChanged(PropertyName.IsReadMode);
           EditCommand.NotifyCanExecuteChanged();
           SaveCommand.NotifyCanExecuteChanged();
           CancelCommand.NotifyCanExecuteChanged();

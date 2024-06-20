@@ -1,5 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using TradeSharp.CoreUI.Repositories;
+﻿using TradeSharp.CoreUI.Repositories;
+using TradeSharp.Common;
 using TradeSharp.Data;
 using System.Collections.ObjectModel;
 
@@ -49,7 +49,7 @@ namespace TradeSharp.CoreUI.Services
         {
           m_parent = value;
           m_holidayRepository.ParentId = value;
-          OnPropertyChanged();
+          OnPropertyChanged(PropertyName.ParentId);
           Refresh();
         }
       }

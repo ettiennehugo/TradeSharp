@@ -1,6 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Repositories;
+using TradeSharp.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Services
@@ -48,7 +48,7 @@ namespace TradeSharp.CoreUI.Services
         if (m_parent != value)
         {
           m_parent = value;
-          OnPropertyChanged();
+          OnPropertyChanged(PropertyName.ParentId);
           Refresh();
         }
       }

@@ -1,5 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System;
+using System.ComponentModel;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Data;
@@ -54,6 +56,18 @@ namespace TradeSharp.WinCoreUI.Views
     {
       if (ViewModel.Nodes.Count == 0)
         ViewModel.RefreshCommand.Execute(null);
+      ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+    }
+
+    private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+      if (e.PropertyName == ITreeViewModel<string,object>.PropertySelectedNode)
+      {
+        if (ViewModel.SelectedNode.Item is Account account)
+          Account = account;
+        else
+          Account = null;
+      }
     }
   }
 }

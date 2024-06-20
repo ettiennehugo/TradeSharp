@@ -7,7 +7,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Note type for broker and accounts associated with them.
   /// </summary>
-  public class BrokerAccountsNodeType : ObservableObject, ITreeNodeType<string, object>
+  public partial class BrokerAccountsNodeType : ObservableObject, ITreeNodeType<string, object>
   {
     //constants
 
@@ -29,6 +29,7 @@ namespace TradeSharp.CoreUI.Services
       Item = item;
       Parent = parent;
       ParentId = parent?.Id ?? m_brokerAccountsService.RootNodeId;
+      Expanded = false;
       Children = new ObservableCollection<ITreeNodeType<string, object>>();
     }
 
@@ -43,7 +44,7 @@ namespace TradeSharp.CoreUI.Services
     public ITreeNodeType<string, object>? Parent { get; set; }
     public string Id { get; set; }
     public object Item { get; set; }
-    public bool Expanded { get; set; }
+    [ObservableProperty] private bool m_expanded;
     public ObservableCollection<ITreeNodeType<string, object>> Children { get; }
 
     //methods

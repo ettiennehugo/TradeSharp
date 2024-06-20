@@ -10,14 +10,16 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     Loaded="UserControl_Loaded">
-    <Grid x:Name="m_main" ColumnDefinitions="300, *">
-      <TreeView x:Name="m_brokerAccountsTree" ItemsSource="{x:Bind ViewModel.Nodes}" SelectionMode="Single" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}" SelectionChanged="m_brokerAccountsTree_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" Grid.Column="0">
-        <TreeView.ItemTemplate>
-          <DataTemplate x:Name="BrokerAccountsTemplate"  x:DataType="cui:BrokerAccountsNodeType">
+  <Grid x:Name="m_main" ColumnDefinitions="300, *">
+    <TreeView x:Name="m_brokerAccountsTree" ItemsSource="{x:Bind ViewModel.Nodes}" SelectionMode="Single" SelectedItem="{x:Bind ViewModel.SelectedNode, Mode=TwoWay}" SelectionChanged="m_brokerAccountsTree_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" Grid.Column="0">
+      <TreeView.ItemTemplate>
+        <DataTemplate x:Name="BrokerAccountsTemplate"  x:DataType="cui:BrokerAccountsNodeType">
+          <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="{x:Bind Expanded, Mode=TwoWay}">
             <TextBlock Text="{x:Bind Id}"/>
-          </DataTemplate>
-        </TreeView.ItemTemplate>
-      </TreeView>
-      <local:AccountView x:Name="m_accountView" Account="{x:Bind Account, Mode=OneWay}" Grid.Column="1"/>
-    </Grid>
+          </TreeViewItem>
+        </DataTemplate>
+      </TreeView.ItemTemplate>
+    </TreeView>
+    <local:AccountView x:Name="m_accountView" Account="{x:Bind Account, Mode=OneWay}" Grid.Column="1"/>
+  </Grid>
 </UserControl>

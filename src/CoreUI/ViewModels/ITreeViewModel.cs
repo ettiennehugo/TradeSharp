@@ -11,9 +11,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// </summary>
   public interface ITreeViewModel<TKey, TItem>: INotifyPropertyChanged, INotifyPropertyChanging, IRefreshable where TItem : class
   {
-
     //constants
-
 
     //enums
 

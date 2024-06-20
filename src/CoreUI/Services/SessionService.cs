@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.CoreUI.Repositories;
 using TradeSharp.Data;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using System.Collections.ObjectModel;
 
 namespace TradeSharp.CoreUI.Services
@@ -49,7 +49,7 @@ namespace TradeSharp.CoreUI.Services
         {
           m_parent = value;
           m_sessionRepository.ParentId = value;
-          OnPropertyChanged();
+          OnPropertyChanged(PropertyName.ParentId);
           Refresh();
         }
       }

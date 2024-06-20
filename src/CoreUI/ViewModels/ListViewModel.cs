@@ -1,8 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using System.Collections;
 using TradeSharp.CoreUI.Services;
-using System.Collections.ObjectModel;
-using TradeSharp.Data;
+using TradeSharp.Common;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -56,7 +55,7 @@ namespace TradeSharp.CoreUI.ViewModels
         {
           m_itemsService.ParentId = value;
           NotifyCanExecuteChanged();
-          OnPropertyChanged();
+          OnPropertyChanged(PropertyName.ParentId);
         }
       }
     }
@@ -72,7 +71,7 @@ namespace TradeSharp.CoreUI.ViewModels
         if (m_itemsService.SelectedItem != value)
         {
           m_itemsService.SelectedItem = value;
-          OnPropertyChanged();
+          OnPropertyChanged(PropertyName.SelectedItem);
           NotifyCanExecuteChanged();
         }
       }

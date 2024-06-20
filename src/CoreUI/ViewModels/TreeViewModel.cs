@@ -1,7 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Services;
+using TradeSharp.Common;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -67,7 +67,7 @@ namespace TradeSharp.CoreUI.ViewModels
       set
       {
         m_findText = value;
-        OnPropertyChanged();
+        OnPropertyChanged(PropertyName.FindText);
         NotifyCanExecuteChanged();
       }
     }
@@ -81,7 +81,7 @@ namespace TradeSharp.CoreUI.ViewModels
       set
       {
         m_itemsService.SelectedNode = value;
-        OnPropertyChanged();
+        OnPropertyChanged(PropertyName.SelectedNode);
         NotifyCanExecuteChanged();
       }
     }
@@ -95,7 +95,7 @@ namespace TradeSharp.CoreUI.ViewModels
       set
       {
         m_itemsService.SelectedNodes = value;
-        OnPropertyChanged();
+        OnPropertyChanged(PropertyName.SelectedNodes);
         NotifyCanExecuteChanged();
       }
     }
