@@ -72,8 +72,9 @@ namespace TradeSharp.WinCoreUI.Views
           //change the account view based on the new account
           if (m_accountView?.Account != account)
             m_main.Children.Remove(m_accountView);
-
-          m_accountView = new AccountView(null, account);
+          
+          IBrokerPlugin broker = ViewModel.SelectedNode.Parent.Item as IBrokerPlugin;
+          m_accountView = new AccountView(broker, account);
           Grid.SetColumn(m_accountView, 1);
           m_main.Children.Add(m_accountView);
         }
