@@ -59,6 +59,7 @@ namespace TradeSharp.Data.Testing
     public virtual event EventHandler? Connected;
     public virtual event EventHandler? Disconnected;
     public virtual event EventHandler? UpdateCommands;
+    public event ConnectionStatusHandler? ConnectionStatus;
 
     //methods
     public void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }

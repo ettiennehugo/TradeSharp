@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Services
@@ -24,7 +25,7 @@ namespace TradeSharp.CoreUI.Services
     private IPluginsService m_pluginsService;
 
     //constructors
-    public BrokerAccountsService(ILogger<BrokerAccountsService> logger, IPluginsService pluginsService, IDialogService dialogService): base(dialogService)
+    public BrokerAccountsService(ILogger<BrokerAccountsService> logger, IPluginsService pluginsService, IDialogService dialogService) : base(dialogService)
     {
       m_logger = logger;
       m_pluginsService = pluginsService;
@@ -50,6 +51,11 @@ namespace TradeSharp.CoreUI.Services
     //methods
     public void Refresh()
     {
+      foreach (var item in Items)
+      {
+        IBrokerPlugin broker = (IBrokerPlugin)item;
+      }
+
       Nodes.Clear();
       Items.Clear();
       foreach (var plugin in m_pluginsService.Items)
@@ -64,13 +70,14 @@ namespace TradeSharp.CoreUI.Services
 
       SelectedNode = Nodes.FirstOrDefault();
     }
-    
+
     //most of the implementation methods are not used
     public bool Add(ITreeNodeType<string, object> item) { return false; }
     public bool Copy(ITreeNodeType<string, object> item) { return false; }
     public bool Delete(ITreeNodeType<string, object> item) { return false; }
-    public void Refresh(string parentKey) {  }
+    public void Refresh(string parentKey) { }
     public void Refresh(ITreeNodeType<string, object> parentNode) { }
-    public bool Update(ITreeNodeType<string, object> item) { return false;  }
+    public bool Update(ITreeNodeType<string, object> item) { return false; }
+
   }
 }

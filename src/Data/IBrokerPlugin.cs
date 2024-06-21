@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
+using TradeSharp.Common;
 
 namespace TradeSharp.Data
 {

@@ -122,6 +122,7 @@ namespace TradeSharp.InteractiveBrokers
       return Task.Run(() => {
         m_manuallyDisconnected = false;   //ensure auto-reconnect works if not manually disconnected
         m_ibServiceHost.Client.Connect(m_ip, m_port);
+        raiseConnectionStatus();
         raiseUpdateCommands();
       });
     }
@@ -132,6 +133,7 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_manuallyDisconnected = true;  //ensure auto-reconnect does not kick in when manually disconnected
         m_ibServiceHost.Client.Disconnect();
+        raiseConnectionStatus();
         raiseUpdateCommands();
       });
     }

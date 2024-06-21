@@ -54,9 +54,12 @@ namespace TradeSharp.Data
     public virtual bool IsConnected { get; protected set; }
 
     //delegates
+    public virtual event ConnectionStatusHandler? ConnectionStatus;    //event raised when the plugin connection status changes
     public virtual event EventHandler? UpdateCommands;                 //event raised when the plugin needs to update the command list
 
     //methods
+    //NOTE: Raise this event only once the connection is completed AND state is setup to reflect correctly in the UI.
+    protected void raiseConnectionStatus() { if (ConnectionStatus != null) ConnectionStatus(this, new ConnectionStatusArgs(IsConnected)); }
     protected void raiseUpdateCommands() { if (UpdateCommands != null) UpdateCommands(this, new EventArgs()); }
   }
 }

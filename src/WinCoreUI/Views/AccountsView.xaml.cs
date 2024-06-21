@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
+using TradeSharp.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.WinCoreUI.Views
@@ -23,7 +24,7 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-
+    private AccountView m_accountView = null;
 
     //constructors
     public AccountsView()
@@ -41,17 +42,15 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public Window ParentWindow { get; set; } = null;
     public IBrokerAccountsViewModel ViewModel { get; set; } = null;
-    public Account Account { get; set; } = null;
 
-    //methods
-    private void m_brokerAccountsTree_SelectionChanged(TreeView sender, TreeViewSelectionChangedEventArgs args)
+    public static readonly DependencyProperty AccountProperty = DependencyProperty.Register(name: "Account", propertyType: typeof(Account), ownerType: typeof(AccountsView), typeMetadata: null);
+    public Account Account
     {
-      if (ViewModel.SelectedNode.Item is Account account)
-        Account = account;
-      else
-        Account = null;
+      get => (Account)GetValue(AccountProperty);
+      set => SetValue(AccountProperty, value);
     }
 
+    //methods
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
       if (ViewModel.Nodes.Count == 0)
@@ -59,14 +58,30 @@ namespace TradeSharp.WinCoreUI.Views
       ViewModel.PropertyChanged += ViewModel_PropertyChanged;
     }
 
+    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+      ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+    }
+
     private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-      if (e.PropertyName == ITreeViewModel<string,object>.PropertySelectedNode)
+      if (e.PropertyName == PropertyName.SelectedNode)
       {
-        if (ViewModel.SelectedNode.Item is Account account)
-          Account = account;
-        else
-          Account = null;
+        if (ViewModel.SelectedNode?.Item is Account account)
+        {    
+          //change the account view based on the new account
+          if (m_accountView?.Account != account)
+            m_main.Children.Remove(m_accountView);
+
+          m_accountView = new AccountView(null, account);
+          Grid.SetColumn(m_accountView, 1);
+          m_main.Children.Add(m_accountView);
+        }
+        else if (m_accountView != null)
+          {
+            m_main.Children.Remove(m_accountView);
+            m_accountView = null;
+          }
       }
     }
   }

@@ -46,6 +46,7 @@ namespace TradeSharp.Data
     bool IsConnected { get; }                           //flag indicating if the plugin is connected to the broker/data provider
 
     //delegates
+    event ConnectionStatusHandler? ConnectionStatus;    //event raised when the plugin connection status changes - NOTE this is called AFTER connection is completed and state loaded
     event EventHandler? UpdateCommands;                 //event raised when the plugin needs to update the command list
 
     //methods

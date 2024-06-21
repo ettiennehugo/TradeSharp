@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using TradeSharp.Common;
 
 namespace TradeSharp.Data
 {
