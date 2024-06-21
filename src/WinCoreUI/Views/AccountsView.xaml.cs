@@ -1,11 +1,11 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
 using System.ComponentModel;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
 using TradeSharp.Common;
 using TradeSharp.Data;
+using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.WinCoreUI.Views
 {
@@ -30,6 +30,15 @@ namespace TradeSharp.WinCoreUI.Views
     public AccountsView()
     {
       ViewModel = (IBrokerAccountsViewModel)IApplication.Current.Services.GetService(typeof(IBrokerAccountsViewModel));
+      ViewModel.BrokerFilter = null;    //make sure we reset the broker account filter
+      this.InitializeComponent();
+    }
+
+    public AccountsView(IBrokerPlugin brokerPlugin)
+    {
+      ViewModel = (IBrokerAccountsViewModel)IApplication.Current.Services.GetService(typeof(IBrokerAccountsViewModel));
+      BrokerPlugin = brokerPlugin;
+      ViewModel.BrokerFilter = brokerPlugin;
       this.InitializeComponent();
     }
 
@@ -42,8 +51,8 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public Window ParentWindow { get; set; } = null;
     public IBrokerAccountsViewModel ViewModel { get; set; } = null;
-
     public static readonly DependencyProperty AccountProperty = DependencyProperty.Register(name: "Account", propertyType: typeof(Account), ownerType: typeof(AccountsView), typeMetadata: null);
+    public IBrokerPlugin BrokerPlugin { get; set; } = null;
     public Account Account
     {
       get => (Account)GetValue(AccountProperty);
@@ -55,12 +64,18 @@ namespace TradeSharp.WinCoreUI.Views
     {
       if (ViewModel.Nodes.Count == 0)
         ViewModel.RefreshCommand.Execute(null);
-      ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+
+      //if we filter accounts by broker, set the selected item delegate
+      //NOTE: This selection change does not fire in time when brokers are shown so for that case we purely use the ViewModel.SelectedNode property
+      if (BrokerPlugin != null)
+        m_brokerAccountsTree.SelectionChanged += m_brokerAccountsTree_SelectionChanged;
+      else
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
     }
 
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
-      ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+      if (BrokerPlugin == null) ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
     }
 
     private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -68,22 +83,35 @@ namespace TradeSharp.WinCoreUI.Views
       if (e.PropertyName == PropertyName.SelectedNode)
       {
         if (ViewModel.SelectedNode?.Item is Account account)
-        {    
-          //change the account view based on the new account
-          if (m_accountView?.Account != account)
-            m_main.Children.Remove(m_accountView);
-          
-          IBrokerPlugin broker = ViewModel.SelectedNode.Parent.Item as IBrokerPlugin;
-          m_accountView = new AccountView(broker, account);
-          Grid.SetColumn(m_accountView, 1);
-          m_main.Children.Add(m_accountView);
-        }
-        else if (m_accountView != null)
-          {
-            m_main.Children.Remove(m_accountView);
-            m_accountView = null;
-          }
+          selectAccount(account);
+        else
+          selectAccount(null);
       }
+    }
+
+    private void selectAccount(Account? account)
+    {
+      //change the account view based on the new account
+      if (m_accountView?.Account != account)
+        m_main.Children.Remove(m_accountView);
+
+      if (account != null)
+      {
+        m_accountView = new AccountView(null, account);
+        Grid.SetColumn(m_accountView, 1);
+        m_main.Children.Add(m_accountView);
+      }
+      else if (m_accountView != null)
+      {
+        m_main.Children.Remove(m_accountView);
+        m_accountView = null;
+      }
+    }
+
+    private void m_brokerAccountsTree_SelectionChanged(TreeView sender, TreeViewSelectionChangedEventArgs args)
+    {
+      BrokerAccountsNodeType? accountNode = (BrokerAccountsNodeType?)sender.SelectedItem;
+      selectAccount((Account)accountNode.Item);
     }
   }
 }

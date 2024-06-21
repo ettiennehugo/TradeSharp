@@ -14,6 +14,7 @@ using Microsoft.UI.Xaml;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Views;
 using Microsoft.Extensions.Logging;
+using TradeSharp.InteractiveBrokers;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -632,6 +633,14 @@ namespace TradeSharp.WinDataManager.Services
     /// </summary>
     public Task ShowAccountDialogAsync()
     {
+      Window window = new Window();
+      window.Title = "Accounts";
+      WinCoreUI.Views.AccountsView accountsView = new WinCoreUI.Views.AccountsView();
+      accountsView.ParentWindow = window;
+      window.Content = accountsView;
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      ResetSizeable(window);
+      window.Activate();
       return Task.CompletedTask;
     }
 
@@ -640,15 +649,21 @@ namespace TradeSharp.WinDataManager.Services
     /// </summary>
     public Task ShowAccountDialogAsync(IBrokerPlugin broker)
     {
-      //TEST CODE
-      return ShowAccountDialogAsync(broker, broker.Accounts[0]);
-      //TEST CODE
+      Window window = new Window();
+      window.Title = $"Accounts - {broker.Name}";
+      WinCoreUI.Views.AccountsView accountsView = new WinCoreUI.Views.AccountsView(broker);
+      accountsView.ParentWindow = window;
+      window.Content = accountsView;
+      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+      ResetSizeable(window);
+      window.Activate();
+      return Task.CompletedTask;
     }
 
     /// <summary>
     /// Shows the account dialog for the specified account.
     /// </summary>
-    public Task ShowAccountDialogAsync(IBrokerPlugin broker, Account account)
+    public Task ShowAccountDialogAsync(IBrokerPlugin broker, Data.Account account)
     {
       Window window = new Window();
       window.Title = $"Account - {account.Name}";

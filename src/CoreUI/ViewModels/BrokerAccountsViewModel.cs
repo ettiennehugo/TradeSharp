@@ -1,4 +1,5 @@
 ﻿
+using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
@@ -15,10 +16,13 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-
+    protected IBrokerAccountsService m_brokerAccountService;
 
     //constructors
-    public BrokerAccountsViewModel(IBrokerAccountsService itemService, INavigationService navigationService, IDialogService dialogService) : base(itemService, navigationService, dialogService) { }
+    public BrokerAccountsViewModel(IBrokerAccountsService itemService, INavigationService navigationService, IDialogService dialogService) : base(itemService, navigationService, dialogService) 
+    {
+      m_brokerAccountService = itemService;
+    }
 
     //finalizers
 
@@ -27,7 +31,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-
+    public IBrokerPlugin BrokerFilter { get => m_brokerAccountService.BrokerFilter; set => m_brokerAccountService.BrokerFilter = value; }
 
     //methods
     public override void OnAdd()

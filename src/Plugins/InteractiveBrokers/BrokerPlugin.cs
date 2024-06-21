@@ -140,7 +140,9 @@ namespace TradeSharp.InteractiveBrokers
 
     public Task OnShowAccountsAsync()
     {
-      return m_dialogService.ShowAccountDialogAsync(this);
+      //Account account = (Account)m_ibServiceHost.Accounts.Accounts.FirstOrDefault();
+      //return m_dialogService.ShowAccountDialogAsync(this, account);
+     return m_dialogService.ShowAccountDialogAsync(this);
     }
 
     public Task OnScanForContractsAsync()
