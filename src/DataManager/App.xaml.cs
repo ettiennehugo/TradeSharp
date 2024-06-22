@@ -107,9 +107,11 @@ namespace TradeSharp.WinDataManager
           //NOTE: Plugins needs to be loaded second to last of all the services/view models since the base repositories/services/view models need to be in place to support the plugins.
           services.AddSingleton<IPluginsService, PluginsService>();
           services.AddSingleton<IPluginsViewModel, PluginsViewModel>();
-          //NOTE: Broker accounts view model is last since it requires the broker plugins to be loaded first - no broker plugins should try to load this server and/or view model
-          services.AddSingleton<IBrokerAccountsService, BrokerAccountsService>();
-          services.AddSingleton<IBrokerAccountsViewModel, BrokerAccountsViewModel>();
+          //NOTES:
+          // - Broker accounts view model is last since it requires the broker plugins to be loaded first - no broker plugins should try to load this server and/or view model
+          // - Broker accounts view model can be manipulated by different views to each view should have it's own copy, hence transient.
+          services.AddTransient<IBrokerAccountsService, BrokerAccountsService>();
+          services.AddTransient<IBrokerAccountsViewModel, BrokerAccountsViewModel>();
         })
         .ConfigureLogging((context, logging) =>
         {
