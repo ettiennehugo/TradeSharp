@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Windows;
 using WinRT.Interop;
 using System.Threading.Tasks;
 using Windows.UI.Popups;
 using System.Runtime.InteropServices;
 using TradeSharp.CoreUI.Services;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Common;
 using TradeSharp.Data;
@@ -14,7 +14,8 @@ using Microsoft.UI.Xaml;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Views;
 using Microsoft.Extensions.Logging;
-using TradeSharp.InteractiveBrokers;
+using Microsoft.UI;
+using Windows.Graphics;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -581,6 +582,7 @@ namespace TradeSharp.WinDataManager.Services
       window.Content = importView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 850));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
+      CenterWindow(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -595,6 +597,7 @@ namespace TradeSharp.WinDataManager.Services
       window.Content = exportView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 930));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
+      CenterWindow(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -609,6 +612,7 @@ namespace TradeSharp.WinDataManager.Services
       window.Content = copyView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 520));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
+      CenterWindow(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -624,6 +628,7 @@ namespace TradeSharp.WinDataManager.Services
       //window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 660));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
+      CenterWindow(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -640,6 +645,7 @@ namespace TradeSharp.WinDataManager.Services
       window.Content = accountsView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
+      CenterWindow(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -656,6 +662,7 @@ namespace TradeSharp.WinDataManager.Services
       window.Content = accountsView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
+      CenterWindow(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -672,6 +679,7 @@ namespace TradeSharp.WinDataManager.Services
       window.Content = accountsView;
       window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
       ResetSizeable(window);
+      CenterWindow(window);
       window.Activate();
       return Task.CompletedTask;
     }
@@ -701,6 +709,20 @@ namespace TradeSharp.WinDataManager.Services
       IntPtr hwnd = WindowNative.GetWindowHandle(window);
       var currentStyle = GetWindowLong(hwnd, GWL_STYLE);
       SetWindowLong(hwnd, GWL_STYLE, (currentStyle & WS_DLGFRAME));
+    }
+
+    internal static void CenterWindow(Window window)
+    {
+      IntPtr hwnd = WindowNative.GetWindowHandle(window);
+      WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
+      if (AppWindow.GetFromWindowId(windowId) is AppWindow appWindow &&
+          DisplayArea.GetFromWindowId(windowId, DisplayAreaFallback.Nearest) is DisplayArea displayArea)
+      {
+        PointInt32 centeredPosition = appWindow.Position;
+        centeredPosition.X = (displayArea.WorkArea.Width - appWindow.Size.Width) / 2;
+        centeredPosition.Y = (displayArea.WorkArea.Height - appWindow.Size.Height) / 2;
+        appWindow.Move(centeredPosition);
+      }
     }
   }
 }
