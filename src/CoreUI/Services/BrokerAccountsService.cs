@@ -41,7 +41,7 @@ namespace TradeSharp.CoreUI.Services
       {
         if (!(plugin is IBrokerPlugin broker))    //skip non-broker plugins
           continue;
-        broker.ConnectionStatus += onConnectionStatus;
+        broker.AccountsUpdated += onAccountsUpdated;
       }
     }
 
@@ -53,7 +53,7 @@ namespace TradeSharp.CoreUI.Services
       {
         if (!(plugin is IBrokerPlugin broker))    //skip non-broker plugins
           continue;
-        broker.ConnectionStatus -= onConnectionStatus;
+        broker.AccountsUpdated -= onAccountsUpdated;
       }
     }
 
@@ -144,7 +144,7 @@ namespace TradeSharp.CoreUI.Services
     public void Refresh(ITreeNodeType<string, object> parentNode) { }
     public bool Update(ITreeNodeType<string, object> item) { return false; }
 
-    protected void onConnectionStatus(object sender, ConnectionStatusArgs e)
+    protected void onAccountsUpdated(object sender, AccountsUpdatedArgs e)
     {
       //only refresh when connection is established and we want to keep the accounts on disconnect
       //if (e.IsConnected == false && KeepAccountsOnDisconnect == true)

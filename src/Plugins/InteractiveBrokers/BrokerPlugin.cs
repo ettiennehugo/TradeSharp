@@ -126,6 +126,7 @@ namespace TradeSharp.InteractiveBrokers
         m_ibServiceHost.Client.Connect(m_ip, m_port);
         raiseConnectionStatus();
         raiseUpdateCommands();
+        //broker plugin does not raise the add account event here but the AccountAdapter does that when a new account is added 
       });
     }
 
@@ -135,6 +136,8 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_manuallyDisconnected = true;  //ensure auto-reconnect does not kick in when manually disconnected
         m_ibServiceHost.Client.Disconnect();
+        Accounts.Clear();
+        raiseAccountsUpdated();   //broker plugin raises the account removed event
         raiseConnectionStatus();
         raiseUpdateCommands();
       });

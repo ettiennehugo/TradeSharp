@@ -1,11 +1,7 @@
 ﻿namespace TradeSharp.Data
 {
   /// <summary>
-  /// Arguments for when the accounts are updated by a broker.
+  /// Arguments for when an account is added/removed.
   /// </summary>
-  public class AccountsUpdatedArgs : EventArgs
-  {
-    public AccountsUpdatedArgs(Account account) => Account = account;
-    public Account Account { get; }
-  }
+  public class AccountsUpdatedArgs : EventArgs { }
 }

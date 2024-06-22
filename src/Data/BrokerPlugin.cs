@@ -36,13 +36,19 @@ namespace TradeSharp.Data
 
     //delegates
     public virtual event AccountsUpdatedHandler? AccountsUpdated;
+    public virtual event AccountUpdatedHandler? AccountUpdated;
     public virtual event PositionUpdatedHandler? PositionUpdated;
     public virtual event OrderUpdatedHandler? OrderUpdated;
 
     //methods
-    public void raiseAccountsUpdated(AccountsUpdatedArgs args)
+    public void raiseAccountsUpdated()
     {
-      AccountsUpdated?.Invoke(this, args);
+      AccountsUpdated?.Invoke(this, new AccountsUpdatedArgs());
+    }
+
+    public void raiseAccountUpdated(AccountUpdatedArgs args)
+    {
+      AccountUpdated?.Invoke(this, args);
     }
 
     public void raisePositionUpdated(PositionUpdatedArgs args)

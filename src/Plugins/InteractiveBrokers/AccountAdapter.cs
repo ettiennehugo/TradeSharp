@@ -177,7 +177,7 @@ namespace TradeSharp.InteractiveBrokers
         account = resolveAccount(summaryMessage.Account);
         m_serviceHost.DialogService.PostUIUpdate(() => setAccountValue(account, "HandleAccountSummary", summaryMessage.RequestId, summaryMessage.Account, summaryMessage.Tag, summaryMessage.Value, summaryMessage.Currency));
       }
-      if (account != null) m_serviceHost.BrokerPlugin.raiseAccountsUpdated(new AccountsUpdatedArgs(account));
+      if (account != null) m_serviceHost.BrokerPlugin.raiseAccountUpdated(new AccountUpdatedArgs(account));
     }
 
     public void HandleUpdateAccountValue(AccountValueMessage accountValueMessage)
@@ -188,7 +188,7 @@ namespace TradeSharp.InteractiveBrokers
         account = resolveAccount(accountValueMessage.Account);
         m_serviceHost.DialogService.PostUIUpdate(() => setAccountValue(account, "HandleAccountValue", -1 /* account value does not have a request id */, accountValueMessage.Account, accountValueMessage.Key, accountValueMessage.Value, accountValueMessage.Currency));
       }
-      if (account != null) m_serviceHost.BrokerPlugin.raiseAccountsUpdated(new AccountsUpdatedArgs(account));
+      if (account != null) m_serviceHost.BrokerPlugin.raiseAccountUpdated(new AccountUpdatedArgs(account));
     }
 
     public void HandleUpdatePortfolio(UpdatePortfolioMessage updatePortfolioMessage)
@@ -302,8 +302,8 @@ namespace TradeSharp.InteractiveBrokers
         AccountIds.Add(accountName);
         account = new Account(m_serviceHost.BrokerPlugin) { Name = accountName };
         Accounts.Add(account);
+        m_serviceHost.BrokerPlugin.raiseAccountsUpdated();    //the AccountAdapter raises the add event while the broker plugin will raise the remove event (typically when disconnection occurs)        
       }
-
       return account;
     }
 
@@ -315,7 +315,6 @@ namespace TradeSharp.InteractiveBrokers
         position = new Position(account, From(contract)!, PositionDirection.Long, 0, 0, 0, 0, 0, 0);
         account.Positions.Add(position);
       }
-
       return position;
     }
 
@@ -327,7 +326,6 @@ namespace TradeSharp.InteractiveBrokers
         order = new Order(orderId);
         account.Orders.Add(order);
       }
-
       return order;
     }
 
@@ -341,7 +339,6 @@ namespace TradeSharp.InteractiveBrokers
         if (order != null)
           break;
       }
-
       return order;
     }
 
