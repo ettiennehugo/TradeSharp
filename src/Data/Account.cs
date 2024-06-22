@@ -25,8 +25,9 @@ namespace TradeSharp.Data
     protected ObservableCollection<Order> m_orders;
 
     //constructors
-    public Account()
+    public Account(IBrokerPlugin brokerPlugin)
     {
+      BrokerPlugin = brokerPlugin;
       Name = string.Empty;
       AccountType = string.Empty;
       Currency = string.Empty;
@@ -50,10 +51,11 @@ namespace TradeSharp.Data
 
 
     //properties
-    [ObservableProperty] private string m_name;               //name of the account
-    [ObservableProperty] private bool m_default;              //if multiple accounts are present this flag will be set for the default account
-    [ObservableProperty] private string m_accountType;        //type of account
-    [ObservableProperty] private string m_currency;           //currency of the account
+    [ObservableProperty] private IBrokerPlugin m_brokerPlugin; //broker plugin associated with the account
+    [ObservableProperty] private string m_name;                //name of the account
+    [ObservableProperty] private bool m_default;               //if multiple accounts are present this flag will be set for the default account
+    [ObservableProperty] private string m_accountType;         //type of account
+    [ObservableProperty] private string m_currency;            //currency of the account
     [ObservableProperty] private decimal m_netLiquidation;     //all cash and securities in the account
     [ObservableProperty] private decimal m_settledCash;        //cash recognised as settled
     [ObservableProperty] private decimal m_buyingPower;        //currency available to trade securities
@@ -61,7 +63,7 @@ namespace TradeSharp.Data
     [ObservableProperty] private decimal m_positionsValue;     //currency value of all poisitions held
     [ObservableProperty] private decimal m_availableFunds;     //cash available for trading
     [ObservableProperty] private decimal m_excessLiquidity;    //cash available for trading after considering margin requirements
-    [ObservableProperty] private DateTime m_lastSyncDateTime; //last time the account was synced with the broker
+    [ObservableProperty] private DateTime m_lastSyncDateTime;  //last time the account was synced with the broker
     public ObservableCollection<Position> Positions { get => m_positions; }  //instrument positions held in the account
     public ObservableCollection<Order> Orders { get => m_orders; }    //orders placed in the account
     public IDictionary<string, CustomProperty> CustomProperties { get; protected set; }  //other properties supported by the broker
@@ -74,7 +76,6 @@ namespace TradeSharp.Data
     public abstract SimpleOrder CreateOrder(string symbol, SimpleOrder.OrderType type, double quantity, decimal price);
     public abstract ComplexOrder CreateOrder(string symbol, ComplexOrder.OrderType type, decimal quantity);
     public abstract void CancelOrder(Order order);
-
   }
 
   /// <summary>
@@ -82,7 +83,7 @@ namespace TradeSharp.Data
   /// </summary>
   public class EmptyAccount : Account
   {
-    public EmptyAccount() : base() { Name = "No account selected"; LastSyncDateTime = DateTime.Now; }
+    public EmptyAccount() : base(null) { Name = "No account selected"; LastSyncDateTime = DateTime.Now; }
 
     public override void CancelOrder(Order order)
     {

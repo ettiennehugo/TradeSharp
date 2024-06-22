@@ -27,10 +27,11 @@ namespace TradeSharp.Data
     ObservableCollection<Account> Accounts { get; }
 
     //events
-
+    event AccountsUpdatedHandler? AccountsUpdated;    //accounts added/removed or account values were changed (this does NOT include position or order updates)
+    event PositionUpdatedHandler? PositionUpdated;    //position values were changed
+    event OrderUpdatedHandler? OrderUpdated;          //order values were changed
 
     //methods
-
 
 
   }

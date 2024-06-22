@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using TradeSharp.Common;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using System.Runtime.InteropServices;
@@ -89,6 +90,7 @@ namespace TradeSharp.InteractiveBrokers
       parseAutoReconnectInterval();
       parseMaintenanceSchedule();
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, m_dialogService, Configuration);
+      m_ibServiceHost.BrokerPlugin = this;
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
       Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) } );
       Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) } );
@@ -140,9 +142,9 @@ namespace TradeSharp.InteractiveBrokers
 
     public Task OnShowAccountsAsync()
     {
-      //Account account = (Account)m_ibServiceHost.Accounts.Accounts.FirstOrDefault();
-      //return m_dialogService.ShowAccountDialogAsync(this, account);
-     return m_dialogService.ShowAccountDialogAsync(this);
+     Account account = (Account)m_ibServiceHost.Accounts.Accounts.FirstOrDefault();
+     return m_dialogService.ShowAccountDialogAsync(this, account);
+     //return m_dialogService.ShowAccountDialogAsync(this);
     }
 
     public Task OnScanForContractsAsync()
@@ -189,8 +191,7 @@ namespace TradeSharp.InteractiveBrokers
     public List<MaintenanceScheduleEntry> MaintenanceSchedule { get => m_maintenanceSchedule; }
 
     //delegates
-    public event EventHandler? Connected;                      //event raised when the plugin connects to the remote service
-    public event EventHandler? Disconnected;                   //event raised when the plugin disconnects from the remote service
+
 
     //methods
     public void defineCustomProperties(Order order)
@@ -217,19 +218,16 @@ namespace TradeSharp.InteractiveBrokers
     {
       if (connectionStatusMessage.IsConnected)
       {
-        raiseConnected();
+        raiseConnectionStatus();
         m_autoReconnectTimer?.Dispose();  //cleanup the auto reconnect timer if it was setup
       }
       else
       {
-        raiseDisconnected();
+        raiseConnectionStatus();
         setupAutoReconnectTimer();
       }
       raiseUpdateCommands();
     }
-
-    protected void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }
-    protected void raiseDisconnected() { if (Disconnected != null) Disconnected(this, new EventArgs()); }
 
     protected void parseAutoReconnectInterval()
     {

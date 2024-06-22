@@ -46,6 +46,7 @@ namespace TradeSharp.InteractiveBrokers
       var configurationService = (IConfigurationService)ServiceHost.Services.GetService(typeof(IConfigurationService))!;
       configurationService.Brokers.TryGetValue(Constants.DefaultName, out IPluginConfiguration? configuration);
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, m_dialogService, configuration!);
+      m_ibServiceHost.DataProviderPlugin = this;
     }
 
     public override bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end)

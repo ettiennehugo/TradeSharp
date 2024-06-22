@@ -7,6 +7,23 @@ namespace TradeSharp.CoreUI.Services
   /// </summary>
   public interface IBrokerAccountsService: ITreeItemsService<string, object> 
   {
-    IBrokerPlugin? BrokerFilter { get; set; }  //filter the accounts down to the specific broker, null for no filtering
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+
+
+    //properties
+    bool KeepAccountsOnDisconnect { get; set; } //keep accounts on disconnect, will refresh them when a connection is established again
+    IBrokerPlugin? BrokerFilter { get; set; }   //filter the accounts down to the specific broker, null for no filtering
+
+    //methods
+    void Refresh(IBrokerPlugin broker);   //refresh a specific broker's accounts
   }
 }

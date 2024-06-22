@@ -91,20 +91,30 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void selectAccount(Account? account)
     {
-      //change the account view based on the new account
-      if (m_accountView?.Account != account)
-        m_main.Children.Remove(m_accountView);
+      if (m_accountView == null && account == null)    //no account to show
+        return;
 
-      if (account != null)
+      if (m_accountView == null)
       {
         m_accountView = new AccountView(null, account);
         Grid.SetColumn(m_accountView, 1);
         m_main.Children.Add(m_accountView);
       }
-      else if (m_accountView != null)
+      else if (m_accountView.Account != account)
       {
         m_main.Children.Remove(m_accountView);
-        m_accountView = null;
+
+        if (account != null)
+        {
+          m_accountView = new AccountView(null, account);
+          Grid.SetColumn(m_accountView, 1);
+          m_main.Children.Add(m_accountView);
+        }
+        else
+        {
+          m_main.Children.Remove(m_accountView);
+          m_accountView = null;
+        }
       }
     }
 

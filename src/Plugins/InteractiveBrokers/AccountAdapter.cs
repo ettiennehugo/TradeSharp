@@ -171,22 +171,35 @@ namespace TradeSharp.InteractiveBrokers
     //NOTE: Handle methods need to lock the account adapter to ensure exclusive access to the defined set of accounts.
     public void HandleAccountSummary(AccountSummaryMessage summaryMessage)
     {
-      lock (this) m_serviceHost.DialogService.PostUIUpdate(() => setAccountValue("HandleAccountSummary", summaryMessage.RequestId, summaryMessage.Account, summaryMessage.Tag, summaryMessage.Value, summaryMessage.Currency));
+      Account? account = null;
+      lock (this)
+      {
+        account = resolveAccount(summaryMessage.Account);
+        m_serviceHost.DialogService.PostUIUpdate(() => setAccountValue(account, "HandleAccountSummary", summaryMessage.RequestId, summaryMessage.Account, summaryMessage.Tag, summaryMessage.Value, summaryMessage.Currency));
+      }
+      if (account != null) m_serviceHost.BrokerPlugin.raiseAccountsUpdated(new AccountsUpdatedArgs(account));
     }
 
     public void HandleUpdateAccountValue(AccountValueMessage accountValueMessage)
     {
-      lock (this) m_serviceHost.DialogService.PostUIUpdate(() => setAccountValue("HandleAccountValue", -1 /* account value does not have a request id */, accountValueMessage.Account, accountValueMessage.Key, accountValueMessage.Value, accountValueMessage.Currency));
+      Account? account = null;
+      lock(this)
+      {
+        account = resolveAccount(accountValueMessage.Account);
+        m_serviceHost.DialogService.PostUIUpdate(() => setAccountValue(account, "HandleAccountValue", -1 /* account value does not have a request id */, accountValueMessage.Account, accountValueMessage.Key, accountValueMessage.Value, accountValueMessage.Currency));
+      }
+      if (account != null) m_serviceHost.BrokerPlugin.raiseAccountsUpdated(new AccountsUpdatedArgs(account));
     }
 
     public void HandleUpdatePortfolio(UpdatePortfolioMessage updatePortfolioMessage)
     {
+      Position? position = null;
       lock (this)
         m_serviceHost.DialogService.PostUIUpdate(() =>
         {
           Account account = resolveAccount(updatePortfolioMessage.Account);
           Contract contract = updatePortfolioMessage.Contract;
-          Position position = resolvePosition(account, contract);
+          position = resolvePosition(account, contract);
           position.Size = updatePortfolioMessage.Position;
           position.MarketPrice = (decimal)updatePortfolioMessage.MarketPrice;
           position.MarketValue = (decimal)updatePortfolioMessage.MarketValue;
@@ -194,16 +207,18 @@ namespace TradeSharp.InteractiveBrokers
           position.UnrealizedPnl = (decimal)updatePortfolioMessage.UnrealizedPNL;
           position.RealizedPnl = (decimal)updatePortfolioMessage.RealizedPNL;
         });
+      if (position != null) m_serviceHost.BrokerPlugin.raisePositionUpdated(new PositionUpdatedArgs(position));
     }
 
     public void HandlePosition(PositionMessage positionMessage)
     {
+      Position? position = null;
       lock (this)
         m_serviceHost.DialogService.PostUIUpdate(() =>
         {
           Account account = resolveAccount(positionMessage.Account);
           Contract contract = positionMessage.Contract;
-          Position position = resolvePosition(account, contract);
+          position = resolvePosition(account, contract);
           position.Size = positionMessage.Position;
           position.MarketPrice = (decimal)positionMessage.AverageCost;
           position.MarketValue = (decimal)positionMessage.AverageCost;
@@ -211,14 +226,16 @@ namespace TradeSharp.InteractiveBrokers
           position.UnrealizedPnl = 0;
           position.RealizedPnl = 0;
         });
+      if (position != null) m_serviceHost.BrokerPlugin.raisePositionUpdated(new PositionUpdatedArgs(position));
     }
 
     public void HandleOrderStatus(OrderStatusMessage orderStatusMessage)
     {
+      Order? order = null;
       lock (this)
         m_serviceHost.DialogService.PostUIUpdate(() =>
         {
-          Order? order = resolveOrder(orderStatusMessage.OrderId);
+          order = resolveOrder(orderStatusMessage.OrderId);
           if (order == null)
           {
             m_logger.LogWarning($"HandleOrderStatus - order not found - {orderStatusMessage.OrderId}");
@@ -247,10 +264,13 @@ namespace TradeSharp.InteractiveBrokers
           order.AverageFillPrice = orderStatusMessage.AvgFillPrice == double.MaxValue ? decimal.Zero : (decimal)orderStatusMessage.AvgFillPrice;
           order.LastFillPrice = orderStatusMessage.LastFillPrice == double.MaxValue ? decimal.Zero : (decimal)orderStatusMessage.LastFillPrice;
         });
+
+      if (order != null) m_serviceHost.BrokerPlugin.raiseOrderUpdated(new OrderUpdatedArgs(order));
     }
 
     public void HandleOpenOrder(OpenOrderMessage openOrderMessage)
     {
+      Order? order = null;
       lock (this)
         m_serviceHost.DialogService.PostUIUpdate(() =>
         {
@@ -261,14 +281,16 @@ namespace TradeSharp.InteractiveBrokers
             return;
           }
 
-          Order order = resolveOrder(account, openOrderMessage.OrderId);
+          order = resolveOrder(account, openOrderMessage.OrderId);
           order.Instrument = From(openOrderMessage.Contract)!;  //intrument should exist if we're receiving an open order on it
           order.Status = openOrderMessage.OrderState.Status == "" ? Data.Order.OrderStatus.Filled : Data.Order.OrderStatus.Open;   //TODO - need to complete this
           order.Filled = openOrderMessage.Order.FilledQuantity == double.MaxValue ? 0.0 : openOrderMessage.Order.FilledQuantity;
           order.Quantity = order.Filled;
-          order.Remaining = openOrderMessage.Order.TotalQuantity - openOrderMessage.Order.FilledQuantity;
+          double total = openOrderMessage.Order.TotalQuantity == double.MaxValue ? 0.0 : openOrderMessage.Order.TotalQuantity;
+          order.Remaining = total - order.Filled;
           //NOTE: AverageFillPrice and LastFillPrice are not available in the OpenOrderMessage, need to check if they are available in the OrderState.
         });
+      if (order != null) m_serviceHost.BrokerPlugin.raiseOrderUpdated(new OrderUpdatedArgs(order));
     }
 
     protected Account resolveAccount(string accountName)
@@ -278,7 +300,7 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_logger.LogInformation($"Adding account - {accountName}");
         AccountIds.Add(accountName);
-        account = new Account { Name = accountName };
+        account = new Account(m_serviceHost.BrokerPlugin) { Name = accountName };
         Accounts.Add(account);
       }
 
@@ -324,9 +346,8 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //Update account value according to the key/value pair given.
-    protected void setAccountValue(string responseName, int reqId, string accountName, string key, string value, string currency)
+    protected Account setAccountValue(Account account, string responseName, int reqId, string accountName, string key, string value, string currency)
     {
-      Account account = resolveAccount(accountName);
       account.LastSyncDateTime = DateTime.Now;
       account.Currency = currency;    //NOTE: We assume account would have same currency for all values.
 
@@ -400,17 +421,8 @@ namespace TradeSharp.InteractiveBrokers
         else
           account.CustomProperties.Add(key, new CustomProperty { Name = key, Description = key, Type = typeof(string), Value = value, Unit = currency });
       }
-    }
 
-    //TBD: Do you need this method, the messages from the client is so disparate that you might not be able to use a central method like this.
-    protected void setPositionValue(string accountName, Contract contract, PositionDirection direction, double size, double averageCost, double marketValue, double marketPrice, double unrealizedPnl, double realizedPnl)
-    {
-      Account account = resolveAccount(accountName);
-
-
-      //TODO
-
-
+      return account;
     }
   }
 }

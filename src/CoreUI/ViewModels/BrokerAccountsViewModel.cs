@@ -31,7 +31,8 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
-    public IBrokerPlugin BrokerFilter { get => m_brokerAccountService.BrokerFilter; set => m_brokerAccountService.BrokerFilter = value; }
+    public bool KeepAccountsOnDisconnect { get => m_brokerAccountService.KeepAccountsOnDisconnect; set => m_brokerAccountService.KeepAccountsOnDisconnect = value; }
+    public IBrokerPlugin? BrokerFilter { get => m_brokerAccountService.BrokerFilter; set => m_brokerAccountService.BrokerFilter = value; }
 
     //methods
     public override void OnAdd()

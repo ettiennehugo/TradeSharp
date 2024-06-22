@@ -59,7 +59,7 @@ namespace TradeSharp.Data
 
     //methods
     //NOTE: Raise this event only once the connection is completed AND state is setup to reflect correctly in the UI.
-    protected void raiseConnectionStatus() { if (ConnectionStatus != null) ConnectionStatus(this, new ConnectionStatusArgs(IsConnected)); }
-    protected void raiseUpdateCommands() { if (UpdateCommands != null) UpdateCommands(this, new EventArgs()); }
+    public void raiseConnectionStatus() { ConnectionStatus?.Invoke(this, new ConnectionStatusArgs(IsConnected)); }
+    public void raiseUpdateCommands() { UpdateCommands?.Invoke(this, new EventArgs()); }
   }
 }

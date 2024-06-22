@@ -7,6 +7,20 @@ namespace TradeSharp.CoreUI.ViewModels
   /// </summary>
   public interface IBrokerAccountsViewModel: ITreeViewModel<string, object> 
   {
-    IBrokerPlugin? BrokerFilter { get; set; }  //filter the accounts down to the specific broker, no filtering if null
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+
+
+    //properties
+    bool KeepAccountsOnDisconnect { get; set; } //keep accounts on disconnect, will refresh them when a connection is established again
+    IBrokerPlugin? BrokerFilter { get; set; }   //filter the accounts down to the specific broker, null for no filtering
   }
 }

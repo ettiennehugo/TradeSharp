@@ -35,10 +35,24 @@ namespace TradeSharp.Data
     public abstract ObservableCollection<Account> Accounts { get; }
 
     //delegates
-
+    public virtual event AccountsUpdatedHandler? AccountsUpdated;
+    public virtual event PositionUpdatedHandler? PositionUpdated;
+    public virtual event OrderUpdatedHandler? OrderUpdated;
 
     //methods
+    public void raiseAccountsUpdated(AccountsUpdatedArgs args)
+    {
+      AccountsUpdated?.Invoke(this, args);
+    }
 
+    public void raisePositionUpdated(PositionUpdatedArgs args)
+    {
+      PositionUpdated?.Invoke(this, args);
+    }
 
+    public void raiseOrderUpdated(OrderUpdatedArgs args)
+    {
+      OrderUpdated?.Invoke(this, args);
+    }
   }
 }
