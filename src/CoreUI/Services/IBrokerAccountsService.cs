@@ -20,7 +20,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
-    bool KeepAccountsOnDisconnect { get; set; } //keep accounts on disconnect, will refresh them when a connection is established again
+    bool KeepAccountsOnDisconnect { get; set; } //keep account information on disconnect, will always refresh accounts when connection is established
     IBrokerPlugin? BrokerFilter { get; set; }   //filter the accounts down to the specific broker, null for no filtering
 
     //methods

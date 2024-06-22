@@ -146,10 +146,10 @@ namespace TradeSharp.CoreUI.Services
 
     protected void onAccountsUpdated(object sender, AccountsUpdatedArgs e)
     {
-      //only refresh when connection is established and we want to keep the accounts on disconnect
-      //if (e.IsConnected == false && KeepAccountsOnDisconnect == true)
-      //  return;
       IBrokerPlugin? broker = (IBrokerPlugin)sender;
+      //only refresh when connection is established or we want to keep the accounts on disconnect
+      if (broker.IsConnected == false && KeepAccountsOnDisconnect == true)
+        return;
       Refresh(broker);
     }
   }
