@@ -23,12 +23,14 @@ namespace TradeSharp.CoreUI.ViewModels
     private IInstrumentService m_instrumentService;
     private IList<ITreeNodeType<Guid, InstrumentGroup>> m_foundNodes;
     private int m_foundNodeIndex;
+    private bool m_findFirstExecuted;
 
     //constructors
     public InstrumentGroupViewModel(IInstrumentGroupService instrumentGroupService, IInstrumentService instrumentService, INavigationService navigationService, IDialogService dialogService) : base(instrumentGroupService, navigationService, dialogService)
     {
       m_foundNodes = new List<ITreeNodeType<Guid, InstrumentGroup>>();
       m_foundNodeIndex = 0;
+      m_findFirstExecuted = false;
       m_instrumentGroupService = instrumentGroupService;
       m_instrumentService = instrumentService;
       m_instrumentGroupService.RefreshEvent += onServiceRefresh;
@@ -96,8 +98,10 @@ namespace TradeSharp.CoreUI.ViewModels
       while (stack.Count > 0)
       {
         ITreeNodeType<Guid, InstrumentGroup> nextNode = stack.Pop();
-        nextNode.Expanded = true;
+        m_dialogService.PostUIUpdate(() => nextNode.Expanded = true);
       }
+
+      m_dialogService.PostUIUpdate(() => SelectedNode = node);
     }
 
     /// <summary>
@@ -107,6 +111,7 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       m_foundNodes.Clear();
       m_foundNodeIndex = 0;
+      m_findFirstExecuted = false;
       NotifyCanExecuteChanged();
     }
 
@@ -116,8 +121,9 @@ namespace TradeSharp.CoreUI.ViewModels
     public override void OnFindFirst()
     {
       m_foundNodes.Clear();
-      findNodes(Nodes);
+      findNodes(FindText.ToUpper(), Nodes);
       m_foundNodeIndex = 0;
+      m_findFirstExecuted = true;
 
       if (m_foundNodes.Count > 0) 
       {
@@ -129,37 +135,48 @@ namespace TradeSharp.CoreUI.ViewModels
 
     public override void OnFindNext()
     {
-      if (m_foundNodeIndex < m_foundNodes.Count - 1)
-      {
-        m_foundNodeIndex++;
-        ITreeNodeType<Guid, InstrumentGroup> foundNode = m_foundNodes[m_foundNodeIndex];
-        expandToNode(foundNode);
-        SelectedNode = foundNode;
-      }
+      //force search if not executed yet 
+      if (m_findFirstExecuted == false)
+        OnFindFirst();
       else
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Search complete", $"Nothing else found for search term \"{FindText}\"");
+      {
+        if (m_foundNodeIndex < m_foundNodes.Count - 1)
+        {
+          m_foundNodeIndex++;
+          ITreeNodeType<Guid, InstrumentGroup> foundNode = m_foundNodes[m_foundNodeIndex];
+          expandToNode(foundNode);
+          SelectedNode = foundNode;
+        }
+        else
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Search complete", $"Nothing else found for search term \"{FindText}\"");
+      }
     }
 
     public override void OnFindPrevious()
     {
-      if (m_foundNodeIndex > 0)
-      {
-        m_foundNodeIndex--;
-        ITreeNodeType<Guid, InstrumentGroup> foundNode = m_foundNodes[m_foundNodeIndex];
-        expandToNode(foundNode);
-        SelectedNode = foundNode;
-      }
+      //force search if not executed yet 
+      if (m_findFirstExecuted == false)
+        OnFindFirst();
       else
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "First Item", $"First item reached for search term \"{FindText}\"");
+      {
+        if (m_foundNodeIndex > 0)
+        {
+          m_foundNodeIndex--;
+          ITreeNodeType<Guid, InstrumentGroup> foundNode = m_foundNodes[m_foundNodeIndex];
+          expandToNode(foundNode);
+          SelectedNode = foundNode;
+        }
+        else
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "First Item", $"First item reached for search term \"{FindText}\"");
+      }
     }
 
     /// <summary>
     /// Searches the tree depth first for nodes that match the find text.
     /// </summary>
-    protected void findNodes(IList<ITreeNodeType<Guid, InstrumentGroup>> nodes)
+    protected void findNodes(string findText, IList<ITreeNodeType<Guid, InstrumentGroup>> nodes)
     {      
       //try to match the node
-      string findText = FindText.ToUpper();
       foreach (ITreeNodeType<Guid, InstrumentGroup> node in nodes)
       {
         bool nodeAdded = false;
@@ -197,7 +214,7 @@ namespace TradeSharp.CoreUI.ViewModels
       }
 
       //recurse to the node children
-      foreach (ITreeNodeType<Guid, InstrumentGroup> node in nodes) findNodes(node.Children);
+      foreach (ITreeNodeType<Guid, InstrumentGroup> node in nodes) findNodes(findText, node.Children);
     }
 
     //properties

@@ -125,6 +125,7 @@ namespace TradeSharp.CoreUI.Services
     private ILogger<InstrumentGroupService> m_logger;
     private IInstrumentGroupRepository m_instrumentGroupRepository;
     private IInstrumentService m_instrumentService;
+    private bool m_refreshInstruments;
 
     //constructors
     public InstrumentGroupService(ILogger<InstrumentGroupService> logger, IDatabase database, IInstrumentGroupRepository instrumentGroupRepository, IInstrumentService instrumentService, IDialogService dialogService) : base(dialogService)
@@ -137,6 +138,7 @@ namespace TradeSharp.CoreUI.Services
       SelectedNodes = new ThreadSafeObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
       Items = new ThreadSafeObservableCollection<InstrumentGroup>();
       Nodes = new ThreadSafeObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
+      m_refreshInstruments = false;
       m_instrumentService.RefreshEvent += onInstrumentServiceRefresh;
     }
 
@@ -209,6 +211,14 @@ namespace TradeSharp.CoreUI.Services
           Nodes.Add(new InstrumentGroupNodeType(this, m_instrumentService, null, item, true));   //null since parent is the root node
       SelectedNode = Nodes.FirstOrDefault(x => x.ParentId == InstrumentGroup.InstrumentGroupRoot); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       LoadedState = LoadedState.Loaded;
+
+      //handle race condition when instrument service finished loading while we were loading
+      if (m_refreshInstruments)
+      {
+        onInstrumentServiceRefresh(this, EventArgs.Empty);
+        m_refreshInstruments = false;
+      }
+
       raiseRefreshEvent();
     }
 
@@ -272,6 +282,11 @@ namespace TradeSharp.CoreUI.Services
 
     protected void onInstrumentServiceRefresh(object sender, EventArgs e)
     {
+      //NOTE: A race condition might exist here where the instrument service finishes loading while the instrument group service is still
+      //      in the middle of loading the instrument groups so we need to make sure we refresh the nodes when this is the case.
+      m_refreshInstruments = LoadedState == LoadedState.Loading;
+      if (m_refreshInstruments) return;
+      
       //recursively process the instrument groups to update the instrument descriptions
       foreach (ITreeNodeType<Guid, InstrumentGroup> node in Nodes)
       {

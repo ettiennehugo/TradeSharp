@@ -31,6 +31,7 @@ namespace TradeSharp.CoreUI.Services
     {
       Ticker = ticker;
       Description= description;
+      Highlight = false;
     }
 
     //finalizers
@@ -42,6 +43,7 @@ namespace TradeSharp.CoreUI.Services
     //properties
     [ObservableProperty] private string m_ticker;
     [ObservableProperty] private string m_description;
+    [ObservableProperty] private bool m_highlight;
 
     //methods
 

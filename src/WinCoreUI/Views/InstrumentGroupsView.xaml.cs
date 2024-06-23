@@ -59,14 +59,14 @@ namespace TradeSharp.WinCoreUI.Views
     {
       ViewModel.FindText = m_findInstrumentGroupFilter.Text;
       if (ViewModel.FindText == "") ViewModel.ClearFilterCommand.Execute(null);
+
+      
+
     }
 
     private void m_findInstrumentGroupFilter_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
-      if (e.Key == Windows.System.VirtualKey.Enter)
-      {
-        if (ViewModel.FindFirstCommand.CanExecute(null)) ViewModel.FindFirstCommand.Execute(null);
-      }
+      if (e.Key == Windows.System.VirtualKey.Enter && ViewModel.FindFirstCommand.CanExecute(null)) ViewModel.FindFirstCommand.Execute(null);
     }
 
     private void m_instrumentGroups_Expanding(TreeView sender, TreeViewExpandingEventArgs args)
