@@ -7,7 +7,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// Inteface of view models that support viewing of items in a list fashion driven by an IListService.
   /// </summary>
-  public interface IListViewModel<TItem>: INotifyPropertyChanged, INotifyPropertyChanging, IRefreshable
+  public interface IListViewModel<TItem>: INotifyPropertyChanged, INotifyPropertyChanging
   {
 
     //constants
@@ -21,6 +21,9 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //attributes
 
+
+    //events
+    event Common.RefreshEventHandler? RefreshEvent;
 
     //properties
     IList<TItem> Items { get; set; }

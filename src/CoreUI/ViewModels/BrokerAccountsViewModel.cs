@@ -1,5 +1,6 @@
 ﻿
 using TradeSharp.Data;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels

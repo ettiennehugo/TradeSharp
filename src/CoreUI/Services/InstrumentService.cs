@@ -136,6 +136,7 @@ namespace TradeSharp.CoreUI.Services
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+      raiseRefreshEvent();
     }
 
     public bool Update(Instrument item)
@@ -418,7 +419,7 @@ namespace TradeSharp.CoreUI.Services
 
       if (Debugging.ImportExport) m_logger.LogInformation($"Import success: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\"");
       if (noErrors) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Import success: Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}) - from \"{importSettings.Filename}\"");
-      RaiseRefreshEvent();  //notify view model of changes
+      raiseRefreshEvent();  //notify view model of changes
     }
 
     //methods
@@ -646,7 +647,7 @@ namespace TradeSharp.CoreUI.Services
 
       if (Debugging.ImportExport) m_logger.LogInformation($"Import from \"{importSettings.Filename}\" complete - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Import from \"{importSettings.Filename}\" complete - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
-      RaiseRefreshEvent();  //notify view model of changes
+      raiseRefreshEvent();  //notify view model of changes
     }
 
     //Method is defined public for testing purposes.

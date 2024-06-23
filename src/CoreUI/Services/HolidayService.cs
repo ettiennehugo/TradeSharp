@@ -80,6 +80,7 @@ namespace TradeSharp.CoreUI.Services
       var result = m_holidayRepository.GetItems();
       Items.Clear();
       foreach (var item in result) Items.Add(item);
+      raiseRefreshEvent();
     }
 
     public bool Update(Holiday item)

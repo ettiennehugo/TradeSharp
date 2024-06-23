@@ -9,7 +9,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// Interface for view models that allow tree type access. 
   /// </summary>
-  public interface ITreeViewModel<TKey, TItem>: INotifyPropertyChanged, INotifyPropertyChanging, IRefreshable where TItem : class
+  public interface ITreeViewModel<TKey, TItem>: INotifyPropertyChanged, INotifyPropertyChanging where TItem : class
   {
     //constants
 
@@ -21,6 +21,9 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //attributes
 
+
+    //events
+    public event Common.RefreshEventHandler? RefreshEvent;
 
     //properties
     ObservableCollection<ITreeNodeType<TKey, TItem>> Nodes { get; }

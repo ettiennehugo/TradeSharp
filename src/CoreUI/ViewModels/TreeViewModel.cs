@@ -39,10 +39,14 @@ namespace TradeSharp.CoreUI.ViewModels
       FindPreviousCommand = new RelayCommand(OnFindPrevious, () => FindText.Length > 0);
       m_findText = string.Empty;
       ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null || SelectedNodes.Count > 0);
+      m_itemsService.RefreshEvent += onServiceRefresh;
     }
 
     //finalizers
-
+    ~TreeViewModel()
+    {
+      m_itemsService.RefreshEvent -= onServiceRefresh;
+    }
 
     //interface implementations
 
@@ -152,7 +156,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
         if (count > 0)
         {
-          RaiseRefreshEvent();
+          raiseRefreshEvent();
           SelectedNode = Nodes.FirstOrDefault();
           await m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "Success", $"Deleted {count} nodes with it's children");
         }
@@ -190,7 +194,7 @@ namespace TradeSharp.CoreUI.ViewModels
     ///Generic handler to re-raise the service refresh event as a view model refresh event.
     protected virtual void onServiceRefresh(object? sender, Common.RefreshEventArgs e)
     {
-      RaiseRefreshEvent(e);
+      raiseRefreshEvent(e);
     }
 
     protected override void NotifyCanExecuteChanged()

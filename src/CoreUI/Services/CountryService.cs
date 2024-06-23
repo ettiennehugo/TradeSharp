@@ -63,6 +63,7 @@ namespace TradeSharp.CoreUI.Services
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+      raiseRefreshEvent();
     }
 
     public bool Update(Country item)

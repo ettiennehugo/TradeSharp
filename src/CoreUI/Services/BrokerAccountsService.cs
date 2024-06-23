@@ -102,6 +102,7 @@ namespace TradeSharp.CoreUI.Services
       }
 
       SelectedNode = Nodes.FirstOrDefault();
+      raiseRefreshEvent();
     }
 
     public void Refresh(IBrokerPlugin broker)

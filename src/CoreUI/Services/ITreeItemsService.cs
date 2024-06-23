@@ -6,7 +6,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Interface to be implemented by services that allow manipulation of items in a tree fashion. 
   /// </summary>
-  public interface ITreeItemsService<TKey, TItem> : IRefreshable
+  public interface ITreeItemsService<TKey, TItem>
     where TItem : class
   {
     //constants
@@ -30,7 +30,7 @@ namespace TradeSharp.CoreUI.Services
     ObservableCollection<TItem> Items { get; }    //flat list of all items
 
     //events
-
+    event RefreshEventHandler? RefreshEvent;
 
     //methods
     void Refresh();

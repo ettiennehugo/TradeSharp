@@ -153,6 +153,7 @@ namespace TradeSharp.CoreUI.Services
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+      raiseRefreshEvent();
     }
 
     public void Refresh(DateTime from, DateTime to)
@@ -778,7 +779,7 @@ namespace TradeSharp.CoreUI.Services
       else
         if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
 
-      RaiseRefreshEvent();  //notify view model of changes
+      raiseRefreshEvent();  //notify view model of changes
     }
 
     private void importJSON(ImportSettings importSettings)
@@ -867,7 +868,7 @@ namespace TradeSharp.CoreUI.Services
       else
         if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", $"Completed import of {barsUpdated} from \"{importSettings.Filename}\".");
 
-      RaiseRefreshEvent();  //notify view model of changes
+      raiseRefreshEvent();  //notify view model of changes
     }
 
 

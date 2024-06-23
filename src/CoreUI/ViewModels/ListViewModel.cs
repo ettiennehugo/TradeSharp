@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using System.Collections;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Common;
 
@@ -34,12 +35,19 @@ namespace TradeSharp.CoreUI.ViewModels
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null);
       DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null);
       CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => SelectedItem != null);
+      m_itemsService.RefreshEvent += onServiceRefresh;
     }
 
     //finalizers
-
+    ~ListViewModel()
+    {
+      m_itemsService.RefreshEvent -= onServiceRefresh;
+    }
 
     //interface implementations
+
+
+    //events
 
 
     //properties
@@ -170,7 +178,7 @@ namespace TradeSharp.CoreUI.ViewModels
     ///Generic handler to re-raise the service refresh event as a view model refresh event.
     protected virtual void onServiceRefresh(object? sender, Common.RefreshEventArgs e)
     {
-      RaiseRefreshEvent(e);
+      raiseRefreshEvent(e);
     }
   }
 }

@@ -11,7 +11,7 @@ namespace TradeSharp.CoreUI.ViewModels
   /// operations specifically need to run in the background if they are long running operations while quick refreshes of
   /// only a few items can run in the UI thread to keep things simple.
   /// </summary>
-  public abstract partial class ViewModelBase : ObservableObject, IRefreshable
+  public abstract partial class ViewModelBase : ObservableObject
   {
     //constants
 
@@ -50,6 +50,9 @@ namespace TradeSharp.CoreUI.ViewModels
     //interface implementations
 
 
+    //events
+    public event RefreshEventHandler? RefreshEvent;
+
     //properties
     /// <summary>
     /// Set of supported operations.
@@ -64,9 +67,6 @@ namespace TradeSharp.CoreUI.ViewModels
     public AsyncRelayCommand<object?> CopyCommandAsync { get; set; }
     public AsyncRelayCommand ImportCommandAsync { get; set; }
     public AsyncRelayCommand ExportCommandAsync { get; set; }
-
-    //events
-    public event IRefreshable.RefreshEventHandler? RefreshEvent;
 
     //methods
     public abstract void OnAdd();
@@ -104,14 +104,22 @@ namespace TradeSharp.CoreUI.ViewModels
       ExportCommandAsync.NotifyCanExecuteChanged();
     }
 
-    protected virtual void RaiseRefreshEvent()
+    protected virtual void raiseRefreshEvent()
     {
       RefreshEvent?.Invoke(this, RefreshEventArgs.Empty);
     }
 
-    protected virtual void RaiseRefreshEvent(RefreshEventArgs e)
+    protected virtual void raiseRefreshEvent(RefreshEventArgs e)
     {
       RefreshEvent?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Generic handler to hook up to the service in sub-classes to handle the service refresh event.
+    /// </summary>
+    protected virtual void onServiceRefreshed(object sender, RefreshEventArgs args)
+    {
+      raiseRefreshEvent(args);
     }
   }
 }

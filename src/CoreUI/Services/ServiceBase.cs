@@ -6,7 +6,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Common base class for services.
   /// </summary>
-  public class ServiceBase : ObservableObject, IRefreshable
+  public class ServiceBase : ObservableObject
   {
     //constants
 
@@ -36,18 +36,18 @@ namespace TradeSharp.CoreUI.Services
 
 
     //events
-    public event IRefreshable.RefreshEventHandler? RefreshEvent;
+    public event RefreshEventHandler? RefreshEvent;
 
     //methods
     public virtual void Import(ImportSettings importSettings) => throw new NotImplementedException();
     public virtual void Export(ExportSettings exportSettings) => throw new NotImplementedException();
 
-    protected virtual void RaiseRefreshEvent()
+    protected virtual void raiseRefreshEvent()
     {
       RefreshEvent?.Invoke(this, RefreshEventArgs.Empty);
     }
 
-    protected virtual void RaiseRefreshEvent(RefreshEventArgs e)
+    protected virtual void raiseRefreshEvent(RefreshEventArgs e)
     {
       RefreshEvent?.Invoke(this, e);
     }

@@ -85,6 +85,7 @@ namespace TradeSharp.CoreUI.Services
       var result = m_exchangeRepository.GetItems();
       Items.Clear();
       foreach (var item in result) Items.Add(item);
+      raiseRefreshEvent();
     }
 
     public bool Update(Exchange item)

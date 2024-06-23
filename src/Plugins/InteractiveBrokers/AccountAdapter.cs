@@ -302,10 +302,10 @@ namespace TradeSharp.InteractiveBrokers
         m_logger.LogInformation($"Adding account - {accountName}");
         AccountIds.Add(accountName);
         account = new Account(m_serviceHost.BrokerPlugin) { Name = accountName };
+        Debug.Assert(account != null);
         Accounts.Add(account);
         m_serviceHost.BrokerPlugin.raiseAccountsUpdated();    //the AccountAdapter raises the add event while the broker plugin will raise the remove event (typically when disconnection occurs)        
       }
-      Debug.Assert(account != null);
       return account;
     }
 

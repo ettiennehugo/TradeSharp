@@ -80,6 +80,7 @@ namespace TradeSharp.CoreUI.Services
       var result = m_sessionRepository.GetItems();
       Items.Clear();
       foreach (var item in result) Items.Add(item);
+      raiseRefreshEvent();
     }
 
     public bool Update(Session item)

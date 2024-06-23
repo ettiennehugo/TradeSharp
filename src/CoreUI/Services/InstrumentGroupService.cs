@@ -203,6 +203,7 @@ namespace TradeSharp.CoreUI.Services
         if (item.ParentId == InstrumentGroup.InstrumentGroupRoot)
           Nodes.Add(new InstrumentGroupNodeType(this, m_instrumentService, null, item, true));   //null since parent is the root node
       SelectedNode = Nodes.FirstOrDefault(x => x.ParentId == InstrumentGroup.InstrumentGroupRoot); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
+      raiseRefreshEvent();
     }
 
     private void removeNodes(Guid parentId)
@@ -535,7 +536,7 @@ namespace TradeSharp.CoreUI.Services
 
         if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Completed import from \"{importSettings.Filename}\" - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
         m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", $"Completed import from \"{importSettings.Filename}\" - Skipped({skippedCount}), Replaced({replacedCount}), Updated({updatedCount}), Created({createdCount}).");
-        RaiseRefreshEvent();
+        raiseRefreshEvent();
       }
       else
       {
@@ -745,7 +746,7 @@ namespace TradeSharp.CoreUI.Services
 
       if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Completed instument group import from \"{importSettings.Filename}\" - Skipped({counts.Skipped}), Replaced({counts.Replaced}), Updated({counts.Updated}), Created({counts.Created}).");
       if (noErrors) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Completed instument group import from \"{importSettings.Filename}\" - Skipped({counts.Skipped}), Replaced({counts.Replaced}), Updated({counts.Updated}), Created({counts.Created}).");
-      RaiseRefreshEvent();
+      raiseRefreshEvent();
     }
 
     private void importJsonNode(Guid parentId, JsonObject node, ImportReplaceBehavior importReplaceBehavior, IList<InstrumentGroup> definedInstrumentGroups, IList<Instrument> definedInstruments, ILogger logger, ref ImportCounts counts)

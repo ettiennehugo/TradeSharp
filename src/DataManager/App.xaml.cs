@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using TradeSharp.Common;
 using TradeSharp.Data;
@@ -144,10 +145,10 @@ namespace TradeSharp.WinDataManager
       countryViewModel.RefreshCommandAsync.Execute(null);
       var exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
       exchangeViewModel.RefreshCommandAsync.Execute(null);
-      var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
-      instrumentGroupViewModel.RefreshCommandAsync.Execute(null);
       var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       instrumentViewModel.RefreshCommandAsync.Execute(null);
+      var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
+      instrumentGroupViewModel.RefreshCommandAsync.Execute(null);
 
       //setup dispatcher queue for UI thread in the dialog service
       var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
