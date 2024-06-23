@@ -309,7 +309,7 @@ namespace TradeSharp.InteractiveBrokers
 
     protected Position resolvePosition(Account account, Contract contract)
     {
-      Position? position = account.Positions.FirstOrDefault(x => x.Instrument.Ticker == contract.Symbol.ToUpper());
+      Position? position = account.Positions.FirstOrDefault(x => x.Instrument?.Ticker == contract.Symbol.ToUpper());
       if (position == null)
       {
         position = new Position(account, From(contract)!, PositionDirection.Long, 0, 0, 0, 0, 0, 0);

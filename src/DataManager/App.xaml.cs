@@ -137,17 +137,17 @@ namespace TradeSharp.WinDataManager
 
     private void loadCachedData()
     {
-      //start caching crucial data
+      //start caching crucial data in the background
       var holidayViewModel = (IHolidayViewModel)IApplication.Current.Services.GetService(typeof(IHolidayViewModel));
-      holidayViewModel.RefreshCommand.Execute(null);
+      holidayViewModel.RefreshCommandAsync.Execute(null);
       var countryViewModel = (ICountryViewModel)IApplication.Current.Services.GetService(typeof(ICountryViewModel));
-      countryViewModel.RefreshCommand.Execute(null);
+      countryViewModel.RefreshCommandAsync.Execute(null);
       var exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
-      exchangeViewModel.RefreshCommand.Execute(null);
-      var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
-      instrumentViewModel.RefreshCommand.Execute(null);
+      exchangeViewModel.RefreshCommandAsync.Execute(null);
       var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
-      instrumentGroupViewModel.RefreshCommand.Execute(null);
+      instrumentGroupViewModel.RefreshCommandAsync.Execute(null);
+      var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
+      instrumentViewModel.RefreshCommandAsync.Execute(null);
 
       //setup dispatcher queue for UI thread in the dialog service
       var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
@@ -175,6 +175,5 @@ namespace TradeSharp.WinDataManager
       var dialogService = m_host.Services.GetService<IDialogService>();
       dialogService.ShowPopupMessageAsync($"An unhandled exception occurred in the application - {e.Message}");
     }
-
   }
 }

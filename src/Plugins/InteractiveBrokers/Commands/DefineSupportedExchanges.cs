@@ -82,7 +82,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         if (definedExchange == null)
         {
           progress.LogInformation($"Defining exchange \"{exchange.Name}\"");
-          var newExchange = new Data.Exchange(Guid.NewGuid(), Data.Attributes.None, exchange.Tag, country!.Id, exchange.Name, exchange.TimeZone, 2, 1, 1, Guid.Empty);
+          var newExchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributeSet, exchange.Tag, country!.Id, exchange.Name, exchange.TimeZone, 2, 1, 1, Guid.Empty);
           m_adapter.m_database.CreateExchange(newExchange);
           defineStockSessions(newExchange);
           definedAnExchange = true;
@@ -94,7 +94,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         if (progress.CancellationTokenSource.IsCancellationRequested) break;
       }
 
-      if (definedAnExchange) m_adapter.m_exchangeService.Refresh();
+      if (definedAnExchange) m_adapter.m_dialogService.PostUIUpdate(() => m_adapter.m_exchangeService.Refresh());
       progress.Complete = true;
     }
 
@@ -103,37 +103,37 @@ namespace TradeSharp.InteractiveBrokers.Commands
     /// </summary>
     protected void defineStockSessions(Data.Exchange exchange)
     {
-      var preMarketMonday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Pre-market Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(6,0), new TimeOnly(9,29));
-      var marketMonday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(9,30), new TimeOnly(15,59));
-      var postMarketMonday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Post-market Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(16,0), new TimeOnly(19,59));
+      var preMarketMonday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(6,0), new TimeOnly(9,29));
+      var marketMonday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(9,30), new TimeOnly(15,59));
+      var postMarketMonday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(16,0), new TimeOnly(19,59));
       m_adapter.m_database.CreateSession(preMarketMonday);
       m_adapter.m_database.CreateSession(marketMonday);
       m_adapter.m_database.CreateSession(postMarketMonday);
 
-      var preMarketTuesday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Pre-market Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(6, 0), new TimeOnly(9, 29));
-      var marketTuesday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(9, 30), new TimeOnly(15, 59));
-      var postMarketTuesday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Post-market Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(16, 0), new TimeOnly(19, 59));
+      var preMarketTuesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(6, 0), new TimeOnly(9, 29));
+      var marketTuesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(9, 30), new TimeOnly(15, 59));
+      var postMarketTuesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(16, 0), new TimeOnly(19, 59));
       m_adapter.m_database.CreateSession(preMarketTuesday);
       m_adapter.m_database.CreateSession(marketTuesday);
       m_adapter.m_database.CreateSession(postMarketTuesday);
 
-      var preMarketWednesday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Pre-market Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(6, 0), new TimeOnly(9, 29));
-      var marketWednesday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(9, 30), new TimeOnly(15, 59));
-      var postMarketWednesday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Post-market Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(16, 0), new TimeOnly(19, 59));
+      var preMarketWednesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(6, 0), new TimeOnly(9, 29));
+      var marketWednesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(9, 30), new TimeOnly(15, 59));
+      var postMarketWednesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(16, 0), new TimeOnly(19, 59));
       m_adapter.m_database.CreateSession(preMarketWednesday);
       m_adapter.m_database.CreateSession(marketWednesday);
       m_adapter.m_database.CreateSession(postMarketWednesday);
 
-      var preMarketThursday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Pre-market Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(6, 0), new TimeOnly(9, 29));
-      var marketThursday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(9, 30), new TimeOnly(15, 59));
-      var postMarketThursday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Post-market Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(16, 0), new TimeOnly(19, 59));
+      var preMarketThursday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(6, 0), new TimeOnly(9, 29));
+      var marketThursday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(9, 30), new TimeOnly(15, 59));
+      var postMarketThursday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(16, 0), new TimeOnly(19, 59));
       m_adapter.m_database.CreateSession(preMarketThursday);
       m_adapter.m_database.CreateSession(marketThursday);
       m_adapter.m_database.CreateSession(postMarketThursday);
 
-      var preMarketFriday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Pre-market Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(6, 0), new TimeOnly(9, 29));
-      var marketFriday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(9, 30), new TimeOnly(15, 59));
-      var postMarketFriday = new Data.Session(Guid.NewGuid(), Data.Attributes.None, "", "Post-market Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(16, 0), new TimeOnly(19, 59));
+      var preMarketFriday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(6, 0), new TimeOnly(9, 29));
+      var marketFriday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(9, 30), new TimeOnly(15, 59));
+      var postMarketFriday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(16, 0), new TimeOnly(19, 59));
       m_adapter.m_database.CreateSession(preMarketFriday);
       m_adapter.m_database.CreateSession(marketFriday);
       m_adapter.m_database.CreateSession(postMarketFriday);

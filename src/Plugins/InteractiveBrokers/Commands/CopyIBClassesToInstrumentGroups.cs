@@ -56,7 +56,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
       progress.Progress = 0;
       progress.Minimum = 0;
       List<Contract> contracts = m_adapter.m_serviceHost.Cache.GetContracts();
-      progress.Maximum = contracts.Count;
+      progress.Maximum = m_adapter.m_instrumentGroupService.Items.Count;
+      progress.Maximum += contracts.Count;
       progress.ShowAsync();
       
       //define root group associated with the interactive borker classifications
@@ -82,7 +83,11 @@ namespace TradeSharp.InteractiveBrokers.Commands
         {
           var metaData = deserializeMetaData(instrumentGroup.Tag);
           definedInstrumentGroups.Add(new Tuple<string, string, string, InstrumentGroup>(metaData!.Industry, metaData!.Category, metaData!.SubCategory, instrumentGroup));
+       
         }
+        
+        progress.Progress++;
+        if (progress.CancellationTokenSource.IsCancellationRequested) return;
       }
 
       //determine the set of industries, categories and sub-categories that must be defined

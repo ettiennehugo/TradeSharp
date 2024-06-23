@@ -335,6 +335,57 @@ namespace TradeSharp.InteractiveBrokers
             m_logger.LogError($"ContractForInstrument - Unsupported security type - {secType}");
         }
 
+      //if we did not find the contract and the default exchange was used try to find contract based on ticker
+      if (contract == null && exchange == Constants.DefaultExchange)
+      {
+        List<Contract> contracts = new List<Contract>();
+        using (var reader = ExecuteReader($"SELECT * FROM {TableContracts} JOIN {TableContractDetails} ON {TableContracts}.ConId = {TableContractDetails}.ConId WHERE {TableContracts}.Symbol = '{tickerUpper}'"))
+          while (reader.Read())
+          {
+            string secType = reader.GetString(4);
+            if (secType == Constants.ContractTypeStock)
+            {
+              contract = new ContractStock
+              {
+                ConId = reader.GetInt32(0),
+                Symbol = reader.GetString(1),
+                SecId = reader.GetString(2),
+                SecIdType = reader.GetString(3),
+                SecType = reader.GetString(4),
+                Exchange = reader.GetString(5),
+                PrimaryExch = reader.GetString(6),
+                Currency = reader.GetString(7),
+                LocalSymbol = reader.GetString(8),
+                TradingClass = reader.GetString(9),
+                LastTradeDateOrContractMonth = reader.GetString(10),
+                //ConId = reader.GetInt32(11),  - duplicate from right table
+                Cusip = reader.GetString(12),
+                LongName = FromSqlSafeString(reader.GetString(13)),
+                StockType = reader.GetString(14),
+                IssueDate = reader.GetString(15),
+                LastTradeTime = reader.GetString(16),
+                Category = FromSqlSafeString(reader.GetString(17)),
+                Subcategory = FromSqlSafeString(reader.GetString(18)),
+                Industry = FromSqlSafeString(reader.GetString(19)),
+                Ratings = reader.GetString(20),
+                TimeZoneId = reader.GetString(21),
+                TradingHours = reader.GetString(22),
+                LiquidHours = reader.GetString(23),
+                OrderTypes = reader.GetString(24),
+                MarketName = FromSqlSafeString(reader.GetString(25)),
+                ValidExchanges = FromSqlSafeString(reader.GetString(26)),
+                Notes = FromSqlSafeString(reader.GetString(27))
+              };
+
+              m_contractsByTickerExchange[contract.Symbol.GetHashCode() + contract.Exchange.GetHashCode()] = contract;    //assumes symbol and exchange are upprcase
+              m_contractsByConId[contract.ConId] = contract;
+              contracts.Add(contract);
+            }
+          }
+
+        if (contracts.Count == 1) contract = contracts[0];
+      }
+
       return contract;
     }
 

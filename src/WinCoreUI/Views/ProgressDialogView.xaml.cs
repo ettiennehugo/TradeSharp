@@ -86,7 +86,7 @@ namespace TradeSharp.WinCoreUI.Views
       set
       {
         m_title = value;
-        DispatcherQueue.TryEnqueue(() => m_titleBarText.Text = m_title);
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_titleBarText.Text = m_title);
       }
     }
 
@@ -99,7 +99,7 @@ namespace TradeSharp.WinCoreUI.Views
         lock (m_minimumLock) 
         {
           m_minimum = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          DispatcherQueue.TryEnqueue(() => m_progressBar.Minimum = m_minimum);
+          DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_progressBar.Minimum = m_minimum);
         }
       }
     }
@@ -112,7 +112,7 @@ namespace TradeSharp.WinCoreUI.Views
         lock (m_maximumLock)
         {
           m_maximum = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          DispatcherQueue.TryEnqueue(() => m_progressBar.Maximum = m_maximum);
+          DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_progressBar.Maximum = m_maximum);
         }
       }
     }
@@ -126,7 +126,7 @@ namespace TradeSharp.WinCoreUI.Views
         {
           m_progress = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
           m_progressPercent = m_maximum > 0 && m_progress >= 0 ? (m_progress / m_maximum) * 100 : 0;
-          DispatcherQueue.TryEnqueue(() => { m_progressBar.Value = m_progress; m_progressLabel.Text = $"{m_progressPercent:#0}%"; } );
+          DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => { m_progressBar.Value = m_progress; m_progressLabel.Text = $"{m_progressPercent:#0}%"; } );
         }
       }
     }
@@ -140,7 +140,7 @@ namespace TradeSharp.WinCoreUI.Views
         {
           m_complete = value;
           if (m_complete)
-            DispatcherQueue.TryEnqueue(() => { m_cancelBtn.Content = "Close"; m_closeOnCancelClick = true; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => { m_cancelBtn.Content = "Close"; m_closeOnCancelClick = true; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
         }
       }
     }
@@ -153,7 +153,7 @@ namespace TradeSharp.WinCoreUI.Views
         lock (m_statusMessageLock) 
         {
           m_statusMessageText = value;   //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          DispatcherQueue.TryEnqueue(() => m_statusMessage.Text = m_statusMessageText);
+          DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_statusMessage.Text = m_statusMessageText);
         }
       }
     }

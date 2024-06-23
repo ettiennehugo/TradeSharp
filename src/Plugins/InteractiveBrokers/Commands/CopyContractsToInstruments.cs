@@ -89,11 +89,13 @@ namespace TradeSharp.InteractiveBrokers.Commands
         }
         else
         {
-          if (updateInstrument(instrument!, contract))
+          bool instrumentUpdated = updateInstrument(instrument!, contract);
+          if (updateInstrumentGroup(instrument!, contract))
           {
-            updated++;
-            refreshInstrumentGroups |= updateInstrumentGroup(instrument!, contract);
+            refreshInstrumentGroups = true;
+            instrumentUpdated = true;
           }
+          if (instrumentUpdated) updated++;
         }
 
         m_progress.Progress++;
@@ -124,6 +126,10 @@ namespace TradeSharp.InteractiveBrokers.Commands
         //Smart exchange - this is the default exchange for IB so we first try it
         if (exchange == null && stock.ValidExchanges.Contains(Constants.DefaultExchange))
           exchange = m_adapter.m_exchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == Constants.DefaultExchange);
+
+        //Global exchange - this should always exist for TradeSharp
+        if (exchange == null)
+          exchange = m_adapter.m_exchangeService.Items.FirstOrDefault((e) => e.Id == Data.Exchange.InternationalId);
 
         //build list of secondary exchanges
         List<Guid> secondaryExchangeIds = new List<Guid>();
