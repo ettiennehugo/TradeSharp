@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Common;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -20,38 +21,11 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    protected ITreeItemsService<TKey, TItem> m_itemsService;
+    protected ITreeService<TKey, TItem> m_itemsService;
     protected string m_findText;
 
-    //constructors
-    public TreeViewModel(ITreeItemsService<TKey, TItem> itemService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
-    {
-      m_itemsService = itemService;
-      m_itemsService.RefreshEvent += onServiceRefresh;
-      UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null);
-      DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
-      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
-      ExpandNodeCommand = new RelayCommand<object?>(OnExpandNode);
-      CollapseNodeCommand = new RelayCommand<object?>(OnCollapseNode);
-      ClearFilterCommand = new RelayCommand(OnClearFilter, () => FindText.Length > 0);
-      FindFirstCommand = new RelayCommand(OnFindFirst, () => FindText.Length > 0);
-      FindNextCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
-      FindPreviousCommand = new RelayCommand(OnFindPrevious, () => FindText.Length > 0);
-      m_findText = string.Empty;
-      ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null || SelectedNodes.Count > 0);
-      m_itemsService.RefreshEvent += onServiceRefresh;
-    }
-
-    //finalizers
-    ~TreeViewModel()
-    {
-      m_itemsService.RefreshEvent -= onServiceRefresh;
-    }
-
-    //interface implementations
-
-
     //properties
+    public LoadedState LoadedState { get => m_itemsService.LoadedState; }
     /// <summary>
     /// Commands to fire when a node is expanded or collapsed.
     /// </summary>
@@ -79,8 +53,8 @@ namespace TradeSharp.CoreUI.ViewModels
     /// <summary>
     /// Get/set single selected node for the view model and associated item service.
     /// </summary>
-    public virtual ITreeNodeType<TKey, TItem>? SelectedNode 
-    { 
+    public virtual ITreeNodeType<TKey, TItem>? SelectedNode
+    {
       get => m_itemsService.SelectedNode;
       set
       {
@@ -94,7 +68,7 @@ namespace TradeSharp.CoreUI.ViewModels
     /// Get/set selected set of nodes for the view model and associated items service. 
     /// </summary>
     public virtual ObservableCollection<ITreeNodeType<TKey, TItem>> SelectedNodes
-    { 
+    {
       get => m_itemsService.SelectedNodes;
       set
       {
@@ -108,6 +82,34 @@ namespace TradeSharp.CoreUI.ViewModels
     /// Returns the set of defined nodes in the tree.
     /// </summary>
     public ObservableCollection<ITreeNodeType<TKey, TItem>> Nodes => m_itemsService.Nodes;
+
+    //constructors
+    public TreeViewModel(ITreeService<TKey, TItem> itemService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService)
+    {
+      m_itemsService = itemService;
+      m_itemsService.RefreshEvent += onServiceRefresh;
+      UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null);
+      DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
+      DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedNode != null || SelectedNodes.Count > 0);
+      ExpandNodeCommand = new RelayCommand<object?>(OnExpandNode);
+      CollapseNodeCommand = new RelayCommand<object?>(OnCollapseNode);
+      ClearFilterCommand = new RelayCommand(OnClearFilter, () => FindText.Length > 0);
+      FindFirstCommand = new RelayCommand(OnFindFirst, () => FindText.Length > 0);
+      FindNextCommand = new RelayCommand(OnFindNext, () => FindText.Length > 0);
+      FindPreviousCommand = new RelayCommand(OnFindPrevious, () => FindText.Length > 0);
+      m_findText = string.Empty;
+      ClearSelectionCommand = new RelayCommand(OnClearSelection, () => SelectedNode != null || SelectedNodes.Count > 0);
+      m_itemsService.RefreshEvent += onServiceRefresh;
+    }
+
+    //finalizers
+    ~TreeViewModel()
+    {
+      m_itemsService.RefreshEvent -= onServiceRefresh;
+    }
+
+    //interface implementations
+
 
     //methods
     public override void OnClearSelection()

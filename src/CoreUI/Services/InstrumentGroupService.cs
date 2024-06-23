@@ -137,10 +137,14 @@ namespace TradeSharp.CoreUI.Services
       SelectedNodes = new ThreadSafeObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
       Items = new ThreadSafeObservableCollection<InstrumentGroup>();
       Nodes = new ThreadSafeObservableCollection<ITreeNodeType<Guid, InstrumentGroup>>();
+      m_instrumentService.RefreshEvent += onInstrumentServiceRefresh;
     }
 
     //finalizers
-
+    ~InstrumentGroupService()
+    {
+      m_instrumentService.RefreshEvent -= onInstrumentServiceRefresh;
+    }
 
     //interface implementations
 
@@ -189,6 +193,7 @@ namespace TradeSharp.CoreUI.Services
 
     public void Refresh()
     {
+      LoadedState = LoadedState.Loading;
       //need to clear nodes/items in reverse order to TRY and avoid memory corruption
       Nodes.Clear();
       Items.Clear();
@@ -203,6 +208,7 @@ namespace TradeSharp.CoreUI.Services
         if (item.ParentId == InstrumentGroup.InstrumentGroupRoot)
           Nodes.Add(new InstrumentGroupNodeType(this, m_instrumentService, null, item, true));   //null since parent is the root node
       SelectedNode = Nodes.FirstOrDefault(x => x.ParentId == InstrumentGroup.InstrumentGroupRoot); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
+      LoadedState = LoadedState.Loaded;
       raiseRefreshEvent();
     }
 
@@ -262,6 +268,16 @@ namespace TradeSharp.CoreUI.Services
         exportCsv(exportSettings);
       else if (extension == extensionJSON)
         exportJson(exportSettings);
+    }
+
+    protected void onInstrumentServiceRefresh(object sender, EventArgs e)
+    {
+      //recursively process the instrument groups to update the instrument descriptions
+      foreach (ITreeNodeType<Guid, InstrumentGroup> node in Nodes)
+      {
+        var instrumentGroupNode = (InstrumentGroupNodeType)node;
+        instrumentGroupNode.RefreshInstruments();
+      }
     }
 
     /// <summary>

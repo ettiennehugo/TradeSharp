@@ -69,6 +69,7 @@ namespace TradeSharp.CoreUI.Services
 
       return Task.Run(() =>
       {
+        LoadedState = LoadedState.Loading;
         try
         {
           Queue<Tuple<Resolution, Instrument>> downloadCombinations = new Queue<Tuple<Resolution, Instrument>>();
@@ -130,12 +131,15 @@ namespace TradeSharp.CoreUI.Services
 
           progressDialog.Complete = true;
           IsRunning = false;
+          LoadedState = LoadedState.Loaded;
         }
         catch (Exception e)
         {
+          LoadedState = LoadedState.Error;
           IsRunning = false;
           progressDialog.LogError($"EXCEPTION: Mass download main thread failed - (Exception: \"{e.Message}\"");
         }
+
       });
     }
   }

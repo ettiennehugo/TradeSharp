@@ -131,11 +131,13 @@ namespace TradeSharp.CoreUI.Services
 
     public void Refresh()
     {
+      LoadedState = Common.LoadedState.Loading;
       var result = m_instrumentRepository.GetItems();
       Items.Clear();
       SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
       foreach (var item in result) Items.Add(item);
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+      LoadedState = Common.LoadedState.Loaded;
       raiseRefreshEvent();
     }
 

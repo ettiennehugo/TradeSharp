@@ -6,7 +6,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Common base class for services.
   /// </summary>
-  public class ServiceBase : ObservableObject
+  public partial class ServiceBase : ObservableObject
   {
     //constants
 
@@ -24,6 +24,7 @@ namespace TradeSharp.CoreUI.Services
     public ServiceBase(IDialogService dialogService)
     {
       m_dialogService = dialogService;
+      LoadedState = LoadedState.NotLoaded;
     }
 
     //finalizers
@@ -33,7 +34,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
-
+    [ObservableProperty] LoadedState m_loadedState;
 
     //events
     public event RefreshEventHandler? RefreshEvent;

@@ -54,6 +54,7 @@ namespace TradeSharp.CoreUI.Services
       m_successCount = 0;
       m_failureCountLock = new object();
       m_failureCount = 0;
+      LoadedState = LoadedState.Loaded; //service does not require loading
     }
 
     //finalizers

@@ -51,6 +51,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //properties
+    public LoadedState LoadedState { get => m_itemsService.LoadedState; }
     /// <summary>
     /// ParentId used when items displayed are dependent on a specific parent object.
     /// </summary>

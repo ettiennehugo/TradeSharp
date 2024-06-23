@@ -82,9 +82,11 @@ namespace TradeSharp.CoreUI.Services
 
     public void Refresh()
     {
+      LoadedState = Common.LoadedState.Loading;
       var result = m_exchangeRepository.GetItems();
       Items.Clear();
       foreach (var item in result) Items.Add(item);
+      LoadedState = Common.LoadedState.Loaded;
       raiseRefreshEvent();
     }
 

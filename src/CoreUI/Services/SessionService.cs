@@ -77,10 +77,12 @@ namespace TradeSharp.CoreUI.Services
 
     public void Refresh()
     {
+      LoadedState = Common.LoadedState.Loading;
       var result = m_sessionRepository.GetItems();
       Items.Clear();
       foreach (var item in result) Items.Add(item);
       raiseRefreshEvent();
+      LoadedState = Common.LoadedState.Loaded;
     }
 
     public bool Update(Session item)

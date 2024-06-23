@@ -73,6 +73,7 @@ namespace TradeSharp.CoreUI.Services
     //methods
     public void Refresh()
     {
+      LoadedState = LoadedState.Loading;
       Nodes.Clear();
       Items.Clear();
       foreach (var plugin in m_pluginsService.Items)
@@ -102,11 +103,13 @@ namespace TradeSharp.CoreUI.Services
       }
 
       SelectedNode = Nodes.FirstOrDefault();
+      LoadedState = LoadedState.Loaded;
       raiseRefreshEvent();
     }
 
     public void Refresh(IBrokerPlugin broker)
     {
+      LoadedState = LoadedState.Loading;
       foreach (var plugin in m_pluginsService.Items)
       {
         if (!(plugin is IBrokerPlugin brokerPlugin))    //skip non-broker plugins
@@ -135,6 +138,7 @@ namespace TradeSharp.CoreUI.Services
 
         break;  //skip rest of the brokers
       }
+      LoadedState = LoadedState.Loaded;
     }
 
     //most of the implementation methods are not used

@@ -70,6 +70,7 @@ namespace TradeSharp.CoreUI.Services
 
       return Task.Run(() =>
       {
+        LoadedState = LoadedState.Loading;
         try
         {
           IsRunning = true;
@@ -266,10 +267,12 @@ namespace TradeSharp.CoreUI.Services
           //output status message
           if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Mass Export Complete - Attempted {attemptedFileCount} files, exported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Export Complete", $"Attempted {attemptedFileCount} files, exported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+          LoadedState = LoadedState.Loaded;
         }
         catch (Exception e)
         {
           IsRunning = false;
+          LoadedState = LoadedState.Error;
           if (Debugging.MassInstrumentDataExport) m_logger.LogError($"EXCEPTION: Mass export main thread failed - (Exception: \"{e.Message}\")");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "Mass Export Failed", $"Mass export main thread failed - (Exception: \"{e.Message}\"");
         }

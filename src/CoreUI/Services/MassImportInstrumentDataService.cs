@@ -65,6 +65,7 @@ namespace TradeSharp.WinCoreUI.Services
 
       return Task.Run(() =>
       {
+        LoadedState = LoadedState.Loading;
         try
         {
           IsRunning = true;
@@ -174,10 +175,12 @@ namespace TradeSharp.WinCoreUI.Services
           //output status message
           if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Mass import complete - Found {progressDialog.Maximum:G0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Import Complete", $"Found {progressDialog.Maximum:G0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+          LoadedState = LoadedState.Loaded;
         }
         catch (Exception e)
         {
           IsRunning = false;
+          LoadedState = LoadedState.Error;
           if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"EXCEPTION: Mass import main thread failed - (Exception: \"{e.Message}\"");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "Mass Import Failed", $"Mass import main thread failed - (Exception: \"{e.Message}\"");
         }

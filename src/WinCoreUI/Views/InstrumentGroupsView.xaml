@@ -78,7 +78,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="cui:InstrumentGroupNodeInstrument">
-                    <TextBlock Text="{x:Bind Ticker}" ToolTipService.ToolTip="{x:Bind Description}" Margin="5,2"/>
+                    <TextBlock Text="{x:Bind Ticker}" ToolTipService.ToolTip="{x:Bind Description, Mode=OneWay}" Margin="5,2"/>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>

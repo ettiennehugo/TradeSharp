@@ -26,6 +26,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public event Common.RefreshEventHandler? RefreshEvent;
 
     //properties
+    LoadedState LoadedState { get; }
     ObservableCollection<ITreeNodeType<TKey, TItem>> Nodes { get; }
     ITreeNodeType<TKey, TItem>? SelectedNode { get; set; }
     ObservableCollection<ITreeNodeType<TKey, TItem>> SelectedNodes { get; set; }

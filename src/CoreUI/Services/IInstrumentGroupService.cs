@@ -5,5 +5,5 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Concrete interface for instrument group service.
   /// </summary>
-  public interface IInstrumentGroupService : ITreeItemsService<Guid, InstrumentGroup> { }
+  public interface IInstrumentGroupService : ITreeService<Guid, InstrumentGroup> { }
 }

@@ -6,7 +6,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Interface to be implemented by services that allow manipulation of items in a tree fashion. 
   /// </summary>
-  public interface ITreeItemsService<TKey, TItem>
+  public interface ITreeService<TKey, TItem>
     where TItem : class
   {
     //constants
@@ -22,6 +22,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
+    LoadedState LoadedState { get; }
     TKey RootNodeId { get; }
     Guid ParentId { get; set; }
     ITreeNodeType<TKey, TItem>? SelectedNode { get; set; }

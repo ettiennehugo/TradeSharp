@@ -26,6 +26,7 @@ namespace TradeSharp.CoreUI.ViewModels
     event Common.RefreshEventHandler? RefreshEvent;
 
     //properties
+    LoadedState LoadedState { get; }
     IList<TItem> Items { get; set; }
     Guid ParentId { get; set; }
     TItem? SelectedItem { get; set; }

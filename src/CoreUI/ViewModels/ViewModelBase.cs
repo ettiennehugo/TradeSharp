@@ -54,9 +54,6 @@ namespace TradeSharp.CoreUI.ViewModels
     public event RefreshEventHandler? RefreshEvent;
 
     //properties
-    /// <summary>
-    /// Set of supported operations.
-    /// </summary>
     public RelayCommand AddCommand { get; set; }
     public RelayCommand UpdateCommand { get; set; }
     public RelayCommand<object?> DeleteCommand { get; set; }

@@ -21,6 +21,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
+    LoadedState LoadedState { get; }
     Guid ParentId { get; set; }
     T? SelectedItem { get; set; }
     IList<T> Items { get; set; }
