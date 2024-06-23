@@ -1,4 +1,5 @@
-﻿using IBApi;
+﻿using System.Diagnostics;
+using IBApi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
@@ -304,6 +305,7 @@ namespace TradeSharp.InteractiveBrokers
         Accounts.Add(account);
         m_serviceHost.BrokerPlugin.raiseAccountsUpdated();    //the AccountAdapter raises the add event while the broker plugin will raise the remove event (typically when disconnection occurs)        
       }
+      Debug.Assert(account != null);
       return account;
     }
 

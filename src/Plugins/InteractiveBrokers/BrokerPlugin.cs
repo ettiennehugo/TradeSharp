@@ -1,12 +1,10 @@
 ﻿using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using TradeSharp.Common;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using System.Runtime.InteropServices;
 using TradeSharp.InteractiveBrokers.Messages;
-using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using System.Collections.ObjectModel;
 
 namespace TradeSharp.InteractiveBrokers
