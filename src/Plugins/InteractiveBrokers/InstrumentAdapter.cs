@@ -5,6 +5,7 @@ using TradeSharp.InteractiveBrokers.Messages;
 using IBApi;
 using TradeSharp.Data;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -317,7 +318,7 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_lastHistoricalDataRequest = request;
         //NOTE: Historical data requests must be done in UTC since we assume it is in UTC here.
-        string date = historicalDataMessage.Date.Trim();    //response sometimes has extra spaces that TryParseExact does not like
+        string date = Regex.Replace(historicalDataMessage.Date, @"\s+", " ").Trim();    //response sometimes has extra whitespace spaces that TryParseExact fails to parse
         if (DateTime.TryParseExact(date, Constants.DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dateTime))
         {
           //NOTES:
