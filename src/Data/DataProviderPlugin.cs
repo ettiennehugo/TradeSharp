@@ -25,6 +25,13 @@ namespace TradeSharp.Data
     //attributes
     static protected Regex s_nameRegEx;
 
+    //events
+    public event RequestErrorHandler? RequestError;
+
+    //properties
+    public virtual IList<string> Tickers { get => throw new NotImplementedException(); }
+    public virtual int ConnectionCountMax { get => Environment.ProcessorCount; }
+
     //constructors
     static DataProviderPlugin()
     {
@@ -43,11 +50,7 @@ namespace TradeSharp.Data
     //interface implementations
     public abstract bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end);
 
-    //properties
-    public virtual IList<string> Tickers { get => throw new NotImplementedException(); }
-    public virtual int ConnectionCountMax { get => Environment.ProcessorCount; }
-
     //methods
-
+    protected virtual void raiseRequestError(string message, Exception? exception = null) { RequestError?.Invoke(this, new RequestErrorArgs(message, exception)); }
   }
 }

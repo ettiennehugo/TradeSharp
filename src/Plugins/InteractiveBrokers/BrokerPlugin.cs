@@ -14,7 +14,7 @@ namespace TradeSharp.InteractiveBrokers
   /// </summary>
   public class MaintenanceScheduleEntry
   {
-    public MaintenanceScheduleEntry(DayOfWeek startDay, TimeOnly startTime, TimeOnly endTime, TimeZoneInfo timeZone) 
+    public MaintenanceScheduleEntry(DayOfWeek startDay, TimeOnly startTime, TimeOnly endTime, TimeZoneInfo timeZone)
     {
       StartDay = startDay;
       StartTime = startTime;
@@ -23,12 +23,12 @@ namespace TradeSharp.InteractiveBrokers
         EndDay = startDay + 1;  //end time is on the next day
       else
         EndDay = startDay;
-      
+
       EndTime = endTime;
       TimeZone = timeZone;
     }
 
-    public DayOfWeek StartDay { get;}
+    public DayOfWeek StartDay { get; }
     public TimeOnly StartTime { get; }
     public DayOfWeek EndDay { get; }
     public TimeOnly EndTime { get; }
@@ -64,7 +64,7 @@ namespace TradeSharp.InteractiveBrokers
     protected Timer? m_autoReconnectTimer;
 
     //constructors
-    public BrokerPlugin() : base(Constants.DefaultName, Constants.DefaultName) 
+    public BrokerPlugin() : base(Constants.DefaultName, Constants.DefaultName)
     {
       m_maintenanceSchedule = new List<MaintenanceScheduleEntry>();
       m_autoConnect = InteractiveBrokers.Constants.DefaultAutoConnect;
@@ -74,7 +74,10 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //finalizers
-
+    ~BrokerPlugin()
+    {
+      m_manuallyDisconnected = true;  //edge case when application is shutdown and we're still connected we need to disable auto-reconnect
+    }
 
     //interface implementations
     public override void Create(ILogger logger)
@@ -90,36 +93,29 @@ namespace TradeSharp.InteractiveBrokers
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, m_dialogService, Configuration);
       m_ibServiceHost.BrokerPlugin = this;
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
-      Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) } );
-      Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) });
+      Commands.Add(new PluginCommand { Name = "Disconnect", Tooltip = "Disconnect from TWS API", Icon = "\uE8CD", Command = new AsyncRelayCommand(OnDisconnectAsync, () => IsConnected) });
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
-      Commands.Add(new PluginCommand { Name = "Accounts", Tooltip = "View accounts", Icon = "\uE923", Command = new AsyncRelayCommand(OnShowAccountsAsync, () => IsConnected) } );
-      Commands.Add(new PluginCommand { Name = "Scan for Contracts", Tooltip = "Run an exhaustive search for new contracts supported by Interactive Brokers", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScanForContractsAsync, () => IsConnected) } );
+      Commands.Add(new PluginCommand { Name = "Accounts", Tooltip = "View accounts", Icon = "\uE923", Command = new AsyncRelayCommand(OnShowAccountsAsync, () => IsConnected) });
+      Commands.Add(new PluginCommand { Name = "Scan for Contracts", Tooltip = "Run an exhaustive search for new contracts supported by Interactive Brokers", Icon = "\uEC5A", Command = new AsyncRelayCommand(OnScanForContractsAsync, () => IsConnected) });
       Commands.Add(new PluginCommand { Name = "Download Contracts", Tooltip = "Download the rest of the contract and contract details based off contract headers", Icon = "\uE826", Command = new AsyncRelayCommand(OnSynchronizeContractCacheAsync, () => IsConnected) });
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
-      Commands.Add(new PluginCommand { Name = "Define Exchange", Tooltip = "Define supported Exchanges", Icon = "\uF22C", Command = new AsyncRelayCommand(OnDefineSupportedExchangesAsync) } );
-      Commands.Add(new PluginCommand { Name = "Validate Non-IB Instrument Groups", Tooltip = "Validate Non-IB Instrument Groups against IB Instrument Groups", Icon = "\uE15C", Command = new AsyncRelayCommand(OnValidateInstrumentGroupsAsync) } );
-      Commands.Add(new PluginCommand { Name = "Copy Classifications to Instrument Groups", Tooltip = "Copy the Interactive Brokers classifications to Instrument Groups", Icon = "\uF413", Command = new AsyncRelayCommand(OnCopyIBClassesToInstrumentGroupsAsync) } );
-      Commands.Add(new PluginCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) } );
-      Commands.Add(new PluginCommand { Name = "Copy Contracts to Instruments", Tooltip = "Copy the Interactive Brokers contracts to Instruments", Icon = "\uE8C8", Command = new AsyncRelayCommand(OnCopyContractsToInstrumentsAsync) } );
+      Commands.Add(new PluginCommand { Name = "Define Exchange", Tooltip = "Define supported Exchanges", Icon = "\uF22C", Command = new AsyncRelayCommand(OnDefineSupportedExchangesAsync) });
+      Commands.Add(new PluginCommand { Name = "Validate Non-IB Instrument Groups", Tooltip = "Validate Non-IB Instrument Groups against IB Instrument Groups", Icon = "\uE15C", Command = new AsyncRelayCommand(OnValidateInstrumentGroupsAsync) });
+      Commands.Add(new PluginCommand { Name = "Copy Classifications to Instrument Groups", Tooltip = "Copy the Interactive Brokers classifications to Instrument Groups", Icon = "\uF413", Command = new AsyncRelayCommand(OnCopyIBClassesToInstrumentGroupsAsync) });
+      Commands.Add(new PluginCommand { Name = "Validate Instruments", Tooltip = "Validate Defined Instruments against Cached Contracts", Icon = "\uE74C", Command = new AsyncRelayCommand(OnValidateInstrumentsAsync) });
+      Commands.Add(new PluginCommand { Name = "Copy Contracts to Instruments", Tooltip = "Copy the Interactive Brokers contracts to Instruments", Icon = "\uE8C8", Command = new AsyncRelayCommand(OnCopyContractsToInstrumentsAsync) });
       updateDescription();
-      if (m_autoConnect) 
+      if (m_autoConnect)
         OnConnectAsync();  //auto connect if enabled, auto-connect will call raiseUpdateCommands
       else
         raiseUpdateCommands();
     }
 
-    public override void Dispose()
-    {
-      m_manuallyDisconnected = true;  //edge case when application is shutdown and we're still connected we need to disable auto-reconnect
-      m_ibServiceHost.Client.Dispose();
-      m_ibServiceHost.Cache.Dispose();
-      base.Dispose();
-    }
-
     public Task OnConnectAsync()
     {
-      return Task.Run(() => {
+      return Task.Run(() =>
+      {
         m_manuallyDisconnected = false;   //ensure auto-reconnect works if not manually disconnected
         m_ibServiceHost.Client.Connect(m_ip, m_port);
         raiseConnectionStatus();
@@ -143,9 +139,9 @@ namespace TradeSharp.InteractiveBrokers
 
     public Task OnShowAccountsAsync()
     {
-     Account account = (Account)m_ibServiceHost.Accounts.Accounts.FirstOrDefault();
-     return m_dialogService.ShowAccountDialogAsync(this, account);
-     //return m_dialogService.ShowAccountDialogAsync(this);
+      Account account = (Account)m_ibServiceHost.Accounts.Accounts.FirstOrDefault();
+      return m_dialogService.ShowAccountDialogAsync(this, account);
+      //return m_dialogService.ShowAccountDialogAsync(this);
     }
 
     public Task OnScanForContractsAsync()
@@ -243,7 +239,7 @@ namespace TradeSharp.InteractiveBrokers
 
     protected void parseMaintenanceSchedule()
     {
-      if (!Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.MaintenanceScheduleKey)) return;      
+      if (!Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.MaintenanceScheduleKey)) return;
       string[] entries = ((string)Configuration!.Configuration[InteractiveBrokers.Constants.MaintenanceScheduleKey]).Split(',');
       foreach (var entry in entries)
       {
@@ -291,11 +287,11 @@ namespace TradeSharp.InteractiveBrokers
     //     that crashes the TWS API and TS.
     protected void setupAutoReconnectTimer()
     {
-      if (m_autoReconnect && !m_manuallyDisconnected)   
+      if (m_autoReconnect && !m_manuallyDisconnected)
       {
         TimeOnly currentTime = TimeOnly.FromDateTime(DateTime.Now);
         TimeSpan startTime = m_autoReconnectInterval;   //per default try to reconnect again after the auto reconnect interval
-        
+
         //check whether we should respect the maintenance schedule
         if (MaintenanceSchedule.Count > 0)
         {

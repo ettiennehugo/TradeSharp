@@ -21,7 +21,7 @@ namespace TradeSharp.InteractiveBrokers
   /// <summary>
   /// Database to locally store data specific to Interactive Brokers, e.g. contract details.
   /// </summary>
-  public sealed class Cache: IDisposable
+  public sealed class Cache
   {
     //constants
     /// <summary>
@@ -75,7 +75,7 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //finalizers
-    public void Dispose()
+    ~Cache()
     {
       m_connection.Close();
     }

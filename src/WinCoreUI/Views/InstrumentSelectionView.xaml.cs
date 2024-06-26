@@ -51,6 +51,7 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentSelectionView()
     {
       ViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
+      ViewModel.RefreshCommand.Execute(null);
       Instruments = new ObservableCollection<Instrument>(ViewModel.Items);
       m_selectedItems = new List<Instrument>();
       m_instrumentSelectionViewMode = DefaultInstrumentSelectionViewMode;

@@ -45,13 +45,22 @@ namespace TradeSharp.CoreUI.Services
     public ILogger Logger { get; set; }
     public MassDownloadSettings Settings { get; set; }
     [ObservableProperty] public bool m_isRunning;
+    protected IProgressDialog m_progressDialog;
 
     //methods
     public Task StartAsync(IProgressDialog progressDialog, IList<Instrument> instruments)
     {
+      m_progressDialog = progressDialog;
+
       if (DataProvider == null)
       {
         if (Debugging.MassInstrumentDataDownload) m_logger.LogError("Failed to start mass download, no data provider was set");
+        return Task.CompletedTask;
+      }
+
+      if (DataProvider.IsConnected == false)
+      {
+        if (Debugging.MassInstrumentDataDownload) m_logger.LogError("Failed to start mass download, data provider is not connected");
         return Task.CompletedTask;
       }
 
@@ -70,6 +79,8 @@ namespace TradeSharp.CoreUI.Services
       return Task.Run(() =>
       {
         LoadedState = LoadedState.Loading;
+        DataProvider.RequestError += onRequestError;
+
         try
         {
           Queue<Tuple<Resolution, Instrument>> downloadCombinations = new Queue<Tuple<Resolution, Instrument>>();
@@ -86,50 +97,69 @@ namespace TradeSharp.CoreUI.Services
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
 
+          object instrumentDownloadCountLock = new object();
           int instrumentDownloadCount = 0;
           object successCountLock = new object();
           int successCount = 0;
           object failureCountLock = new object();
           int failureCount = 0;
 
-          progressDialog.StatusMessage = $"Requesting data for {instruments.Count} instruments";
-          progressDialog.Progress = 0;
-          progressDialog.Minimum = 0;
-          progressDialog.Maximum = downloadCombinations.Count;
-          progressDialog.ShowAsync();
+          m_progressDialog.StatusMessage = $"Requesting data for {instruments.Count} instruments";
+          m_progressDialog.Progress = 0;
+          m_progressDialog.Minimum = 0;
+          m_progressDialog.Maximum = downloadCombinations.Count;
+          m_progressDialog.ShowAsync();
 
           List<Task> tasks = new List<Task>();
-          while (downloadCombinations.Count > 0 && !progressDialog.CancellationTokenSource.IsCancellationRequested)
+          while (downloadCombinations.Count > 0 && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
           {
             //allocate block of threads to download data
             while (tasks.Count < Settings.ThreadCount && downloadCombinations.Count > 0)
             {
               Tuple<Resolution, Instrument> downloadCombination = downloadCombinations.Dequeue();
+              lock (instrumentDownloadCountLock) instrumentDownloadCount++;
               tasks.Add(Task.Run(() =>
               {
-                progressDialog.LogInformation($"Requesting data for {downloadCombination.Item2.Ticker}");
+                m_progressDialog.LogInformation($"Requesting data for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1}");
+                
+                //wait for the data provider to become connected if for some reason it was disconnected
+                bool showDisconnectedMessage = false;
+                while (!DataProvider.IsConnected && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
+                {
+                  if (!showDisconnectedMessage)
+                  {
+                    m_progressDialog.LogError("Data provider is not connected, waiting for connection");
+                    showDisconnectedMessage = true;
+                  }
+                  Thread.Sleep(1000);
+                }
+
+                //send the download request
                 if (DataProvider!.Request(downloadCombination.Item2, downloadCombination.Item1, Settings.FromDateTime, Settings.ToDateTime))
                   lock (successCountLock) successCount++;
                 else
                   lock (failureCountLock) failureCount++;
-                progressDialog.Progress++;
+                m_progressDialog.Progress++;
               }));
             }
 
             //wait for all threads to complete and then clear the list for next block
-            try { Task.WaitAll(tasks.ToArray(), progressDialog.CancellationTokenSource.Token); } catch (OperationCanceledException) { }
+            try { Task.WaitAll(tasks.ToArray(), m_progressDialog.CancellationTokenSource.Token); } catch (OperationCanceledException) { }
             tasks.Clear();
           }
 
           stopwatch.Stop();
           TimeSpan elapsed = stopwatch.Elapsed;
 
-          if (progressDialog.CancellationTokenSource.IsCancellationRequested)
-            progressDialog.StatusMessage += " - Cancelled";
+          if (m_progressDialog.CancellationTokenSource.IsCancellationRequested)
+            m_progressDialog.StatusMessage += " - Cancelled";
           else
-            progressDialog.StatusMessage = $"Mass download complete - Attempted {instrumentDownloadCount} instruments, downloaded {successCount} instruments successfully and failed on {failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})";
+          {
+            m_progressDialog.LogInformation($"Attempted {instrumentDownloadCount} instrument/resolution combinations, downloaded {successCount} instrument/resolutions successfully and failed on {failureCount} instrument/resolutions (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+            m_progressDialog.StatusMessage = $"Mass download complete";
+          }
 
-          progressDialog.Complete = true;
+          m_progressDialog.Complete = true;
           IsRunning = false;
           LoadedState = LoadedState.Loaded;
         }
@@ -137,10 +167,17 @@ namespace TradeSharp.CoreUI.Services
         {
           LoadedState = LoadedState.Error;
           IsRunning = false;
-          progressDialog.LogError($"EXCEPTION: Mass download main thread failed - (Exception: \"{e.Message}\"");
+          m_progressDialog.LogError($"EXCEPTION: Mass download main thread failed - (Exception: \"{e.Message}\"");
         }
 
+        DataProvider.RequestError -= onRequestError;
       });
+    }
+
+    protected void onRequestError(object sender, RequestErrorArgs e)
+    {
+      m_logger.LogError($"Request error: {e.Message}");
+      m_progressDialog.LogError(e.Message);
     }
   }
 }

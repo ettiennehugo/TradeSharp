@@ -54,6 +54,5 @@ namespace TradeSharp.Data
     /// Called on plugin creation/destruction.
     /// </summary>
     void Create(ILogger logger);
-    void Dispose();
   }
 }

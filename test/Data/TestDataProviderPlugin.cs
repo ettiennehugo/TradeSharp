@@ -6,7 +6,6 @@ namespace TradeSharp.Data.Testing
 {
   public class TestDataProviderPlugin : IDataProviderPlugin
   {
-
     //constants
 
 
@@ -18,6 +17,24 @@ namespace TradeSharp.Data.Testing
 
     //attributes
     List<string> m_tickers;
+
+    //properties
+    public string Name => "TestDataProvider";
+    public string Description => "Test Data Provider";
+    public IList<string> Tickers => m_tickers;
+    public int ConnectionCountMax => Environment.ProcessorCount;
+    public IPluginConfiguration Configuration { get; set; }
+    public IHost ServiceHost { get; set; }
+    public bool IsConnected { get; internal set; }
+    public bool HasSettings { get; internal set; }
+    public IList<PluginCommand> Commands { get; internal set; }
+
+    //delegates
+    public virtual event EventHandler? Connected;
+    public virtual event EventHandler? Disconnected;
+    public virtual event EventHandler? UpdateCommands;
+    public virtual event ConnectionStatusHandler? ConnectionStatus;
+    public virtual event RequestErrorHandler? RequestError;
 
     //constructors
     public TestDataProviderPlugin()
@@ -36,30 +53,10 @@ namespace TradeSharp.Data.Testing
       Commands = new List<PluginCommand>();
     }
 
-    public void Dispose() { IsConnected = false; }
-
     public void Connect() { IsConnected = true; }
     public void Disconnect() { IsConnected = false; }
     public void ShowSettings() { }
-
     public bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end) { return true; }
-
-    //properties
-    public string Name => "TestDataProvider";
-    public string Description => "Test Data Provider";
-    public IList<string> Tickers => m_tickers;
-    public int ConnectionCountMax => Environment.ProcessorCount;
-    public IPluginConfiguration Configuration { get; set; }
-    public IHost ServiceHost { get; set; }
-    public bool IsConnected { get; internal set; }
-    public bool HasSettings { get; internal set; }
-    public IList<PluginCommand> Commands { get; internal set; }
-
-    //delegates
-    public virtual event EventHandler? Connected;
-    public virtual event EventHandler? Disconnected;
-    public virtual event EventHandler? UpdateCommands;
-    public event ConnectionStatusHandler? ConnectionStatus;
 
     //methods
     public void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }

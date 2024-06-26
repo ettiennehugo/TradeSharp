@@ -6,10 +6,10 @@ using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
-  /// <summary>
-  /// Interface for view models that allow tree type access. 
-  /// </summary>
-  public interface ITreeViewModel<TKey, TItem>: INotifyPropertyChanged, INotifyPropertyChanging where TItem : class
+    /// <summary>
+    /// Interface for view models that allow tree type access. 
+    /// </summary>
+    public interface ITreeViewModel<TKey, TItem>: INotifyPropertyChanged, INotifyPropertyChanging where TItem : class
   {
     //constants
 
@@ -23,7 +23,7 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //events
-    public event Common.RefreshEventHandler? RefreshEvent;
+    public event Events.RefreshEventHandler? RefreshEvent;
 
     //properties
     LoadedState LoadedState { get; }

@@ -317,7 +317,8 @@ namespace TradeSharp.InteractiveBrokers
       {
         m_lastHistoricalDataRequest = request;
         //NOTE: Historical data requests must be done in UTC since we assume it is in UTC here.
-        if (DateTime.TryParseExact(historicalDataMessage.Date, Constants.DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dateTime))
+        string date = historicalDataMessage.Date.Trim();    //response sometimes has extra spaces that TryParseExact does not like
+        if (DateTime.TryParseExact(date, Constants.DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dateTime))
         {
           //NOTES:
           // - Requests must be done as whole units of days, week, months or years so we need to make sure that the response date is within the specific requested date range.
@@ -326,7 +327,7 @@ namespace TradeSharp.InteractiveBrokers
             m_database.UpdateData(Constants.DefaultName, request.Contract.Symbol, request.Resolution, dateTime, historicalDataMessage.Open, historicalDataMessage.High, historicalDataMessage.Low, historicalDataMessage.Close, historicalDataMessage.Volume);
         }
         else
-          m_logger.LogError($"Failed to parse date {historicalDataMessage.Date} for historical data request entry for reqId {historicalDataMessage.RequestId}");
+          m_logger.LogError($"Failed to parse date {date} for historical data request entry for reqId {historicalDataMessage.RequestId}");
       }
       else
         m_logger.LogError($"Failed to find historical data request entry for reqId {historicalDataMessage.RequestId}");

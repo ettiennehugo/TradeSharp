@@ -1,12 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Events;
 
 namespace TradeSharp.CoreUI.Services
 {
-  /// <summary>
-  /// Interface to be implemented by services that allow manipulation of items in a tree fashion. 
-  /// </summary>
-  public interface ITreeService<TKey, TItem>
+    /// <summary>
+    /// Interface to be implemented by services that allow manipulation of items in a tree fashion. 
+    /// </summary>
+    public interface ITreeService<TKey, TItem>
     where TItem : class
   {
     //constants

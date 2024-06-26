@@ -3,16 +3,17 @@ using System.Collections;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Common;
+using TradeSharp.CoreUI.Events;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
-  /// <summary>
-  /// Base class for models that support the viewing of items in a list supplied by an items service, commands are exposed to crete/update/delete items from the list.
-  /// The model optionally uses a parent Id when lists of items needs to be displayed that are dependent on a specific parent Id from the IDataSourceService.
-  /// IMPORTANT: The model assumes synchronous operation in the UI thread so it does not do anything fancy to support background worker threads, for services that require
-  ///            long running background processes the structure of the refresh, refresh async and Items properties.
-  /// </summary>
-  public abstract partial class ListViewModel<TItem> : ViewModelBase, IListViewModel<TItem> where TItem : class
+    /// <summary>
+    /// Base class for models that support the viewing of items in a list supplied by an items service, commands are exposed to crete/update/delete items from the list.
+    /// The model optionally uses a parent Id when lists of items needs to be displayed that are dependent on a specific parent Id from the IDataSourceService.
+    /// IMPORTANT: The model assumes synchronous operation in the UI thread so it does not do anything fancy to support background worker threads, for services that require
+    ///            long running background processes the structure of the refresh, refresh async and Items properties.
+    /// </summary>
+    public abstract partial class ListViewModel<TItem> : ViewModelBase, IListViewModel<TItem> where TItem : class
   {
     //constants
 
@@ -177,7 +178,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public override Task OnExportAsync() => throw new NotImplementedException();
 
     ///Generic handler to re-raise the service refresh event as a view model refresh event.
-    protected virtual void onServiceRefresh(object? sender, Common.RefreshEventArgs e)
+    protected virtual void onServiceRefresh(object? sender, RefreshEventArgs e)
     {
       raiseRefreshEvent(e);
     }

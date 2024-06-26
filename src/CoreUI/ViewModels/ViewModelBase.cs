@@ -1,17 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Events;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
-  /// <summary>
-  /// Base class for all view models, the view model exists in the UI Thread and is responsible to make sure that the
-  /// UI thread correctly represents the state of the model that can run in the UI thread or a background thread. Refresh
-  /// operations specifically need to run in the background if they are long running operations while quick refreshes of
-  /// only a few items can run in the UI thread to keep things simple.
-  /// </summary>
-  public abstract partial class ViewModelBase : ObservableObject
+    /// <summary>
+    /// Base class for all view models, the view model exists in the UI Thread and is responsible to make sure that the
+    /// UI thread correctly represents the state of the model that can run in the UI thread or a background thread. Refresh
+    /// operations specifically need to run in the background if they are long running operations while quick refreshes of
+    /// only a few items can run in the UI thread to keep things simple.
+    /// </summary>
+    public abstract partial class ViewModelBase : ObservableObject
   {
     //constants
 

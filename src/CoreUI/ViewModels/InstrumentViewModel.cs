@@ -1,7 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Microsoft.Extensions.Logging;
-using TradeSharp.Common;
-using TradeSharp.Data;
+﻿using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels

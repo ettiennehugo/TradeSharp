@@ -14,7 +14,7 @@ namespace TradeSharp.InteractiveBrokers
   /// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html
   /// Pacing violations - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#historical-pacing-limitations
   /// </summary>
-  public class Client : EWrapper, IDisposable
+  public class Client : EWrapper
   {
     //constants
 
@@ -61,13 +61,11 @@ namespace TradeSharp.InteractiveBrokers
       m_dialogService = serviceHost.Host.Services.GetRequiredService<IDialogService>();
     }
 
-    public void Dispose()
+    //finalizers
+    ~Client()
     {
       Disconnect();
     }
-
-    //finalizers
-
 
     //interface implementations
 
@@ -267,7 +265,7 @@ namespace TradeSharp.InteractiveBrokers
       return res.Task;
     }
 
-    public event Action<int, int, string, string, Exception> Error;
+    public event Action<int, int, string, string, Exception?> Error;
 
     void EWrapper.error(Exception e)
     {

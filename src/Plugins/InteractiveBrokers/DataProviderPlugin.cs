@@ -34,7 +34,10 @@ namespace TradeSharp.InteractiveBrokers
     public DataProviderPlugin() : base(Constants.DefaultName, $"{Constants.DefaultName} - connect via Broker Plugin") { }
 
     //finalizers
-
+    ~DataProviderPlugin()
+    {
+      m_ibServiceHost.Client.Error -= OnError;
+    }
 
     //interface implementations
     public override void Create(ILogger logger)
@@ -47,6 +50,7 @@ namespace TradeSharp.InteractiveBrokers
       configurationService.Brokers.TryGetValue(Constants.DefaultName, out IPluginConfiguration? configuration);
       m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, m_dialogService, configuration!);
       m_ibServiceHost.DataProviderPlugin = this;
+      m_ibServiceHost.Client.Error += OnError;
     }
 
     public override bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end)
@@ -80,7 +84,10 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //methods
-
-
+    public void OnError(int id, int errorCode, string message, string advErrorJson, Exception? exception)
+    {
+      string errorMessage = $"{message} - (id: {id}, code: {errorCode})";
+      raiseRequestError(errorMessage, exception);
+    }
   }
 }

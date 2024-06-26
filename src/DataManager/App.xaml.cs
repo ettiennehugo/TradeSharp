@@ -90,7 +90,8 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<IHolidayService, HolidayService>();
           services.AddSingleton<IExchangeService, ExchangeService>();
           services.AddSingleton<ISessionService, SessionService>();
-          services.AddSingleton<IInstrumentService, InstrumentService>();
+          services.AddSingleton<IInstrumentCacheService, InstrumentCacheService>();
+          services.AddTransient<IInstrumentService, InstrumentService>();
           services.AddSingleton<IInstrumentGroupService, InstrumentGroupService>();
           services.AddSingleton<ICountryViewModel, CountryViewModel>();
           services.AddSingleton<IHolidayViewModel, HolidayViewModel>();
@@ -100,7 +101,7 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<IMassCopyInstrumentDataService, MassCopyInstrumentDataService>();
           services.AddSingleton<IMassImportInstrumentDataService, MassImportInstrumentDataService>();
           services.AddSingleton<IMassExportInstrumentDataService, MassExportInstrumentDataService>();
-          services.AddSingleton<IInstrumentViewModel, InstrumentViewModel>();
+          services.AddTransient<IInstrumentViewModel, InstrumentViewModel>();
           services.AddSingleton<IInstrumentGroupViewModel, WinCoreUI.ViewModels.InstrumentGroupViewModel>();
           services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
           services.AddTransient<IInstrumentBarDataService, InstrumentBarDataService>(); //this service must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
@@ -145,8 +146,8 @@ namespace TradeSharp.WinDataManager
       countryViewModel.RefreshCommandAsync.Execute(null);
       var exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
       exchangeViewModel.RefreshCommandAsync.Execute(null);
-      var instrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
-      instrumentViewModel.RefreshCommandAsync.Execute(null);
+      var instrumentCacheService = (IInstrumentCacheService)IApplication.Current.Services.GetService(typeof(IInstrumentCacheService));
+      instrumentCacheService.RefreshAsync();
       var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
       instrumentGroupViewModel.RefreshCommandAsync.Execute(null);
 

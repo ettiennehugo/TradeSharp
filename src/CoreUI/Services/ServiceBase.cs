@@ -1,12 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Events;
 
 namespace TradeSharp.CoreUI.Services
 {
-  /// <summary>
-  /// Common base class for services.
-  /// </summary>
-  public partial class ServiceBase : ObservableObject
+    /// <summary>
+    /// Common base class for services.
+    /// </summary>
+    public partial class ServiceBase : ObservableObject
   {
     //constants
 

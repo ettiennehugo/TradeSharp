@@ -79,15 +79,17 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     private ILogger<InstrumentService> m_logger;
     private IInstrumentRepository m_instrumentRepository;
-    private IDatabase m_database;
+    private IInstrumentCacheService m_instrumentCacheService;
+    private IExchangeService m_exchangeService;
     private Instrument? m_selectedItem;
 
     //constructors
-    public InstrumentService(ILogger<InstrumentService> logger, IDatabase database, IInstrumentRepository instrumentRepository, IDialogService dialogService) : base(dialogService)
+    public InstrumentService(ILogger<InstrumentService> logger, IExchangeService exchangeService, IInstrumentRepository instrumentRepository, IInstrumentCacheService instrumentCacheService, IDialogService dialogService) : base(dialogService)
     {
       m_logger = logger;
       m_instrumentRepository = instrumentRepository;
-      m_database = database;
+      m_instrumentCacheService = instrumentCacheService;
+      m_exchangeService = exchangeService;
       m_selectedItem = null;
       Items = new ObservableCollection<Instrument>();
     }
@@ -99,6 +101,7 @@ namespace TradeSharp.CoreUI.Services
     public bool Add(Instrument item)
     {
       var result = m_instrumentRepository.Add(item);
+      m_instrumentCacheService.Add(item);
       TradeSharp.Common.Utilities.SortedInsert(item, Items);
       SelectedItem = item;
       SelectedItemChanged?.Invoke(this, SelectedItem);
@@ -110,6 +113,7 @@ namespace TradeSharp.CoreUI.Services
       Instrument clone = (Instrument)item.Clone();
       clone.Id = Guid.NewGuid();
       var result = m_instrumentRepository.Add(clone);
+      m_instrumentCacheService.Add(clone);
       TradeSharp.Common.Utilities.SortedInsert(clone, Items);
       SelectedItem = clone;
       SelectedItemChanged?.Invoke(this, SelectedItem);
@@ -119,6 +123,7 @@ namespace TradeSharp.CoreUI.Services
     public bool Delete(Instrument item)
     {
       bool result = m_instrumentRepository.Delete(item);
+      m_instrumentCacheService.Delete(item);
 
       if (item == SelectedItem)
       {
@@ -132,10 +137,9 @@ namespace TradeSharp.CoreUI.Services
     public void Refresh()
     {
       LoadedState = Common.LoadedState.Loading;
-      var result = m_instrumentRepository.GetItems();
       Items.Clear();
-      SelectedItem = result.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
-      foreach (var item in result) Items.Add(item);
+      SelectedItem = m_instrumentCacheService.Items.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null      
+      foreach (var item in m_instrumentCacheService.Items) Items.Add(item);
       if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
       LoadedState = Common.LoadedState.Loaded;
       raiseRefreshEvent();
@@ -144,6 +148,7 @@ namespace TradeSharp.CoreUI.Services
     public bool Update(Instrument item)
     {
       var result = m_instrumentRepository.Update(item);
+      m_instrumentCacheService.Update(item);
       for (int i = 0; i < Items.Count(); i++)
         if (item.Equals(Items[i]))
         {
@@ -175,42 +180,37 @@ namespace TradeSharp.CoreUI.Services
 
     public int GetCount()
     {
-      return m_instrumentRepository.GetCount();
+      return m_instrumentCacheService.Items.Count;
     }
 
     public int GetCount(InstrumentType instrumentType)
     {
-      return m_instrumentRepository.GetCount(instrumentType);
+      return m_instrumentCacheService.Items.Select((instrument, index) => instrument.Type == instrumentType).Count();
     }
 
     public int GetCount(string tickerFilter, string nameFilter, string descriptionFilter)
     {
-      return m_instrumentRepository.GetCount(tickerFilter, nameFilter, descriptionFilter);
+      return m_instrumentCacheService.Items.Select((instrument, index) => (tickerFilter.Length > 0 && instrument.Ticker == tickerFilter) || (nameFilter.Length > 0 && instrument.Name.Contains(nameFilter)) || (descriptionFilter.Length > 0 && instrument.Description.Contains(descriptionFilter))).Count();
     }
 
     public int GetCount(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter)
     {
-      return m_instrumentRepository.GetCount(instrumentType, tickerFilter, nameFilter, descriptionFilter);
-    }
-
-    public Instrument? GetItem(Guid id)
-    {
-      return m_instrumentRepository.GetItem(id);
+      return m_instrumentCacheService.Items.Select((instrument, index) => instrument.Type == instrumentType && ((tickerFilter.Length > 0 && instrument.Ticker == tickerFilter) || (nameFilter.Length > 0 && instrument.Name.Contains(nameFilter)) || (descriptionFilter.Length > 0 && instrument.Description.Contains(descriptionFilter)))).Count();
     }
 
     public Instrument? GetItem(string ticker)
     {
-      return m_instrumentRepository.GetItem(ticker);
+      return m_instrumentCacheService.Items.FirstOrDefault(x => x.Ticker == ticker || x.AlternateTickers.Contains(ticker));
     }
 
     public IList<Instrument> GetItems(string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
     {
-      return m_instrumentRepository.GetItems(tickerFilter, nameFilter, descriptionFilter, offset, count);
+      return m_instrumentCacheService.Items.Where(instrument => (tickerFilter.Length > 0 && (instrument.Ticker == tickerFilter || instrument.AlternateTickers.Contains(tickerFilter))) || (nameFilter.Length > 0 && instrument.Name.Contains(nameFilter)) || (descriptionFilter.Length > 0 && instrument.Description.Contains(descriptionFilter))).Skip(offset).Take(count).ToList();
     }
 
     public IList<Instrument> GetItems(InstrumentType instrumentType, string tickerFilter, string nameFilter, string descriptionFilter, int offset, int count)
     {
-      return m_instrumentRepository.GetItems(instrumentType, tickerFilter, nameFilter, descriptionFilter, offset, count);
+      return m_instrumentCacheService.Items.Where(instrument => instrument.Type == instrumentType && ((tickerFilter.Length > 0 && (instrument.Ticker == tickerFilter || instrument.AlternateTickers.Contains(tickerFilter))) || (nameFilter.Length > 0 && instrument.Name.Contains(nameFilter)) || (descriptionFilter.Length > 0 && instrument.Description.Contains(descriptionFilter)))).Skip(offset).Take(count).ToList();
     }
 
     //properties
@@ -244,10 +244,7 @@ namespace TradeSharp.CoreUI.Services
 
         if (documentNode != null)
         {
-          IList<Exchange> definedExchanges = m_database.GetExchanges();
-          Exchange globalExchange = definedExchanges.First(x => x.Id == Exchange.InternationalId);    //global exchange must always exist
-          List<Instrument> definedInstruments = new List<Instrument>(m_database.GetInstruments());
-
+          Exchange globalExchange = m_exchangeService.Items.First(x => x.Id == Exchange.InternationalId);    //global exchange must always exist
           JsonArray fileInstrumentsJson = documentNode.AsArray();
           foreach (JsonObject? fileInstrumentJson in fileInstrumentsJson)
           {
@@ -305,9 +302,9 @@ namespace TradeSharp.CoreUI.Services
               if (exchangeStr != null)
               {
                 if (Guid.TryParse(exchangeStr, out Guid exchangeId))
-                  primaryExchange = definedExchanges.FirstOrDefault(e => e.Id == exchangeId);
+                  primaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == exchangeId);
                 else
-                  primaryExchange = definedExchanges.FirstOrDefault(e => e.Name.ToLower() == exchangeStr!.ToLower() || e.Tag.ToLower() == exchangeStr.ToLower());
+                  primaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Name.ToLower() == exchangeStr!.ToLower() || e.Tag.ToLower() == exchangeStr.ToLower());
               }
 
               if (primaryExchange == null)
@@ -319,7 +316,7 @@ namespace TradeSharp.CoreUI.Services
               //NOTE: We do not set the primary exchange price decimals, minimum movement and big point value here, as these are set by the exchange itself.
 
               //process the secondary exchanges
-              JsonArray ? secondaryExchangesJson = fileInstrumentJson!.ContainsKey(tokenJsonSecondaryExchanges) ? fileInstrumentJson[tokenJsonSecondaryExchanges]!.AsArray() : null;
+              JsonArray? secondaryExchangesJson = fileInstrumentJson!.ContainsKey(tokenJsonSecondaryExchanges) ? fileInstrumentJson[tokenJsonSecondaryExchanges]!.AsArray() : null;
               List<Guid> secondaryExchanges = new List<Guid>();
               if (secondaryExchangesJson != null)
               {
@@ -336,7 +333,7 @@ namespace TradeSharp.CoreUI.Services
                     else
                     {
                       //try to match the secondary exchange using it's name or tag
-                      Exchange? definedExchange = definedExchanges.FirstOrDefault(e => e.Name.ToLower() == secondaryExchangeStr.ToLower() || e.Tag.ToLower() == secondaryExchangeStr.ToLower());
+                      Exchange? definedExchange = m_exchangeService.Items.FirstOrDefault(e => e.Name.ToLower() == secondaryExchangeStr.ToLower() || e.Tag.ToLower() == secondaryExchangeStr.ToLower());
                       if (definedExchange != null)
                         secondaryExchanges.Add(definedExchange.Id);
                       else
@@ -361,7 +358,7 @@ namespace TradeSharp.CoreUI.Services
               else
                 fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty);
 
-              Instrument? definedInstrument = definedInstruments.FirstOrDefault(x => x.Equals(fileInstrument));
+              Instrument? definedInstrument = m_instrumentCacheService.Items.FirstOrDefault(x => x.Equals(fileInstrument));
               if (definedInstrument != null)
               {
                 switch (importSettings.ReplaceBehavior)
@@ -374,6 +371,7 @@ namespace TradeSharp.CoreUI.Services
                     //replacing name, description, tag and all data from the input file
                     if (Debugging.ImportExport) m_logger.LogInformation($"Replacing - {definedInstrument.Name}, {definedInstrument.Description}, {definedInstrument.Tag} => {name}, {description}, {tag}");
                     m_instrumentRepository.Update(fileInstrument);
+                    m_instrumentCacheService.Update(fileInstrument);
                     replacedCount++;
                     break;
                   case ImportReplaceBehavior.Update:
@@ -392,6 +390,7 @@ namespace TradeSharp.CoreUI.Services
                       fileInstrument = new Instrument(ticker, attributes, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExchange.Id, secondaryExchanges, string.Empty);
 
                     m_instrumentRepository.Update(fileInstrument);
+                    m_instrumentCacheService.Update(fileInstrument);
                     updatedCount++;
                     break;
                 }
@@ -399,6 +398,7 @@ namespace TradeSharp.CoreUI.Services
               else
               {
                 m_instrumentRepository.Add(fileInstrument);
+                m_instrumentCacheService.Add(fileInstrument);
                 createdCount++;
               }
             }
@@ -450,10 +450,7 @@ namespace TradeSharp.CoreUI.Services
         {
           int lineNo = 1; //header row is on line 0
           bool parseError = false;
-          IList<Exchange> exchanges = m_database.GetExchanges();
-          Exchange? globalExchange = exchanges.FirstOrDefault(e => e.Id == Exchange.InternationalId);
-          SortedDictionary<string, Instrument> definedInstruments = new SortedDictionary<string, Instrument>();
-          foreach (Instrument instrument in m_database.GetInstruments()) definedInstruments.Add(instrument.Ticker.ToUpper(), instrument);
+          Exchange? globalExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == Exchange.InternationalId);
           List<Instrument> fileInstruments = new List<Instrument>();
 
           while (csv.Read() && !parseError)
@@ -541,7 +538,7 @@ namespace TradeSharp.CoreUI.Services
 
             //try to find the exchange for the instrument matching different potential attributes of the exchanges
             Exchange? primaryExchange = null;
-            foreach (Exchange definedExchange in exchanges)
+            foreach (Exchange definedExchange in m_exchangeService.Items)
             {
               if (Guid.TryParse(exchange, out Guid primaryExchangeId))
               {
@@ -587,7 +584,7 @@ namespace TradeSharp.CoreUI.Services
             IList<Guid> secondaryExchangeIds = new List<Guid>();
             foreach (string secondaryExchange in secondaryExchanges)
             {
-              Exchange? definedExchange = exchanges.FirstOrDefault(e => e.Id.ToString() == secondaryExchange || e.Name.ToUpper() == secondaryExchange.ToUpper() || e.Tag.ToUpper() == secondaryExchange.ToUpper());
+              Exchange? definedExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id.ToString() == secondaryExchange || e.Name.ToUpper() == secondaryExchange.ToUpper() || e.Tag.ToUpper() == secondaryExchange.ToUpper());
               if (definedExchange != null)
                 secondaryExchangeIds.Add(definedExchange.Id);
               else
@@ -610,7 +607,8 @@ namespace TradeSharp.CoreUI.Services
           long instrumentsProcessed = 0;
           foreach (Instrument fileInstrument in fileInstruments)
           {
-            if (definedInstruments.TryGetValue(fileInstrument.Ticker, out Instrument? definedInstrument))
+            Instrument? definedInstrument = m_instrumentCacheService.Items.FirstOrDefault(x => x.Equals(fileInstrument));
+            if (definedInstrument != null)
             {
               switch (importSettings.ReplaceBehavior)
               {
@@ -625,12 +623,12 @@ namespace TradeSharp.CoreUI.Services
                   break;
                 case ImportReplaceBehavior.Update:
                   if (Debugging.ImportExport) m_logger.LogInformation($"Updating - {fileInstrument.Ticker}");
-                  foreach (string ticker in definedInstrument.AlternateTickers)
-                    if (!fileInstrument.AlternateTickers.Contains(ticker)) fileInstrument.AlternateTickers.Add(ticker);
-                  foreach (Guid id in definedInstrument.SecondaryExchangeIds)
-                    if (!fileInstrument.SecondaryExchangeIds.Contains(id)) fileInstrument.SecondaryExchangeIds.Add(id);
+                  fileInstrument.AlternateTickers = definedInstrument.AlternateTickers.Union(fileInstrument.AlternateTickers).ToList();
+                  fileInstrument.SecondaryExchangeIds = definedInstrument.SecondaryExchangeIds.Union(definedInstrument.SecondaryExchangeIds).ToList();
 
-                  m_instrumentRepository.Update(fileInstrument);
+                  definedInstrument.Update(fileInstrument);
+                  m_instrumentRepository.Update(definedInstrument);
+                  m_instrumentCacheService.Update(definedInstrument);
                   updatedCount++;
                   break;
               }
@@ -639,6 +637,7 @@ namespace TradeSharp.CoreUI.Services
             {
               if (Debugging.ImportExport) m_logger.LogInformation($"Creating - {fileInstrument.Ticker}");
               m_instrumentRepository.Add(fileInstrument);
+              m_instrumentCacheService.Add(fileInstrument);
               createdCount++;
             }
 
@@ -661,24 +660,27 @@ namespace TradeSharp.CoreUI.Services
 
       if (exportSettings.ReplaceBehavior != ExportReplaceBehavior.Replace && File.Exists(exportSettings.Filename))
       {
-        statusMessage = $"File \"{exportSettings.Filename}\" already exists, but export settings are set to not replace it.";
-        if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
-        return;
+        //we also need to check the file size, the Windows save dialog would sometimes create an empty file
+        FileInfo fileInfo = new FileInfo(exportSettings.Filename);
+        if (fileInfo.Length > 0)
+        {
+          statusMessage = $"File \"{exportSettings.Filename}\" already exists, but export settings are set to not replace it.";
+          if (Debugging.ImportExport) m_logger.LogError(statusMessage);
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+          return;
+        }
       }
 
-      var exchanges = m_database.GetExchanges();
-      Exchange? globalExchange = exchanges.FirstOrDefault(e => e.Id == Exchange.InternationalId);
+      Exchange? globalExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == Exchange.InternationalId);
       using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
-        IList<Instrument> instruments = m_database.GetInstruments();
         int instrumentIndex = 0;
-        int instrumentCount = instruments.Count;
+        int instrumentCount = m_instrumentCacheService.Items.Count;
 
         file.WriteLine("[");
-        foreach (Instrument instrument in instruments)
+        foreach (Instrument instrument in m_instrumentCacheService.Items)
         {
-          Exchange? exchange = exchanges.FirstOrDefault(e => e.Id == instrument.PrimaryExchangeId);
+          Exchange? exchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == instrument.PrimaryExchangeId);
           if (exchange == null)
           {
             if (Debugging.ImportExport) m_logger.LogInformation($"Failed to find primary exchange with Id {instrument.PrimaryExchangeId} for instrument \"{instrument.Ticker}\", using global exchange for instrument.");
@@ -716,7 +718,7 @@ namespace TradeSharp.CoreUI.Services
             JsonArray secondaryExchanges = instrumentJson[tokenJsonSecondaryExchanges]!.AsArray();
             foreach (Guid secondaryExchangeId in instrument.SecondaryExchangeIds)
             {
-              exchange = exchanges.FirstOrDefault(e => e.Id == secondaryExchangeId);
+              exchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == secondaryExchangeId);
               if (exchange != null)
                 secondaryExchanges.Add(exchange.Name);
               else
@@ -745,26 +747,40 @@ namespace TradeSharp.CoreUI.Services
 
       if (exportSettings.ReplaceBehavior != ExportReplaceBehavior.Replace && File.Exists(exportSettings.Filename))
       {
-        statusMessage = $"File \"{exportSettings.Filename}\" already exists, but export settings are set to not replace it.";
-        if (Debugging.ImportExport) m_logger.LogError(statusMessage);
-        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
-        return;
+        //we also need to check the file size, the Windows save dialog would sometimes create an empty file
+        FileInfo fileInfo = new FileInfo(exportSettings.Filename);
+        if (fileInfo.Length > 0)
+        {
+          statusMessage = $"File \"{exportSettings.Filename}\" already exists, but export settings are set to not replace it.";
+          if (Debugging.ImportExport) m_logger.LogError(statusMessage);
+          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", statusMessage);
+          return;
+        }
       }
 
-      var exchanges = m_database.GetExchanges();
-      Exchange globalExchange = exchanges.First(x => x.Id == Exchange.InternationalId);    //global exchange must always exist
+      Exchange globalExchange = m_exchangeService.Items.First(x => x.Id == Exchange.InternationalId);    //global exchange must always exist
       using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
-        IList<Instrument> instruments = m_database.GetInstruments();
         file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvAlternateTickers},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate1},{tokenCsvPriceDecimals1},{tokenCsvMinimumMovement1},{tokenCsvBigPointValue1},{tokenCsvMarketCap1},{tokenCsvTag},{tokenCsvSecondaryExchanges1},{tokenCsvAttributes}");
 
-        foreach (Instrument instrument in instruments)
+        List<Exchange> secondaryExchanges = new List<Exchange>();
+        foreach (Instrument instrument in m_instrumentCacheService.Items)
         {
-          Exchange? exchange = exchanges.FirstOrDefault(e => e.Id == instrument.PrimaryExchangeId);
+          Exchange? exchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == instrument.PrimaryExchangeId);
           if (exchange == null)
           {
             if (Debugging.ImportExport) m_logger.LogInformation($"Failed to find primary exchange with Id {instrument.PrimaryExchangeId} for instrument \"{instrument.Ticker}\", using global exchange for instrument.");
             exchange = globalExchange;
+          }
+
+          secondaryExchanges.Clear();
+          foreach (var secondaryExchangeId in instrument.SecondaryExchangeIds)
+          {
+            var secondaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == secondaryExchangeId);
+            if (secondaryExchange != null)
+              secondaryExchanges.Add(secondaryExchange);
+            else
+              if (Debugging.ImportExport) m_logger.LogInformation($"Failed to find secondary exchange with Id {secondaryExchangeId} for instrument \"{instrument.Ticker}\".");
           }
 
           string instrumentDefinition = ((int)instrument.Type).ToString();
@@ -791,7 +807,7 @@ namespace TradeSharp.CoreUI.Services
           instrumentDefinition += ",";
           instrumentDefinition += instrument.Tag;
           instrumentDefinition += ",";
-          instrumentDefinition += Common.Utilities.secondaryExchangeNamesCsv(instrument, exchanges, m_logger);
+          instrumentDefinition += Common.Utilities.secondaryExchangeNamesCsv(instrument, secondaryExchanges, m_logger);
           instrumentDefinition += ",";
           instrumentDefinition += (int)instrument.AttributeSet;
           file.WriteLine(instrumentDefinition);

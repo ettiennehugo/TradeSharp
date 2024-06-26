@@ -8,13 +8,14 @@ using TradeSharp.CoreUI.ViewModels;
 using Microsoft.UI.Xaml;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Events;
 
 namespace TradeSharp.WinCoreUI.Views
 {
-  /// <summary>
-  /// Control to display bar data for a given instrument.
-  /// </summary>
-  public sealed partial class InstrumentBarsDataView : UserControl
+    /// <summary>
+    /// Control to display bar data for a given instrument.
+    /// </summary>
+    public sealed partial class InstrumentBarsDataView : UserControl
   {
     //constants
     /// <summary>

@@ -3,13 +3,14 @@ using System.Collections.ObjectModel;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Events;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
-  /// <summary>
-  /// Base calss for models that support viewing of items in a tree fashion driven by an ITreeItemService.
-  /// </summary>
-  public abstract class TreeViewModel<TKey, TItem> : ViewModelBase, ITreeViewModel<TKey, TItem> where TItem : class
+    /// <summary>
+    /// Base calss for models that support viewing of items in a tree fashion driven by an ITreeItemService.
+    /// </summary>
+    public abstract class TreeViewModel<TKey, TItem> : ViewModelBase, ITreeViewModel<TKey, TItem> where TItem : class
   {
     //constants
 
@@ -194,7 +195,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public virtual void OnCollapseNode(object? node) { }
 
     ///Generic handler to re-raise the service refresh event as a view model refresh event.
-    protected virtual void onServiceRefresh(object? sender, Common.RefreshEventArgs e)
+    protected virtual void onServiceRefresh(object? sender, RefreshEventArgs e)
     {
       raiseRefreshEvent(e);
     }

@@ -35,8 +35,8 @@ namespace TradeSharp.Data
     int ConnectionCountMax { get; }
 
     //events
+    event RequestErrorHandler? RequestError;    //event raised when a request error occurs
 
-  
     //TODO
     // - Add events for data changes - instrument, price, news, etc.
 

@@ -164,8 +164,9 @@ namespace TradeSharp.CoreUI.Testing.Services
 
     //attributes
     private Mock<ILogger<CoreUI.Services.InstrumentService>> m_logger;
-    private Mock<IDatabase> m_database;
+    private Mock<IExchangeService> m_exchangeService;
     private Mock<IInstrumentRepository> m_instrumentRepository;
+    private IInstrumentCacheService m_instrumentCacheService;
     private Mock<IDialogService> m_dialogService;
     private List<Instrument> m_addedInstruments;
     private List<Instrument> m_updatedInstruments;
@@ -241,18 +242,17 @@ namespace TradeSharp.CoreUI.Testing.Services
             Debug.WriteLine($"InstrumentService Log: {(string)logMessage!}");
           }));
 
-      m_database = new Mock<IDatabase>();
+      m_exchangeService = new Mock<IExchangeService>();
       m_instrumentRepository = new Mock<IInstrumentRepository>();
       m_dialogService = new Mock<IDialogService>();
 
-      m_database.Setup(x => x.GetExchanges()).Returns(m_exchanges);
-      m_database.Setup(x => x.GetInstruments()).Returns(m_emptyInstruments);
+      m_exchangeService.SetupGet(x => x.Items).Returns(m_exchanges);
       m_dialogService.Setup(x => x.ShowStatusMessageAsync(It.IsAny<IDialogService.StatusMessageSeverity>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_emptyInstruments);
       m_instrumentRepository.Setup(x => x.Update(It.IsAny<Instrument>())).Callback((Instrument x) => m_updatedInstruments.Add(x));
       m_instrumentRepository.Setup(x => x.Add(It.IsAny<Instrument>())).Callback((Instrument x) => m_addedInstruments.Add(x));
-
-      m_instrumentService = new CoreUI.Services.InstrumentService(m_logger.Object, m_database.Object, m_instrumentRepository.Object, m_dialogService.Object);
+      m_instrumentCacheService = new InstrumentCacheService(m_dialogService.Object, m_instrumentRepository.Object);
+      m_instrumentService = new CoreUI.Services.InstrumentService(m_logger.Object, m_exchangeService.Object, m_instrumentRepository.Object, m_instrumentCacheService, m_dialogService.Object);
     }
 
     //finalizers
@@ -353,9 +353,16 @@ namespace TradeSharp.CoreUI.Testing.Services
     [TestMethod]
     public void Import_CsvUpdated_Success()
     {
-      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
+      m_instrumentService.Refresh(); //load the data from the mock repository
+      m_instrumentCacheService.Refresh();
+
       string filename = "testInstrumentsWithIds.csv";
+      var exportSettings = new ExportSettings();
+      exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
+      exportSettings.Filename = outputTestFile(filename, csv);
+      m_instrumentService.Export(exportSettings);
+
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, csv);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Update; //force call to our dummy repository
@@ -366,9 +373,16 @@ namespace TradeSharp.CoreUI.Testing.Services
     [TestMethod]
     public void Import_JsonUpdated_Success()
     {
-      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
+      m_instrumentService.Refresh(); //load the data from the mock repository
+      m_instrumentCacheService.Refresh();
+
       string filename = "testInstrumentsWithIds.json";
+      var exportSettings = new ExportSettings();
+      exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
+      exportSettings.Filename = outputTestFile(filename, json);
+      m_instrumentService.Export(exportSettings);
+
       var importSettings = new ImportSettings();
       importSettings.Filename = outputTestFile(filename, json);
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Update; //force call to our dummy repository
@@ -379,9 +393,9 @@ namespace TradeSharp.CoreUI.Testing.Services
     [TestMethod]
     public void Export_CsvCreated_Success()
     {
-      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
       m_instrumentService.Refresh(); //load the data from the mock repository
+      m_instrumentCacheService.Refresh();
 
       string filename = "testExportWithoutIds.csv";
       var exportSettings = new ExportSettings();
@@ -393,15 +407,15 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_instrumentService.Export(exportSettings);
       m_instrumentService.Import(importSettings);
       postImport();
-      checkImportedInstruments(m_instruments, m_updatedInstruments);
+      checkImportedInstruments(m_instruments, m_updatedInstruments);  //for replacement instruments they are updated without merging in the current instrument definition
     }
 
     [TestMethod]
     public void Export_JsonCreated_Success()
     {
-      m_database.Setup(x => x.GetInstruments()).Returns(m_instruments);
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
       m_instrumentService.Refresh(); //load the data from the mock repository
+      m_instrumentCacheService.Refresh();
 
       string filename = "testExportWithoutIds.json";
       var exportSettings = new ExportSettings();
@@ -411,9 +425,15 @@ namespace TradeSharp.CoreUI.Testing.Services
       importSettings.Filename = exportSettings.Filename;
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
       m_instrumentService.Export(exportSettings);
+
+      //clear the defined instruments
+      m_instrumentRepository.Setup(x => x.GetItems()).Returns(Array.Empty<Instrument>());
+      m_instrumentService.Refresh(); //load the data from the mock repository
+      m_instrumentCacheService.Refresh();
+
       m_instrumentService.Import(importSettings);
       postImport();
-      checkImportedInstruments(m_instruments, m_updatedInstruments);
+      checkImportedInstruments(m_instruments, m_addedInstruments);
     }
   }
 }
