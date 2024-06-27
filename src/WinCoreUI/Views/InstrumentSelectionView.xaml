@@ -62,7 +62,7 @@
         </AppBarElementContainer>
       </CommandBar>
     </StackPanel>
-    <ListView x:Name="m_instruments" ItemsSource="{x:Bind Instruments, Mode=OneWay}" SelectionMode="{x:Bind SelectionMode, Mode=OneWay}" SelectionChanged="m_instruments_SelectionChanged" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" Grid.Row="1">
+    <ListView x:Name="m_instruments" ItemsSource="{x:Bind Instruments, Mode=OneWay}" SelectionMode="{x:Bind SelectionMode, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" SelectionChanged="m_instruments_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" Grid.Row="1">
       <ListView.Header>
         <Grid Background="{ThemeResource SystemBaseLowColor}">
           <Grid.ColumnDefinitions>

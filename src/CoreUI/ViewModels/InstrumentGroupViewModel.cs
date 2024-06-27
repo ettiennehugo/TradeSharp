@@ -31,8 +31,8 @@ namespace TradeSharp.CoreUI.ViewModels
       m_foundNodes = new List<ITreeNodeType<Guid, InstrumentGroup>>();
       m_foundNodeIndex = 0;
       m_findFirstExecuted = false;
-      m_instrumentGroupService = instrumentGroupService;
       m_instrumentService = instrumentService;
+      m_instrumentGroupService = instrumentGroupService;
       m_instrumentGroupService.RefreshEvent += onServiceRefresh;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? target) => SelectedNode != null && SelectedNode.Item.HasAttribute(Attributes.Deletable));
@@ -68,7 +68,11 @@ namespace TradeSharp.CoreUI.ViewModels
 
     protected Task OnRefreshAsync(Guid parentId)
     {
-      return Task.Run(() => m_itemsService.Refresh(parentId));
+      return Task.Run(() =>
+      {
+        m_instrumentService.Refresh();    //load the defined instruments from the cache
+        m_itemsService.Refresh(parentId);
+      });
     }
 
     public override Task OnCopyAsync(object? target)

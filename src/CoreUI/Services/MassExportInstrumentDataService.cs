@@ -77,6 +77,9 @@ namespace TradeSharp.CoreUI.Services
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
 
+          //load instruments from the cache into the instrument service
+          m_instrumentService.Refresh();
+
           //draw up the set of instruments to export in a stack
           if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Starting mass export of instrument data for {m_instrumentService.Items.Count} instruments");
 

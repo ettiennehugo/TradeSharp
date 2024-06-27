@@ -52,6 +52,7 @@ namespace TradeSharp.InteractiveBrokers
       Accounts = new ObservableCollection<Data.Account>();
       m_subscribedAccounts = new List<string>();
       m_instrumentService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentService>();
+      m_instrumentService.Refresh();    //load instruments from the cache
       m_instrumentBarDataService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentBarDataService>();
     }
 

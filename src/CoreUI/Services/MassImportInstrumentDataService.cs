@@ -78,6 +78,11 @@ namespace TradeSharp.WinCoreUI.Services
           //scan the import directory and construct the set of files to import
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
+
+          //load the instruments from the cache into the service
+          m_instrumentService.Refresh();
+
+          //start mass import
           Stack<ImportFile>? importFiles = null;
           if (Settings.ImportStructure == MassImportExportStructure.DiretoriesAndFiles)
             importFiles = scanImportDirectory();

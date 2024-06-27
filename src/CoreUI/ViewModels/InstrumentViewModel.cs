@@ -1,4 +1,5 @@
-﻿using TradeSharp.Data;
+﻿using System.Collections.ObjectModel;
+using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.CoreUI.ViewModels
@@ -18,10 +19,13 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-
+    private ObservableCollection<Instrument> m_selectedItems;
 
     //constructors
-    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) { }
+    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) 
+    {
+      SelectedItems = new ObservableCollection<Instrument>();
+    }
 
     //finalizers
 
@@ -61,8 +65,19 @@ namespace TradeSharp.CoreUI.ViewModels
       return Task.Run(() => m_itemsService.Refresh());
     }
 
-    //properties
-
+    //properties    
+    public ObservableCollection<Instrument> SelectedItems 
+    { 
+      get => m_selectedItems;
+      set 
+      {
+        if (m_selectedItems != value)
+        {
+          m_selectedItems = value;
+          OnPropertyChanged(nameof(SelectedItems));
+        }
+      } 
+    }
 
     //methods
 

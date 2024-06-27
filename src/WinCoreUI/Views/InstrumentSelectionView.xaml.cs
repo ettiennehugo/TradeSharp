@@ -45,7 +45,7 @@ namespace TradeSharp.WinCoreUI.Views
     Visibility m_exportVisible = Visibility.Visible;
     Visibility m_importExportSeparatorVisible = Visibility.Visible;
     Visibility m_multiSelectVisible = Visibility.Visible;
-    List<Instrument> m_selectedItems;
+    List<Instrument> m_previousSelectedItems;
 
     //constructors
     public InstrumentSelectionView()
@@ -53,10 +53,13 @@ namespace TradeSharp.WinCoreUI.Views
       ViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       ViewModel.RefreshCommand.Execute(null);
       Instruments = new ObservableCollection<Instrument>(ViewModel.Items);
-      m_selectedItems = new List<Instrument>();
       m_instrumentSelectionViewMode = DefaultInstrumentSelectionViewMode;
+      m_previousSelectedItems = new List<Instrument>();
       updateScreenControlFlags(false);
       this.InitializeComponent();
+
+      //bind to the selected items of the list view (XAML binding does not work for this)
+      ViewModel.SelectedItems = new ObservableCollection<Instrument>(m_instruments.SelectedItems.Cast<Instrument>().ToList());
     }
 
     //finalizers
@@ -70,7 +73,7 @@ namespace TradeSharp.WinCoreUI.Views
     public IInstrumentViewModel ViewModel { get; }
     public ObservableCollection<Instrument> Instruments;
     public ListViewSelectionMode SelectionMode { get => m_selectionMode; }
-    public IList<Instrument> SelectedItems { get => m_selectedItems; }
+    public ObservableCollection<Instrument> SelectedItems { get => ViewModel.SelectedItems; }
     public Visibility RefreshVisible { get => m_refreshVisible; }
     public Visibility AddVisible { get => m_addVisible; }
     public Visibility EditVisible { get => m_editVisible;}
@@ -193,8 +196,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_ignoreSelectionChanged = true;
       m_instruments.SelectRange(new ItemIndexRange(0, (uint)Instruments.Count));
-      m_selectedItems = new List<Instrument>(ViewModel.Items);
-      IList<object> itemsAdded = new List<object>(m_selectedItems);
+      IList<object> itemsAdded = new List<object>(ViewModel.SelectedItems);
       m_ignoreSelectionChanged = false;
       SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(Array.Empty<object>().ToList(), itemsAdded));
     }
@@ -203,8 +205,8 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_ignoreSelectionChanged = true;
       m_instruments.DeselectRange(new ItemIndexRange(0, (uint)Instruments.Count));
-      IList<object> itemsRemoved = new List<object>(m_selectedItems);
-      m_selectedItems.Clear();
+      IList<object> itemsRemoved = new List<object>(ViewModel.SelectedItems);
+      ViewModel.SelectedItems.Clear();
       m_ignoreSelectionChanged = false;
       SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(itemsRemoved, Array.Empty<object>().ToList()));
     }
@@ -212,11 +214,12 @@ namespace TradeSharp.WinCoreUI.Views
     private void m_instruments_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
       if (m_ignoreSelectionChanged) return;
-      IList<object> itemsRemoved = new List<object>(m_selectedItems);
-      m_selectedItems.Clear();
-      foreach (var item in m_instruments.SelectedItems) m_selectedItems.Add(item as Instrument);
-      foreach (var item in itemsRemoved) if (m_selectedItems.Contains(item as Instrument)) itemsRemoved.Remove(item as Instrument); //need to compute the correct delta for removed items if item is still selected
-      IList<object> itemsAdded = new List<object>(m_selectedItems);
+      IList<object> itemsRemoved = new List<object>(m_previousSelectedItems);
+      IList<object> itemsAdded = new List<object>(ViewModel.SelectedItems);
+      foreach (var instrument in ViewModel.SelectedItems)
+        itemsRemoved.Remove(instrument);
+      foreach (var instrument in m_previousSelectedItems)
+        itemsAdded.Remove(instrument);
       SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(itemsRemoved, itemsAdded));
     }
   }

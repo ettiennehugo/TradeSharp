@@ -92,6 +92,9 @@ namespace TradeSharp.CoreUI.Services
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
 
+          //load the instruments from the cache into the instrument service
+          m_instrumentService.Refresh();
+
           //reinitialize instance variables
           m_attemptedInstrumentCount = 0;
           m_successCountLock = new object();

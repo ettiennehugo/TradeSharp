@@ -45,6 +45,7 @@ namespace TradeSharp.InteractiveBrokers
       base.Create(logger);
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
       m_instrumentService = (IInstrumentService)ServiceHost.Services.GetService(typeof(IInstrumentService))!;
+      m_instrumentService.Refresh();    //load instruments from the cache
       //the broker plugin contains the connection details required for the cache etc.
       var configurationService = (IConfigurationService)ServiceHost.Services.GetService(typeof(IConfigurationService))!;
       configurationService.Brokers.TryGetValue(Constants.DefaultName, out IPluginConfiguration? configuration);

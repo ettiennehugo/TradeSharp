@@ -199,6 +199,7 @@ namespace TradeSharp.CoreUI.Services
       //need to clear nodes/items in reverse order to TRY and avoid memory corruption
       Nodes.Clear();
       Items.Clear();
+      m_instrumentService.Refresh();    //instrument group is transient so it needs to be loaded before use
 
       //load all the items
       var result = m_instrumentGroupRepository.GetItems();

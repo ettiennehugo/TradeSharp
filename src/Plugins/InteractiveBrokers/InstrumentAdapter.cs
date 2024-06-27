@@ -78,6 +78,7 @@ namespace TradeSharp.InteractiveBrokers
       m_exchangeService = m_serviceHost.Host.Services.GetRequiredService<IExchangeService>();
       m_instrumentGroupService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentGroupService>();
       m_instrumentService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentService>();
+      m_instrumentService.Refresh();    //load instruments from the cache
       m_database = m_serviceHost.Host.Services.GetRequiredService<IDatabase>();
       m_activeHistoricalRequests = new Dictionary<int, HistoricalDataRequest>();
       m_activeRealTimeRequests = new Dictionary<int, Contract>();
