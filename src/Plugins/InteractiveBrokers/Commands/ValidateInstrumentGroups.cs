@@ -37,7 +37,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       SubcategoryWords = Array.Empty<string>();
     }
 
-    public InstrumentAdapter InstrumentAdapter { get; set; }
+    public ServiceHost ServiceHost { get; set; }
     public Contract Contract { get; set; }
     public InstrumentGroup? InstrumentGroup { get; set; }
     public string Industry { get; set; }
@@ -74,7 +74,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       }
 
       //we compare terminal groups only against the sub-categories defined
-      bool terminalGroup = InstrumentAdapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.ParentId == instrumentGroup.Id) == null;
+      bool terminalGroup = ServiceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.ParentId == instrumentGroup.Id) == null;
 
       string[] nameWords = splitWords(instrumentGroup.Name);
       double score = 0.0;
@@ -173,7 +173,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       var currentGroup = instrumentGroup;
       while (currentGroup != null && currentGroup.ParentId != rootId)
       {
-        currentGroup = InstrumentAdapter.m_instrumentGroupService.Items.FirstOrDefault(g => g.Id == currentGroup.ParentId);
+        currentGroup = ServiceHost.InstrumentGroupService.Items.FirstOrDefault(g => g.Id == currentGroup.ParentId);
         if (currentGroup != null) result = $"\"{currentGroup.Name}\"->{result}";
       }
 
@@ -196,12 +196,12 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
 
     //attributes
-    private InstrumentAdapter m_adapter;
+    private ServiceHost m_serviceHost;
 
     //constructors
-    public ValidateInstrumentGroups(InstrumentAdapter adapter)
+    public ValidateInstrumentGroups(ServiceHost serviceHost)
     {
-      m_adapter = adapter;
+      m_serviceHost = serviceHost;
     }
 
     //finalizers
@@ -218,22 +218,22 @@ namespace TradeSharp.InteractiveBrokers.Commands
     {
       List<InstrumentGroupValidation> definedContractGroups = new List<InstrumentGroupValidation>();
 
-      IProgressDialog progress = m_adapter.m_dialogService.CreateProgressDialog("Validating Instrument Group Definitions", m_adapter.m_logger);
+      IProgressDialog progress = m_serviceHost.DialogService.CreateProgressDialog("Validating Instrument Group Definitions", m_serviceHost.Logger);
       progress.StatusMessage = "Accumulating industry class definitions from the InteractiveBrokers contract definitions";
       progress.Progress = 0;
       progress.Minimum = 0;
-      progress.Maximum = m_adapter.m_instrumentService.Items.Count;
+      progress.Maximum = m_serviceHost.InstrumentService.Items.Count;
       progress.ShowAsync();
 
       List<string> missingInstruments = new List<string>();
-      foreach (var instrument in m_adapter.m_instrumentService.Items)
+      foreach (var instrument in m_serviceHost.InstrumentService.Items)
       {
-        var contract = m_adapter.m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
+        var contract = m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
 
         if (contract == null)
           foreach (var altTicker in instrument.AlternateTickers)
           {
-            contract = m_adapter.m_serviceHost.Cache.GetContract(altTicker, Constants.DefaultExchange);
+            contract = m_serviceHost.Cache.GetContract(altTicker, Constants.DefaultExchange);
             if (contract != null) break;
           }
 
@@ -247,7 +247,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
             var contractGroup = definedContractGroups.FirstOrDefault((g) => g.Industry == contractStock.Industry && g.Category == contractStock.Category && g.Subcategory == contractStock.Subcategory);
             if (contractGroup == null)
             {
-              contractGroup = new InstrumentGroupValidation { InstrumentAdapter = m_adapter, Contract = contract, Industry = contractStock.Industry, Category = contractStock.Category, Subcategory = contractStock.Subcategory };
+              contractGroup = new InstrumentGroupValidation { ServiceHost = m_serviceHost, Contract = contract, Industry = contractStock.Industry, Category = contractStock.Category, Subcategory = contractStock.Subcategory };
               definedContractGroups.Add(contractGroup);
             }
           }
@@ -269,15 +269,15 @@ namespace TradeSharp.InteractiveBrokers.Commands
       List<InstrumentGroup> missingInstrumentGroups = new List<InstrumentGroup>();
 
       //determine non-IB industry groups to validate
-      InstrumentGroup? rootGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.Tag == Constants.DefaultRootInstrumentGroupTag);
+      InstrumentGroup? rootGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.Tag == Constants.DefaultRootInstrumentGroupTag);
 
       List<InstrumentGroup> groupsToValidate;
       if (rootGroup != null)
         //only select groups that are not children of the IB root group since the IB groups will always match and
         //hide problematic non-IB groups
-        groupsToValidate = m_adapter.m_instrumentGroupService.Items.Where((g) => !IsChildOf(rootGroup, g)).ToList();
+        groupsToValidate = m_serviceHost.InstrumentGroupService.Items.Where((g) => !IsChildOf(rootGroup, g)).ToList();
       else
-        groupsToValidate = m_adapter.m_instrumentGroupService.Items.ToList();
+        groupsToValidate = m_serviceHost.InstrumentGroupService.Items.ToList();
 
       if (groupsToValidate.Count == 0)
       {
@@ -326,7 +326,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         progress.StatusMessage = $"Searching for potential matches on {missingInstrumentGroups.Count} instrument groups";
         progress.Maximum += missingInstrumentGroups.Count;
 
-        InstrumentGroup? rootInstrumentGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault(g => g.ParentId == InstrumentGroup.InstrumentGroupRoot);
+        InstrumentGroup? rootInstrumentGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault(g => g.ParentId == InstrumentGroup.InstrumentGroupRoot);
         foreach (var instrumentGroup in missingInstrumentGroups)
         {
           List<Tuple<double, InstrumentGroupValidation.MatchesOn, InstrumentGroupValidation, InstrumentGroup, string>> matchScores = new List<Tuple<double, InstrumentGroupValidation.MatchesOn, InstrumentGroupValidation, InstrumentGroup, string>>();
@@ -377,7 +377,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
     {
       if (parameter == null)
       {
-        m_adapter.m_logger.LogError($"HandleMissingInstrumentGroup encountered null parameter.");
+        m_serviceHost.Logger.LogError($"HandleMissingInstrumentGroup encountered null parameter.");
         return;
       }
 
@@ -396,13 +396,13 @@ namespace TradeSharp.InteractiveBrokers.Commands
             valueToAdd = match.Item3.Subcategory;
             break;
           default:
-            m_adapter.m_logger.LogError($"HandleMissingInstrumentGroup encountered incorrect match state.");
+            m_serviceHost.Logger.LogError($"HandleMissingInstrumentGroup encountered incorrect match state.");
             return;
         }
 
         match.Item4.AlternateNames.Add(valueToAdd);
-        m_adapter.m_database.UpdateInstrumentGroup(match.Item4);
-        m_adapter.m_logger.LogInformation($"Added alternate name \"{valueToAdd}\" to instrument group \"{match.Item4.Name}\"");
+        m_serviceHost.Database.UpdateInstrumentGroup(match.Item4);
+        m_serviceHost.Logger.LogInformation($"Added alternate name \"{valueToAdd}\" to instrument group \"{match.Item4.Name}\"");
       }
     }
 
@@ -415,7 +415,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       while (currentNode.ParentId != InstrumentGroup.InstrumentGroupRoot)
       {
         if (currentNode.ParentId == parent.Id) return true;
-        currentNode = m_adapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.Id == currentNode.ParentId)!; //NOTE: We allow a crash if the parent is not found since there might be a problem in the tree.
+        currentNode = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.Id == currentNode.ParentId)!; //NOTE: We allow a crash if the parent is not found since there might be a problem in the tree.
       }
 
       return false;

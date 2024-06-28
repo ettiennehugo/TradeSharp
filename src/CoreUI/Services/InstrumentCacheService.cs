@@ -30,6 +30,7 @@ namespace TradeSharp.CoreUI.Services
     public event ItemAddedEventHandler? ItemAdded;
     public event ItemUpdatedEventHandler? ItemUpdated;
     public event ItemRemovedEventHandler? ItemRemoved;
+    public event RefreshEventHandler? Refreshed;
 
     //properties
     public ObservableCollection<Instrument> Items { get; }
@@ -55,6 +56,7 @@ namespace TradeSharp.CoreUI.Services
       Items.Clear();
       foreach (var item in m_repository.GetItems())
         Items.Add(item);
+      Refreshed?.Invoke(this, RefreshEventArgs.Empty);
     }
 
     public Task RefreshAsync()

@@ -139,28 +139,31 @@ namespace TradeSharp.WinDataManager
 
     private void loadCachedData()
     {
-      //start caching crucial data in the background
-      var holidayViewModel = (IHolidayViewModel)IApplication.Current.Services.GetService(typeof(IHolidayViewModel));
-      holidayViewModel.RefreshCommandAsync.Execute(null);
-      var countryViewModel = (ICountryViewModel)IApplication.Current.Services.GetService(typeof(ICountryViewModel));
-      countryViewModel.RefreshCommandAsync.Execute(null);
-      var exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
-      exchangeViewModel.RefreshCommandAsync.Execute(null);
-      var instrumentCacheService = (IInstrumentCacheService)IApplication.Current.Services.GetService(typeof(IInstrumentCacheService));
-      instrumentCacheService.RefreshAsync();
-      var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
-      instrumentGroupViewModel.RefreshCommandAsync.Execute(null);
-
       //setup dispatcher queue for UI thread in the dialog service
       var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
       var dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       ((DialogService)dialogService).UIDispatcherQueue = dispatcherQueue;
 
-      //setup plugin service host and start caching plugins
-      var pluginsService = m_host.Services.GetService<IPluginsService>();
-      pluginsService.Host = m_host;
-      var pluginsViewModel = m_host.Services.GetService<IPluginsViewModel>();
-      pluginsViewModel.RefreshCommandAsync.ExecuteAsync(null);    //this is the only refresh that should be called since during run-time these services are not expected to change
+      Task.Run(() =>
+      {
+        //start caching crucial data in the background
+        var holidayViewModel = (IHolidayViewModel)IApplication.Current.Services.GetService(typeof(IHolidayViewModel));
+        holidayViewModel.RefreshCommand.Execute(null);
+        var countryViewModel = (ICountryViewModel)IApplication.Current.Services.GetService(typeof(ICountryViewModel));
+        countryViewModel.RefreshCommand.Execute(null);
+        var exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
+        exchangeViewModel.RefreshCommand.Execute(null);
+        var instrumentCacheService = (IInstrumentCacheService)IApplication.Current.Services.GetService(typeof(IInstrumentCacheService));
+        instrumentCacheService.Refresh();
+        var instrumentGroupViewModel = (IInstrumentGroupViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentGroupViewModel));
+        instrumentGroupViewModel.RefreshCommandAsync.Execute(null);
+
+        //setup plugin service host and start caching plugins
+        var pluginsService = m_host.Services.GetService<IPluginsService>();
+        pluginsService.Host = m_host;
+        var pluginsViewModel = m_host.Services.GetService<IPluginsViewModel>();
+        pluginsViewModel.RefreshCommand.Execute(null);    //this is the only refresh that should be called since during run-time these services are not expected to change
+      });
     }
 
     /// <summary>

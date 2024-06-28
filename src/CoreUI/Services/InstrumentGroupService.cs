@@ -195,32 +195,34 @@ namespace TradeSharp.CoreUI.Services
 
     public void Refresh()
     {
-      LoadedState = LoadedState.Loading;
-      //need to clear nodes/items in reverse order to TRY and avoid memory corruption
-      Nodes.Clear();
-      Items.Clear();
-      m_instrumentService.Refresh();    //instrument group is transient so it needs to be loaded before use
-
-      //load all the items
-      var result = m_instrumentGroupRepository.GetItems();
-      foreach (var item in result) Items.Add(item);
-
-      //populate the nodes list of root nodes
-      //TODO: There is a bug in this code where the Add would result in an ExceptionAccessViolation, it's some threading issue since it does not occur consistenly.
-      foreach (var item in Items)
-        if (item.ParentId == InstrumentGroup.InstrumentGroupRoot)
-          Nodes.Add(new InstrumentGroupNodeType(this, m_instrumentService, null, item, true));   //null since parent is the root node
-      SelectedNode = Nodes.FirstOrDefault(x => x.ParentId == InstrumentGroup.InstrumentGroupRoot); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
-      LoadedState = LoadedState.Loaded;
-
-      //handle race condition when instrument service finished loading while we were loading
-      if (m_refreshInstruments)
+      lock(this)
       {
-        onInstrumentServiceRefresh(this, EventArgs.Empty);
-        m_refreshInstruments = false;
-      }
+        LoadedState = LoadedState.Loading;
+        //need to clear nodes/items in reverse order to TRY and avoid memory corruption
+        Nodes.Clear();
+        Items.Clear();
+        m_instrumentService.Refresh();    //instrument group is transient so it needs to be loaded before use
 
-      raiseRefreshEvent();
+        //load all the items
+        var result = m_instrumentGroupRepository.GetItems();
+        foreach (var item in result) Items.Add(item);
+
+        //populate the nodes list of root nodes
+        foreach (var item in Items)
+          if (item.ParentId == InstrumentGroup.InstrumentGroupRoot)
+            Nodes.Add(new InstrumentGroupNodeType(this, m_instrumentService, null, item, true));   //null since parent is the root node
+        SelectedNode = Nodes.FirstOrDefault(x => x.ParentId == InstrumentGroup.InstrumentGroupRoot); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null
+        LoadedState = LoadedState.Loaded;
+
+        //handle race condition when instrument service finished loading while we were loading
+        if (m_refreshInstruments)
+        {
+          onInstrumentServiceRefresh(this, EventArgs.Empty);
+          m_refreshInstruments = false;
+        }
+
+        raiseRefreshEvent();
+      }
     }
 
     private void removeNodes(Guid parentId)
@@ -285,7 +287,7 @@ namespace TradeSharp.CoreUI.Services
     {
       //NOTE: A race condition might exist here where the instrument service finishes loading while the instrument group service is still
       //      in the middle of loading the instrument groups so we need to make sure we refresh the nodes when this is the case.
-      m_refreshInstruments = LoadedState == LoadedState.Loading;
+      lock(this) m_refreshInstruments = LoadedState == LoadedState.Loading;
       if (m_refreshInstruments) return;
       
       //recursively process the instrument groups to update the instrument descriptions

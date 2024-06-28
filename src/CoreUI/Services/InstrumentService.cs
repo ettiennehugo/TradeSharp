@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TradeSharp.Common;
+using TradeSharp.CoreUI.Events;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -83,19 +84,35 @@ namespace TradeSharp.CoreUI.Services
     private IExchangeService m_exchangeService;
     private Instrument? m_selectedItem;
 
+    //properties
+    public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
+
+    public event EventHandler<Instrument?>? SelectedItemChanged;
+    public Instrument? SelectedItem
+    {
+      get => m_selectedItem;
+      set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
+    }
+
+    public IList<Instrument> Items { get; set; }
+
     //constructors
     public InstrumentService(ILogger<InstrumentService> logger, IExchangeService exchangeService, IInstrumentRepository instrumentRepository, IInstrumentCacheService instrumentCacheService, IDialogService dialogService) : base(dialogService)
     {
       m_logger = logger;
       m_instrumentRepository = instrumentRepository;
       m_instrumentCacheService = instrumentCacheService;
+      m_instrumentCacheService.Refreshed += onCacheRefresh;
       m_exchangeService = exchangeService;
       m_selectedItem = null;
       Items = new ObservableCollection<Instrument>();
     }
 
     //finalizers
-
+    ~InstrumentService()
+    {
+      m_instrumentCacheService.Refreshed -= onCacheRefresh;
+    }
 
     //interface implementations
     public bool Add(Instrument item)
@@ -136,13 +153,17 @@ namespace TradeSharp.CoreUI.Services
 
     public void Refresh()
     {
-      LoadedState = Common.LoadedState.Loading;
-      Items.Clear();
-      SelectedItem = m_instrumentCacheService.Items.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null      
-      foreach (var item in m_instrumentCacheService.Items) Items.Add(item);
-      if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
-      LoadedState = Common.LoadedState.Loaded;
-      raiseRefreshEvent();
+      //need to lock the refresh in case the cache is being updated by another thread
+      lock(this)
+      {
+        LoadedState = Common.LoadedState.Loading;
+        Items.Clear();
+        SelectedItem = m_instrumentCacheService.Items.FirstOrDefault(); //need to populate selected item first otherwise collection changes fire off UI changes with SelectedItem null      
+        foreach (var item in m_instrumentCacheService.Items) Items.Add(item);
+        if (SelectedItem != null) SelectedItemChanged?.Invoke(this, SelectedItem);
+        LoadedState = Items.Count > 0 ? Common.LoadedState.Loaded : Common.LoadedState.NotLoaded;
+        if (LoadedState == Common.LoadedState.Loaded) raiseRefreshEvent();
+      }
     }
 
     public bool Update(Instrument item)
@@ -213,17 +234,10 @@ namespace TradeSharp.CoreUI.Services
       return m_instrumentCacheService.Items.Where(instrument => instrument.Type == instrumentType && ((tickerFilter.Length > 0 && (instrument.Ticker == tickerFilter || instrument.AlternateTickers.Contains(tickerFilter))) || (nameFilter.Length > 0 && instrument.Name.Contains(nameFilter)) || (descriptionFilter.Length > 0 && instrument.Description.Contains(descriptionFilter)))).Skip(offset).Take(count).ToList();
     }
 
-    //properties
-    public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } }
-
-    public event EventHandler<Instrument?>? SelectedItemChanged;
-    public Instrument? SelectedItem
+    private void onCacheRefresh(object sender, RefreshEventArgs args)
     {
-      get => m_selectedItem;
-      set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, m_selectedItem); }
+      Refresh();
     }
-
-    public IList<Instrument> Items { get; set; }
 
     ///Method is defined public for testing purposes.
     public void importJson(ImportSettings importSettings)

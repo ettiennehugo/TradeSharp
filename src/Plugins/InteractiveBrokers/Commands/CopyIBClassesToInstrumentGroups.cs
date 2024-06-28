@@ -31,12 +31,12 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
 
     //attributes
-    private InstrumentAdapter m_adapter;
+    private ServiceHost m_serviceHost;
 
     //constructors
-    public CopyIBClassesToInstrumentGroups(InstrumentAdapter adapter)
+    public CopyIBClassesToInstrumentGroups(ServiceHost serviceHost)
     {
-      m_adapter = adapter;
+      m_serviceHost = serviceHost;
     }
 
     //finalizers
@@ -51,32 +51,32 @@ namespace TradeSharp.InteractiveBrokers.Commands
     //methods
     public void Run()
     {
-      IProgressDialog progress = m_adapter.m_dialogService.CreateProgressDialog("Copy Interactive Broker Classes to Instrument Groups", m_adapter.m_logger);
+      IProgressDialog progress = m_serviceHost.DialogService.CreateProgressDialog("Copy Interactive Broker Classes to Instrument Groups", m_serviceHost.Logger);
       progress.StatusMessage = "Copy Interactive Broker Classes to Instrument Groups";
       progress.Progress = 0;
       progress.Minimum = 0;
-      List<Contract> contracts = m_adapter.m_serviceHost.Cache.GetContracts();
-      progress.Maximum = m_adapter.m_instrumentGroupService.Items.Count;
+      List<Contract> contracts = m_serviceHost.Cache.GetContracts();
+      progress.Maximum = m_serviceHost.InstrumentGroupService.Items.Count;
       progress.Maximum += contracts.Count;
       progress.ShowAsync();
       
       //define root group associated with the interactive borker classifications
-      InstrumentGroup? rootGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.Tag == Constants.DefaultRootInstrumentGroupTag);
+      InstrumentGroup? rootGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.Tag == Constants.DefaultRootInstrumentGroupTag);
       if (rootGroup == null)
       {
         rootGroup = new InstrumentGroup(Guid.NewGuid(), Attributes.None /* not editable */, Constants.DefaultRootInstrumentGroupTag, InstrumentGroup.InstrumentGroupRoot, Constants.DefaultRootInstrumentGroupName, Array.Empty<string>(), Constants.DefaultRootInstrumentGroupName, "", Array.Empty<string>());
-        m_adapter.m_database.CreateInstrumentGroup(rootGroup);
+        m_serviceHost.Database.CreateInstrumentGroup(rootGroup);
         progress.LogInformation($"Created root instrument group \"{Constants.DefaultRootInstrumentGroupName}\"");
       }
 
       //determine the list of instrument groups already associated with the Interactive Brokers classifications
       List<Tuple<string, string, string, InstrumentGroup>> definedInstrumentGroups = new List<Tuple<string, string, string, InstrumentGroup>>();
-      foreach (var instrumentGroup in m_adapter.m_instrumentGroupService.Items)
+      foreach (var instrumentGroup in m_serviceHost.InstrumentGroupService.Items)
       {
         //check whether this instrument group ultimately has the IB root as parent
         var currentGroup = instrumentGroup;
         while (currentGroup != null && (currentGroup.ParentId != InstrumentGroup.InstrumentGroupRoot || currentGroup.ParentId != rootGroup.Id))
-          currentGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault(g => g.Id == currentGroup.ParentId);
+          currentGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault(g => g.Id == currentGroup.ParentId);
 
         //add instrument group to the list of defined instrument groups
         if (currentGroup != null && currentGroup.ParentId == rootGroup.Id)
@@ -120,7 +120,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         if (industry == null)
         {
           industry = new InstrumentGroup(Guid.NewGuid(), Attributes.None, serializeMetaData(requiredInstrumentGroup.Item1, requiredInstrumentGroup.Item2, requiredInstrumentGroup.Item3), rootGroup.Id, requiredInstrumentGroup.Item1, Array.Empty<string>(), requiredInstrumentGroup.Item1, requiredInstrumentGroup.Item1, Array.Empty<string>());
-          m_adapter.m_database.CreateInstrumentGroup(industry);
+          m_serviceHost.Database.CreateInstrumentGroup(industry);
           definedInstrumentGroups.Add(new(requiredInstrumentGroup.Item1, requiredInstrumentGroup.Item2, requiredInstrumentGroup.Item3, industry));
           copiedGroups++;
         }
@@ -128,7 +128,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         if (category == null)
         {
           category = new InstrumentGroup(Guid.NewGuid(), Attributes.None, serializeMetaData(requiredInstrumentGroup.Item1, requiredInstrumentGroup.Item2, requiredInstrumentGroup.Item3), industry.Id, requiredInstrumentGroup.Item2, Array.Empty<string>(), requiredInstrumentGroup.Item2, requiredInstrumentGroup.Item2, Array.Empty<string>());
-          m_adapter.m_database.CreateInstrumentGroup(category);
+          m_serviceHost.Database.CreateInstrumentGroup(category);
           definedInstrumentGroups.Add(new(requiredInstrumentGroup.Item1, requiredInstrumentGroup.Item2, requiredInstrumentGroup.Item3, category));
           copiedGroups++;
         }
@@ -136,7 +136,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         if (subCategory == null)
         {
           subCategory = new InstrumentGroup(Guid.NewGuid(), Attributes.None, serializeMetaData(requiredInstrumentGroup.Item1, requiredInstrumentGroup.Item2, requiredInstrumentGroup.Item3), category.Id, requiredInstrumentGroup.Item3, Array.Empty<string>(), requiredInstrumentGroup.Item3, requiredInstrumentGroup.Item3, Array.Empty<string>());
-          m_adapter.m_database.CreateInstrumentGroup(subCategory);
+          m_serviceHost.Database.CreateInstrumentGroup(subCategory);
           definedInstrumentGroups.Add(new(requiredInstrumentGroup.Item1, requiredInstrumentGroup.Item2, requiredInstrumentGroup.Item3, subCategory));
           copiedGroups++;
         }
@@ -149,7 +149,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       progress.Complete = true;
       
       //kick off task to refresh the instrument group definitions
-      if (copiedGroups > 0) Task.Run(m_adapter.m_instrumentGroupService.Refresh);
+      if (copiedGroups > 0) Task.Run(m_serviceHost.InstrumentGroupService.Refresh);
     }
 
     private string serializeMetaData(string industry, string category, string subCategory)

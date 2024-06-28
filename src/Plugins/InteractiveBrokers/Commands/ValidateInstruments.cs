@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.CoreUI.Common;
-using TradeSharp.CoreUI.Services;
+﻿using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.InteractiveBrokers.Commands
 {
@@ -23,12 +17,12 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
 
     //attributes
-    private InstrumentAdapter m_adapter;
+    private ServiceHost m_serviceHost;
 
     //constructors
-    public ValidateInstruments(InstrumentAdapter adapter)
+    public ValidateInstruments(ServiceHost serviceHost)
     {
-      m_adapter = adapter;
+      m_serviceHost = serviceHost;
     }
 
     //finalizers
@@ -43,21 +37,21 @@ namespace TradeSharp.InteractiveBrokers.Commands
     //methods
     public void Run()
     {
-      IProgressDialog progress = m_adapter.m_dialogService.CreateProgressDialog("Validating Instruments", m_adapter.m_logger);
+      IProgressDialog progress = m_serviceHost.DialogService.CreateProgressDialog("Validating Instruments", m_serviceHost.Logger);
       progress.StatusMessage = "Validating Instrument definitions against the Contract Cache definitions";
       progress.Progress = 0;
       progress.Minimum = 0;
-      progress.Maximum = m_adapter.m_instrumentService.Items.Count;
+      progress.Maximum = m_serviceHost.InstrumentService.Items.Count;
       progress.ShowAsync();
 
-      foreach (var instrument in m_adapter.m_instrumentService.Items)
+      foreach (var instrument in m_serviceHost.InstrumentService.Items)
       {
-        var contract = m_adapter.m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
+        var contract = m_serviceHost.Cache.GetContract(instrument.Ticker, Constants.DefaultExchange);
 
         if (contract == null)
           foreach (var altTicker in instrument.AlternateTickers)
           {
-            contract = m_adapter.m_serviceHost.Cache.GetContract(altTicker, Constants.DefaultExchange);
+            contract = m_serviceHost.Cache.GetContract(altTicker, Constants.DefaultExchange);
             if (contract != null) progress.LogInformation($"Will not match on primary ticker but on alternate ticker {altTicker}.");
           }
 
@@ -72,7 +66,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
             {
               if (contractStock.Subcategory != string.Empty)
               {
-                var instrumentGroup = m_adapter.m_instrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Subcategory));
+                var instrumentGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault(g => g.Equals(contractStock.Subcategory));
                 if (instrumentGroup == null)
                   progress.LogError($"\"{instrument.Ticker}\" - Instrument group for {contractStock.Industry}->{contractStock.Category}->{contractStock.Subcategory} not found.");
               }

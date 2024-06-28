@@ -10,8 +10,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:common="using:TradeSharp.WinCoreUI.Common"
     mc:Ignorable="d"  
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-    Loaded="Page_Loaded">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
   <Page.Resources>
     <ResourceDictionary>
       <common:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>

@@ -36,10 +36,7 @@ namespace TradeSharp.Data
 
     //events
     event RequestErrorHandler? RequestError;    //event raised when a request error occurs
-
-    //TODO
-    // - Add events for data changes - instrument, price, news, etc.
-
+    event DataDownloadCompleteHandler? DataDownloadComplete;    //event raised when data download is complete for an instrument and resolution
 
     //methods
     /// <summary>

@@ -27,6 +27,7 @@ namespace TradeSharp.CoreUI.Services
     event ItemAddedEventHandler? ItemAdded;
     event ItemUpdatedEventHandler? ItemUpdated;
     event ItemRemovedEventHandler? ItemRemoved;
+    event RefreshEventHandler? Refreshed;
 
     //properties
     ObservableCollection<Instrument> Items { get; }

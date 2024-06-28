@@ -19,13 +19,10 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-    private ObservableCollection<Instrument> m_selectedItems;
+
 
     //constructors
-    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) 
-    {
-      SelectedItems = new ObservableCollection<Instrument>();
-    }
+    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) { }
 
     //finalizers
 
@@ -66,18 +63,7 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     //properties    
-    public ObservableCollection<Instrument> SelectedItems 
-    { 
-      get => m_selectedItems;
-      set 
-      {
-        if (m_selectedItems != value)
-        {
-          m_selectedItems = value;
-          OnPropertyChanged(nameof(SelectedItems));
-        }
-      } 
-    }
+
 
     //methods
 

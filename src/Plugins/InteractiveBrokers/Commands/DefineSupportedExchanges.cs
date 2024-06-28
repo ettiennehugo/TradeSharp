@@ -40,12 +40,12 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
 
     //attributes
-    private InstrumentAdapter m_adapter;
+    private ServiceHost m_serviceHost;
 
     //constructors
-    public DefineSupportedExchanges(InstrumentAdapter adapter)
+    public DefineSupportedExchanges(ServiceHost serviceHost)
     {
-      m_adapter = adapter;
+      m_serviceHost = serviceHost;
     }
 
     //finalizers
@@ -60,7 +60,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
     //methods
     public void Run()
     {
-      IProgressDialog progress = m_adapter.m_dialogService.CreateProgressDialog("Validating Instruments", m_adapter.m_logger);
+      IProgressDialog progress = m_serviceHost.DialogService.CreateProgressDialog("Validating Instruments", m_serviceHost.Logger);
       progress.StatusMessage = "Validating Instrument definitions against the Contract Cache definitions";
       progress.Progress = 0;
       progress.Minimum = 0;
@@ -68,9 +68,9 @@ namespace TradeSharp.InteractiveBrokers.Commands
       progress.ShowAsync();
 
       bool definedAnExchange = false;
-      ICountryService countryService = m_adapter.m_serviceHost.Host.Services.GetService<ICountryService>()!;
+      ICountryService countryService = m_serviceHost.Host.Services.GetService<ICountryService>()!;
       foreach (Exchange exchange in Exchanges) {
-        var definedExchange = m_adapter.m_exchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == exchange.Name.ToUpper() || e.Tag.ToUpper().Contains(exchange.Tag));
+        var definedExchange = m_serviceHost.ExchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == exchange.Name.ToUpper() || e.Tag.ToUpper().Contains(exchange.Tag));
         Data.Country? country = countryService.Items.FirstOrDefault((c) => c.IsoCode == exchange.CountryIsoCode);
 
         if (country == null)
@@ -83,7 +83,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         {
           progress.LogInformation($"Defining exchange \"{exchange.Name}\"");
           var newExchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributeSet, exchange.Tag, country!.Id, exchange.Name, exchange.TimeZone, 2, 1, 1, Guid.Empty);
-          m_adapter.m_database.CreateExchange(newExchange);
+          m_serviceHost.Database.CreateExchange(newExchange);
           defineStockSessions(newExchange);
           definedAnExchange = true;
         }
@@ -94,7 +94,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         if (progress.CancellationTokenSource.IsCancellationRequested) break;
       }
 
-      if (definedAnExchange) m_adapter.m_dialogService.PostUIUpdate(() => m_adapter.m_exchangeService.Refresh());
+      if (definedAnExchange) m_serviceHost.DialogService.PostUIUpdate(() => m_serviceHost.ExchangeService.Refresh());
       progress.Complete = true;
     }
 
@@ -106,37 +106,37 @@ namespace TradeSharp.InteractiveBrokers.Commands
       var preMarketMonday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(6,0), new TimeOnly(9,29));
       var marketMonday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(9,30), new TimeOnly(15,59));
       var postMarketMonday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Monday", exchange.Id, DayOfWeek.Monday, new TimeOnly(16,0), new TimeOnly(19,59));
-      m_adapter.m_database.CreateSession(preMarketMonday);
-      m_adapter.m_database.CreateSession(marketMonday);
-      m_adapter.m_database.CreateSession(postMarketMonday);
+      m_serviceHost.Database.CreateSession(preMarketMonday);
+      m_serviceHost.Database.CreateSession(marketMonday);
+      m_serviceHost.Database.CreateSession(postMarketMonday);
 
       var preMarketTuesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(6, 0), new TimeOnly(9, 29));
       var marketTuesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(9, 30), new TimeOnly(15, 59));
       var postMarketTuesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Tuesday", exchange.Id, DayOfWeek.Tuesday, new TimeOnly(16, 0), new TimeOnly(19, 59));
-      m_adapter.m_database.CreateSession(preMarketTuesday);
-      m_adapter.m_database.CreateSession(marketTuesday);
-      m_adapter.m_database.CreateSession(postMarketTuesday);
+      m_serviceHost.Database.CreateSession(preMarketTuesday);
+      m_serviceHost.Database.CreateSession(marketTuesday);
+      m_serviceHost.Database.CreateSession(postMarketTuesday);
 
       var preMarketWednesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(6, 0), new TimeOnly(9, 29));
       var marketWednesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(9, 30), new TimeOnly(15, 59));
       var postMarketWednesday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Wednesday", exchange.Id, DayOfWeek.Wednesday, new TimeOnly(16, 0), new TimeOnly(19, 59));
-      m_adapter.m_database.CreateSession(preMarketWednesday);
-      m_adapter.m_database.CreateSession(marketWednesday);
-      m_adapter.m_database.CreateSession(postMarketWednesday);
+      m_serviceHost.Database.CreateSession(preMarketWednesday);
+      m_serviceHost.Database.CreateSession(marketWednesday);
+      m_serviceHost.Database.CreateSession(postMarketWednesday);
 
       var preMarketThursday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(6, 0), new TimeOnly(9, 29));
       var marketThursday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(9, 30), new TimeOnly(15, 59));
       var postMarketThursday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Thursday", exchange.Id, DayOfWeek.Thursday, new TimeOnly(16, 0), new TimeOnly(19, 59));
-      m_adapter.m_database.CreateSession(preMarketThursday);
-      m_adapter.m_database.CreateSession(marketThursday);
-      m_adapter.m_database.CreateSession(postMarketThursday);
+      m_serviceHost.Database.CreateSession(preMarketThursday);
+      m_serviceHost.Database.CreateSession(marketThursday);
+      m_serviceHost.Database.CreateSession(postMarketThursday);
 
       var preMarketFriday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Pre-market Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(6, 0), new TimeOnly(9, 29));
       var marketFriday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(9, 30), new TimeOnly(15, 59));
       var postMarketFriday = new Data.Session(Guid.NewGuid(), Data.Session.DefaultAttributeSet, "", "Post-market Friday", exchange.Id, DayOfWeek.Friday, new TimeOnly(16, 0), new TimeOnly(19, 59));
-      m_adapter.m_database.CreateSession(preMarketFriday);
-      m_adapter.m_database.CreateSession(marketFriday);
-      m_adapter.m_database.CreateSession(postMarketFriday);
+      m_serviceHost.Database.CreateSession(preMarketFriday);
+      m_serviceHost.Database.CreateSession(marketFriday);
+      m_serviceHost.Database.CreateSession(postMarketFriday);
     }
   }
 }

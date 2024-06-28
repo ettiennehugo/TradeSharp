@@ -18,14 +18,14 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
 
     //attributes
-    private InstrumentAdapter m_adapter;
+    private ServiceHost m_serviceHost;
     private IProgressDialog m_progress;
     private int m_requestId;
 
     //constructors
-    public SynchronizeContractCache(InstrumentAdapter adapter) 
+    public SynchronizeContractCache(ServiceHost serviceHost) 
     {
-      m_adapter = adapter;
+      m_serviceHost = serviceHost;
       m_requestId = InstrumentAdapter.InstrumentIdBase;
     }
 
@@ -41,16 +41,16 @@ namespace TradeSharp.InteractiveBrokers.Commands
     //methods
     public void Run()
     {
-      List<IBApi.Contract> contracts = m_adapter.m_serviceHost.Cache.GetContractHeaders();
-      m_progress = m_adapter.m_dialogService.CreateProgressDialog("Synchronizing Contract Cache", m_adapter.m_logger);
+      List<IBApi.Contract> contracts = m_serviceHost.Cache.GetContractHeaders();
+      m_progress = m_serviceHost.DialogService.CreateProgressDialog("Synchronizing Contract Cache", m_serviceHost.Logger);
       m_progress.StatusMessage = "Synchronizing Contract Cache from Interactive Brokers";
       m_progress.Progress = 0;
       m_progress.Minimum = 0;
       m_progress.Maximum = contracts.Count;
       m_progress.ShowAsync();
 
-      m_adapter.m_serviceHost.Client.Error += HandleError;
-      m_adapter.m_contractRequestActive = true;
+      m_serviceHost.Client.Error += HandleError;
+      m_serviceHost.Instruments.m_contractRequestActive = true;
 
       int updated = 0;
       foreach (var contract in contracts)
@@ -58,7 +58,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         //this can be a very long running process, check whether we have a connection and wait for the connection to come alive or exit
         //if the user cancels the operation
         bool disconnectDetected = false;
-        while (!m_adapter.m_serviceHost.Client.ClientSocket.IsConnected() && !m_progress.CancellationTokenSource.IsCancellationRequested)
+        while (!m_serviceHost.Client.ClientSocket.IsConnected() && !m_progress.CancellationTokenSource.IsCancellationRequested)
         {
           if (!disconnectDetected)
           {
@@ -74,12 +74,12 @@ namespace TradeSharp.InteractiveBrokers.Commands
         updated++;
 
         //NOTE: InstrumentAdapter.HandleContractDetails is called when the contract details are received.
-        m_adapter.m_serviceHost.Client.ClientSocket.reqContractDetails(m_requestId, contract);
+        m_serviceHost.Client.ClientSocket.reqContractDetails(m_requestId, contract);
         m_requestId++;
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelled
       }
 
-      m_adapter.m_serviceHost.Client.Error -= HandleError;
+      m_serviceHost.Client.Error -= HandleError;
 
       m_progress.StatusMessage = $"Synchronized {updated} contracts of {contracts.Count}";
       m_progress.Complete = true;
@@ -97,9 +97,9 @@ namespace TradeSharp.InteractiveBrokers.Commands
       else
       {
         if (e == null)
-          m_adapter.m_logger.LogError($"Error {errorCode} - {errorMessage ?? ""}");
+          m_serviceHost.Logger.LogError($"Error {errorCode} - {errorMessage ?? ""}");
         else
-          m_adapter.m_logger.LogError($"Error - {e.Message}");
+          m_serviceHost.Logger.LogError($"Error - {e.Message}");
       }
     }
   }

@@ -90,7 +90,8 @@ namespace TradeSharp.InteractiveBrokers
       m_autoReconnect = Configuration!.Configuration.ContainsKey(InteractiveBrokers.Constants.AutoReconnectKey) ? bool.Parse((string)Configuration!.Configuration[InteractiveBrokers.Constants.AutoReconnectKey]) : InteractiveBrokers.Constants.DefaultAutoReconnect;
       parseAutoReconnectInterval();
       parseMaintenanceSchedule();
-      m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, m_dialogService, Configuration);
+      var database = (IDatabase)ServiceHost.Services.GetService(typeof(IDatabase))!;
+      m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(logger, ServiceHost, m_dialogService, database, Configuration);
       m_ibServiceHost.BrokerPlugin = this;
       m_ibServiceHost.Client.ConnectionStatus += HandleConnectionStatus;
       Commands.Add(new PluginCommand { Name = "Connect", Tooltip = "Connect to TWS API", Icon = "\uE8CE", Command = new AsyncRelayCommand(OnConnectAsync, () => !IsConnected) });

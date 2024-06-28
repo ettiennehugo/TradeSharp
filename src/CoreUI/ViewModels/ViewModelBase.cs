@@ -26,6 +26,21 @@ namespace TradeSharp.CoreUI.ViewModels
     protected readonly INavigationService m_navigationService;    //TBD: Remove this service, it is not used.
     protected readonly IDialogService m_dialogService;
 
+    //events
+    public event RefreshEventHandler? RefreshEvent;
+
+    //properties
+    public RelayCommand AddCommand { get; set; }
+    public RelayCommand UpdateCommand { get; set; }
+    public RelayCommand<object?> DeleteCommand { get; set; }
+    public AsyncRelayCommand<object?> DeleteCommandAsync { get; set; } //use async delete to allow long running deletes to run in the background
+    public RelayCommand ClearSelectionCommand { get; set; }
+    public RelayCommand RefreshCommand { get; set; }
+    public AsyncRelayCommand RefreshCommandAsync { get; set; } //use async refresh to allow long running refreshes to run in the background
+    public AsyncRelayCommand<object?> CopyCommandAsync { get; set; }
+    public AsyncRelayCommand ImportCommandAsync { get; set; }
+    public AsyncRelayCommand ExportCommandAsync { get; set; }
+
     //constructors
     public ViewModelBase(INavigationService navigationService, IDialogService dialogService)
     {
@@ -49,21 +64,6 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //interface implementations
 
-
-    //events
-    public event RefreshEventHandler? RefreshEvent;
-
-    //properties
-    public RelayCommand AddCommand { get; set; }
-    public RelayCommand UpdateCommand { get; set; }
-    public RelayCommand<object?> DeleteCommand { get; set; }
-    public AsyncRelayCommand<object?> DeleteCommandAsync { get; set; } //use async delete to allow long running deletes to run in the background
-    public RelayCommand ClearSelectionCommand { get; set; }
-    public RelayCommand RefreshCommand { get; set; }
-    public AsyncRelayCommand RefreshCommandAsync { get; set; } //use async refresh to allow long running refreshes to run in the background
-    public AsyncRelayCommand<object?> CopyCommandAsync { get; set; }
-    public AsyncRelayCommand ImportCommandAsync { get; set; }
-    public AsyncRelayCommand ExportCommandAsync { get; set; }
 
     //methods
     public abstract void OnAdd();

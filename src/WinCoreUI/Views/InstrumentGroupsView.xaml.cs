@@ -43,12 +43,6 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public IInstrumentGroupViewModel ViewModel { get; }
 
-    private void Page_Loaded(object sender, RoutedEventArgs e)
-    {
-      //NOTE: TreeView binds directly to the Nodes, so a crash will occur when the model modifies the Nodes ASYNC so this call must be sync.  
-      if (ViewModel.Nodes.Count == 0) ViewModel.RefreshCommand.Execute(null); 
-    }
-
     //methods
     private void onViewModelRefresh(object? sender, RefreshEventArgs e)
     {

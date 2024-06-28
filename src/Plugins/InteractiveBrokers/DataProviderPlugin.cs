@@ -26,8 +26,6 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //attributes
-    protected IDialogService m_dialogService;
-    protected IInstrumentService m_instrumentService;
     protected ServiceHost m_ibServiceHost;
 
     //constructors
@@ -43,13 +41,12 @@ namespace TradeSharp.InteractiveBrokers
     public override void Create(ILogger logger)
     {
       base.Create(logger);
-      m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
-      m_instrumentService = (IInstrumentService)ServiceHost.Services.GetService(typeof(IInstrumentService))!;
-      m_instrumentService.Refresh();    //load instruments from the cache
+      var dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
+      var database = (IDatabase)ServiceHost.Services.GetService(typeof(IDatabase))!;
       //the broker plugin contains the connection details required for the cache etc.
       var configurationService = (IConfigurationService)ServiceHost.Services.GetService(typeof(IConfigurationService))!;
       configurationService.Brokers.TryGetValue(Constants.DefaultName, out IPluginConfiguration? configuration);
-      m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(ServiceHost, m_dialogService, configuration!);
+      m_ibServiceHost = InteractiveBrokers.ServiceHost.GetInstance(logger, ServiceHost, dialogService, database, configuration!);
       m_ibServiceHost.DataProviderPlugin = this;
       m_ibServiceHost.Client.Error += OnError;
     }
@@ -89,6 +86,15 @@ namespace TradeSharp.InteractiveBrokers
     {
       string errorMessage = $"{message} - (id: {id}, code: {errorCode})";
       raiseRequestError(errorMessage, exception);
+    }
+
+    public void RaiseDataDownloadComplete(IBApi.Contract contract, Resolution resolution, long count)
+    {
+      var instrument = m_ibServiceHost.Cache.GetInstrument(contract);
+      if (instrument != null)
+        raiseDataDownloadComplete(instrument, resolution, count);
+      else
+        m_logger.LogWarning($"Failed to find instrument for contract: {contract.SecId} - {contract.SecIdType}");
     }
   }
 }

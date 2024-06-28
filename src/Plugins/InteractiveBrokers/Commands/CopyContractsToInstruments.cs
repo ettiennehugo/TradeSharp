@@ -21,13 +21,13 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
 
     //attributes
-    private InstrumentAdapter m_adapter;
+    private ServiceHost m_serviceHost;
     private IProgressDialog m_progress;
 
     //constructors
-    public CopyContractsToInstruments(InstrumentAdapter adapter)
+    public CopyContractsToInstruments(ServiceHost serviceHost)
     {
-      m_adapter = adapter;
+      m_serviceHost = serviceHost;
     }
 
     //finalizers
@@ -63,8 +63,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
     public void Run()
     {
-      List<Contract> contracts = m_adapter.m_serviceHost.Cache.GetContracts();
-      m_progress = m_adapter.m_dialogService.CreateProgressDialog("Synchronizing Contract Cache", m_adapter.m_logger);
+      List<Contract> contracts = m_serviceHost.Cache.GetContracts();
+      m_progress = m_serviceHost.DialogService.CreateProgressDialog("Synchronizing Contract Cache", m_serviceHost.Logger);
       m_progress.StatusMessage = "Synchronizing Instrument definitions from Contracts";
       m_progress.Progress = 0;
       m_progress.Minimum = 0;
@@ -77,7 +77,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
       foreach (var contract in contracts)
       {
-        var instrument = m_adapter.m_instrumentService.Items.FirstOrDefault((i) => DeepCompare(contract, i));
+        var instrument = m_serviceHost.InstrumentService.Items.FirstOrDefault((i) => DeepCompare(contract, i));
         if (instrument == null)
         {
           instrument = createInstrument(contract);
@@ -102,7 +102,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         if (m_progress.CancellationTokenSource.IsCancellationRequested) break;  //exit thread when operation is cancelledigf
       }
 
-      if (refreshInstrumentGroups) Task.Run(m_adapter.m_instrumentGroupService.Refresh);
+      if (refreshInstrumentGroups) Task.Run(m_serviceHost.InstrumentGroupService.Refresh);
 
       m_progress.StatusMessage = $"Synchronizing instruments complete - created {created} and updated {updated} instruments";
       m_progress.Complete = true;
@@ -113,29 +113,29 @@ namespace TradeSharp.InteractiveBrokers.Commands
       Instrument? instrument = null; 
       if (contract is ContractStock stock)
       {
-        InstrumentType instrumentType = m_adapter.IBContractTypeToInstrumentType(stock.SecType);
+        InstrumentType instrumentType = m_serviceHost.Instruments.IBContractTypeToInstrumentType(stock.SecType);
         TextInfo textInfo = CultureInfo.CurrentCulture.TextInfo;
 
         string name = textInfo.ToTitleCase(stock.LongName);   //NOTE We use only the long name as the name contains trash at times.
         DateTime inceptionDate = Common.Constants.DefaultMinimumDateTime;
 
         string primaryExchangeName = stock.PrimaryExch.ToUpper();
-        Data.Exchange? exchange = m_adapter.m_exchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == primaryExchangeName);
+        Data.Exchange? exchange = m_serviceHost.ExchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == primaryExchangeName);
 
         //fallback strategies for exchanges
         //Smart exchange - this is the default exchange for IB so we first try it
         if (exchange == null && stock.ValidExchanges.Contains(Constants.DefaultExchange))
-          exchange = m_adapter.m_exchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == Constants.DefaultExchange);
+          exchange = m_serviceHost.ExchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == Constants.DefaultExchange);
 
         //Global exchange - this should always exist for TradeSharp
         if (exchange == null)
-          exchange = m_adapter.m_exchangeService.Items.FirstOrDefault((e) => e.Id == Data.Exchange.InternationalId);
+          exchange = m_serviceHost.ExchangeService.Items.FirstOrDefault((e) => e.Id == Data.Exchange.InternationalId);
 
         //build list of secondary exchanges
         List<Guid> secondaryExchangeIds = new List<Guid>();
         foreach (var exchangeName in stock.ValidExchanges.Split())
         {
-          Data.Exchange? secondaryExchange = m_adapter.m_exchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == exchangeName.ToUpper());
+          Data.Exchange? secondaryExchange = m_serviceHost.ExchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == exchangeName.ToUpper());
           if (secondaryExchange != null)
           {
             if (exchange != null) exchange = secondaryExchange;
@@ -148,7 +148,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         else
         {
           instrument = new Instrument(contract.Symbol, Instrument.DefaultAttributeSet, contract.Symbol, instrumentType, Array.Empty<string>(), name, name /*this is correct, see note above*/, inceptionDate, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchange.Id, secondaryExchangeIds, "");
-          m_adapter.m_instrumentService.Add(instrument);
+          m_serviceHost.InstrumentService.Add(instrument);
         }
       }
       else
@@ -162,7 +162,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       bool updated = false;
 
       //process the instrument according to contract type
-      InstrumentType instrumentType = m_adapter.IBContractTypeToInstrumentType(contract.SecType);
+      InstrumentType instrumentType = m_serviceHost.Instruments.IBContractTypeToInstrumentType(contract.SecType);
       switch (instrumentType)
       {
         case InstrumentType.Stock:
@@ -186,7 +186,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
             if (updated)
             {
               m_progress.LogInformation($"Updating instrument \"{instrument.Ticker}\" inception date\\instrument type.");
-              m_adapter.m_database.UpdateInstrument(instrument);
+              m_serviceHost.Database.UpdateInstrument(instrument);
             }
 
             //check whether the instrument is associated with the specific instrument group
@@ -220,8 +220,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
         //      in this case we need to find the associated sub-category and ignore the category. The sub-category
         //      will not contain any child groups.
         InstrumentGroup? instrumentGroup = null;
-        foreach (var group in m_adapter.m_instrumentGroupService.Items)
-          if (group.Equals(stock.Subcategory) && m_adapter.m_instrumentGroupService.Items.FirstOrDefault((g) => g.ParentId == group.Id) == null)
+        foreach (var group in m_serviceHost.InstrumentGroupService.Items)
+          if (group.Equals(stock.Subcategory) && m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.ParentId == group.Id) == null)
           {
             instrumentGroup = group;
             break;
@@ -235,7 +235,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         {
           m_progress.LogInformation($"Adding stock \"{instrument.Ticker}\" to subcategory \"{stock.Subcategory}\".");
           instrumentGroup.Instruments.Add(instrument.Ticker);
-          m_adapter.m_database.UpdateInstrumentGroup(instrumentGroup);
+          m_serviceHost.Database.UpdateInstrumentGroup(instrumentGroup);
           updated = true;
         }
       }

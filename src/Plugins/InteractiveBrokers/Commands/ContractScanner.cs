@@ -29,7 +29,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
 
     //attributes
-    private InstrumentAdapter m_adapter;
+    private ServiceHost m_serviceHost;
     private IProgressDialog m_progress;
     private HashSet<string> m_contractsToScan;
     private HashSet<string> m_contractsNotProcessed;
@@ -42,13 +42,13 @@ namespace TradeSharp.InteractiveBrokers.Commands
     private int m_persistBlockIndex;
 
     //constructors
-    public ContractScanner(InstrumentAdapter adapter)
+    public ContractScanner(ServiceHost serviceHost)
     {
-      m_adapter = adapter;
+      m_serviceHost = serviceHost;
       m_contractsToScan = new HashSet<string>();
       m_contractsNotProcessed = new HashSet<string>();
-      m_contractsDefined = m_adapter.m_serviceHost.Cache.GetDefinedSymbols();
-      m_contractScannerMetaData = m_adapter.m_serviceHost.Cache.GetContractScannerMetaData();
+      m_contractsDefined = m_serviceHost.Cache.GetDefinedSymbols();
+      m_contractScannerMetaData = m_serviceHost.Cache.GetContractScannerMetaData();
       m_contractsFound = new List<IBApi.Contract>();
       m_contractsFoundSymbols = new HashSet<string>();
       m_basicList = new HashSet<string>();
@@ -69,14 +69,14 @@ namespace TradeSharp.InteractiveBrokers.Commands
     //methods
     public void Run()
     {
-      m_progress = m_adapter.m_dialogService.CreateProgressDialog("Scanning for Contracts", m_adapter.m_logger);
+      m_progress = m_serviceHost.DialogService.CreateProgressDialog("Scanning for Contracts", m_serviceHost.Logger);
       m_progress.StatusMessage = "Generating tickers to scan, please wait.";
       m_progress.Progress = 0;
       m_progress.Minimum = 0;
       m_contractsToScan = generateTickersToScan(MaxLength);
       m_progress.ShowAsync();
 
-      m_adapter.m_serviceHost.Client.Error += HandleError;
+      m_serviceHost.Client.Error += HandleError;
 
       m_progress.LogInformation($"Generated {m_contractsToScan.Count} potential tickers of up to length {MaxLength}...removing tickers already cached");
 
@@ -99,7 +99,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         m_progress.LogInformation($"{m_contractsToScan.Count} contracts after removing contracts not within the refresh interval of {RefreshScanIntervalDays} days");
         m_progress.LogInformation($"Scanning remaining {m_contractsToScan.Count} tickers");
 
-        m_adapter.m_serviceHost.Client.SymbolSamples += HandleSymbolSamples;
+        m_serviceHost.Client.SymbolSamples += HandleSymbolSamples;
 
         foreach (string ticker in m_contractsToScan) m_contractsNotProcessed.Add(ticker);
         foreach (string ticker in m_contractsToScan)
@@ -107,7 +107,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
           //this can be a very long running process, check whether we have a connection and wait for the connection to come alive or exit
           //if the user cancels the operation
           bool disconnectDetected = false;
-          while (!m_adapter.m_serviceHost.Client.ClientSocket.IsConnected() && !m_progress.CancellationTokenSource.IsCancellationRequested)
+          while (!m_serviceHost.Client.ClientSocket.IsConnected() && !m_progress.CancellationTokenSource.IsCancellationRequested)
           {
             if (!disconnectDetected)             {
               m_progress.LogWarning($"Connection to Interactive Brokers lost at {DateTime.Now}, waiting for connection to be re-established");
@@ -126,13 +126,13 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
           //request the new symbols that might match the ticker
           m_requestId = ScannerIdBase + scannedCount;
-          m_adapter.m_serviceHost.Client.ClientSocket.reqMatchingSymbols(m_requestId, ticker);
+          m_serviceHost.Client.ClientSocket.reqMatchingSymbols(m_requestId, ticker);
           if (m_progress.CancellationTokenSource.IsCancellationRequested) break;
 
           //persist specific generated ticker that it was scanned - we commit every ticker as this stuff takes ages to run
           var metaData = new ContractScannerMetaData { Ticker = ticker };
           metaData.LastScanDateTime = DateTime.Now;
-          m_adapter.m_serviceHost.Cache.UpdateContractScannerMetaData(metaData);
+          m_serviceHost.Cache.UpdateContractScannerMetaData(metaData);
 
           //wait for the response to be handled
           var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -146,26 +146,26 @@ namespace TradeSharp.InteractiveBrokers.Commands
           int blockIndex = m_contractsFound.Count / PersistBlockInterval;
           if (m_contractsFound.Count > 0 && blockIndex != m_persistBlockIndex)
           {
-            m_adapter.m_serviceHost.Cache.BeginTransaction();
+            m_serviceHost.Cache.BeginTransaction();
             int startIndex = m_persistBlockIndex * PersistBlockInterval;
             int endIndex = blockIndex * PersistBlockInterval - 1; //-1 since it will be included in the next block persistenace, also makes sure the index stays in bounds of the m_contractsFound list
             m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache from index {startIndex} to {endIndex}");
             for (int i = startIndex; i <= endIndex; i++)
             {
-              m_adapter.m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
+              m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
               metaData = new ContractScannerMetaData { Ticker = m_contractsFound[i].Symbol };
               metaData.LastScanDateTime = DateTime.Now;
-              m_adapter.m_serviceHost.Cache.UpdateContractScannerMetaData(metaData);
+              m_serviceHost.Cache.UpdateContractScannerMetaData(metaData);
             }
-            m_adapter.m_serviceHost.Cache.CommitTransaction();
+            m_serviceHost.Cache.CommitTransaction();
             m_persistBlockIndex++;
           }
 
           scannedCount++;
         }
 
-        m_adapter.m_serviceHost.Client.Error -= HandleError;
-        m_adapter.m_serviceHost.Client.SymbolSamples -= HandleSymbolSamples;
+        m_serviceHost.Client.Error -= HandleError;
+        m_serviceHost.Client.SymbolSamples -= HandleSymbolSamples;
       }
 
       //store left over contracts to the cache
@@ -174,15 +174,15 @@ namespace TradeSharp.InteractiveBrokers.Commands
       if (m_contractsFound.Count > lastPersistedIndex)
       {
         m_progress.LogInformation($"{m_contractsFound.Count} new contracts found, flushing contracts to the local cache from index {lastPersistedIndex} to {m_contractsFound.Count}");
-        m_adapter.m_serviceHost.Cache.BeginTransaction();
+        m_serviceHost.Cache.BeginTransaction();
         for (int i = lastPersistedIndex; i < m_contractsFound.Count; i++)
         {
-          m_adapter.m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
+          m_serviceHost.Cache.UpdateContract(m_contractsFound[i]);
           var metaData = new ContractScannerMetaData { Ticker = m_contractsFound[i].Symbol };
           metaData.LastScanDateTime = DateTime.Now;
-          m_adapter.m_serviceHost.Cache.UpdateContractScannerMetaData(metaData);
+          m_serviceHost.Cache.UpdateContractScannerMetaData(metaData);
         }
-        m_adapter.m_serviceHost.Cache.CommitTransaction();
+        m_serviceHost.Cache.CommitTransaction();
       }
       m_progress.LogInformation($"Found {m_contractsFound.Count} new contracts after scanning {scannedCount} generated tickers (this number can be smaller, IB can return multiple contracts per ticker scanned), refreshing meta-data cache for scanner");
 
@@ -249,9 +249,9 @@ namespace TradeSharp.InteractiveBrokers.Commands
       else
       {
         if (e == null)
-          m_adapter.m_logger.LogError($"Error {errorCode} - {errorMessage ?? ""}");
+          m_serviceHost.Logger.LogError($"Error {errorCode} - {errorMessage ?? ""}");
         else
-          m_adapter.m_logger.LogError($"Error - {e.Message}");
+          m_serviceHost.Logger.LogError($"Error - {e.Message}");
       }
     }
   }

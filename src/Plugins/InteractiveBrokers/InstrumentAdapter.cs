@@ -43,17 +43,13 @@ namespace TradeSharp.InteractiveBrokers
       public Resolution Resolution { get; set; }
       public DateTime FromDateTime { get; set; }
       public DateTime ToDateTime { get; set; }
+      public long Count { get; set; }   //used internally to count the numnber of bars retrieved for this request
     }
 
     //attributes
     private static InstrumentAdapter? s_instance;
     internal ServiceHost m_serviceHost;
     internal ILogger m_logger;
-    internal IDialogService m_dialogService;
-    internal ICountryService m_countryService;
-    internal IExchangeService m_exchangeService;
-    internal IInstrumentGroupService m_instrumentGroupService;
-    internal IInstrumentService m_instrumentService;
     internal IDatabase m_database;
     internal bool m_contractRequestActive;
     internal bool m_fundamentalsRequestActive;
@@ -73,12 +69,6 @@ namespace TradeSharp.InteractiveBrokers
     {
       m_serviceHost = serviceHost;
       m_logger = serviceHost.Host.Services.GetRequiredService<ILogger<InstrumentAdapter>>();
-      m_dialogService = serviceHost.Host.Services.GetRequiredService<IDialogService>();
-      m_countryService = m_serviceHost.Host.Services.GetRequiredService<ICountryService>();
-      m_exchangeService = m_serviceHost.Host.Services.GetRequiredService<IExchangeService>();
-      m_instrumentGroupService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentGroupService>();
-      m_instrumentService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentService>();
-      m_instrumentService.Refresh();    //load instruments from the cache
       m_database = m_serviceHost.Host.Services.GetRequiredService<IDatabase>();
       m_activeHistoricalRequests = new Dictionary<int, HistoricalDataRequest>();
       m_activeRealTimeRequests = new Dictionary<int, Contract>();
@@ -137,43 +127,43 @@ namespace TradeSharp.InteractiveBrokers
 
     public void ScanForContracts()
     {
-      Commands.ContractScanner contractScanner = new Commands.ContractScanner(this);
+      Commands.ContractScanner contractScanner = new Commands.ContractScanner(m_serviceHost);
       contractScanner.Run();
     }
 
     public void SynchronizeContractCache()
     {
-      Commands.SynchronizeContractCache synchronizeContractCache = new Commands.SynchronizeContractCache(this);
+      Commands.SynchronizeContractCache synchronizeContractCache = new Commands.SynchronizeContractCache(m_serviceHost);
       synchronizeContractCache.Run();
     }
 
     public void DefineSupportedExchanges()
     {
-      Commands.DefineSupportedExchanges command = new Commands.DefineSupportedExchanges(this);
+      Commands.DefineSupportedExchanges command = new Commands.DefineSupportedExchanges(m_serviceHost);
       command.Run();
     }
 
     public void ValidateInstrumentGroups()
     {
-      Commands.ValidateInstrumentGroups command = new Commands.ValidateInstrumentGroups(this);
+      Commands.ValidateInstrumentGroups command = new Commands.ValidateInstrumentGroups(m_serviceHost);
       command.Run();
     }
 
     public void CopyIBClassesToInstrumentGroups()
     {
-      Commands.CopyIBClassesToInstrumentGroups command = new Commands.CopyIBClassesToInstrumentGroups(this);
+      Commands.CopyIBClassesToInstrumentGroups command = new Commands.CopyIBClassesToInstrumentGroups(m_serviceHost);
       command.Run();
     }
 
     public void ValidateInstruments()
     {
-      Commands.ValidateInstruments command = new Commands.ValidateInstruments(this);
+      Commands.ValidateInstruments command = new Commands.ValidateInstruments(m_serviceHost);
       command.Run();
     }
 
     public void CopyContractsToInstruments() 
     {
-      Commands.CopyContractsToInstruments command = new Commands.CopyContractsToInstruments(this);
+      Commands.CopyContractsToInstruments command = new Commands.CopyContractsToInstruments(m_serviceHost);
       command.Run();
     }
 
@@ -326,7 +316,10 @@ namespace TradeSharp.InteractiveBrokers
           // - Requests must be done as whole units of days, week, months or years so we need to make sure that the response date is within the specific requested date range.
           // - Volume returned is the numner of trades and not the volume in terms of total stocks that changed hands - this is NOT a good indicator of volume.
           if (dateTime >= request.FromDateTime && dateTime <= request.ToDateTime)
+          {
             m_database.UpdateData(Constants.DefaultName, request.Contract.Symbol, request.Resolution, dateTime, historicalDataMessage.Open, historicalDataMessage.High, historicalDataMessage.Low, historicalDataMessage.Close, historicalDataMessage.Volume);
+            m_lastHistoricalDataRequest.Count++;  //NOTE: This is correct, the HistoricalDataMessage is sent for each bar retrieved (it has a count field which contains the number of bars retrieved)
+          }
         }
         else
           m_logger.LogError($"Failed to parse date {date} for historical data request entry for reqId {historicalDataMessage.RequestId}");
@@ -337,6 +330,11 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleHistoricalDataEnd(HistoricalDataEndMessage historicalDataEndMessage)
     {
+      if (m_activeHistoricalRequests.TryGetValue(historicalDataEndMessage.RequestId, out HistoricalDataRequest? historicalDataRequest))
+        m_serviceHost.DataProviderPlugin.RaiseDataDownloadComplete(historicalDataRequest.Contract, historicalDataRequest.Resolution, historicalDataRequest.Count);
+      else
+        m_logger.LogError($"Failed to find historical data request - {historicalDataEndMessage.RequestId}");
+
       m_activeHistoricalRequests.Remove(historicalDataEndMessage.RequestId);
       m_lastHistoricalDataRequest = null;
     }

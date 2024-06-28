@@ -34,7 +34,6 @@ namespace TradeSharp.InteractiveBrokers
     protected ServiceHost m_serviceHost;
     protected ILogger m_logger;
     protected List<string> m_subscribedAccounts;
-    protected IInstrumentService m_instrumentService;
     protected IInstrumentBarDataService m_instrumentBarDataService;
 
     //constructors
@@ -51,8 +50,6 @@ namespace TradeSharp.InteractiveBrokers
       AccountIds = new ObservableCollection<string>();
       Accounts = new ObservableCollection<Data.Account>();
       m_subscribedAccounts = new List<string>();
-      m_instrumentService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentService>();
-      m_instrumentService.Refresh();    //load instruments from the cache
       m_instrumentBarDataService = m_serviceHost.Host.Services.GetRequiredService<IInstrumentBarDataService>();
     }
 
@@ -134,12 +131,12 @@ namespace TradeSharp.InteractiveBrokers
 
     public Instrument? From(Contract contract)
     {
-      return m_instrumentService.Items.FirstOrDefault(x => x.Ticker == contract.Symbol.ToUpper());
+      return m_serviceHost.InstrumentService.Items.FirstOrDefault(x => x.Ticker == contract.Symbol.ToUpper());
     }
 
     public Instrument? From(ContractDetails contractDetails)
     {
-      return m_instrumentService.Items.FirstOrDefault(x => x.Ticker == contractDetails.UnderSymbol.ToUpper());
+      return m_serviceHost.InstrumentService.Items.FirstOrDefault(x => x.Ticker == contractDetails.UnderSymbol.ToUpper());
     }
 
     //properties

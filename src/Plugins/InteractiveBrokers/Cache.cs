@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Data.Sqlite;
 using TradeSharp.Common;
+using TradeSharp.Data;
 using IBApi;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +40,7 @@ namespace TradeSharp.InteractiveBrokers
 
     //attributes
     static private Cache? s_instance; 
+    private ServiceHost m_serviceHost;
     private string m_databaseFile;
     private SqliteConnection m_connection;
     private string m_connectionString;
@@ -47,15 +49,16 @@ namespace TradeSharp.InteractiveBrokers
     private Dictionary<int, Contract> m_contractsByConId;
 
     //constructors
-    public static Cache GetInstance(ServiceHost host)
+    public static Cache GetInstance(ServiceHost serviceHost)
     {
-      if (s_instance == null) s_instance = new Cache(host.Host.Services.GetRequiredService<ILogger<Cache>>(), host.Host, host.Configuration);
+      if (s_instance == null) s_instance = new Cache(serviceHost.Host.Services.GetRequiredService<ILogger<Cache>>(), serviceHost, serviceHost.Configuration);
       return s_instance;
     }
 
-    protected Cache(ILogger logger, IHost host, IPluginConfiguration configuration)
+    protected Cache(ILogger logger, ServiceHost serviceHost, IPluginConfiguration configuration)
     {
       m_logger = logger;
+      m_serviceHost = serviceHost;
       string tradeSharpHome = Environment.GetEnvironmentVariable(TradeSharp.Common.Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{TradeSharp.Common.Constants.TradeSharpHome}\" not defined.");
       m_databaseFile = Path.Combine(tradeSharpHome, TradeSharp.Common.Constants.DataDir, configuration.Configuration[TradeSharp.InteractiveBrokers.Constants.CacheKey]!.ToString());
       m_contractsByTickerExchange = new Dictionary<int, Contract>();
@@ -387,6 +390,11 @@ namespace TradeSharp.InteractiveBrokers
       }
 
       return contract;
+    }
+
+    public Instrument? GetInstrument(Contract contract)
+    {
+      return m_serviceHost.InstrumentService.Items.FirstOrDefault((i) => i.Equals(contract.SecId));
     }
 
     public void UpdateContractScannerMetaData(ContractScannerMetaData metaData)

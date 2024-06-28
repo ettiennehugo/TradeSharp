@@ -1,8 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Data;
-using TradeSharp.CoreUI.Common;
 using System.Collections.ObjectModel;
-using System.Xml.Linq;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -94,18 +92,8 @@ namespace TradeSharp.CoreUI.Services
       Children.Clear();
       foreach (InstrumentGroup instrumentGroup in m_instrumentGroupService.Items)
         if (instrumentGroup.ParentId == Id) Children.Add(new InstrumentGroupNodeType(m_instrumentGroupService, m_instrumentService, this, instrumentGroup, false));
-
-      bool loadInstruments = m_instrumentService.LoadedState == LoadedState.Loaded;
       foreach (var ticker in Item.Instruments)
-      {
-        string description = "<No description found>";
-        if (loadInstruments)
-        {
-          var instrument = m_instrumentService.Items.FirstOrDefault(i => i.Equals(ticker));
-          if (instrument != null) description = instrument.Description;
-        }
-        Instruments.Add(new InstrumentGroupNodeInstrument(ticker, description));
-      }
+        Instruments.Add(new InstrumentGroupNodeInstrument(ticker, "<No description found>"));
     }
 
     public void RefreshInstruments()

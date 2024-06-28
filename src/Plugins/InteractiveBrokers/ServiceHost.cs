@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using TradeSharp.Common;
+using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.InteractiveBrokers
@@ -21,18 +23,39 @@ namespace TradeSharp.InteractiveBrokers
     //attributes
     private static ServiceHost? s_instance;
 
+    //properties
+    public ILogger Logger { get; protected set; }
+    public IPluginConfiguration Configuration { get; protected set; }
+    public IDialogService DialogService { get; protected set; }
+    public IDatabase Database { get; protected set; }
+    public IInstrumentService InstrumentService { get; protected set; }
+    public IInstrumentGroupService InstrumentGroupService { get; protected set; }
+    public IExchangeService ExchangeService { get; protected set; }
+    public IHost Host { get; protected set; }
+    public InteractiveBrokers.BrokerPlugin BrokerPlugin { get; set; }                //should only be called by the broker when it is created
+    public InteractiveBrokers.DataProviderPlugin DataProviderPlugin { get; set; }    //should only be called by the data provider when it is created
+    public Client Client { get; protected set; }
+    public Cache Cache { get; protected set; }
+    public AccountAdapter Accounts { get; protected set; }
+    public InstrumentAdapter Instruments { get; protected set; }
+
     //constructors
-    public static ServiceHost GetInstance(IHost host, IDialogService dialogService, IPluginConfiguration configuration)
+    public static ServiceHost GetInstance(ILogger logger, IHost host, IDialogService dialogService, IDatabase database, IPluginConfiguration configuration)
     {
-      if (s_instance == null) s_instance = new ServiceHost(host, dialogService, configuration);
+      if (s_instance == null) s_instance = new ServiceHost(logger, host, dialogService, database, configuration);
       return s_instance;
     }
 
-    protected ServiceHost(IHost host, IDialogService dialogService, IPluginConfiguration configuration)
+    protected ServiceHost(ILogger logger, IHost host, IDialogService dialogService, IDatabase database, IPluginConfiguration configuration)
     {
       //allocate components
+      Logger = logger; 
       Configuration = configuration;
       DialogService = dialogService;
+      Database = database;
+      InstrumentGroupService = (IInstrumentGroupService)host.Services.GetService(typeof(IInstrumentGroupService))!;
+      InstrumentService = (IInstrumentService)host.Services.GetService(typeof(IInstrumentService))!;
+      ExchangeService = (IExchangeService)host.Services.GetService(typeof(IExchangeService))!;
       Host = host;
       Client = Client.GetInstance(this);
       Cache = Cache.GetInstance(this);
@@ -62,22 +85,6 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //interface implementations
-
-
-    //properties
-    public IPluginConfiguration Configuration { get; protected set; }
-    public IDialogService DialogService { get; protected set; }
-    public IHost Host { get; protected set; }
-    public InteractiveBrokers.BrokerPlugin BrokerPlugin { get; set; }                //should only be called by the broker when it is created
-    public InteractiveBrokers.DataProviderPlugin DataProviderPlugin { get; set; }    //should only be called by the data provider when it is created
-    public Client Client { get; protected set; }
-    public Cache Cache { get; protected set; }
-    public AccountAdapter Accounts { get; protected set; }
-    public InstrumentAdapter Instruments { get; protected set; }
-
-
-    //TODO define the set of 
-
 
 
     //methods

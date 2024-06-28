@@ -27,6 +27,7 @@ namespace TradeSharp.Data
 
     //events
     public event RequestErrorHandler? RequestError;
+    public event DataDownloadCompleteHandler? DataDownloadComplete;
 
     //properties
     public virtual IList<string> Tickers { get => throw new NotImplementedException(); }
@@ -52,5 +53,6 @@ namespace TradeSharp.Data
 
     //methods
     protected virtual void raiseRequestError(string message, Exception? exception = null) { RequestError?.Invoke(this, new RequestErrorArgs(message, exception)); }
+    protected virtual void raiseDataDownloadComplete(Instrument instrument, Resolution resolution, long count) { DataDownloadComplete?.Invoke(this, new DataDownloadCompleteArgs(instrument, resolution, count)); }
   }
 }

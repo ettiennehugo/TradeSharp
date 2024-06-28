@@ -6,26 +6,5 @@ namespace TradeSharp.CoreUI.ViewModels
   /// <summary>
   /// Concrete interface for the view model for instruments.
   /// </summary>
-  public interface IInstrumentViewModel: IListViewModel<Instrument> 
-  {
-
-    //constants
-
-
-    //enums
-
-
-    //types
-
-
-    //attributes
-
-
-    //properties
-    ObservableCollection<Instrument> SelectedItems { get; set; }
-
-    //methods
-
-
-  }
+  public interface IInstrumentViewModel: IListViewModel<Instrument> { }
 }
