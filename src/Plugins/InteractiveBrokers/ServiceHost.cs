@@ -54,6 +54,7 @@ namespace TradeSharp.InteractiveBrokers
       Database = database;
       InstrumentGroupService = (IInstrumentGroupService)host.Services.GetService(typeof(IInstrumentGroupService))!;
       InstrumentService = (IInstrumentService)host.Services.GetService(typeof(IInstrumentService))!;
+      InstrumentService.Refresh();
       ExchangeService = (IExchangeService)host.Services.GetService(typeof(IExchangeService))!;
       Host = host;
       Client = Client.GetInstance(this);

@@ -332,7 +332,6 @@ namespace TradeSharp.InteractiveBrokers
     protected Order? resolveOrder(int orderId)
     {
       Order? order = null;
-
       foreach (var account in Accounts)
       {
         order = (Order?)account.Orders.FirstOrDefault(x => ((Order)x).OrderId == orderId);
