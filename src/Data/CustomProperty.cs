@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TradeSharp.Data
 {
@@ -20,13 +21,14 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public CustomProperty()
+    public CustomProperty(object? parent, string name, string description, Type type, string unit = "")
     {
-      Name = string.Empty;
-      Description = string.Empty;
-      Type = typeof(object);
-      Value = new object();
-      Unit = string.Empty;
+      Parent = parent;
+      Name = name;
+      Description = description;
+      Type = type;
+      Value = Activator.CreateInstance(type)!;  //only use basic types for custom properties, if this breaks you most likely used some other type
+      Unit = unit;
     }
 
     //finalizers
@@ -36,11 +38,12 @@ namespace TradeSharp.Data
 
 
     //properties
-    [ObservableProperty] string m_name;
-    [ObservableProperty] string m_description;
-    [ObservableProperty] Type m_type;
+    public object? Parent { get; protected set; } //object that owns this property
+    public string Name { get; protected set; }
+    public string Description { get; protected set; }
+    public Type Type { get; protected set; }
     [ObservableProperty] object m_value;
-    [ObservableProperty] string m_unit; //unit of measure for value, blank if no specific unit of measure
+    public string Unit { get; protected set; } //unit of measure for value, blank if no specific unit of measure
 
     //methods
 

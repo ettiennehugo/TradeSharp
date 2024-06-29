@@ -3,6 +3,7 @@ using TradeSharp.Data;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 
 namespace TradeSharp.CoreUI.Services
@@ -78,114 +79,49 @@ namespace TradeSharp.CoreUI.Services
         return;
       }
 
-      //TEMPORARY CODE - Statically load the plugins.
-      //InteractiveBrokers
-      IPlugin plugin = (IPlugin)new TradeSharp.InteractiveBrokers.BrokerPlugin();
-      plugin.ServiceHost = Host;
-      plugin.Configuration = m_configurationService.Brokers[plugin.Name];
-      plugin.Create(m_logger);
-      Items.Add(plugin);
-
-      //TODO: Currently no extension plugins are implemented, but the following code should be used to load them.
-
-      //TODO: Currently the plugins are loaded but you need to setup a static reference to the project that defines the plugin. This is not correct,
-      //      and the plugins should be loaded dynamically without a static reference to the project. The following code is somewhat of what it should
-      //      look like:
-      //ObjectHandle? dataProviderHandle = Activator.CreateInstanceFrom(dataProviderPluginConfig.Value.Assembly, dataProviderPluginConfig.Value.Type);
-      //if (dataProviderHandle == null)
-      //{
-      //  m_logger.LogError($"Error creating instance of data provider plugin {dataProviderPluginConfig.Key}");
-      //  continue;
-      //}
-
-      //foreach (var dataProviderPluginConfig in m_configurationService.DataProviders)
-      //{
-      //  try
-      //  {
-      //    Type t = typeof(TradeSharp.InteractiveBrokers.DataProviderPlugin);
-      //    string n = t.ToString();
-
-      //    Type? dataProviderPluginType = Type.GetType(dataProviderPluginConfig.Value.Type);
-      //    Plugin? dataProviderPlugin = (Plugin?)Activator.CreateInstance(t);
-      //    if (dataProviderPlugin == null)
-      //    {
-      //      m_logger.LogError($"Error unwrapping instance of data provider plugin {dataProviderPluginConfig.Key}");
-      //      continue;
-      //    }
-
-      //    dataProviderPlugin!.ServiceHost = host;
-      //    dataProviderPlugin.Configuration = dataProviderPluginConfig.Value;
-      //    dataProviderPlugin.Create(m_logger);
-      //    Plugins.Add((IPlugin)dataProviderPlugin);
-      //  }
-      //  catch (Exception ex)
-      //  {
-      //    m_logger.LogError(ex, $"Error loading data provider plugin {dataProviderPluginConfig.Key}");
-      //  }
-      //}
-
-      //foreach (var brokerPluginConfig in m_configurationService.Brokers) 
-      //{
-      //  try
-      //  {
-      //    ObjectHandle? brokerPluginHandle = Activator.CreateInstanceFrom(brokerPluginConfig.Value.Assembly, brokerPluginConfig.Value.Type);
-      //    if (brokerPluginHandle == null)
-      //    {
-      //      m_logger.LogError($"Error creating instance of broker plugin {brokerPluginConfig.Key}");
-      //      continue;
-      //    }
-
-      //    Plugin? brokerPlugin = (Plugin?)brokerPluginHandle.Unwrap();
-      //    if (brokerPlugin == null)
-      //    {
-      //      m_logger.LogError($"Error unwrapping instance of broker plugin {brokerPluginConfig.Key}");
-      //      continue;
-      //    }
-
-      //    brokerPlugin!.ServiceHost = host;
-      //    brokerPlugin!.Configuration = brokerPluginConfig.Value;
-      //    brokerPlugin.Create(m_logger);
-      //    Plugins.Add((IPlugin)brokerPlugin);
-      //  }
-      //  catch (Exception ex)
-      //  {
-      //    m_logger.LogError(ex, $"Error loading broker plugin {brokerPluginConfig.Key}");
-      //  }
-      //}
-
-      //foreach (var extensionPluginConfig in m_configurationService.Extensions) 
-      //{
-      //  try
-      //  {
-      //    ObjectHandle? extensionPluginHandle = Activator.CreateInstanceFrom(extensionPluginConfig.Value.Assembly, extensionPluginConfig.Value.Type);
-      //    if (extensionPluginHandle == null)
-      //    {
-      //      m_logger.LogError($"Error creating instance of extension plugin {extensionPluginConfig.Key}");
-      //      continue;
-      //    }
-
-      //    Plugin? extensionPlugin = (Plugin?)extensionPluginHandle.Unwrap();
-      //    if (extensionPlugin == null)
-      //    {
-      //      m_logger.LogError($"Error unwrapping instance of extension plugin {extensionPluginConfig.Key}");
-      //      continue;
-      //    }
-
-      //    extensionPlugin!.ServiceHost = host;
-      //    extensionPlugin!.Configuration = extensionPluginConfig.Value;
-      //    extensionPlugin.Create(m_logger);
-      //    Plugins.Add((IPlugin)extensionPlugin);
-      //  }
-      //  catch (Exception ex)
-      //  {
-      //    m_logger.LogError(ex, $"Error loading extension plugin {extensionPluginConfig.Key}");
-      //  }
-      //}
+      //load the sets of defined plugin's from the configuration
+      loadPlugins(m_configurationService.Brokers);
+      loadPlugins(m_configurationService.DataProviders);
+      loadPlugins(m_configurationService.Extensions);
     }
 
     public bool Update(IPlugin item)
     {
       throw new NotImplementedException();
+    }
+
+    protected void loadPlugins(IDictionary<string,IPluginConfiguration> plugins)
+    {
+      foreach (var pluginConfig in plugins)
+      {
+        try
+        {
+          var assembly = Assembly.LoadFrom(pluginConfig.Value.Assembly);
+          var type = assembly.GetType(pluginConfig.Value.Type);
+          if (type == null)
+          {
+            m_logger.LogError($"Could not find plugin type {pluginConfig.Value.Type} in assembly {pluginConfig.Value.Assembly}.");
+            continue;
+          }
+          // Create an instance of the type
+          var instance = Activator.CreateInstance(type) as IPlugin;
+          if (instance == null)
+          {
+            m_logger.LogError($"Could not create an instance of plugin type {pluginConfig.Value.Type}.");
+            continue;
+          }
+
+          // Assuming the instance needs to be configured and added to Items
+          instance.ServiceHost = Host;
+          instance.Configuration = pluginConfig.Value;
+          instance.Create(m_logger);
+          Items.Add(instance);
+        }
+        catch (Exception ex)
+        {
+          m_logger.LogError(ex, $"Error loading plugin {pluginConfig.Key} - {ex.Message}.");
+        }
+      }
     }
   }
 }

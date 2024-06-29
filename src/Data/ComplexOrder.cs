@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace TradeSharp.Data
@@ -8,7 +9,7 @@ namespace TradeSharp.Data
   /// </summary>
   [ComVisible(true)]
   [Guid("70A8C5EE-0A95-4193-BA07-D3F3B84BF3DB")]
-  public abstract class ComplexOrder : Order
+  public abstract partial class ComplexOrder : Order
   {
     //constants
 
@@ -34,7 +35,7 @@ namespace TradeSharp.Data
 
 
     //constructors
-
+    public ComplexOrder(Account account, Instrument instrument) : base(account, instrument) { }
 
     //finalizers
 
@@ -43,7 +44,7 @@ namespace TradeSharp.Data
 
 
     //properties
-    public OrderType Type { get; protected set; }
+    [ObservableProperty] OrderType m_type;
 
     //methods
 

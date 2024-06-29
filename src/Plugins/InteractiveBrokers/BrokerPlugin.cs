@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.ComponentModel;
+using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using TradeSharp.Data;
@@ -43,7 +44,9 @@ namespace TradeSharp.InteractiveBrokers
   public class BrokerPlugin : TradeSharp.Data.BrokerPlugin
   {
     //constants
-
+    public const string PropertyHidden = "Hidden";
+    public const string PropertyGoodAfterTime = "GoodAfterTime";
+    public const string PropertyOutsideRTH = "OutsideRTH";
 
     //enums
 
@@ -180,6 +183,16 @@ namespace TradeSharp.InteractiveBrokers
       return Task.Run(m_ibServiceHost.Instruments.CopyContractsToInstruments);
     }
 
+    public override SimpleOrder CreateSimpleOrder(Data.Account account, Instrument instrument)
+    {
+      return new InteractiveBrokers.SimpleOrder((InteractiveBrokers.Account)account, instrument, m_ibServiceHost);
+    }
+
+    public override ComplexOrder CreateComplexOrder(Data.Account account, Instrument instrument)
+    {
+      return new InteractiveBrokers.ComplexOrder((InteractiveBrokers.Account)account, instrument, m_ibServiceHost);
+    }
+
     //properties
     public override bool IsConnected { get => m_ibServiceHost.Client.IsConnected; }
     public override ObservableCollection<Data.Account> Accounts { get => m_ibServiceHost.Accounts.Accounts; }
@@ -192,26 +205,6 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //methods
-    public void defineCustomProperties(Order order)
-    {
-      if (order is SimpleOrder)
-      {
-
-        //TODO: Define the custom properties for the order.
-
-      }
-      else if (order is ComplexOrder)
-      {
-
-        //TODO: Define the custom properties for the order.
-
-      }
-      else
-      {
-        m_logger.LogError("Order type not supported.");
-      }
-    }
-
     public void HandleConnectionStatus(ConnectionStatusMessage connectionStatusMessage)
     {
       if (connectionStatusMessage.IsConnected)
@@ -325,6 +318,49 @@ namespace TradeSharp.InteractiveBrokers
       }
       else
         Description += "; No maintenance schedule";
+    }
+
+    //common order property definitions and change handlers
+    internal void defineCommonOrderProperties(Data.Order order)
+    {
+      var property = new CustomProperty(order, PropertyHidden, "Do not show order in order book", typeof(bool));
+      property.PropertyChanged += onHiddenChanged;
+      order.CustomProperties.Add(PropertyHidden, property);
+      property = new CustomProperty(order, PropertyGoodAfterTime, "Specifies the date and time after which the order will be active", typeof(DateTime));
+      property.PropertyChanged += onGoodAfterTimeChanged;
+      order.CustomProperties.Add(PropertyGoodAfterTime, property);
+      property = new CustomProperty(order, PropertyOutsideRTH, "Allow fill outside regular trading hours", typeof(bool));
+      order.CustomProperties.Add(PropertyOutsideRTH, property);
+    }
+
+    protected static void onHiddenChanged(object? sender, PropertyChangedEventArgs e)
+    {
+      CustomProperty property = (CustomProperty)sender!;
+      Order parent = (Order)property.Parent!;
+      IBApi.Order? order = null;
+      if (parent is SimpleOrder simpleOrder) order = simpleOrder.Order;
+      else if (parent is ComplexOrder complexOrder) order = complexOrder.Order;
+      order!.Hidden = (bool)property.Value;
+    }
+
+    protected static void onGoodAfterTimeChanged(object? sender, PropertyChangedEventArgs e)
+    {
+      CustomProperty property = (CustomProperty)sender!;
+      Order parent = (Order)property.Parent!;
+      IBApi.Order? order = null;
+      if (parent is SimpleOrder simpleOrder) order = simpleOrder.Order;
+      else if (parent is ComplexOrder complexOrder) order = complexOrder.Order;
+      order!.GoodAfterTime = ((DateTime)property.Value).ToUniversalTime().ToString("yyyyMMdd HH:mm:ss Z");
+    }
+
+    protected static void onOutsideRTHChanged(object? sender, PropertyChangedEventArgs e)
+    {
+      CustomProperty property = (CustomProperty)sender!;
+      Order parent = (Order)property.Parent!;
+      IBApi.Order? order = null;
+      if (parent is SimpleOrder simpleOrder) order = simpleOrder.Order;
+      else if (parent is ComplexOrder complexOrder) order = complexOrder.Order;
+      order!.OutsideRth = (bool)property.Value;
     }
   }
 }

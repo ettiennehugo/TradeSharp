@@ -41,6 +41,9 @@ namespace TradeSharp.Data
     public virtual event OrderUpdatedHandler? OrderUpdated;
 
     //methods
+    public abstract SimpleOrder CreateSimpleOrder(Account account, Instrument instrument);
+    public abstract ComplexOrder CreateComplexOrder(Account account, Instrument instrument);
+
     public void raiseAccountsUpdated()
     {
       AccountsUpdated?.Invoke(this, new AccountsUpdatedArgs());

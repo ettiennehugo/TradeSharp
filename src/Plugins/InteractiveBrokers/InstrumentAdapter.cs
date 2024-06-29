@@ -122,6 +122,39 @@ namespace TradeSharp.InteractiveBrokers
       return InstrumentType.Stock;
     }
 
+
+    public Instrument? From(Contract contract)
+    {
+      return m_serviceHost.InstrumentService.Items.FirstOrDefault(x => x.Ticker == contract.Symbol.ToUpper());
+    }
+
+    public Instrument? From(ContractDetails contractDetails)
+    {
+      return m_serviceHost.InstrumentService.Items.FirstOrDefault(x => x.Ticker == contractDetails.UnderSymbol.ToUpper());
+    }
+
+    public Contract? From(Instrument instrument)
+    {
+      Exchange? exchange = m_serviceHost.ExchangeService.Items.FirstOrDefault((e) => e.Id == instrument.PrimaryExchangeId);
+      if (exchange == null)
+      {
+        m_logger.LogError($"Failed to find exchange for instrument {instrument.Ticker}.");
+        return null;
+      }
+
+      Contract? contract = m_serviceHost.Cache.GetContract(instrument.Ticker, exchange.Name);
+      if (contract == null)
+      {
+        foreach (var ticker in instrument.AlternateTickers)
+        {
+          contract = m_serviceHost.Cache.GetContract(ticker, exchange.Name);
+          if (contract != null) break;
+        }
+      }
+
+      return contract;
+    }
+
     public void ScanForContracts()
     {
       Commands.ContractScanner contractScanner = new Commands.ContractScanner(m_serviceHost);

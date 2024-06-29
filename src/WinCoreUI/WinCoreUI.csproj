@@ -44,7 +44,6 @@
     <ProjectReference Include="$(TradeSharpSrc)\Common\Common.csproj" />
     <ProjectReference Include="$(TradeSharpSrc)\CoreUI\CoreUI.csproj" />
     <ProjectReference Include="$(TradeSharpSrc)\Data\Data.csproj" />
-    <ProjectReference Include="..\Plugins\InteractiveBrokers\InteractiveBrokers.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\SessionsView.xaml">

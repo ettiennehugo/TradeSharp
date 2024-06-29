@@ -129,16 +129,6 @@ namespace TradeSharp.InteractiveBrokers
       m_serviceHost.Client.ClientSocket.reqCompletedOrders(false);  //we retrieve all orders, both submitted to the API and via TWS - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#req-completed-orders
     }
 
-    public Instrument? From(Contract contract)
-    {
-      return m_serviceHost.InstrumentService.Items.FirstOrDefault(x => x.Ticker == contract.Symbol.ToUpper());
-    }
-
-    public Instrument? From(ContractDetails contractDetails)
-    {
-      return m_serviceHost.InstrumentService.Items.FirstOrDefault(x => x.Ticker == contractDetails.UnderSymbol.ToUpper());
-    }
-
     //properties
     public ObservableCollection<string> AccountIds { get; protected set; }
     public ObservableCollection<Data.Account> Accounts { get; protected set; }
@@ -230,11 +220,11 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleOrderStatus(OrderStatusMessage orderStatusMessage)
     {
-      Order? order = null;
+      Data.Order? order = null;
       lock (this)
         m_serviceHost.DialogService.PostUIUpdate(() =>
         {
-          order = resolveOrder(orderStatusMessage.OrderId);
+          order = (Data.Order?)resolveOrder(orderStatusMessage.OrderId);
           if (order == null)
           {
             m_logger.LogWarning($"HandleOrderStatus - order not found - {orderStatusMessage.OrderId}");
@@ -244,17 +234,17 @@ namespace TradeSharp.InteractiveBrokers
           //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#order-status-message
           string orderStatus = orderStatusMessage.Status.ToUpper();
           if (orderStatus == Constants.OrderStatusPendingSubmit)
-            order.Status = Data.Order.OrderStatus.PendingSubmit;
+            order.Status = OrderStatus.PendingSubmit;
           else if (orderStatus == Constants.OrderStatusPendingCancel)
-            order.Status = Data.Order.OrderStatus.PendingCancel;
+            order.Status = OrderStatus.PendingCancel;
           else if (orderStatus == Constants.OrderStatusSubmitted)
-            order.Status = Data.Order.OrderStatus.Open;
+            order.Status = OrderStatus.Open;
           else if (orderStatus == Constants.OrderStatusInactive)
-            order.Status = Data.Order.OrderStatus.Inactive;
+            order.Status = OrderStatus.Inactive;
           else if (orderStatus == Constants.OrderStatusFilled)
-            order.Status = Data.Order.OrderStatus.Filled;
+            order.Status = OrderStatus.Filled;
           else if (orderStatus == Constants.OrderStatusCancelled)
-            order.Status = Data.Order.OrderStatus.Cancelled;
+            order.Status = OrderStatus.Cancelled;
           else
             m_logger.LogWarning($"HandleOrderStatus - unknown order status - {orderStatusMessage.Status}");
 
@@ -269,7 +259,7 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleOpenOrder(OpenOrderMessage openOrderMessage)
     {
-      Order? order = null;
+      Data.Order? order = null;
       lock (this)
         m_serviceHost.DialogService.PostUIUpdate(() =>
         {
@@ -280,9 +270,8 @@ namespace TradeSharp.InteractiveBrokers
             return;
           }
 
-          order = resolveOrder(account, openOrderMessage.OrderId);
-          order.Instrument = From(openOrderMessage.Contract)!;  //intrument should exist if we're receiving an open order on it
-          order.Status = openOrderMessage.OrderState.Status == "" ? Data.Order.OrderStatus.Filled : Data.Order.OrderStatus.Open;   //TODO - need to complete this
+          order = (SimpleOrder)resolveOrder(account, openOrderMessage.Contract, openOrderMessage.OrderId);
+          order.Status = openOrderMessage.OrderState.Status == "" ? OrderStatus.Filled : OrderStatus.Open;   //TODO - need to complete this
           order.Filled = openOrderMessage.Order.FilledQuantity == double.MaxValue ? 0.0 : openOrderMessage.Order.FilledQuantity;
           order.Quantity = order.Filled;
           double total = openOrderMessage.Order.TotalQuantity == double.MaxValue ? 0.0 : openOrderMessage.Order.TotalQuantity;
@@ -312,29 +301,29 @@ namespace TradeSharp.InteractiveBrokers
       Position? position = account.Positions.FirstOrDefault(x => x.Instrument?.Ticker == contract.Symbol.ToUpper());
       if (position == null)
       {
-        position = new Position(account, From(contract)!, PositionDirection.Long, 0, 0, 0, 0, 0, 0);
+        position = new Position(account, m_serviceHost.Instruments.From(contract)!, PositionDirection.Long, 0, 0, 0, 0, 0, 0);
         account.Positions.Add(position);
       }
       return position;
     }
 
-    protected Order resolveOrder(Data.Account account, int orderId)
+    protected Data.Order resolveOrder(Data.Account account, Contract contract, int orderId)
     {
-      Order? order = (Order?)account.Orders.FirstOrDefault(x => ((Order)x).OrderId == orderId);
+      Data.Order? order = account.Orders.FirstOrDefault(x => (x is SimpleOrder simpleOrder && simpleOrder.Order.OrderId == orderId) || (x is ComplexOrder complexOrder && complexOrder.Order.OrderId == orderId));
       if (order == null)
       {
-        order = new Order(orderId);
+        order = new SimpleOrder((TradeSharp.InteractiveBrokers.Account)account, m_serviceHost.Instruments.From(contract)!, m_serviceHost);
         account.Orders.Add(order);
       }
       return order;
     }
 
-    protected Order? resolveOrder(int orderId)
+    protected Data.Order? resolveOrder(int orderId)
     {
-      Order? order = null;
+      Data.Order? order = null;
       foreach (var account in Accounts)
       {
-        order = (Order?)account.Orders.FirstOrDefault(x => ((Order)x).OrderId == orderId);
+        order = account.Orders.FirstOrDefault(x => (x is SimpleOrder simpleOrder && simpleOrder.Order.OrderId == orderId) || (x is ComplexOrder complexOrder && complexOrder.Order.OrderId == orderId));
         if (order != null)
           break;
       }
@@ -407,15 +396,35 @@ namespace TradeSharp.InteractiveBrokers
         //some unknown property, add it as a custom property based on simple supported types
         if (account.CustomProperties.ContainsKey(key)) account.CustomProperties.Remove(key);  //always update key values
         if (int.TryParse(value, out int intResult))
-          account.CustomProperties.Add(key, new CustomProperty { Name = key, Description = key, Type = typeof(int), Value = intResult, Unit = currency });
+        {
+          var property = new CustomProperty(account, key, key, typeof(int), currency);
+          property.Value = intResult;
+          account.CustomProperties[key] = property;
+        }
         else if (double.TryParse(value, out double doubleResult))
-          account.CustomProperties.Add(key, new CustomProperty { Name = key, Description = key, Type = typeof(double), Value = doubleResult, Unit = currency });
+        {
+          var property = new CustomProperty(account, key, key, typeof(double), currency);
+          property.Value = doubleResult;
+          account.CustomProperties[key] = property;
+        }
         else if (bool.TryParse(value, out bool boolResult))
-          account.CustomProperties.Add(key, new CustomProperty { Name = key, Description = key, Type = typeof(bool), Value = boolResult, Unit = currency });
+        {
+          var property = new CustomProperty(account, key, key, typeof(bool));
+          property.Value = boolResult;
+          account.CustomProperties[key] = property;
+        }
         else if (DateTime.TryParse(value, out DateTime dateTimeResult))
-          account.CustomProperties.Add(key, new CustomProperty { Name = key, Description = key, Type = typeof(DateTime), Value = dateTimeResult, Unit = currency });
+        {
+          var property = new CustomProperty(account, key, key, typeof(DateTime));
+          property.Value = dateTimeResult;
+          account.CustomProperties[key] = property;
+        }
         else
-          account.CustomProperties.Add(key, new CustomProperty { Name = key, Description = key, Type = typeof(string), Value = value, Unit = currency });
+        {
+          var property = new CustomProperty(account, key, key, typeof(string), currency);
+          property.Value = value;
+          account.CustomProperties[key] = property;
+        }
       }
 
       return account;

@@ -33,7 +33,7 @@ namespace TradeSharp.Data
     event OrderUpdatedHandler? OrderUpdated;          //order values were changed
 
     //methods
-
-
+    SimpleOrder CreateSimpleOrder(Account account, Instrument instrument);
+    ComplexOrder CreateComplexOrder(Account account, Instrument instrument);
   }
 }

@@ -7,7 +7,14 @@
       "ConnectionString": "TradeSharp.db"
     }
   },
-  "DataProviders": { },
+  "DataProviders": {
+    "PolygonIO": {
+      "Assembly": "C:\\Share\\Trading\\Projects\\TradeSharp\\bin\\Debug\\net8.0\\TradeSharp.PolygonIO.dll",
+      "Type": "TradeSharp.PolygonIO.DataProviderPlugin",
+      "ApiBaseUrl": "https://api.polygon.io",
+      "ApiKey": "<TODO - Fill this in>"
+    }
+  },
   "Brokers": {
     "InteractiveBrokers": {
       "Assembly": "C:\\Share\\Trading\\Projects\\TradeSharp\\bin\\Debug\\net8.0\\TradeSharp.InteractiveBrokers.dll",
@@ -21,5 +28,5 @@
       "MaintenanceSchedule": "Monday 23:35-0:45 EST, Tuesday 23:35-0:45 EST, Wednesday 23:35-0:45 EST, Thursday 23:35-0:45 EST, Friday 23:00-3:00 EST, Saturday 23:35-0:45 EST, Sunday 23:35-0:45 EST"
     }
   },
-  "Extensions": { }
+  "Extensions": {}
 }

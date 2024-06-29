@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TradeSharp.Data
 {
@@ -12,12 +8,20 @@ namespace TradeSharp.Data
   /// </summary>
   [ComVisible(true)]
   [Guid("6995B0CB-6A57-4797-B52F-B81466A562DE")]
-  public abstract class SimpleOrder: Order
+  public abstract partial class SimpleOrder: Order
   {
     //constants
 
 
     //enums
+    public enum OrderAction
+    {
+      Buy,
+      Sell,
+      BuyToCover,
+      SellShort
+    }
+
     /// <summary>
     /// Basic order type supported by most brokers.
     /// </summary>summary>
@@ -36,6 +40,7 @@ namespace TradeSharp.Data
 
 
     //constructors
+    public SimpleOrder(Account account, Instrument instrument): base(account, instrument) { }
 
 
     //finalizers
@@ -45,9 +50,12 @@ namespace TradeSharp.Data
 
 
     //properties
-    public OrderType Type { get; protected set; }
-    public double Quantity { get; protected set; }
-    public double CostBasis { get; protected set; }
+
+    [ObservableProperty] OrderType m_type;
+    [ObservableProperty] OrderAction m_action;
+    [ObservableProperty] double m_costBasis;
+    [ObservableProperty] double m_stopPrice;
+    [ObservableProperty] double m_limitPrice;
 
     //methods
 

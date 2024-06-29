@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>TradeSharp.PolygonIO</RootNamespace>
+    <AssemblyName>TradeSharp.PolygonIO</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\CoreUI\CoreUI.csproj" />
+    <ProjectReference Include="..\..\Data\Data.csproj" />
+  </ItemGroup>
+
+</Project>

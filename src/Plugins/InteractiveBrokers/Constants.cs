@@ -31,6 +31,36 @@
     public const string DefaultRootInstrumentGroupTag = "IBIndustriesRoot";    //tag used for IB classifications root instrument group
     public const int DisconnectedSleepInterval = 30000;   //interval in milliseconds to wait between checks when the IB connection is disconnected - typically used for long running processes
 
+    //Order actions supported
+    public const string OrderActionBuy = "BUY";
+    public const string OrderActionSell = "SELL";
+
+    //Order types supported
+    //NOTE: There are a lot more order types supported, see the TWS API example app.
+    public const string OrderTypeMarket = "MKT";
+    public const string OrderTypeLimit = "LMT";
+    public const string OrderTypeStop = "STP";
+    public const string OrderTypeStopLimit = "STP LMT";
+
+    //Order time in force constants
+    public const string OrderTimeInForceDay = "DAY";    //valid for the day
+    public const string OrderTimeInForceGTD = "GTD";    //good till date
+    public const string OrderTimeInForceGTC = "GTC";    //good till cancelled
+    public const string OrderTimeInForceIOC = "IOC";    //immediate or cancel
+    public const string OrderTimeInForceFOK = "FOK";    //fill or kill
+    public const string OrderTimeInForceOPG = "OPG";    //market on open OR limit on open order
+    public const string OrderTimeInForceDTC = "DTC";    //day until cancelled
+
+    public const string Rule80AIndividual = "I";
+    public const string Rule80AAgency = "A";
+    public const string Rule80AAgentOtherMember = "W";
+    public const string Rule80AIndividualPTIA = "J";
+    public const string Rule80AAgencyPTIA = "U";
+    public const string Rule80AAgentOtherMemberPTIA = "M";
+    public const string Rule80AIndividualPT = "K";
+    public const string Rule80AAgencyPT = "Y";
+    public const string Rule80AAgentOtherMemberPT = "N";
+
     //Order status constants
     //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#order-status-message
     //NOTE: We make these constants upper case to ensure that they are case insensitive when comparing.
@@ -43,9 +73,7 @@
     public const string OrderStatusFilled = "FILLED";
     public const string OrderStatusInactive = "INACTIVE";
 
-    /// <summary>
-    /// Supported contract types.
-    /// </summary>
+    //Supported contract types.
     public const string ContractTypeStock = "STK";
     public const string ContractTypeETF = "ETF";
     public const string ContractTypeCFD = "CFD";
