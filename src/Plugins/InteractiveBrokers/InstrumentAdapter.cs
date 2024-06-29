@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TradeSharp.CoreUI.Services;
 using TradeSharp.InteractiveBrokers.Messages;
 using IBApi;
 using TradeSharp.Data;
-using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace TradeSharp.InteractiveBrokers
 {
@@ -195,55 +192,56 @@ namespace TradeSharp.InteractiveBrokers
     //https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requesting-historical-bars
     public void RequestHistoricalData(Contract contract, DateTime startDateTime, DateTime endDateTime, Resolution resolution)
     {
-      //duration string requires a valid date range
-      if (startDateTime >= endDateTime)
-      {
-        m_logger.LogError($"Invalid date range (start: {startDateTime}, end: {endDateTime}) for historical data request on ticker {contract.Symbol}.");
-        return;
-      }
+      throw new NotImplementedException("InteractiveBrokers historical data not supported due to limitations from broker.");
+      ////duration string requires a valid date range
+      //if (startDateTime >= endDateTime)
+      //{
+      //  m_logger.LogError($"Invalid date range (start: {startDateTime}, end: {endDateTime}) for historical data request on ticker {contract.Symbol}.");
+      //  return;
+      //}
 
-      //compute the end date/time as UTC - IB requires the format yyyymmdd hh:mm:ss xx/xxxx where yyyymmdd and xx/xxxx are optional. E.g.: 20031126 15:59:00 US/Eastern OR
-      //yyyymmddd-hh:mm:ss time is in UTC - valid IB time zones defined here - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#contract-details
-      string endDateTimeStr = endDateTime.ToUniversalTime().ToString("yyyyMMdd-HH:mm:ss");
+      ////compute the end date/time as UTC - IB requires the format yyyymmdd hh:mm:ss xx/xxxx where yyyymmdd and xx/xxxx are optional. E.g.: 20031126 15:59:00 US/Eastern OR
+      ////yyyymmddd-hh:mm:ss time is in UTC - valid IB time zones defined here - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#contract-details
+      //string endDateTimeStr = endDateTime.ToUniversalTime().ToString("yyyyMMdd-HH:mm:ss");
 
-      //compute the duration string based on the resolution and start date
-      string barSizeSetting = Constants.BarSize1Day;
-      string durationString;
-      switch (resolution)
-      {
-        case Resolution.Minute:
-          barSizeSetting = Constants.BarSize1Min;
-          TimeSpan duration = endDateTime - startDateTime;
-          durationString = computeDuration(duration);
-          break;
-        case Resolution.Hour:
-          barSizeSetting = Constants.BarSize1Hour;
-          duration = endDateTime - startDateTime;
-          durationString = computeDuration(duration);
-          break;
-        case Resolution.Day:
-          barSizeSetting = Constants.BarSize1Day;
-          duration = endDateTime - startDateTime;
-          durationString = computeDuration(duration);
-          break;
-        case Resolution.Week:
-          barSizeSetting = Constants.BarSize1Week;
-          duration = endDateTime - startDateTime;
-          durationString = computeDuration(duration);
-          break;
-        case Resolution.Month:
-          barSizeSetting = Constants.BarSize1Month;
-          duration = endDateTime - startDateTime;
-          durationString = computeDuration(duration);
-          break;
-        default:
-          m_logger.LogError($"Unsupported resolution requested {resolution.ToString()} on ticker {contract.Symbol} for historical data.");
-          return;   //intentional exit on error state
-      }
+      ////compute the duration string based on the resolution and start date
+      //string barSizeSetting = Constants.BarSize1Day;
+      //string durationString;
+      //switch (resolution)
+      //{
+      //  case Resolution.Minute:
+      //    barSizeSetting = Constants.BarSize1Min;
+      //    TimeSpan duration = endDateTime - startDateTime;
+      //    durationString = computeDuration(duration);
+      //    break;
+      //  case Resolution.Hour:
+      //    barSizeSetting = Constants.BarSize1Hour;
+      //    duration = endDateTime - startDateTime;
+      //    durationString = computeDuration(duration);
+      //    break;
+      //  case Resolution.Day:
+      //    barSizeSetting = Constants.BarSize1Day;
+      //    duration = endDateTime - startDateTime;
+      //    durationString = computeDuration(duration);
+      //    break;
+      //  case Resolution.Week:
+      //    barSizeSetting = Constants.BarSize1Week;
+      //    duration = endDateTime - startDateTime;
+      //    durationString = computeDuration(duration);
+      //    break;
+      //  case Resolution.Month:
+      //    barSizeSetting = Constants.BarSize1Month;
+      //    duration = endDateTime - startDateTime;
+      //    durationString = computeDuration(duration);
+      //    break;
+      //  default:
+      //    m_logger.LogError($"Unsupported resolution requested {resolution.ToString()} on ticker {contract.Symbol} for historical data.");
+      //    return;   //intentional exit on error state
+      //}
 
-      int reqId = m_historicalRequestCounter++ + HistoricalIdBase;
-      m_activeHistoricalRequests[reqId] = new HistoricalDataRequest(reqId, contract, resolution, startDateTime, endDateTime);
-      m_serviceHost.Client.ClientSocket.reqHistoricalData(reqId, contract, endDateTimeStr, durationString, barSizeSetting, "TRADES" /*whatToShow*/ , 1 /*useRTH*/, 1 /*formatDate as UTC - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#hist-format-date*/, false /*keepUpToDate*/, new List<TagValue>());
+      //int reqId = m_historicalRequestCounter++ + HistoricalIdBase;
+      //m_activeHistoricalRequests[reqId] = new HistoricalDataRequest(reqId, contract, resolution, startDateTime, endDateTime);
+      //m_serviceHost.Client.ClientSocket.reqHistoricalData(reqId, contract, endDateTimeStr, durationString, barSizeSetting, "TRADES" /*whatToShow*/ , 1 /*useRTH*/, 1 /*formatDate as UTC - https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#hist-format-date*/, false /*keepUpToDate*/, new List<TagValue>());
     }
 
     /// <summary>
@@ -252,21 +250,25 @@ namespace TradeSharp.InteractiveBrokers
     /// </summary>
     public int RequestRealTimeBars(Contract contract, int barSize, string whatToShow, bool useRTH)
     {
-      int reqId = m_historicalRequestCounter++ + HistoricalIdBase;
-      m_activeRealTimeRequests[reqId] = contract;
-      //NOTE: barSize is currently ignored (14 April 2024)
-      m_serviceHost.Client.ClientSocket.reqRealTimeBars(reqId, contract, barSize, whatToShow, useRTH, new List<TagValue>());
-      return reqId;
+      throw new NotImplementedException("InteractiveBrokers historical data not supported due to limitations from broker.");
+
+      //int reqId = m_historicalRequestCounter++ + HistoricalIdBase;
+      //m_activeRealTimeRequests[reqId] = contract;
+      ////NOTE: barSize is currently ignored (14 April 2024)
+      //m_serviceHost.Client.ClientSocket.reqRealTimeBars(reqId, contract, barSize, whatToShow, useRTH, new List<TagValue>());
+      //return reqId;
     }
 
     public bool CancelRealTimeBars(int requestId)
     {
-      bool result = m_activeRealTimeRequests.Remove(requestId);
-      if (result)
-        m_serviceHost.Client.ClientSocket.cancelRealTimeBars(requestId);
-      else
-        m_logger.LogError($"Failed to cancel real-time bars request with request Id {requestId}.");
-      return result;
+      throw new NotImplementedException("InteractiveBrokers historical data not supported due to limitations from broker.");
+
+      //bool result = m_activeRealTimeRequests.Remove(requestId);
+      //if (result)
+      //  m_serviceHost.Client.ClientSocket.cancelRealTimeBars(requestId);
+      //else
+      //  m_logger.LogError($"Failed to cancel real-time bars request with request Id {requestId}.");
+      //return result;
     }
 
     //properties
@@ -299,58 +301,58 @@ namespace TradeSharp.InteractiveBrokers
 
     public void HandleHistoricalData(HistoricalDataMessage historicalDataMessage)
     {
-      //retrieve the historical request data
-      HistoricalDataRequest? request = m_lastHistoricalDataRequest;
-      if (request == null || request.RequestId != historicalDataMessage.RequestId)
-        request = m_activeHistoricalRequests.TryGetValue(historicalDataMessage.RequestId, out request) ? request : null;
+      throw new NotImplementedException("InteractiveBrokers historical data not supported due to limitations from broker.");
 
-      //process the data response based on the request
-      if (request != null)
-      {
-        m_lastHistoricalDataRequest = request;
-        //NOTE: Historical data requests must be done in UTC since we assume it is in UTC here.
-        string date = Regex.Replace(historicalDataMessage.Date, @"\s+", " ").Trim();    //response sometimes has extra whitespace spaces that TryParseExact fails to parse
-        if (DateTime.TryParseExact(date, Constants.DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dateTime))
-        {
-          //NOTES:
-          // - Requests must be done as whole units of days, week, months or years so we need to make sure that the response date is within the specific requested date range.
-          // - Volume returned is the numner of trades and not the volume in terms of total stocks that changed hands - this is NOT a good indicator of volume.
-          if (dateTime >= request.FromDateTime && dateTime <= request.ToDateTime)
-          {
-            m_database.UpdateData(Constants.DefaultName, request.Contract.Symbol, request.Resolution, dateTime, historicalDataMessage.Open, historicalDataMessage.High, historicalDataMessage.Low, historicalDataMessage.Close, historicalDataMessage.Volume);
-            m_lastHistoricalDataRequest.Count++;  //NOTE: This is correct, the HistoricalDataMessage is sent for each bar retrieved (it has a count field which contains the number of bars retrieved)
-          }
-        }
-        else
-          m_logger.LogError($"Failed to parse date {date} for historical data request entry for reqId {historicalDataMessage.RequestId}");
-      }
-      else
-        m_logger.LogError($"Failed to find historical data request entry for reqId {historicalDataMessage.RequestId}");
+      ////retrieve the historical request data
+      //HistoricalDataRequest? request = m_lastHistoricalDataRequest;
+      //if (request == null || request.RequestId != historicalDataMessage.RequestId)
+      //  request = m_activeHistoricalRequests.TryGetValue(historicalDataMessage.RequestId, out request) ? request : null;
+
+      ////process the data response based on the request
+      //if (request != null)
+      //{
+      //  m_lastHistoricalDataRequest = request;
+      //  //NOTE: Historical data requests must be done in UTC since we assume it is in UTC here.
+      //  string date = Regex.Replace(historicalDataMessage.Date, @"\s+", " ").Trim();    //response sometimes has extra whitespace spaces that TryParseExact fails to parse
+      //  if (DateTime.TryParseExact(date, Constants.DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dateTime))
+      //  {
+      //    //NOTES:
+      //    // - Requests must be done as whole units of days, week, months or years so we need to make sure that the response date is within the specific requested date range.
+      //    // - Volume returned is the numner of trades and not the volume in terms of total stocks that changed hands - this is NOT a good indicator of volume.
+      //    if (dateTime >= request.FromDateTime && dateTime <= request.ToDateTime)
+      //    {
+      //      m_database.UpdateData(Constants.DefaultName, request.Contract.Symbol, request.Resolution, dateTime, historicalDataMessage.Open, historicalDataMessage.High, historicalDataMessage.Low, historicalDataMessage.Close, historicalDataMessage.Volume);
+      //      m_lastHistoricalDataRequest.Count++;  //NOTE: This is correct, the HistoricalDataMessage is sent for each bar retrieved (it has a count field which contains the number of bars retrieved)
+      //    }
+      //  }
+      //  else
+      //    m_logger.LogError($"Failed to parse date {date} for historical data request entry for reqId {historicalDataMessage.RequestId}");
+      //}
+      //else
+      //  m_logger.LogError($"Failed to find historical data request entry for reqId {historicalDataMessage.RequestId}");
     }
 
     public void HandleHistoricalDataEnd(HistoricalDataEndMessage historicalDataEndMessage)
     {
-      if (m_activeHistoricalRequests.TryGetValue(historicalDataEndMessage.RequestId, out HistoricalDataRequest? historicalDataRequest))
-        m_serviceHost.DataProviderPlugin.RaiseDataDownloadComplete(historicalDataRequest.Contract, historicalDataRequest.Resolution, historicalDataRequest.Count);
-      else
-        m_logger.LogError($"Failed to find historical data request - {historicalDataEndMessage.RequestId}");
+      throw new NotImplementedException("InteractiveBrokers historical data not supported due to limitations from broker.");
 
-      m_activeHistoricalRequests.Remove(historicalDataEndMessage.RequestId);
-      m_lastHistoricalDataRequest = null;
+      //if (m_activeHistoricalRequests.TryGetValue(historicalDataEndMessage.RequestId, out HistoricalDataRequest? historicalDataRequest))
+      //  m_serviceHost.DataProviderPlugin.RaiseDataDownloadComplete(historicalDataRequest.Contract, historicalDataRequest.Resolution, historicalDataRequest.Count);
+      //else
+      //  m_logger.LogError($"Failed to find historical data request - {historicalDataEndMessage.RequestId}");
+
+      //m_activeHistoricalRequests.Remove(historicalDataEndMessage.RequestId);
+      //m_lastHistoricalDataRequest = null;
     }
 
     public void HandleUpdateMktDepth(DeepBookMessage updateMktDepthMessage)
     {
-      //TODO
+      throw new NotImplementedException("InteractiveBrokers historical data not supported due to limitations from broker.");
     }
 
     public void HandleRealTimeBar(RealTimeBarMessage realTimeBarsMessage)
     {
-
-      //TODO:
-      // - Update data for the real-time bar update in the database tables. How would you do this? Update all resolutions even if it means partial bars vs update only requested resolution update?
-      // - Add some event that could be raised to fire the bar update.
-
+      throw new NotImplementedException("InteractiveBrokers historical data not supported due to limitations from broker.");
     }
 
     public void HandleFundamentalsData(FundamentalsMessage fundamentalsMessage)

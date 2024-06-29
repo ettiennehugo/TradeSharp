@@ -33,7 +33,6 @@ namespace TradeSharp.InteractiveBrokers
     public IExchangeService ExchangeService { get; protected set; }
     public IHost Host { get; protected set; }
     public InteractiveBrokers.BrokerPlugin BrokerPlugin { get; set; }                //should only be called by the broker when it is created
-    public InteractiveBrokers.DataProviderPlugin DataProviderPlugin { get; set; }    //should only be called by the data provider when it is created
     public Client Client { get; protected set; }
     public Cache Cache { get; protected set; }
     public AccountAdapter Accounts { get; protected set; }

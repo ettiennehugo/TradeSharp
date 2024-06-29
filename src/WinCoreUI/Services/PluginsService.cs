@@ -78,14 +78,9 @@ namespace TradeSharp.CoreUI.Services
         return;
       }
 
+      //TEMPORARY CODE - Statically load the plugins.
       //InteractiveBrokers
-      IPlugin plugin = (IPlugin)new TradeSharp.InteractiveBrokers.DataProviderPlugin();
-      plugin.ServiceHost = Host;
-      plugin.Configuration = m_configurationService.DataProviders[plugin.Name];
-      plugin.Create(m_logger);
-      Items.Add(plugin);
-
-      plugin = (IPlugin)new TradeSharp.InteractiveBrokers.BrokerPlugin();
+      IPlugin plugin = (IPlugin)new TradeSharp.InteractiveBrokers.BrokerPlugin();
       plugin.ServiceHost = Host;
       plugin.Configuration = m_configurationService.Brokers[plugin.Name];
       plugin.Create(m_logger);

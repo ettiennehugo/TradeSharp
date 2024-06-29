@@ -139,7 +139,7 @@ namespace TradeSharp.Common
 
     protected void loadSection(string sectionName, IDictionary<string, IPluginConfiguration> configuration)
     {
-      IConfigurationSection section = m_configuration.GetRequiredSection(sectionName);
+      IConfigurationSection section = m_configuration.GetSection(sectionName);
       if (section != null)
         foreach (var subSection in section.GetChildren())
         {
