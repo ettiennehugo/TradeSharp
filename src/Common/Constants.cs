@@ -9,6 +9,8 @@
     /// Environment variable used for the TradeSharp home directory.
     /// </summary>
     public const string TradeSharpHome = "TradeSharpHome";
+    public const string ConfigurationBin = "bin";
+    public const string ConfigurationData = "data";
     public const string ConfigurationDir = "config";
     public const string ConfigurationFile = "tradesharp.json";
     public const string DataDir = "data";

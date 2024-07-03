@@ -29,6 +29,8 @@ namespace TradeSharp.Common
 
     //attributes
     protected IConfiguration m_configuration;
+    protected string m_tradeSharpHome;
+    protected string m_tradeSharpBin;
 
     //properties
     public CultureInfo CultureInfo { get; internal set; }
@@ -42,8 +44,11 @@ namespace TradeSharp.Common
 #nullable disable
     public ConfigurationService()
     {
-      string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
-      string jsonFile = string.Format("{0}\\{1}\\{2}", tradeSharpHome, Constants.ConfigurationDir, "tradesharp.json");
+    
+      // Inside your method or constructor
+      m_tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
+      m_tradeSharpBin = m_tradeSharpHome + Path.DirectorySeparatorChar + Constants.ConfigurationBin + Path.DirectorySeparatorChar;
+      string jsonFile = m_tradeSharpHome + Path.DirectorySeparatorChar + Constants.ConfigurationDir + Path.DirectorySeparatorChar + "tradesharp.json";
       init(jsonFile);
     }
 
@@ -121,7 +126,7 @@ namespace TradeSharp.Common
                 switch (subSetting.Key.ToLower())
                 {
                   case c_tokenAssembly:
-                    setting.Assembly = subSetting.Value!;
+                    setting.Assembly = m_tradeSharpBin + subSetting.Value!;
                     break;
                   case c_tokenType:
                     setting.Type = subSetting.Value!;
@@ -153,7 +158,7 @@ namespace TradeSharp.Common
             switch (subSectionSetting.Key.ToLower())
             {
               case c_tokenAssembly:
-                assembly = subSectionSetting.Value!;
+                assembly = m_tradeSharpBin + subSectionSetting.Value!;
                 break;
               case c_tokenType:
                 type = subSectionSetting.Value!;
