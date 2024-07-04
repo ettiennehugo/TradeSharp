@@ -922,7 +922,7 @@ namespace TradeSharp.Data
   /// The data store should also take into account specific configuration settings related to data, e.g. data related to timezones
   /// should be correctly stored in UTC time and then returned using the user's desired TimeZone from the IConfiguration interface.
   /// </summary>
-  public interface IDatabase : IDisposable
+  public interface IDatabase
   {
     //constants
 

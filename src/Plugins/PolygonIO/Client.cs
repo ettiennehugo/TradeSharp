@@ -1,0 +1,304 @@
+﻿using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using TradeSharp.Data;
+using TradeSharp.PolygonIO.Messages;
+using System.Text;
+using System.Net.WebSockets;
+
+namespace TradeSharp.PolygonIO
+{
+  /// <summary>
+  /// HTTP client to work with the Polygon IO end-points.
+  /// </summary>
+  public class Client
+  {
+    //constants
+    public const string BaseUrl = "https://api.polygon.io";
+    public const string RealTimeUrl = "wss://socket.polygon.io/stocks";
+    public const string DelayedUrl = "wss://delayed.polygon.io/stocks";
+
+    //enums
+    public enum AssetClass
+    {
+      Stocks,
+      Options,
+      Forex,
+      Fx
+    }
+
+    //types
+
+
+    //attributes
+    protected static Client s_instance;
+    protected ILogger m_logger;
+    protected string m_apiKey;
+    protected int m_requestLimit;
+    protected HttpClient m_httpClient;
+
+    //properties
+
+
+    //constructors
+    public static Client GetInstance(ILogger logger, string apiKey, int requestLimit)
+    {
+      if (s_instance == null)
+        s_instance = new Client(logger, apiKey, requestLimit);
+      return s_instance;
+    }
+
+    private Client(ILogger logger,string apiKey, int requestLimit)
+    {
+      m_logger = logger;
+      m_apiKey = apiKey;
+      m_requestLimit = requestLimit;
+      m_httpClient = new HttpClient();
+    }
+
+    //finalizers
+
+
+    //interface implementations
+
+
+    //methods
+    public string GetExchangesUri() => $"{BaseUrl}/v3/reference/exchanges?apiKey={m_apiKey}";
+    public string GetTickersUri(string ticker) => $"{BaseUrl}/v3/reference/tickers?apiKey={m_apiKey}";
+    public string GetTickerDetailsUri(string ticker) => $"{BaseUrl}/v3/reference/tickers/{ticker}?apiKey={m_apiKey}";
+    public string GetStockAggregatesUri(string ticker, Resolution resolution, long startDate, long endDate, int multiplier = 1) => $"{BaseUrl}/v2/aggs/ticker/{ticker}/range/{multiplier}/{resolution.ToString().ToLower()}/{startDate}/{endDate}?adjusted=true&sort=asc&limit={m_requestLimit}&apiKey={m_apiKey}";
+    public string GetTradesUri(string ticker, DateTime startDate, DateTime endDate) => $"{BaseUrl}/v3/trades/{ticker}?limit={m_requestLimit}&timestamp.gte={startDate.ToUniversalTime().ToString("o")}&timestamp.lte={endDate.ToUniversalTime().ToString("o")}&sort=timestamp&apiKey={m_apiKey}";
+    public string GetSubscriptionUri(bool realTime = true) => realTime ? $"{RealTimeUrl}?apiKey={m_apiKey}" : $"{DelayedUrl}?apiKey={m_apiKey}";
+    public string GetQuotesUri(string ticker, DateTime startDate, DateTime endDate) => $"{BaseUrl}/v3/quotes/{ticker}?limit={m_requestLimit}&timestamp.gte={startDate.ToUniversalTime().ToString("o")}&timestamp.lte={endDate.ToUniversalTime().ToString("o")}&sort=timestamp&apiKey={m_apiKey}";
+    public string GetConditionsUri(AssetClass assetClass) => $"{BaseUrl}/v3/reference/conditions?asset_class={assetClass.ToString().ToLower()}&limit=1000&apiKey={m_apiKey}";
+
+    public async Task<IList<Messages.ExchangeDto>> GetExchanges()
+    {
+      var exchanges = new List<Messages.ExchangeDto>();
+      var uri = GetExchangesUri();
+      var exchangeResult = await GetPolygonApi<ExchangeResponseDto>(uri);
+      if (exchangeResult?.Results is not null)
+        exchanges.AddRange(exchangeResult.Results);
+
+      return exchanges;
+    }
+
+    public async Task<IList<Messages.TickersDto>> GetTickers()
+    {
+      var tickers = new List<Messages.TickersDto>();
+      var uri = GetTickersUri("");
+      var tickerResult = await GetPolygonApi<TickersResponseDto>(uri);
+      if (tickerResult?.Results is not null)
+        tickers.AddRange(tickerResult.Results);
+
+      while (tickerResult?.NextUrl != null)
+      {
+        tickerResult = await GetPolygonApi<TickersResponseDto>(tickerResult.NextUrl + "&apiKey=" + m_apiKey);
+        tickers.AddRange(tickerResult?.Results);
+      }
+
+      return tickers;
+    }
+
+    public async Task<Messages.TickerDetailsDto> GetTickerDetails(string ticker)
+    {
+      var uri = GetTickerDetailsUri(ticker);
+      return await GetPolygonApi<Messages.TickerDetailsDto>(uri);
+    }
+
+    public async Task<IList<Messages.BarDataDto>> GetHistoricalData(string ticker, Resolution resolution, DateTime startDate, DateTime endDate)
+    {
+      var allStockAggregates = new List<Messages.BarDataDto>();
+      var startDateUnix = new DateTimeOffset(startDate).ToUnixTimeMilliseconds();
+      var endDateUnix = new DateTimeOffset(endDate).ToUnixTimeMilliseconds(); // TODO: Second resolution can be 1 too many
+      var uri = GetStockAggregatesUri(ticker, resolution, startDateUnix, endDateUnix);
+      var aggregateResult = await GetPolygonApi<BarDataResponseDto>(uri);
+      if (aggregateResult?.Results is not null)
+        allStockAggregates.AddRange(aggregateResult.Results);
+
+      while (aggregateResult?.NextUrl != null)
+      {
+        aggregateResult = await GetPolygonApi<BarDataResponseDto>(aggregateResult.NextUrl + "&apiKey=" + m_apiKey);
+        allStockAggregates.AddRange(aggregateResult!.Results);
+      }
+
+      return allStockAggregates;
+    }
+
+
+
+    //TODO: Need to fix these web-socket methods.
+    // - Need to determine how the authentication is done.
+
+    public Action<Messages.BarDataM1ResultDto> BarDataM1Handler;
+    public async Task SubscribeToM1(string ticker, bool realTime, CancellationToken cancellationToken)
+    {
+      using (var socket = new ClientWebSocket())
+      {
+        var uri = GetSubscriptionUri(realTime);
+        await socket.ConnectAsync(new Uri(uri), cancellationToken);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"AM." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
+        var buffer = new byte[1024 * 4]; //response buffer size, in most cases this would be more than enough
+        while (socket.State == WebSocketState.Open)
+        {
+          WebSocketReceiveResult result;
+          var messageBuffer = new MemoryStream();
+          do
+          {
+            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+            //write the received chunk to the messageBuffer
+            messageBuffer.Write(buffer, 0, result.Count);
+          } while (!result.EndOfMessage); //keep reading until the end of the message
+
+          messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
+
+          if (result.MessageType == WebSocketMessageType.Text)
+          {
+            using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
+            {
+              var messageString = await reader.ReadToEndAsync();
+              var bars = JsonSerializer.Deserialize<Messages.BarDataM1ResultDto>(messageString);
+              if (bars != null) BarDataM1Handler?.Invoke(bars);
+            }
+          }
+          else if (result.MessageType == WebSocketMessageType.Close)
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+        }
+      }
+    }
+
+    public Action<Messages.BarDataS1ResultDto> BarDataS1Handler;
+    public async Task SubscribeToS1(string ticker, bool realTime, CancellationToken cancellationToken)
+    {
+      using (var socket = new ClientWebSocket())
+      {
+        var uri = GetSubscriptionUri(realTime);
+        await socket.ConnectAsync(new Uri(uri), cancellationToken);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"A." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
+        var buffer = new byte[1024 * 4]; //response buffer size, in most cases this would be more than enough
+        while (socket.State == WebSocketState.Open)
+        {
+          WebSocketReceiveResult result;
+          var messageBuffer = new MemoryStream();
+          do
+          {
+            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+            //write the received chunk to the messageBuffer
+            messageBuffer.Write(buffer, 0, result.Count);
+          } while (!result.EndOfMessage); //keep reading until the end of the message
+
+          messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
+
+          if (result.MessageType == WebSocketMessageType.Text)
+          {
+            using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
+            {
+              var messageString = await reader.ReadToEndAsync();
+              var bars = JsonSerializer.Deserialize<Messages.BarDataS1ResultDto>(messageString);
+              if (bars != null) BarDataS1Handler?.Invoke(bars);
+            }
+          }
+          else if (result.MessageType == WebSocketMessageType.Close)
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+        }
+      }
+    }
+
+    public Action<Messages.StockTradesResultDto> StockTradesHandler;
+    public async Task SubscribeToTrades(string ticker, bool realTime, CancellationToken cancellationToken)
+    {
+      using (var socket = new ClientWebSocket())
+      {
+        var uri = GetSubscriptionUri(realTime);
+        await socket.ConnectAsync(new Uri(uri), cancellationToken);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"T." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
+        var buffer = new byte[1024 * 4]; //response buffer size, in most cases this would be more than enough
+        while (socket.State == WebSocketState.Open)
+        {
+          WebSocketReceiveResult result;
+          var messageBuffer = new MemoryStream();
+          do
+          {
+            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+            //write the received chunk to the messageBuffer
+            messageBuffer.Write(buffer, 0, result.Count);
+          } while (!result.EndOfMessage); //keep reading until the end of the message
+
+          messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
+
+          if (result.MessageType == WebSocketMessageType.Text)
+          {
+            using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
+            {
+              var messageString = await reader.ReadToEndAsync();
+              var trades = JsonSerializer.Deserialize<Messages.StockTradesResultDto>(messageString);
+              if (trades != null) StockTradesHandler?.Invoke(trades);
+            }
+          }
+          else if (result.MessageType == WebSocketMessageType.Close)
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+        }
+      }
+    }
+
+    public Action<Messages.StockQuotesResultDto> StockQuotesHandler;
+    public async Task SubscribeToQuotes(string ticker, bool realTime, CancellationToken cancellationToken)
+    {
+      using (var socket = new ClientWebSocket())
+      {
+        var uri = GetSubscriptionUri(realTime);
+        await socket.ConnectAsync(new Uri(uri), cancellationToken);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"Q." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
+        var buffer = new byte[1024 * 4]; //response buffer size, in most cases this would be more than enough
+        while (socket.State == WebSocketState.Open)
+        {
+          WebSocketReceiveResult result;
+          var messageBuffer = new MemoryStream();
+          do
+          {
+            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+            //write the received chunk to the messageBuffer
+            messageBuffer.Write(buffer, 0, result.Count);
+          } while (!result.EndOfMessage); //keep reading until the end of the message
+
+          messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
+
+          if (result.MessageType == WebSocketMessageType.Text)
+          {
+            using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
+            {
+              var messageString = await reader.ReadToEndAsync();
+              var quotes = JsonSerializer.Deserialize<Messages.StockQuotesResultDto>(messageString);
+              if (quotes != null) StockQuotesHandler?.Invoke(quotes);
+            }
+          }
+          else if (result.MessageType == WebSocketMessageType.Close)
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+        }
+      }
+    }
+
+    private async Task<T?> GetPolygonApi<T>(string url)
+    {
+      var response = await m_httpClient.GetStringAsync(url);
+      var options = new JsonSerializerOptions
+      {
+        PropertyNameCaseInsensitive = true
+      };
+      try
+      {
+        var data = JsonSerializer.Deserialize<T>(response, options);
+        return data;
+      }
+      catch (JsonException ex)
+      {
+        m_logger.LogError($"Error deserializing: {ex.Path}");
+      }
+      catch (Exception ex)
+      {
+        m_logger.LogError("Error deserializing: " + ex.Message);
+      }
+
+      return default;
+    }
+  }
+}

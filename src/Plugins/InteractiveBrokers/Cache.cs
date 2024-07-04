@@ -3,7 +3,6 @@ using Microsoft.Data.Sqlite;
 using TradeSharp.Common;
 using TradeSharp.Data;
 using IBApi;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TradeSharp.InteractiveBrokers
@@ -22,7 +21,7 @@ namespace TradeSharp.InteractiveBrokers
   /// <summary>
   /// Database to locally store data specific to Interactive Brokers, e.g. contract details.
   /// </summary>
-  public sealed class Cache
+  public sealed class Cache: SqlLiteBase
   {
     //constants
     /// <summary>
@@ -42,9 +41,6 @@ namespace TradeSharp.InteractiveBrokers
     static private Cache? s_instance; 
     private ServiceHost m_serviceHost;
     private string m_databaseFile;
-    private SqliteConnection m_connection;
-    private string m_connectionString;
-    private ILogger m_logger;
     private Dictionary<int, Contract> m_contractsByTickerExchange;
     private Dictionary<int, Contract> m_contractsByConId;
 
@@ -55,7 +51,7 @@ namespace TradeSharp.InteractiveBrokers
       return s_instance;
     }
 
-    protected Cache(ILogger logger, ServiceHost serviceHost, IPluginConfiguration configuration)
+    protected Cache(ILogger logger, ServiceHost serviceHost, IPluginConfiguration configuration): base(logger)
     {
       m_logger = logger;
       m_serviceHost = serviceHost;
@@ -75,6 +71,8 @@ namespace TradeSharp.InteractiveBrokers
 
       //create the data store schema
       CreateSchema();
+
+      CreateDefaultObjects();
     }
 
     //finalizers
@@ -84,28 +82,6 @@ namespace TradeSharp.InteractiveBrokers
     }
 
     //interface implementations
-    /// <summary>
-    /// Start a new transaction - NOTE: Be careful with transaction as SQLite does not support nested transactions.
-    /// </summary>
-    public void StartTransaction()
-    {
-      lock (this) ExecuteCommand("BEGIN TRANSACTION");
-    }
-
-    /// <summary>
-    /// End a transaction with either a commit or rollback.
-    /// </summary>
-    public void EndTransaction(bool success)
-    {
-      lock (this)
-      {
-        if (success)
-          ExecuteCommand("END TRANSACTION");
-        else
-          ExecuteCommand("ROLLBACK TRANSACTION");
-      }
-    }
-
     /// <summary>
     /// Clears the cache of all contracts and starts recaching.
     /// </summary>
@@ -477,107 +453,25 @@ namespace TradeSharp.InteractiveBrokers
 
 
     //methods
-    /// <summary>
-    /// Database utility functions.
-    /// </summary>
-    public int ExecuteCommand(string command, int timeout = -1)
-    {
-      if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database non-query - {command}");
-      var commandObj = m_connection.CreateCommand();
-      commandObj.CommandTimeout = timeout >= 0 ? timeout : m_connection.DefaultTimeout;
-      commandObj.CommandText = command;
-      return commandObj.ExecuteNonQuery();
-    }
-
-    public object? ExecuteScalar(string command, int timeout = -1)
-    {
-      if (Debugging.DatabaseCalls) m_logger.LogInformation($"Database scalar read - {command}");
-      var commandObj = m_connection.CreateCommand();
-      commandObj.CommandTimeout = timeout >= 0 ? timeout : m_connection.DefaultTimeout;
-      commandObj.CommandText = command;
-      return commandObj.ExecuteScalar();
-    }
-
-    public SqliteDataReader ExecuteReader(string command, int timeout = -1)
-    {
-      var commandObj = m_connection.CreateCommand();
-      commandObj.CommandTimeout = timeout >= 0 ? timeout : m_connection.DefaultTimeout;
-      commandObj.CommandText = command;
-      return commandObj.ExecuteReader();
-    }
-
-    public string ToSqlSafeString(string? value)
-    {
-      if (value == null) return "";
-      return value.Replace("\'", "\'\'");
-    }
-
-    public string FromSqlSafeString(string value)
-    {
-      return value.Replace("\'\'", "\'");
-    }
-
-    public void BeginTransaction() {
-      ExecuteCommand("BEGIN TRANSACTION");
-    }
-
-    public void CommitTransaction() {
-      ExecuteCommand("COMMIT TRANSACTION");
-    }
-
-    public void RollbackTransaction() {
-      ExecuteCommand("ROLLBACK TRANSACTION");
-    }
-
-    private void CreateTable(string name, string columns)
-    {
-      //https://sqlite.org/lang_createtable.html
-      ExecuteCommand($"CREATE TABLE IF NOT EXISTS {name} ({columns})");
-    }
-
-    private void CreateIndex(string indexName, string tableName, bool unique, string columns)
-    {
-      //https://sqlite.org/lang_createindex.html
-      if (unique)
-        ExecuteCommand($"CREATE UNIQUE INDEX IF NOT EXISTS {indexName} ON {tableName} ({columns})");
-      else
-        ExecuteCommand($"CREATE INDEX IF NOT EXISTS {indexName} ON {tableName} ({columns})");
-    }
-
-    private void DropTable(string name)
-    {
-      //https://sqlite.org/lang_droptable.html
-      ExecuteCommand($"DROP TABLE IF EXISTS {name}");
-    }
-
-    private void DropIndex(string name)
-    {
-      //https://sqlite.org/lang_dropindex.html
-      ExecuteCommand($"DROP INDEX IF EXISTS {name}");
-    }
-
-    public int GetRowCount(string tableName, string where)
-    {
-      int count = 0;
-
-      var command = m_connection.CreateCommand();
-      command.CommandText = $"SELECT * FROM {tableName} WHERE {where}";
-
-      using (var reader = command.ExecuteReader())
-      {
-        while (reader.Read()) count++;
-      }
-
-      return count;
-    }
-
-    private void CreateSchema()
+    public override void CreateSchema()
     {
       lock (this)
       {
         CreateContractsTable();
         CreateStockContractDetails();
         CreateContractScannerTable();
+      }
+    }
+
+    public override int ClearDatabase()
+    {
+      lock (this)
+      {
+        int count = 0;
+        count += ExecuteCommand($"DELETE FROM {TableContracts}");
+        count += ExecuteCommand($"DELETE FROM {TableContractDetails}");
+        count += ExecuteCommand($"DELETE FROM {TableContractScannerMetaData}");
+        return count;
       }
     }
 

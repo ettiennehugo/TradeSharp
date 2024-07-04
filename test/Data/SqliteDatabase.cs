@@ -79,10 +79,7 @@ namespace TradeSharp.Data.Testing
     }
 
     //finalizers
-    ~SqliteDatabase()
-    {
-      m_database.Dispose();
-    }
+
 
     //interface implementations
 

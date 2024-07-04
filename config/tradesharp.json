@@ -12,7 +12,9 @@
       "Assembly": "Debug\\net8.0\\TradeSharp.PolygonIO.dll",
       "Type": "TradeSharp.PolygonIO.DataProviderPlugin",
       "ApiBaseUrl": "https://api.polygon.io",
-      "ApiKey": "<TODO - Fill this in>"
+      "Cache": "PolygonIO.db",
+      "RequestLimit": "50000",
+      "ApiKey": "fAbnorpF_fpmp_ETxAilHo4WEAtGQZOF"
     }
   },
   "Brokers": {

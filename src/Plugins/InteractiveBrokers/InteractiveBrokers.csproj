@@ -20,9 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\Common.csproj" />
-    <ProjectReference Include="..\..\CoreUI\CoreUI.csproj" />
-    <ProjectReference Include="..\..\Data\Data.csproj" />
+    <ProjectReference Include="$(TradeSharpSrc)\Common\Common.csproj" />
+    <ProjectReference Include="$(TradeSharpSrc)\CoreUI\CoreUI.csproj" />
+    <ProjectReference Include="$(TradeSharpSrc)\Data\Data.csproj" />
   </ItemGroup>
 
 </Project>

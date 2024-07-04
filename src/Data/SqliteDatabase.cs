@@ -2,7 +2,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data
@@ -10,7 +9,7 @@ namespace TradeSharp.Data
   /// <summary>
   /// Data store for Sqlite database.
   /// </summary>
-  public partial class SqliteDatabase : ObservableObject, IDatabase
+  public partial class SqliteDatabase : SqlLiteBase, IDatabase
   {
     //constants
     public const string TableCountry = "Country";
@@ -54,20 +53,16 @@ namespace TradeSharp.Data
     //attributes
     private IConfigurationService m_configurationService;
     private string m_databaseFile;
-    private string m_connectionString;
-    private SqliteConnection m_connection;
     private AssociationCache m_countryFundamentalAssociations;
     private AssociationCache m_instrumentFundamentalAssociations;
-    private ILogger<SqliteDatabase> m_logger;
 
     //constructors
-    public SqliteDatabase(IConfigurationService configurationService, ILogger<SqliteDatabase> logger) : base()
+    public SqliteDatabase(IConfigurationService configurationService, ILogger<SqliteDatabase> logger) : base(logger)
     {
       m_configurationService = configurationService;
       m_logger = logger;
       m_databaseFile = "";
       m_connectionString = "";
-      m_connection = new SqliteConnection();
       m_countryFundamentalAssociations = new AssociationCache();
       m_instrumentFundamentalAssociations = new AssociationCache();
       IsOptimizing = false;
@@ -105,34 +100,12 @@ namespace TradeSharp.Data
     }
 
     //finalizers
-    public void Dispose()
+    ~SqliteDatabase()
     {
       m_connection.Close();
     }
 
     //interface implementations
-    /// <summary>
-    /// Start a new transaction - NOTE: Be careful with transaction as SQLite does not support nested transactions.
-    /// </summary>
-    public void StartTransaction()
-    {
-      lock (this) ExecuteCommand("BEGIN TRANSACTION");
-    }
-
-    /// <summary>
-    /// End a transaction with either a commit or rollback.
-    /// </summary>
-    public void EndTransaction(bool success)
-    {
-      lock (this)
-      {
-        if (success)
-          ExecuteCommand("END TRANSACTION");
-        else
-          ExecuteCommand("ROLLBACK TRANSACTION");
-      }
-    }
-
     public void Optimize()
     {
       if (IsOptimizing)
@@ -2348,7 +2321,7 @@ namespace TradeSharp.Data
     /// <summary>
     /// Creates the database schema to store the data.
     /// </summary>
-    public void CreateSchema()
+    public override void CreateSchema()
     {
       lock (this)
       {
@@ -2381,10 +2354,11 @@ namespace TradeSharp.Data
     /// <summary>
     /// Creates the default objects used for the data model that can not be removed.
     /// </summary>
-    public void CreateDefaultObjects()
+    public override void CreateDefaultObjects()
     {
       lock (this)
       {
+        base.CreateDefaultObjects();
         if (GetRowCount(TableCountry, $"Id == '{Country.InternationalId.ToString()}'") == 0) CreateCountry(new Country(Country.InternationalId, Attributes.None, "", Country.InternationalIsoCode));
         if (GetRowCount(TableExchange, $"Id == '{Exchange.InternationalId.ToString()}'") == 0) CreateExchange(new Exchange(Exchange.InternationalId, Attributes.None, "", Country.InternationalId, "Global Exchange", TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId));
         if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Monday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Monday", Exchange.InternationalId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
@@ -2720,7 +2694,7 @@ namespace TradeSharp.Data
     /// <summary>
     /// Clear the database for testing purposes.
     /// </summary>
-    public int ClearDatabase()
+    public override int ClearDatabase()
     {
       int result = 0;
 
@@ -2742,20 +2716,10 @@ namespace TradeSharp.Data
 
           foreach (Resolution resolution in SupportedDataResolutions)
             result += ExecuteCommand($"DELETE FROM {GetDataProviderDBName(dataProvider.Key, Data.SqliteDatabase.TableInstrumentData, resolution)}");
-        }
+        }        
       }
 
       return result;
-    }
-
-    public string ToSqlSafeString(string value)
-    {
-      return value.Replace("\'", "\'\'");
-    }
-
-    public string FromSqlSafeString(string value)
-    {
-      return value.Replace("\'\'", "\'");
     }
 
     public string GetDataProviderDBName(string dataProviderName, string name)
@@ -2804,61 +2768,6 @@ namespace TradeSharp.Data
       //NOTE: DataProvider name must be database safe so it can not contain any non-alphanumeric characters and it has to be unique among the set of defined
       //      data providers - this is checked in the DataProvider constructor.
       return dataProviderName + name + suffix;
-    }
-
-    /// <summary>
-    /// Utility method to fascilitate line counting for testing purposes.
-    /// </summary>
-    public int GetRowCount(string tableName, string where)
-    {
-      int count = 0;
-
-      var command = m_connection.CreateCommand();
-      command.CommandText = $"SELECT * FROM {tableName} WHERE {where}";
-
-      using (var reader = command.ExecuteReader())
-        while (reader.Read()) count++;
-
-      return count;
-    }
-
-    /// <summary>
-    /// Utility method to create database table.
-    /// </summary>
-    private void CreateTable(string name, string columns)
-    {
-      //https://sqlite.org/lang_createtable.html
-      ExecuteCommand($"CREATE TABLE IF NOT EXISTS {name} ({columns})");
-    }
-
-    /// <summary>
-    /// Utility method to create a database index on a database table using the given columns.
-    /// </summary>
-    private void CreateIndex(string indexName, string tableName, bool unique, string columns)
-    {
-      //https://sqlite.org/lang_createindex.html
-      if (unique)
-        ExecuteCommand($"CREATE UNIQUE INDEX IF NOT EXISTS {indexName} ON {tableName} ({columns})");
-      else
-        ExecuteCommand($"CREATE INDEX IF NOT EXISTS {indexName} ON {tableName} ({columns})");
-    }
-
-    /// <summary>
-    /// Utility method to drop a database table.
-    /// </summary>
-    private void DropTable(string name)
-    {
-      //https://sqlite.org/lang_droptable.html
-      ExecuteCommand($"DROP TABLE IF EXISTS {name}");
-    }
-
-    /// <summary>
-    /// Utility method to drop a daa
-    /// </summary>
-    private void DropIndex(string name)
-    {
-      //https://sqlite.org/lang_dropindex.html
-      ExecuteCommand($"DROP INDEX IF EXISTS {name}");
     }
 
     /// <summary>
