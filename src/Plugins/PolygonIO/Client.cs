@@ -4,6 +4,7 @@ using TradeSharp.Data;
 using TradeSharp.PolygonIO.Messages;
 using System.Text;
 using System.Net.WebSockets;
+using System.Threading;
 
 namespace TradeSharp.PolygonIO
 {
@@ -16,6 +17,7 @@ namespace TradeSharp.PolygonIO
     public const string BaseUrl = "https://api.polygon.io";
     public const string RealTimeUrl = "wss://socket.polygon.io/stocks";
     public const string DelayedUrl = "wss://delayed.polygon.io/stocks";
+    public const int SubscriptionApiBufferSize = 4096;    //buffer size for the subscription API result messages
 
     //enums
     public enum AssetClass
@@ -124,11 +126,9 @@ namespace TradeSharp.PolygonIO
       return allStockAggregates;
     }
 
-
-
-    //TODO: Need to fix these web-socket methods.
-    // - Need to determine how the authentication is done.
-
+    /// <summary>
+    /// Subscribe to 1-minute data updated in real-time/delyed fashion - ticker == "*" would subscribe to all updates from the market.
+    /// </summary>
     public Action<Messages.BarDataM1ResultDto> BarDataM1Handler;
     public async Task SubscribeToM1(string ticker, bool realTime, CancellationToken cancellationToken)
     {
@@ -137,35 +137,13 @@ namespace TradeSharp.PolygonIO
         var uri = GetSubscriptionUri(realTime);
         await socket.ConnectAsync(new Uri(uri), cancellationToken);
         await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"AM." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
-        var buffer = new byte[1024 * 4]; //response buffer size, in most cases this would be more than enough
-        while (socket.State == WebSocketState.Open)
-        {
-          WebSocketReceiveResult result;
-          var messageBuffer = new MemoryStream();
-          do
-          {
-            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
-            //write the received chunk to the messageBuffer
-            messageBuffer.Write(buffer, 0, result.Count);
-          } while (!result.EndOfMessage); //keep reading until the end of the message
-
-          messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
-
-          if (result.MessageType == WebSocketMessageType.Text)
-          {
-            using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
-            {
-              var messageString = await reader.ReadToEndAsync();
-              var bars = JsonSerializer.Deserialize<Messages.BarDataM1ResultDto>(messageString);
-              if (bars != null) BarDataM1Handler?.Invoke(bars);
-            }
-          }
-          else if (result.MessageType == WebSocketMessageType.Close)
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-        }
+        await AwaitSubscriptionResponse(socket, cancellationToken, BarDataM1Handler);
       }
     }
 
+    /// <summary>
+    /// Subscribe to 1-second data updated in real-time/delyed fashion - ticker == "*" would subscribe to all updates from the market.
+    /// </summary>
     public Action<Messages.BarDataS1ResultDto> BarDataS1Handler;
     public async Task SubscribeToS1(string ticker, bool realTime, CancellationToken cancellationToken)
     {
@@ -174,32 +152,7 @@ namespace TradeSharp.PolygonIO
         var uri = GetSubscriptionUri(realTime);
         await socket.ConnectAsync(new Uri(uri), cancellationToken);
         await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"A." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
-        var buffer = new byte[1024 * 4]; //response buffer size, in most cases this would be more than enough
-        while (socket.State == WebSocketState.Open)
-        {
-          WebSocketReceiveResult result;
-          var messageBuffer = new MemoryStream();
-          do
-          {
-            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
-            //write the received chunk to the messageBuffer
-            messageBuffer.Write(buffer, 0, result.Count);
-          } while (!result.EndOfMessage); //keep reading until the end of the message
-
-          messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
-
-          if (result.MessageType == WebSocketMessageType.Text)
-          {
-            using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
-            {
-              var messageString = await reader.ReadToEndAsync();
-              var bars = JsonSerializer.Deserialize<Messages.BarDataS1ResultDto>(messageString);
-              if (bars != null) BarDataS1Handler?.Invoke(bars);
-            }
-          }
-          else if (result.MessageType == WebSocketMessageType.Close)
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-        }
+        await AwaitSubscriptionResponse(socket, cancellationToken, BarDataS1Handler);
       }
     }
 
@@ -211,32 +164,7 @@ namespace TradeSharp.PolygonIO
         var uri = GetSubscriptionUri(realTime);
         await socket.ConnectAsync(new Uri(uri), cancellationToken);
         await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"T." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
-        var buffer = new byte[1024 * 4]; //response buffer size, in most cases this would be more than enough
-        while (socket.State == WebSocketState.Open)
-        {
-          WebSocketReceiveResult result;
-          var messageBuffer = new MemoryStream();
-          do
-          {
-            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
-            //write the received chunk to the messageBuffer
-            messageBuffer.Write(buffer, 0, result.Count);
-          } while (!result.EndOfMessage); //keep reading until the end of the message
-
-          messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
-
-          if (result.MessageType == WebSocketMessageType.Text)
-          {
-            using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
-            {
-              var messageString = await reader.ReadToEndAsync();
-              var trades = JsonSerializer.Deserialize<Messages.StockTradesResultDto>(messageString);
-              if (trades != null) StockTradesHandler?.Invoke(trades);
-            }
-          }
-          else if (result.MessageType == WebSocketMessageType.Close)
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-        }
+        await AwaitSubscriptionResponse(socket, cancellationToken, StockTradesHandler);
       }
     }
 
@@ -248,32 +176,7 @@ namespace TradeSharp.PolygonIO
         var uri = GetSubscriptionUri(realTime);
         await socket.ConnectAsync(new Uri(uri), cancellationToken);
         await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"Q." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
-        var buffer = new byte[1024 * 4]; //response buffer size, in most cases this would be more than enough
-        while (socket.State == WebSocketState.Open)
-        {
-          WebSocketReceiveResult result;
-          var messageBuffer = new MemoryStream();
-          do
-          {
-            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
-            //write the received chunk to the messageBuffer
-            messageBuffer.Write(buffer, 0, result.Count);
-          } while (!result.EndOfMessage); //keep reading until the end of the message
-
-          messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
-
-          if (result.MessageType == WebSocketMessageType.Text)
-          {
-            using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
-            {
-              var messageString = await reader.ReadToEndAsync();
-              var quotes = JsonSerializer.Deserialize<Messages.StockQuotesResultDto>(messageString);
-              if (quotes != null) StockQuotesHandler?.Invoke(quotes);
-            }
-          }
-          else if (result.MessageType == WebSocketMessageType.Close)
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-        }
+        await AwaitSubscriptionResponse(socket, cancellationToken, StockQuotesHandler);
       }
     }
 
@@ -299,6 +202,36 @@ namespace TradeSharp.PolygonIO
       }
 
       return default;
+    }
+
+    private async Task AwaitSubscriptionResponse<T>(WebSocket socket, CancellationToken cancellationToken, Action<T> handler)
+    {
+      var buffer = new byte[SubscriptionApiBufferSize]; //response buffer size, in most cases this would be more than enough
+      while (socket.State == WebSocketState.Open)
+      {
+        WebSocketReceiveResult result;
+        var messageBuffer = new MemoryStream();
+        do
+        {
+          result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+          //write the received chunk to the messageBuffer
+          messageBuffer.Write(buffer, 0, result.Count);
+        } while (!result.EndOfMessage); //keep reading until the end of the message
+
+        messageBuffer.Seek(0, SeekOrigin.Begin); //reset the position of the messageBuffer to read from the beginning
+
+        if (result.MessageType == WebSocketMessageType.Text)
+        {
+          using (var reader = new StreamReader(messageBuffer, Encoding.UTF8))
+          {
+            var messageString = await reader.ReadToEndAsync();
+            var quotes = JsonSerializer.Deserialize<T>(messageString);
+            if (quotes != null) handler?.Invoke(quotes);
+          }
+        }
+        else if (result.MessageType == WebSocketMessageType.Close)
+          await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+      }
     }
   }
 }
