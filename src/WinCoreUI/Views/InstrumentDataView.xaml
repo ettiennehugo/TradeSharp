@@ -66,7 +66,7 @@
             <TextBlock Text="Minutes" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_minuteBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Minute"/>
+        <wcui:InstrumentBarsDataView x:Name="m_minuteBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Minutes"/>
       </TabViewItem>
       <TabViewItem x:Name="m_hoursTab" IsClosable="False">
         <TabViewItem.Header>
@@ -75,7 +75,7 @@
             <TextBlock Text="Hours" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_hoursBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Hour"/>
+        <wcui:InstrumentBarsDataView x:Name="m_hoursBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Hours"/>
       </TabViewItem>
       <TabViewItem x:Name="m_daysTab" IsClosable="False" IsSelected="True">
         <TabViewItem.Header>
@@ -84,7 +84,7 @@
             <TextBlock Text="Days" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_daysBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Day"/>
+        <wcui:InstrumentBarsDataView x:Name="m_daysBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Days"/>
       </TabViewItem>
       <TabViewItem x:Name="m_weeksTab" IsClosable="False">
         <TabViewItem.Header>
@@ -93,7 +93,7 @@
             <TextBlock Text="Weeks" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_weeksBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Week"/>
+        <wcui:InstrumentBarsDataView x:Name="m_weeksBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Weeks"/>
       </TabViewItem>
       <TabViewItem x:Name="m_monthsTab" IsClosable="False">
         <TabViewItem.Header>
@@ -102,7 +102,7 @@
             <TextBlock Text="Months" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
         </TabViewItem.Header>
-        <wcui:InstrumentBarsDataView x:Name="m_monthsBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Month"/>
+        <wcui:InstrumentBarsDataView x:Name="m_monthsBarsData" DataProvider="{x:Bind m_dataProviders.SelectedItem}" Resolution="Months"/>
       </TabViewItem>
     </TabView>
   </Grid>

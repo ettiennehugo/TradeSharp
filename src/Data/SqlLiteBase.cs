@@ -21,6 +21,7 @@ namespace TradeSharp.Data
 
     //attributes
     protected SqliteConnection m_connection;
+    protected string m_databaseFile;
     protected string m_connectionString;
     protected ILogger m_logger;
 
@@ -28,11 +29,18 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public SqlLiteBase(ILogger logger, string connectionString, bool useWAL)
+    public SqlLiteBase(ILogger logger, string databaseFile, bool useWAL)
     {
       m_logger = logger;
-      m_connectionString = connectionString;
-      m_connection = new SqliteConnection(connectionString);
+      m_databaseFile = databaseFile;
+
+      m_connectionString = new SqliteConnectionStringBuilder()
+      {
+        DataSource = m_databaseFile,
+        Mode = SqliteOpenMode.ReadWriteCreate,
+      }.ToString();
+
+      m_connection = new SqliteConnection(m_connectionString);
       m_connection.Open();
 
       //enable write-ahead-log journalling for concurrent write/read operations - https://sqlite.org/wal.html

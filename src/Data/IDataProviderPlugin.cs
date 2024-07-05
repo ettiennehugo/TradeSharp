@@ -36,7 +36,8 @@ namespace TradeSharp.Data
 
     //events
     event RequestErrorHandler? RequestError;    //event raised when a request error occurs
-    event DataDownloadCompleteHandler? DataDownloadComplete;    //event raised when data download is complete for an instrument and resolution
+    event DataDownloadCompleteHandler? DataDownloadComplete;    //event raised when historical data download is complete for an instrument and resolution
+    event RealTimeDataUpdateHandler? RealTimeDataUpdate;    //event raised when real-time data is updated for an instrument and resolution
 
     //methods
     /// <summary>

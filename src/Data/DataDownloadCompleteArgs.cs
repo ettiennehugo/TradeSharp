@@ -15,21 +15,19 @@
 
 
 		//attributes
-		private Instrument m_instrument;
-		private Resolution m_resolution;
-		private long m_count;
+
 
 		//properties
-		public Instrument Instrument { get { return m_instrument; } }
-		public Resolution Resolution { get { return m_resolution; } }
-		public long Count { get { return m_count; } }
+		public Instrument Instrument { get; protected set; }
+		public Resolution Resolution { get; protected set; }
+		public long Count { get; protected set; }
 
 		//constructors
 		public DataDownloadCompleteArgs(Instrument instrument, Resolution resolution, long count)
     {
-      m_instrument = instrument;
-      m_resolution = resolution;
-      m_count = count;
+      Instrument = instrument;
+      Resolution = resolution;
+      Count = count;
     }
 
 		//finalizers

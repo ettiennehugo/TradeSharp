@@ -92,7 +92,7 @@ namespace TradeSharp.PolygonIO
 
 
     //interface implementations
-    public Cache GetInstance(ILogger logger, IPluginConfiguration configuration, IInstrumentService instrumentService)
+    public static Cache GetInstance(ILogger logger, IPluginConfiguration configuration)
     {
       if (s_instance == null)
       {
