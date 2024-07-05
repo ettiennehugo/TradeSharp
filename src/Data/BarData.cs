@@ -22,7 +22,7 @@ namespace TradeSharp.Data
     //constructors
     public BarData() 
     {
-      Resolution = Resolution.Day;
+      Resolution = Resolution.Days;
       DateTime = DateTime.MinValue;
       Open = double.MinValue;
       High = double.MinValue;

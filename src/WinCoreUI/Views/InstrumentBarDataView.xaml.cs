@@ -50,7 +50,7 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //properties
-    public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register("Resolution", typeof(Resolution), typeof(InstrumentBarsDataView), new PropertyMetadata(Resolution.Day));
+    public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register("Resolution", typeof(Resolution), typeof(InstrumentBarsDataView), new PropertyMetadata(Resolution.Days));
     public static readonly DependencyProperty DateProperty = DependencyProperty.Register("Date", typeof(DateTimeOffset), typeof(InstrumentBarsDataView), new PropertyMetadata(new DateTimeOffset(1980, 1, 1, 12, 0, 0, new TimeSpan(0, 0, 0))));
     public static readonly DependencyProperty TimeProperty = DependencyProperty.Register("Time", typeof(TimeSpan), typeof(InstrumentBarsDataView), new PropertyMetadata(new TimeSpan(0, 0, 0)));
 
@@ -66,20 +66,20 @@ namespace TradeSharp.WinCoreUI.Views
         {
           case Resolution.Level1:
             throw new ArgumentException("Level1 resolution not supported by bar data view, use view for level1 data.");
-          case Resolution.Minute:
+          case Resolution.Minutes:
             m_date.DayVisible = true;
             m_time.IsEnabled = true;
             break;
-          case Resolution.Hour:
+          case Resolution.Hours:
             m_date.DayVisible = true;
             m_time.IsEnabled = true;
             break;
-          case Resolution.Day:
-          case Resolution.Week:
+          case Resolution.Days:
+          case Resolution.Weeks:
             m_date.DayVisible = true;
             m_time.IsEnabled = false;
             break;
-          case Resolution.Month:
+          case Resolution.Months:
             m_date.DayVisible = false;
             m_time.IsEnabled = false;
             break;

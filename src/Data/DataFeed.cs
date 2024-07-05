@@ -209,15 +209,15 @@ namespace TradeSharp.Data
 
       switch (Resolution)
       {
-        case Resolution.Minute:
-        case Resolution.Hour:
-        case Resolution.Day:
-        case Resolution.Week:
-        case Resolution.Month:
+        case Resolution.Minutes:
+        case Resolution.Hours:
+        case Resolution.Days:
+        case Resolution.Weeks:
+        case Resolution.Months:
           {
             DataCacheBars barData = (DataCacheBars)dataCache.Data;
             Count = (int)Math.Ceiling((double)barData.Count / Interval);
-            if (Resolution == Resolution.Minute && (From.Minute % Interval != 0)) Count++;  //add an extra partial bar if the from date is not aligned to the interval
+            if (Resolution == Resolution.Minutes && (From.Minute % Interval != 0)) Count++;  //add an extra partial bar if the from date is not aligned to the interval
             m_dateTimeData = new DateTime[Count];
             m_openData = new double[Count];
             m_highData = new double[Count];
@@ -242,7 +242,7 @@ namespace TradeSharp.Data
 
                 //handle edge case where bar resolution is minute and interval is larger than 1, we need to align the first bar to the interval date/time even if we do not have FULL data for it in the range
                 // e.g. 9:38 as the first bar at interval 5 need to be aligned to 9:35 for the first bar
-                if (barDataIndex == 0 && Resolution == Resolution.Minute && Interval > 1)
+                if (barDataIndex == 0 && Resolution == Resolution.Minutes && Interval > 1)
                 {
                   subBarIndex = m_dateTimeData[index].Minute % Interval;
                   m_dateTimeData[index] = m_dateTimeData[index].AddMinutes(-subBarIndex);

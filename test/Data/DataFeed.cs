@@ -134,19 +134,19 @@ namespace TradeSharp.Data.Testing
         {
           case Resolution.Level1:
             continue;
-          case Resolution.Minute:
+          case Resolution.Minutes:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddMinutes(i));
             break;
-          case Resolution.Hour:
+          case Resolution.Hours:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddHours(i));
             break;
-          case Resolution.Day:
+          case Resolution.Days:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddDays(i));
             break;
-          case Resolution.Week:
+          case Resolution.Weeks:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddDays(i * 7));
             break;
-          case Resolution.Month:
+          case Resolution.Months:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddMonths(i));
             break;
         }
@@ -216,19 +216,19 @@ namespace TradeSharp.Data.Testing
         {
           case Resolution.Level1:
             continue;
-          case Resolution.Minute:
+          case Resolution.Minutes:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddMinutes(i));
             break;
-          case Resolution.Hour:
+          case Resolution.Hours:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddHours(i));
             break;
-          case Resolution.Day:
+          case Resolution.Days:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddDays(i));
             break;
-          case Resolution.Week:
+          case Resolution.Weeks:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddDays(i * 7));
             break;
-          case Resolution.Month:
+          case Resolution.Months:
             barData.DateTime = new List<DateTime>(barData.Count); for (int i = 0; i < barData.Count; i++) barData.DateTime.Add(m_fromDateTime.AddMonths(i));
             break;
         }
@@ -262,7 +262,7 @@ namespace TradeSharp.Data.Testing
     protected (int, DateTime[], double[], double[], double[], double[], double[]) mergeBarTestData(Resolution resolution, int count, int interval)
     {
       int expectedBarCount = (int)Math.Ceiling((double)count / interval);
-      if (resolution == Resolution.Minute && m_fromDateTime.Minute % interval != 0) expectedBarCount++; //add additional bar for the partial bar generated when the fromDateTime does not align by an exact minute boundary
+      if (resolution == Resolution.Minutes && m_fromDateTime.Minute % interval != 0) expectedBarCount++; //add additional bar for the partial bar generated when the fromDateTime does not align by an exact minute boundary
 
       DataCacheBars originalBarData = m_testBarDataReversed[resolution];
       Assert.IsTrue(count <= originalBarData.Count, "Count should be less than generated set of bars.");
@@ -283,7 +283,7 @@ namespace TradeSharp.Data.Testing
         {
           expectedDateTime[index] = currentDateTime;
 
-          if (i == 0 && resolution == Resolution.Minute && interval > 1)
+          if (i == 0 && resolution == Resolution.Minutes && interval > 1)
           {
             subBarIndex = currentDateTime.Minute % interval;
             expectedDateTime[index] = expectedDateTime[index].AddMinutes(-subBarIndex); //align by minute boundary
@@ -314,19 +314,19 @@ namespace TradeSharp.Data.Testing
 
         switch (resolution)
         {
-          case Resolution.Minute:
+          case Resolution.Minutes:
             currentDateTime = currentDateTime.AddMinutes(1);
             break;
-          case Resolution.Hour:
+          case Resolution.Hours:
             currentDateTime = currentDateTime.AddHours(1);
             break;
-          case Resolution.Day:
+          case Resolution.Days:
             currentDateTime = currentDateTime.AddDays(1);
             break;
-          case Resolution.Week:
+          case Resolution.Weeks:
             currentDateTime = currentDateTime.AddDays(7);
             break;
-          case Resolution.Month:
+          case Resolution.Months:
             currentDateTime = currentDateTime.AddMonths(1);
             break;
         }
@@ -404,21 +404,21 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, IConfigurationService.TimeZone.Local)]
-    [DataRow(Resolution.Hour, IConfigurationService.TimeZone.Local)]
-    [DataRow(Resolution.Day, IConfigurationService.TimeZone.Local)]
-    [DataRow(Resolution.Week, IConfigurationService.TimeZone.Local)]
-    [DataRow(Resolution.Month, IConfigurationService.TimeZone.Local)]
-    [DataRow(Resolution.Minute, IConfigurationService.TimeZone.Exchange)]
-    [DataRow(Resolution.Hour, IConfigurationService.TimeZone.Exchange)]
-    [DataRow(Resolution.Day, IConfigurationService.TimeZone.Exchange)]
-    [DataRow(Resolution.Week, IConfigurationService.TimeZone.Exchange)]
-    [DataRow(Resolution.Month, IConfigurationService.TimeZone.Exchange)]
-    [DataRow(Resolution.Minute, IConfigurationService.TimeZone.UTC)]
-    [DataRow(Resolution.Hour, IConfigurationService.TimeZone.UTC)]
-    [DataRow(Resolution.Day, IConfigurationService.TimeZone.UTC)]
-    [DataRow(Resolution.Week, IConfigurationService.TimeZone.UTC)]
-    [DataRow(Resolution.Month, IConfigurationService.TimeZone.UTC)]
+    [DataRow(Resolution.Minutes, IConfigurationService.TimeZone.Local)]
+    [DataRow(Resolution.Hours, IConfigurationService.TimeZone.Local)]
+    [DataRow(Resolution.Days, IConfigurationService.TimeZone.Local)]
+    [DataRow(Resolution.Weeks, IConfigurationService.TimeZone.Local)]
+    [DataRow(Resolution.Months, IConfigurationService.TimeZone.Local)]
+    [DataRow(Resolution.Minutes, IConfigurationService.TimeZone.Exchange)]
+    [DataRow(Resolution.Hours, IConfigurationService.TimeZone.Exchange)]
+    [DataRow(Resolution.Days, IConfigurationService.TimeZone.Exchange)]
+    [DataRow(Resolution.Weeks, IConfigurationService.TimeZone.Exchange)]
+    [DataRow(Resolution.Months, IConfigurationService.TimeZone.Exchange)]
+    [DataRow(Resolution.Minutes, IConfigurationService.TimeZone.UTC)]
+    [DataRow(Resolution.Hours, IConfigurationService.TimeZone.UTC)]
+    [DataRow(Resolution.Days, IConfigurationService.TimeZone.UTC)]
+    [DataRow(Resolution.Weeks, IConfigurationService.TimeZone.UTC)]
+    [DataRow(Resolution.Months, IConfigurationService.TimeZone.UTC)]
     public void GetDataFeed_BarDataConversionByTimeZone_CheckData(Resolution resolution, IConfigurationService.TimeZone timeZone)
     {
       createTestDataWithPersist(DateTime.Now.ToUniversalTime(), 30);
@@ -476,7 +476,7 @@ namespace TradeSharp.Data.Testing
             dataFeed.Next();
           }
           break;
-        case Resolution.Minute:
+        case Resolution.Minutes:
           DataCacheBars barData = m_testBarDataReversed[resolution];
 
           for (int i = 0; i < dataFeed.Count; i++)
@@ -503,115 +503,115 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, 1)]
-    [DataRow(Resolution.Minute, 2)]
-    [DataRow(Resolution.Minute, 3)]
-    [DataRow(Resolution.Minute, 4)]
-    [DataRow(Resolution.Minute, 5)]
-    [DataRow(Resolution.Minute, 6)]
-    [DataRow(Resolution.Minute, 7)]
-    [DataRow(Resolution.Minute, 8)]
-    [DataRow(Resolution.Minute, 9)]
-    [DataRow(Resolution.Minute, 10)]
-    [DataRow(Resolution.Minute, 11)]
-    [DataRow(Resolution.Minute, 12)]
-    [DataRow(Resolution.Minute, 13)]
-    [DataRow(Resolution.Minute, 14)]
-    [DataRow(Resolution.Minute, 15)]
-    [DataRow(Resolution.Minute, 16)]
-    [DataRow(Resolution.Minute, 17)]
-    [DataRow(Resolution.Minute, 18)]
-    [DataRow(Resolution.Minute, 19)]
-    [DataRow(Resolution.Minute, 20)]
-    [DataRow(Resolution.Minute, 21)]
-    [DataRow(Resolution.Minute, 22)]
-    [DataRow(Resolution.Minute, 23)]
-    [DataRow(Resolution.Minute, 24)]
-    [DataRow(Resolution.Minute, 25)]
-    [DataRow(Resolution.Minute, 26)]
-    [DataRow(Resolution.Minute, 27)]
-    [DataRow(Resolution.Minute, 28)]
-    [DataRow(Resolution.Minute, 29)]
-    [DataRow(Resolution.Minute, 30)]
-    [DataRow(Resolution.Minute, 31)]
-    [DataRow(Resolution.Minute, 32)]
-    [DataRow(Resolution.Minute, 33)]
-    [DataRow(Resolution.Minute, 34)]
-    [DataRow(Resolution.Minute, 35)]
-    [DataRow(Resolution.Minute, 36)]
-    [DataRow(Resolution.Minute, 37)]
-    [DataRow(Resolution.Minute, 38)]
-    [DataRow(Resolution.Minute, 39)]
-    [DataRow(Resolution.Minute, 40)]
-    [DataRow(Resolution.Minute, 41)]
-    [DataRow(Resolution.Minute, 42)]
-    [DataRow(Resolution.Minute, 43)]
-    [DataRow(Resolution.Minute, 44)]
-    [DataRow(Resolution.Minute, 45)]
-    [DataRow(Resolution.Minute, 46)]
-    [DataRow(Resolution.Minute, 47)]
-    [DataRow(Resolution.Minute, 48)]
-    [DataRow(Resolution.Minute, 49)]
-    [DataRow(Resolution.Minute, 50)]
-    [DataRow(Resolution.Minute, 51)]
-    [DataRow(Resolution.Minute, 52)]
-    [DataRow(Resolution.Minute, 53)]
-    [DataRow(Resolution.Minute, 54)]
-    [DataRow(Resolution.Minute, 55)]
-    [DataRow(Resolution.Minute, 56)]
-    [DataRow(Resolution.Minute, 57)]
-    [DataRow(Resolution.Minute, 58)]
-    [DataRow(Resolution.Minute, 59)]
-    [DataRow(Resolution.Hour, 1)]
-    [DataRow(Resolution.Hour, 2)]
-    [DataRow(Resolution.Hour, 3)]
-    [DataRow(Resolution.Hour, 4)]
-    [DataRow(Resolution.Hour, 5)]
-    [DataRow(Resolution.Hour, 6)]
-    [DataRow(Resolution.Hour, 7)]
-    [DataRow(Resolution.Hour, 8)]
-    [DataRow(Resolution.Hour, 9)]
-    [DataRow(Resolution.Hour, 10)]
-    [DataRow(Resolution.Hour, 11)]
-    [DataRow(Resolution.Hour, 12)]
-    [DataRow(Resolution.Day, 1)]
-    [DataRow(Resolution.Day, 2)]
-    [DataRow(Resolution.Day, 3)]
-    [DataRow(Resolution.Day, 4)]
-    [DataRow(Resolution.Day, 5)]
-    [DataRow(Resolution.Day, 6)]
-    [DataRow(Resolution.Day, 7)]
-    [DataRow(Resolution.Day, 8)]
-    [DataRow(Resolution.Day, 9)]
-    [DataRow(Resolution.Day, 10)]
-    [DataRow(Resolution.Day, 11)]
-    [DataRow(Resolution.Day, 12)]
-    [DataRow(Resolution.Day, 13)]
-    [DataRow(Resolution.Day, 14)]
-    [DataRow(Resolution.Week, 1)]
-    [DataRow(Resolution.Week, 2)]
-    [DataRow(Resolution.Week, 3)]
-    [DataRow(Resolution.Week, 4)]
-    [DataRow(Resolution.Week, 5)]
-    [DataRow(Resolution.Week, 6)]
-    [DataRow(Resolution.Week, 7)]
-    [DataRow(Resolution.Week, 8)]
-    [DataRow(Resolution.Week, 9)]
-    [DataRow(Resolution.Week, 10)]
-    [DataRow(Resolution.Week, 11)]
-    [DataRow(Resolution.Week, 12)]
-    [DataRow(Resolution.Month, 1)]
-    [DataRow(Resolution.Month, 2)]
-    [DataRow(Resolution.Month, 3)]
-    [DataRow(Resolution.Month, 4)]
-    [DataRow(Resolution.Month, 5)]
-    [DataRow(Resolution.Month, 6)]
-    [DataRow(Resolution.Month, 7)]
-    [DataRow(Resolution.Month, 8)]
-    [DataRow(Resolution.Month, 9)]
-    [DataRow(Resolution.Month, 10)]
-    [DataRow(Resolution.Month, 11)]
-    [DataRow(Resolution.Month, 12)]
+    [DataRow(Resolution.Minutes, 1)]
+    [DataRow(Resolution.Minutes, 2)]
+    [DataRow(Resolution.Minutes, 3)]
+    [DataRow(Resolution.Minutes, 4)]
+    [DataRow(Resolution.Minutes, 5)]
+    [DataRow(Resolution.Minutes, 6)]
+    [DataRow(Resolution.Minutes, 7)]
+    [DataRow(Resolution.Minutes, 8)]
+    [DataRow(Resolution.Minutes, 9)]
+    [DataRow(Resolution.Minutes, 10)]
+    [DataRow(Resolution.Minutes, 11)]
+    [DataRow(Resolution.Minutes, 12)]
+    [DataRow(Resolution.Minutes, 13)]
+    [DataRow(Resolution.Minutes, 14)]
+    [DataRow(Resolution.Minutes, 15)]
+    [DataRow(Resolution.Minutes, 16)]
+    [DataRow(Resolution.Minutes, 17)]
+    [DataRow(Resolution.Minutes, 18)]
+    [DataRow(Resolution.Minutes, 19)]
+    [DataRow(Resolution.Minutes, 20)]
+    [DataRow(Resolution.Minutes, 21)]
+    [DataRow(Resolution.Minutes, 22)]
+    [DataRow(Resolution.Minutes, 23)]
+    [DataRow(Resolution.Minutes, 24)]
+    [DataRow(Resolution.Minutes, 25)]
+    [DataRow(Resolution.Minutes, 26)]
+    [DataRow(Resolution.Minutes, 27)]
+    [DataRow(Resolution.Minutes, 28)]
+    [DataRow(Resolution.Minutes, 29)]
+    [DataRow(Resolution.Minutes, 30)]
+    [DataRow(Resolution.Minutes, 31)]
+    [DataRow(Resolution.Minutes, 32)]
+    [DataRow(Resolution.Minutes, 33)]
+    [DataRow(Resolution.Minutes, 34)]
+    [DataRow(Resolution.Minutes, 35)]
+    [DataRow(Resolution.Minutes, 36)]
+    [DataRow(Resolution.Minutes, 37)]
+    [DataRow(Resolution.Minutes, 38)]
+    [DataRow(Resolution.Minutes, 39)]
+    [DataRow(Resolution.Minutes, 40)]
+    [DataRow(Resolution.Minutes, 41)]
+    [DataRow(Resolution.Minutes, 42)]
+    [DataRow(Resolution.Minutes, 43)]
+    [DataRow(Resolution.Minutes, 44)]
+    [DataRow(Resolution.Minutes, 45)]
+    [DataRow(Resolution.Minutes, 46)]
+    [DataRow(Resolution.Minutes, 47)]
+    [DataRow(Resolution.Minutes, 48)]
+    [DataRow(Resolution.Minutes, 49)]
+    [DataRow(Resolution.Minutes, 50)]
+    [DataRow(Resolution.Minutes, 51)]
+    [DataRow(Resolution.Minutes, 52)]
+    [DataRow(Resolution.Minutes, 53)]
+    [DataRow(Resolution.Minutes, 54)]
+    [DataRow(Resolution.Minutes, 55)]
+    [DataRow(Resolution.Minutes, 56)]
+    [DataRow(Resolution.Minutes, 57)]
+    [DataRow(Resolution.Minutes, 58)]
+    [DataRow(Resolution.Minutes, 59)]
+    [DataRow(Resolution.Hours, 1)]
+    [DataRow(Resolution.Hours, 2)]
+    [DataRow(Resolution.Hours, 3)]
+    [DataRow(Resolution.Hours, 4)]
+    [DataRow(Resolution.Hours, 5)]
+    [DataRow(Resolution.Hours, 6)]
+    [DataRow(Resolution.Hours, 7)]
+    [DataRow(Resolution.Hours, 8)]
+    [DataRow(Resolution.Hours, 9)]
+    [DataRow(Resolution.Hours, 10)]
+    [DataRow(Resolution.Hours, 11)]
+    [DataRow(Resolution.Hours, 12)]
+    [DataRow(Resolution.Days, 1)]
+    [DataRow(Resolution.Days, 2)]
+    [DataRow(Resolution.Days, 3)]
+    [DataRow(Resolution.Days, 4)]
+    [DataRow(Resolution.Days, 5)]
+    [DataRow(Resolution.Days, 6)]
+    [DataRow(Resolution.Days, 7)]
+    [DataRow(Resolution.Days, 8)]
+    [DataRow(Resolution.Days, 9)]
+    [DataRow(Resolution.Days, 10)]
+    [DataRow(Resolution.Days, 11)]
+    [DataRow(Resolution.Days, 12)]
+    [DataRow(Resolution.Days, 13)]
+    [DataRow(Resolution.Days, 14)]
+    [DataRow(Resolution.Weeks, 1)]
+    [DataRow(Resolution.Weeks, 2)]
+    [DataRow(Resolution.Weeks, 3)]
+    [DataRow(Resolution.Weeks, 4)]
+    [DataRow(Resolution.Weeks, 5)]
+    [DataRow(Resolution.Weeks, 6)]
+    [DataRow(Resolution.Weeks, 7)]
+    [DataRow(Resolution.Weeks, 8)]
+    [DataRow(Resolution.Weeks, 9)]
+    [DataRow(Resolution.Weeks, 10)]
+    [DataRow(Resolution.Weeks, 11)]
+    [DataRow(Resolution.Weeks, 12)]
+    [DataRow(Resolution.Months, 1)]
+    [DataRow(Resolution.Months, 2)]
+    [DataRow(Resolution.Months, 3)]
+    [DataRow(Resolution.Months, 4)]
+    [DataRow(Resolution.Months, 5)]
+    [DataRow(Resolution.Months, 6)]
+    [DataRow(Resolution.Months, 7)]
+    [DataRow(Resolution.Months, 8)]
+    [DataRow(Resolution.Months, 9)]
+    [DataRow(Resolution.Months, 10)]
+    [DataRow(Resolution.Months, 11)]
+    [DataRow(Resolution.Months, 12)]
     public void GetDataFeed_BarDataConvertByInterval_AlignedByMinute(Resolution resolution, int interval)
     {
       //number of bars created when the from/to time aligns by an exact divisible minute boundary should not result in
@@ -647,115 +647,115 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, 1)]
-    [DataRow(Resolution.Minute, 2)]
-    [DataRow(Resolution.Minute, 3)]
-    [DataRow(Resolution.Minute, 4)]
-    [DataRow(Resolution.Minute, 5)]
-    [DataRow(Resolution.Minute, 6)]
-    [DataRow(Resolution.Minute, 7)]
-    [DataRow(Resolution.Minute, 8)]
-    [DataRow(Resolution.Minute, 9)]
-    [DataRow(Resolution.Minute, 10)]
-    [DataRow(Resolution.Minute, 11)]
-    [DataRow(Resolution.Minute, 12)]
-    [DataRow(Resolution.Minute, 13)]
-    [DataRow(Resolution.Minute, 14)]
-    [DataRow(Resolution.Minute, 15)]
-    [DataRow(Resolution.Minute, 16)]
-    [DataRow(Resolution.Minute, 17)]
-    [DataRow(Resolution.Minute, 18)]
-    [DataRow(Resolution.Minute, 19)]
-    [DataRow(Resolution.Minute, 20)]
-    [DataRow(Resolution.Minute, 21)]
-    [DataRow(Resolution.Minute, 22)]
-    [DataRow(Resolution.Minute, 23)]
-    [DataRow(Resolution.Minute, 24)]
-    [DataRow(Resolution.Minute, 25)]
-    [DataRow(Resolution.Minute, 26)]
-    [DataRow(Resolution.Minute, 27)]
-    [DataRow(Resolution.Minute, 28)]
-    [DataRow(Resolution.Minute, 29)]
-    [DataRow(Resolution.Minute, 30)]
-    [DataRow(Resolution.Minute, 31)]
-    [DataRow(Resolution.Minute, 32)]
-    [DataRow(Resolution.Minute, 33)]
-    [DataRow(Resolution.Minute, 34)]
-    [DataRow(Resolution.Minute, 35)]
-    [DataRow(Resolution.Minute, 36)]
-    [DataRow(Resolution.Minute, 37)]
-    [DataRow(Resolution.Minute, 38)]
-    [DataRow(Resolution.Minute, 39)]
-    [DataRow(Resolution.Minute, 40)]
-    [DataRow(Resolution.Minute, 41)]
-    [DataRow(Resolution.Minute, 42)]
-    [DataRow(Resolution.Minute, 43)]
-    [DataRow(Resolution.Minute, 44)]
-    [DataRow(Resolution.Minute, 45)]
-    [DataRow(Resolution.Minute, 46)]
-    [DataRow(Resolution.Minute, 47)]
-    [DataRow(Resolution.Minute, 48)]
-    [DataRow(Resolution.Minute, 49)]
-    [DataRow(Resolution.Minute, 50)]
-    [DataRow(Resolution.Minute, 51)]
-    [DataRow(Resolution.Minute, 52)]
-    [DataRow(Resolution.Minute, 53)]
-    [DataRow(Resolution.Minute, 54)]
-    [DataRow(Resolution.Minute, 55)]
-    [DataRow(Resolution.Minute, 56)]
-    [DataRow(Resolution.Minute, 57)]
-    [DataRow(Resolution.Minute, 58)]
-    [DataRow(Resolution.Minute, 59)]
-    [DataRow(Resolution.Hour, 1)]
-    [DataRow(Resolution.Hour, 2)]
-    [DataRow(Resolution.Hour, 3)]
-    [DataRow(Resolution.Hour, 4)]
-    [DataRow(Resolution.Hour, 5)]
-    [DataRow(Resolution.Hour, 6)]
-    [DataRow(Resolution.Hour, 7)]
-    [DataRow(Resolution.Hour, 8)]
-    [DataRow(Resolution.Hour, 9)]
-    [DataRow(Resolution.Hour, 10)]
-    [DataRow(Resolution.Hour, 11)]
-    [DataRow(Resolution.Hour, 12)]
-    [DataRow(Resolution.Day, 1)]
-    [DataRow(Resolution.Day, 2)]
-    [DataRow(Resolution.Day, 3)]
-    [DataRow(Resolution.Day, 4)]
-    [DataRow(Resolution.Day, 5)]
-    [DataRow(Resolution.Day, 6)]
-    [DataRow(Resolution.Day, 7)]
-    [DataRow(Resolution.Day, 8)]
-    [DataRow(Resolution.Day, 9)]
-    [DataRow(Resolution.Day, 10)]
-    [DataRow(Resolution.Day, 11)]
-    [DataRow(Resolution.Day, 12)]
-    [DataRow(Resolution.Day, 13)]
-    [DataRow(Resolution.Day, 14)]
-    [DataRow(Resolution.Week, 1)]
-    [DataRow(Resolution.Week, 2)]
-    [DataRow(Resolution.Week, 3)]
-    [DataRow(Resolution.Week, 4)]
-    [DataRow(Resolution.Week, 5)]
-    [DataRow(Resolution.Week, 6)]
-    [DataRow(Resolution.Week, 7)]
-    [DataRow(Resolution.Week, 8)]
-    [DataRow(Resolution.Week, 9)]
-    [DataRow(Resolution.Week, 10)]
-    [DataRow(Resolution.Week, 11)]
-    [DataRow(Resolution.Week, 12)]
-    [DataRow(Resolution.Month, 1)]
-    [DataRow(Resolution.Month, 2)]
-    [DataRow(Resolution.Month, 3)]
-    [DataRow(Resolution.Month, 4)]
-    [DataRow(Resolution.Month, 5)]
-    [DataRow(Resolution.Month, 6)]
-    [DataRow(Resolution.Month, 7)]
-    [DataRow(Resolution.Month, 8)]
-    [DataRow(Resolution.Month, 9)]
-    [DataRow(Resolution.Month, 10)]
-    [DataRow(Resolution.Month, 11)]
-    [DataRow(Resolution.Month, 12)]
+    [DataRow(Resolution.Minutes, 1)]
+    [DataRow(Resolution.Minutes, 2)]
+    [DataRow(Resolution.Minutes, 3)]
+    [DataRow(Resolution.Minutes, 4)]
+    [DataRow(Resolution.Minutes, 5)]
+    [DataRow(Resolution.Minutes, 6)]
+    [DataRow(Resolution.Minutes, 7)]
+    [DataRow(Resolution.Minutes, 8)]
+    [DataRow(Resolution.Minutes, 9)]
+    [DataRow(Resolution.Minutes, 10)]
+    [DataRow(Resolution.Minutes, 11)]
+    [DataRow(Resolution.Minutes, 12)]
+    [DataRow(Resolution.Minutes, 13)]
+    [DataRow(Resolution.Minutes, 14)]
+    [DataRow(Resolution.Minutes, 15)]
+    [DataRow(Resolution.Minutes, 16)]
+    [DataRow(Resolution.Minutes, 17)]
+    [DataRow(Resolution.Minutes, 18)]
+    [DataRow(Resolution.Minutes, 19)]
+    [DataRow(Resolution.Minutes, 20)]
+    [DataRow(Resolution.Minutes, 21)]
+    [DataRow(Resolution.Minutes, 22)]
+    [DataRow(Resolution.Minutes, 23)]
+    [DataRow(Resolution.Minutes, 24)]
+    [DataRow(Resolution.Minutes, 25)]
+    [DataRow(Resolution.Minutes, 26)]
+    [DataRow(Resolution.Minutes, 27)]
+    [DataRow(Resolution.Minutes, 28)]
+    [DataRow(Resolution.Minutes, 29)]
+    [DataRow(Resolution.Minutes, 30)]
+    [DataRow(Resolution.Minutes, 31)]
+    [DataRow(Resolution.Minutes, 32)]
+    [DataRow(Resolution.Minutes, 33)]
+    [DataRow(Resolution.Minutes, 34)]
+    [DataRow(Resolution.Minutes, 35)]
+    [DataRow(Resolution.Minutes, 36)]
+    [DataRow(Resolution.Minutes, 37)]
+    [DataRow(Resolution.Minutes, 38)]
+    [DataRow(Resolution.Minutes, 39)]
+    [DataRow(Resolution.Minutes, 40)]
+    [DataRow(Resolution.Minutes, 41)]
+    [DataRow(Resolution.Minutes, 42)]
+    [DataRow(Resolution.Minutes, 43)]
+    [DataRow(Resolution.Minutes, 44)]
+    [DataRow(Resolution.Minutes, 45)]
+    [DataRow(Resolution.Minutes, 46)]
+    [DataRow(Resolution.Minutes, 47)]
+    [DataRow(Resolution.Minutes, 48)]
+    [DataRow(Resolution.Minutes, 49)]
+    [DataRow(Resolution.Minutes, 50)]
+    [DataRow(Resolution.Minutes, 51)]
+    [DataRow(Resolution.Minutes, 52)]
+    [DataRow(Resolution.Minutes, 53)]
+    [DataRow(Resolution.Minutes, 54)]
+    [DataRow(Resolution.Minutes, 55)]
+    [DataRow(Resolution.Minutes, 56)]
+    [DataRow(Resolution.Minutes, 57)]
+    [DataRow(Resolution.Minutes, 58)]
+    [DataRow(Resolution.Minutes, 59)]
+    [DataRow(Resolution.Hours, 1)]
+    [DataRow(Resolution.Hours, 2)]
+    [DataRow(Resolution.Hours, 3)]
+    [DataRow(Resolution.Hours, 4)]
+    [DataRow(Resolution.Hours, 5)]
+    [DataRow(Resolution.Hours, 6)]
+    [DataRow(Resolution.Hours, 7)]
+    [DataRow(Resolution.Hours, 8)]
+    [DataRow(Resolution.Hours, 9)]
+    [DataRow(Resolution.Hours, 10)]
+    [DataRow(Resolution.Hours, 11)]
+    [DataRow(Resolution.Hours, 12)]
+    [DataRow(Resolution.Days, 1)]
+    [DataRow(Resolution.Days, 2)]
+    [DataRow(Resolution.Days, 3)]
+    [DataRow(Resolution.Days, 4)]
+    [DataRow(Resolution.Days, 5)]
+    [DataRow(Resolution.Days, 6)]
+    [DataRow(Resolution.Days, 7)]
+    [DataRow(Resolution.Days, 8)]
+    [DataRow(Resolution.Days, 9)]
+    [DataRow(Resolution.Days, 10)]
+    [DataRow(Resolution.Days, 11)]
+    [DataRow(Resolution.Days, 12)]
+    [DataRow(Resolution.Days, 13)]
+    [DataRow(Resolution.Days, 14)]
+    [DataRow(Resolution.Weeks, 1)]
+    [DataRow(Resolution.Weeks, 2)]
+    [DataRow(Resolution.Weeks, 3)]
+    [DataRow(Resolution.Weeks, 4)]
+    [DataRow(Resolution.Weeks, 5)]
+    [DataRow(Resolution.Weeks, 6)]
+    [DataRow(Resolution.Weeks, 7)]
+    [DataRow(Resolution.Weeks, 8)]
+    [DataRow(Resolution.Weeks, 9)]
+    [DataRow(Resolution.Weeks, 10)]
+    [DataRow(Resolution.Weeks, 11)]
+    [DataRow(Resolution.Weeks, 12)]
+    [DataRow(Resolution.Months, 1)]
+    [DataRow(Resolution.Months, 2)]
+    [DataRow(Resolution.Months, 3)]
+    [DataRow(Resolution.Months, 4)]
+    [DataRow(Resolution.Months, 5)]
+    [DataRow(Resolution.Months, 6)]
+    [DataRow(Resolution.Months, 7)]
+    [DataRow(Resolution.Months, 8)]
+    [DataRow(Resolution.Months, 9)]
+    [DataRow(Resolution.Months, 10)]
+    [DataRow(Resolution.Months, 11)]
+    [DataRow(Resolution.Months, 12)]
     public void GetDataFeed_BarDataConvertByInterval_MisalignedByMinute(Resolution resolution, int interval)
     {
       //number of bars created when the from/to time do not align by an exact divisible minute boundary should result in

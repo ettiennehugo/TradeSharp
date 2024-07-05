@@ -59,6 +59,15 @@ namespace TradeSharp.PolygonIO
       }
 
       m_client = Client.GetInstance(logger, m_apiKey, m_requestLimit);
+
+
+      //TODO:
+      // - Define API's on IDataProvider for real-time updates.
+      // - Hook up response handlers.
+  
+
+
+
    }
 
     public override bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end)

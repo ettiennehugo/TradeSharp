@@ -583,10 +583,10 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute)]
-    [DataRow(Resolution.Day)]
-    [DataRow(Resolution.Week)]
-    [DataRow(Resolution.Month)]
+    [DataRow(Resolution.Minutes)]
+    [DataRow(Resolution.Days)]
+    [DataRow(Resolution.Weeks)]
+    [DataRow(Resolution.Months)]
     public void UpdateData_SingleBarDataPersist_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
@@ -637,10 +637,10 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute)]
-    [DataRow(Resolution.Day)]
-    [DataRow(Resolution.Week)]
-    [DataRow(Resolution.Month)]
+    [DataRow(Resolution.Minutes)]
+    [DataRow(Resolution.Days)]
+    [DataRow(Resolution.Weeks)]
+    [DataRow(Resolution.Months)]
     public void UpdateData_SingleBarDataUpdate_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
@@ -679,10 +679,10 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute)]
-    [DataRow(Resolution.Day)]
-    [DataRow(Resolution.Week)]
-    [DataRow(Resolution.Month)]
+    [DataRow(Resolution.Minutes)]
+    [DataRow(Resolution.Days)]
+    [DataRow(Resolution.Weeks)]
+    [DataRow(Resolution.Months)]
     public void UpdateData_RangeBarDataPersist_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
@@ -712,10 +712,10 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute)]
-    [DataRow(Resolution.Day)]
-    [DataRow(Resolution.Week)]
-    [DataRow(Resolution.Month)]
+    [DataRow(Resolution.Minutes)]
+    [DataRow(Resolution.Days)]
+    [DataRow(Resolution.Weeks)]
+    [DataRow(Resolution.Months)]
     public void UpdateData_RangeBarDataUpdate_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
@@ -1586,7 +1586,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.CreateInstrumentGroup(instrumentGroup);
       m_database.CreateInstrument(m_instrument);
-      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, Resolution.Day, barData);
+      m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, Resolution.Days, barData);
 
       Fundamental fundamental = new Fundamental(Guid.NewGuid(), Fundamental.DefaultAttributeSet, "TagValue", "TestInstrumentFundamental", "TestInstrumentFundamentalDescription", FundamentalCategory.Instrument, FundamentalReleaseInterval.Daily);
       m_database.CreateFundamental(fundamental);
@@ -1604,7 +1604,7 @@ namespace TradeSharp.Data.Testing
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not persisted to database.");
-      Assert.AreEqual(10, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, Resolution.Day),
+      Assert.AreEqual(10, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, Resolution.Days),
         $"Ticker = '{m_instrument.Ticker}'")
       , "Actual bar values from list not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
@@ -1629,7 +1629,7 @@ namespace TradeSharp.Data.Testing
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()}")
       , "Instrument not deleted from database.");
-      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, Resolution.Day),
+      Assert.AreEqual(0, m_database.GetRowCount(m_database.GetDataProviderDBName(m_dataProvider1.Object.Name, Data.SqliteDatabase.TableInstrumentData, Resolution.Days),
         $"Ticker = '{m_instrument.Ticker}'")
       , "Actual bar values from list not deleted from database.");
       Assert.AreEqual(0, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
@@ -2316,19 +2316,19 @@ namespace TradeSharp.Data.Testing
         case Resolution.Level1:
           dateTimeDelta = new TimeSpan(0, 0, 1);
           break;
-        case Resolution.Minute:
+        case Resolution.Minutes:
           dateTimeDelta = new TimeSpan(0, 1, 0);
           break;
-        case Resolution.Hour:
+        case Resolution.Hours:
           dateTimeDelta = new TimeSpan(1, 0, 0);
           break;
-        case Resolution.Day:
+        case Resolution.Days:
           dateTimeDelta = new TimeSpan(1, 0, 0, 0);
           break;
-        case Resolution.Week:
+        case Resolution.Weeks:
           dateTimeDelta = new TimeSpan(7, 0, 0, 0);
           break;
-        case Resolution.Month:
+        case Resolution.Months:
           dateTimeDelta = new TimeSpan(31, 0, 0, 0);
           break;
       }
@@ -2363,11 +2363,11 @@ namespace TradeSharp.Data.Testing
 
     [TestMethod]
     [DataRow(Resolution.Level1, 500)]
-    [DataRow(Resolution.Minute, 500)]
-    [DataRow(Resolution.Hour, 500)]
-    [DataRow(Resolution.Day, 500)]
-    [DataRow(Resolution.Week, 500)]
-    [DataRow(Resolution.Month, 500)]
+    [DataRow(Resolution.Minutes, 500)]
+    [DataRow(Resolution.Hours, 500)]
+    [DataRow(Resolution.Days, 500)]
+    [DataRow(Resolution.Weeks, 500)]
+    [DataRow(Resolution.Months, 500)]
     public void GetDataCount_AnyResolution_Success(Resolution resolution, int expectedCount)
     {
       generateDataBars(resolution, 500);
@@ -2375,8 +2375,8 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, 500)]
-    [DataRow(Resolution.Day, 500)]
+    [DataRow(Resolution.Minutes, 500)]
+    [DataRow(Resolution.Days, 500)]
     public void GetBarDataCount_NoDateFilter_Success(Resolution resolution, int expectedCount)
     {
       generateDataBars(resolution, 500);
@@ -2384,8 +2384,8 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", 151)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 122)]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T03:30:00Z", 151)]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 122)]
     public void GetBarDataCount_WithDateFilter_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int expectedCount)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
@@ -2396,8 +2396,8 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute)]
-    [DataRow(Resolution.Day)]
+    [DataRow(Resolution.Minutes)]
+    [DataRow(Resolution.Days)]
     public void GetBarData_ReturnsBarData_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
@@ -2421,8 +2421,8 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T05:00:00Z", 241)]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 122)]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T05:00:00Z", 241)]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 122)]
     public void GetBarData_FilterByDate_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int expectedCount)
     {
       DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
@@ -2437,18 +2437,18 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 10, 10, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 10, 10, 10, "2023-12-31T00:10:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 20, 10, 10, "2023-12-31T00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 0, 20, 20, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 20, 20, 20, "2023-12-31T00:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", 40, 20, 20, "2023-12-31T00:40:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 10, 10, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 10, 10, 10, "2024-01-10T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 20, 10, 10, "2024-01-20T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 0, 20, 20, "2023-12-31T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 20, 20, 20, "2024-01-20T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", 40, 20, 20, "2024-02-09T00:00:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", 0, 10, 10, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", 10, 10, 10, "2023-12-31T00:10:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", 20, 10, 10, "2023-12-31T00:20:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", 0, 20, 20, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", 20, 20, 20, "2023-12-31T00:20:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", 40, 20, 20, "2023-12-31T00:40:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", 0, 10, 10, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", 10, 10, 10, "2024-01-10T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", 20, 10, 10, "2024-01-20T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", 0, 20, 20, "2023-12-31T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", 20, 20, 20, "2024-01-20T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", 40, 20, 20, "2024-02-09T00:00:00Z")]
     public void GetBarData_FilterByPage_Success(Resolution resolution, string generatedFromDate, int index, int count, int expectedCount, string expectedFromDate)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
@@ -2459,18 +2459,18 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 10, 10, "2023-12-31T01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 10, 10, 10, "2023-12-31T01:10:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 20, 10, 10, "2023-12-31T01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 20, 20, "2023-12-31T01:00:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 20, 20, 20, "2023-12-31T01:20:00Z")]
-    [DataRow(Resolution.Minute, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 40, 20, 20, "2023-12-31T01:40:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 10, 10, "2024-06-01T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 10, 10, 10, "2024-06-11T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 20, 10, 10, "2024-06-21T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 20, 20, "2024-06-01T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 20, 20, 20, "2024-06-21T00:00:00Z")]
-    [DataRow(Resolution.Day, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 40, 20, 20, "2024-07-11T00:00:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 10, 10, "2023-12-31T01:00:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 10, 10, 10, "2023-12-31T01:10:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 20, 10, 10, "2023-12-31T01:20:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 0, 20, 20, "2023-12-31T01:00:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 20, 20, 20, "2023-12-31T01:20:00Z")]
+    [DataRow(Resolution.Minutes, "2023-12-31T00:00:00Z", "2023-12-31T01:00:00Z", "2023-12-31T02:00:00Z", 40, 20, 20, "2023-12-31T01:40:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 10, 10, "2024-06-01T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 10, 10, 10, "2024-06-11T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 20, 10, 10, "2024-06-21T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 0, 20, 20, "2024-06-01T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 20, 20, 20, "2024-06-21T00:00:00Z")]
+    [DataRow(Resolution.Days, "2023-12-31T00:00:00Z", "2024-06-01T00:00:00Z", "2024-09-30T00:00:00Z", 40, 20, 20, "2024-07-11T00:00:00Z")]
     public void GetBarData_FilterByDateAndPage_Success(Resolution resolution, string generatedFromDate, string fromDate, string toDate, int index, int count, int expectedCount, string expectedFromDate)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
@@ -2483,8 +2483,8 @@ namespace TradeSharp.Data.Testing
     }
 
     [TestMethod]
-    [DataRow(Resolution.Minute)]
-    [DataRow(Resolution.Day)]
+    [DataRow(Resolution.Minutes)]
+    [DataRow(Resolution.Days)]
     public void GetDataCache_ReturnsBarData_Success(Resolution resolution)
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;

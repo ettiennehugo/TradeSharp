@@ -38,7 +38,7 @@ namespace TradeSharp.Data
 
     //TODO: Add L2 tables if required - to store the order book would require a lot of space.
 
-    public static readonly Resolution[] s_SupportedResolutions = { Resolution.Minute, Resolution.Hour, Resolution.Day, Resolution.Week, Resolution.Month, Resolution.Level1 };
+    public static readonly Resolution[] s_SupportedResolutions = { Resolution.Minutes, Resolution.Hours, Resolution.Days, Resolution.Weeks, Resolution.Months, Resolution.Level1 };
 
     //enums
 
@@ -2263,11 +2263,11 @@ namespace TradeSharp.Data
     {
       switch (resolution)
       {
-        case Resolution.Minute:
-        case Resolution.Hour:
-        case Resolution.Day:
-        case Resolution.Week:
-        case Resolution.Month:
+        case Resolution.Minutes:
+        case Resolution.Hours:
+        case Resolution.Days:
+        case Resolution.Weeks:
+        case Resolution.Months:
           return GetBarData(dataProviderName, ticker, from, to, resolution);
 
         case Resolution.Level1:
@@ -2608,7 +2608,7 @@ namespace TradeSharp.Data
     {
       var command = m_connection.CreateCommand();
       command.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'";
-      command.Parameters.AddWithValue("$tableName", GetDataProviderDBName(dataProviderName, TableInstrumentData, Resolution.Day));
+      command.Parameters.AddWithValue("$tableName", GetDataProviderDBName(dataProviderName, TableInstrumentData, Resolution.Days));
       SqliteDataReader reader = command.ExecuteReader();
       return !reader.NextResult();
     }
@@ -2621,11 +2621,11 @@ namespace TradeSharp.Data
 
       switch (resolution)
       {
-        case Resolution.Minute:
-        case Resolution.Hour:
-        case Resolution.Day:
-        case Resolution.Week:
-        case Resolution.Month:
+        case Resolution.Minutes:
+        case Resolution.Hours:
+        case Resolution.Days:
+        case Resolution.Weeks:
+        case Resolution.Months:
           CreateTable(tableName,
           @"
             Ticker TEXT,
@@ -2737,23 +2737,23 @@ namespace TradeSharp.Data
       string suffix;
       switch (resolution)
       {
-        case Resolution.Minute:
+        case Resolution.Minutes:
           suffix = TableInstrumentDataSuffixMinute;
           break;
 
-        case Resolution.Hour:
+        case Resolution.Hours:
           suffix = TableInstrumentDataSuffixHour;
           break;
 
-        case Resolution.Day:
+        case Resolution.Days:
           suffix = TableInstrumentDataSuffixDay;
           break;
 
-        case Resolution.Week:
+        case Resolution.Weeks:
           suffix = TableInstrumentDataSuffixWeekly;
           break;
 
-        case Resolution.Month:
+        case Resolution.Months:
           suffix = TableInstrumentDataSuffixMonthly;
           break;
 

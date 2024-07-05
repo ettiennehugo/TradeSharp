@@ -63,11 +63,12 @@ namespace TradeSharp.Data
   /// </summary>
   public enum Resolution 
   {
-    Minute,
-    Hour,
-    Day,
-    Week,
-    Month,
+    Seconds,
+    Minutes,
+    Hours,
+    Days,
+    Weeks,
+    Months,
     Level1,   //tick data
     //Level2,   //order book data - currently not supported
   }

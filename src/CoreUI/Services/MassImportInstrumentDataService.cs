@@ -227,7 +227,7 @@ namespace TradeSharp.WinCoreUI.Services
             importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
             if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
             importFile.Filename = filename;
-            importFile.Resolution = Resolution.Minute;
+            importFile.Resolution = Resolution.Minutes;
             importFiles.Push(importFile);
           }
         }
@@ -256,7 +256,7 @@ namespace TradeSharp.WinCoreUI.Services
             importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
             if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
             importFile.Filename = filename;
-            importFile.Resolution = Resolution.Hour;
+            importFile.Resolution = Resolution.Hours;
             importFiles.Push(importFile);
           }
         }
@@ -285,7 +285,7 @@ namespace TradeSharp.WinCoreUI.Services
             importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
             if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
             importFile.Filename = filename;
-            importFile.Resolution = Resolution.Day;
+            importFile.Resolution = Resolution.Days;
             importFiles.Push(importFile);
           }
         }
@@ -314,7 +314,7 @@ namespace TradeSharp.WinCoreUI.Services
             importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
             if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
             importFile.Filename = filename;
-            importFile.Resolution = Resolution.Week;
+            importFile.Resolution = Resolution.Weeks;
             importFiles.Push(importFile);
           }
         }
@@ -343,7 +343,7 @@ namespace TradeSharp.WinCoreUI.Services
             importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
             if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
             importFile.Filename = filename;
-            importFile.Resolution = Resolution.Month;
+            importFile.Resolution = Resolution.Months;
             importFiles.Push(importFile);
           }
         }
@@ -406,7 +406,7 @@ namespace TradeSharp.WinCoreUI.Services
           importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
           if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
           importFile.Filename = filename;
-          importFile.Resolution = Resolution.Minute;
+          importFile.Resolution = Resolution.Minutes;
           importFiles.Push(importFile);
         }
 
@@ -417,7 +417,7 @@ namespace TradeSharp.WinCoreUI.Services
           importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
           if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
           importFile.Filename = filename;
-          importFile.Resolution = Resolution.Hour;
+          importFile.Resolution = Resolution.Hours;
           importFiles.Push(importFile);
         }
 
@@ -428,7 +428,7 @@ namespace TradeSharp.WinCoreUI.Services
           importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
           if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
           importFile.Filename = filename;
-          importFile.Resolution = Resolution.Day;
+          importFile.Resolution = Resolution.Days;
           importFiles.Push(importFile);
         }
 
@@ -439,7 +439,7 @@ namespace TradeSharp.WinCoreUI.Services
           importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
           if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
           importFile.Filename = filename;
-          importFile.Resolution = Resolution.Week;
+          importFile.Resolution = Resolution.Weeks;
           importFiles.Push(importFile);
         }
 
@@ -450,7 +450,7 @@ namespace TradeSharp.WinCoreUI.Services
           importFile.Ticker = Path.GetFileNameWithoutExtension(filename).Split('.')[0];
           if (importFile.Ticker.Length == 0) continue;  //skip files that don't have a ticker in the filename
           importFile.Filename = filename;
-          importFile.Resolution = Resolution.Month;
+          importFile.Resolution = Resolution.Months;
           importFiles.Push(importFile);
         }
 

@@ -44,7 +44,7 @@ namespace TradeSharp.CoreUI.ViewModels
       m_dataProvider = string.Empty;
       m_filter = new Dictionary<string, object>();
       m_priceValueFormatMask = DefaultPriceValueFormatMask;
-      Resolution = Resolution.Day;
+      Resolution = Resolution.Days;
       DataProvider = string.Empty;
       Instrument = null;
       AddCommand = new RelayCommand(OnAdd, () => DataProvider != string.Empty && Instrument != null); //view model must be keyed correctly before allowing the adding new items
@@ -54,11 +54,11 @@ namespace TradeSharp.CoreUI.ViewModels
       ImportCommandAsync = new AsyncRelayCommand(OnImportAsync, () => DataProvider != string.Empty && Instrument != null);
       ExportCommandAsync = new AsyncRelayCommand(OnExportAsync, () => DataProvider != string.Empty && Instrument != null);
       CopyCommandAsync = new AsyncRelayCommand<object?>(OnCopyAsync, (object? x) => DataProvider != string.Empty && Instrument != null && Count > 0);
-      CopyToHourCommandAsync = new AsyncRelayCommand(OnCopyToHourAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution == Resolution.Minute);
-      CopyToDayCommandAsync = new AsyncRelayCommand(OnCopyToDayAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour));
-      CopyToWeekCommandAsync = new AsyncRelayCommand(OnCopyToWeekAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day));
-      CopyToMonthCommandAsync = new AsyncRelayCommand(OnCopyToMonthAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minute || Resolution == Resolution.Hour || Resolution == Resolution.Day || Resolution == Resolution.Week));
-      CopyToAllCommandAsync = new AsyncRelayCommand(OnCopyToAllAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution != Resolution.Month);
+      CopyToHourCommandAsync = new AsyncRelayCommand(OnCopyToHourAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution == Resolution.Minutes);
+      CopyToDayCommandAsync = new AsyncRelayCommand(OnCopyToDayAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minutes || Resolution == Resolution.Hours));
+      CopyToWeekCommandAsync = new AsyncRelayCommand(OnCopyToWeekAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minutes || Resolution == Resolution.Hours || Resolution == Resolution.Days));
+      CopyToMonthCommandAsync = new AsyncRelayCommand(OnCopyToMonthAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && (Resolution == Resolution.Minutes || Resolution == Resolution.Hours || Resolution == Resolution.Days || Resolution == Resolution.Weeks));
+      CopyToAllCommandAsync = new AsyncRelayCommand(OnCopyToAllAsync, () => DataProvider != string.Empty && Instrument != null && Count > 0 && Resolution != Resolution.Months);
     }
 
     //finalizers
@@ -127,15 +127,15 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     public virtual Task OnCopyToHourAsync()
     {
-      return Task.Run(() => m_barDataService.Copy(Resolution.Minute));
+      return Task.Run(() => m_barDataService.Copy(Resolution.Minutes));
     }
 
     public virtual Task OnCopyToDayAsync()
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
-        m_barDataService.Copy(Resolution.Hour);
+        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes);
+        m_barDataService.Copy(Resolution.Hours);
       });
     }
 
@@ -143,9 +143,9 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
-        if (Resolution == Resolution.Hour) m_barDataService.Copy(Resolution.Hour);
-        m_barDataService.Copy(Resolution.Day);
+        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes);
+        if (Resolution == Resolution.Hours) m_barDataService.Copy(Resolution.Hours);
+        m_barDataService.Copy(Resolution.Days);
       });
     }
 
@@ -153,10 +153,10 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Minute) m_barDataService.Copy(Resolution.Minute);
-        if (Resolution == Resolution.Hour) m_barDataService.Copy(Resolution.Hour);
-        if (Resolution == Resolution.Day) m_barDataService.Copy(Resolution.Day);
-        m_barDataService.Copy(Resolution.Week);
+        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes);
+        if (Resolution == Resolution.Hours) m_barDataService.Copy(Resolution.Hours);
+        if (Resolution == Resolution.Days) m_barDataService.Copy(Resolution.Days);
+        m_barDataService.Copy(Resolution.Weeks);
       });
     }
 
@@ -166,23 +166,23 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         switch (Resolution)
         {
-          case Resolution.Minute:
-            m_barDataService.Copy(Resolution.Minute);
-            m_barDataService.Copy(Resolution.Hour);
-            m_barDataService.Copy(Resolution.Day);
-            m_barDataService.Copy(Resolution.Week);
+          case Resolution.Minutes:
+            m_barDataService.Copy(Resolution.Minutes);
+            m_barDataService.Copy(Resolution.Hours);
+            m_barDataService.Copy(Resolution.Days);
+            m_barDataService.Copy(Resolution.Weeks);
             break;
-          case Resolution.Hour:
-            m_barDataService.Copy(Resolution.Hour);
-            m_barDataService.Copy(Resolution.Day);
-            m_barDataService.Copy(Resolution.Week);
+          case Resolution.Hours:
+            m_barDataService.Copy(Resolution.Hours);
+            m_barDataService.Copy(Resolution.Days);
+            m_barDataService.Copy(Resolution.Weeks);
             break;
-          case Resolution.Day:
-            m_barDataService.Copy(Resolution.Day);
-            m_barDataService.Copy(Resolution.Week);
+          case Resolution.Days:
+            m_barDataService.Copy(Resolution.Days);
+            m_barDataService.Copy(Resolution.Weeks);
             break;
-          case Resolution.Week:
-            m_barDataService.Copy(Resolution.Week);
+          case Resolution.Weeks:
+            m_barDataService.Copy(Resolution.Weeks);
             break;
         }
       });

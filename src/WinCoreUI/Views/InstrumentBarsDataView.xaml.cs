@@ -64,7 +64,7 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public static readonly DependencyProperty DataProviderProperty = DependencyProperty.Register("DataProvider", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata(""));
-    public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register("Resolution", typeof(Resolution), typeof(InstrumentBarsDataView), new PropertyMetadata(Resolution.Day));
+    public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register("Resolution", typeof(Resolution), typeof(InstrumentBarsDataView), new PropertyMetadata(Resolution.Days));
     public static readonly DependencyProperty InstrumentProperty = DependencyProperty.Register("Instrument", typeof(Instrument), typeof(InstrumentBarsDataView), new PropertyMetadata(null));
     public static readonly DependencyProperty FilterStartTooltipProperty = DependencyProperty.Register("FilterStartTooltip", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata("Filter start date/time"));
     public static readonly DependencyProperty FilterEndTooltipProperty = DependencyProperty.Register("FilterEndTooltip", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata("Filter end date/time"));
@@ -116,35 +116,35 @@ namespace TradeSharp.WinCoreUI.Views
       {
         case Resolution.Level1:
           throw new ArgumentException("Level1 resolution not supported by bar data view, use view for level1 data.");
-        case Resolution.Minute:
+        case Resolution.Minutes:
           m_buttonCopy.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Visible;
           m_copyToDay.Visibility = Visibility.Visible;
           m_copyToWeek.Visibility = Visibility.Visible;
           m_copyToMonth.Visibility = Visibility.Visible;
           break;
-        case Resolution.Hour:
+        case Resolution.Hours:
           m_buttonCopy.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Visible;
           m_copyToWeek.Visibility = Visibility.Visible;
           m_copyToMonth.Visibility = Visibility.Visible;
           break;
-        case Resolution.Day:
+        case Resolution.Days:
           m_buttonCopy.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Collapsed;
           m_copyToWeek.Visibility = Visibility.Visible;
           m_copyToMonth.Visibility = Visibility.Visible;
           break;
-        case Resolution.Week:
+        case Resolution.Weeks:
           m_buttonCopy.Visibility = Visibility.Visible;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Collapsed;
           m_copyToWeek.Visibility = Visibility.Collapsed;
           m_copyToMonth.Visibility = Visibility.Visible;
           break;
-        case Resolution.Month:
+        case Resolution.Months:
           m_buttonCopy.Visibility = Visibility.Collapsed;
           m_copyToHour.Visibility = Visibility.Collapsed;
           m_copyToDay.Visibility = Visibility.Collapsed;
@@ -161,26 +161,26 @@ namespace TradeSharp.WinCoreUI.Views
       {
         case Resolution.Level1:
           throw new ArgumentException("Level1 resolution not supported by bar data view, use view for level1 data.");
-        case Resolution.Minute:
+        case Resolution.Minutes:
           FilterStartTooltip = $"Filter start date/time ({timeZoneValue} time-zone)";
           FilterEndTooltip = $"Filter end date/time ({timeZoneValue} time-zone)";
           m_startDateTime.PlaceholderText = "yyyy/mm/dd hh:mm";
           m_endDateTime.PlaceholderText = "yyyy/mm/dd hh:mm";
           break;
-        case Resolution.Hour:
+        case Resolution.Hours:
           FilterStartTooltip = $"Filter start date/hour ({timeZoneValue} time-zone)";
           FilterEndTooltip = $"Filter end date/hour ({timeZoneValue} time-zone)";
           m_startDateTime.PlaceholderText = "yyyy/mm/dd hh:00";
           m_endDateTime.PlaceholderText = "yyyy/mm/dd hh:00";
           break;
-        case Resolution.Day:
-        case Resolution.Week:
+        case Resolution.Days:
+        case Resolution.Weeks:
           FilterStartTooltip = $"Filter start date ({timeZoneValue} time-zone)";
           FilterEndTooltip = $"Filter end date ({timeZoneValue} time-zone)";
           m_startDateTime.PlaceholderText = "yyyy/mm/dd";
           m_endDateTime.PlaceholderText = "yyyy/mm/dd";
           break;
-        case Resolution.Month:
+        case Resolution.Months:
           FilterStartTooltip = $"Filter start date ({timeZoneValue} time-zone)";
           FilterEndTooltip = $"Filter end date ({timeZoneValue} time-zone)";
           m_startDateTime.PlaceholderText = "yyyy/mm/dd";
@@ -200,23 +200,23 @@ namespace TradeSharp.WinCoreUI.Views
       {
         case Resolution.Level1:
           throw new ArgumentException("Level1 resolution not supported by bar data view, use view for level1 data.");
-        case Resolution.Minute:
+        case Resolution.Minutes:
           m_dataTable.IncrementalLoadingThreshold = MinuteIncrementalLoadingThreshold;
           m_dataTable.DataFetchSize = MinuteDataFethSize;
           break;
-        case Resolution.Hour:
+        case Resolution.Hours:
           m_dataTable.IncrementalLoadingThreshold = HourIncrementalLoadingThreshold;
           m_dataTable.DataFetchSize = HourDataFethSize;
           break;
-        case Resolution.Day:
+        case Resolution.Days:
           m_dataTable.IncrementalLoadingThreshold = DayIncrementalLoadingThreshold;
           m_dataTable.DataFetchSize = DayDataFethSize;
           break;
-        case Resolution.Week:
+        case Resolution.Weeks:
           m_dataTable.IncrementalLoadingThreshold = WeekIncrementalLoadingThreshold;
           m_dataTable.DataFetchSize = WeekDataFethSize;
           break;
-        case Resolution.Month:
+        case Resolution.Months:
           m_dataTable.IncrementalLoadingThreshold = MonthIncrementalLoadingThreshold;
           m_dataTable.DataFetchSize = MonthDataFethSize;
           break;
@@ -255,7 +255,7 @@ namespace TradeSharp.WinCoreUI.Views
           break;
       }
 
-      if (Resolution == Resolution.Day || Resolution == Resolution.Week || Resolution == Resolution.Month) result = new DateTime(result.Year, result.Month, result.Day, 23, 59, 59);  //set the time to midnight 11:59:59 PM to ensure to include the entire day/week/month
+      if (Resolution == Resolution.Days || Resolution == Resolution.Weeks || Resolution == Resolution.Months) result = new DateTime(result.Year, result.Month, result.Day, 23, 59, 59);  //set the time to midnight 11:59:59 PM to ensure to include the entire day/week/month
       return result;
     }
 

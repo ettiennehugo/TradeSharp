@@ -135,8 +135,8 @@ namespace TradeSharp.CoreUI.Services
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
-              exportFile.Filename = getExportFileName(Resolution.Minute, instrument);
-              exportFile.Resolution = Resolution.Minute;
+              exportFile.Filename = getExportFileName(Resolution.Minutes, instrument);
+              exportFile.Resolution = Resolution.Minutes;
               exportFile.Instrument = instrument;
               exportFileList.Push(exportFile);
             }
@@ -145,8 +145,8 @@ namespace TradeSharp.CoreUI.Services
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
-              exportFile.Filename = getExportFileName(Resolution.Hour, instrument);
-              exportFile.Resolution = Resolution.Hour;
+              exportFile.Filename = getExportFileName(Resolution.Hours, instrument);
+              exportFile.Resolution = Resolution.Hours;
               exportFile.Instrument = instrument;
               exportFileList.Push(exportFile);
             }
@@ -155,8 +155,8 @@ namespace TradeSharp.CoreUI.Services
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
-              exportFile.Filename = getExportFileName(Resolution.Day, instrument);
-              exportFile.Resolution = Resolution.Day;
+              exportFile.Filename = getExportFileName(Resolution.Days, instrument);
+              exportFile.Resolution = Resolution.Days;
               exportFile.Instrument = instrument;
               exportFileList.Push(exportFile);
             }
@@ -165,8 +165,8 @@ namespace TradeSharp.CoreUI.Services
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
-              exportFile.Filename = getExportFileName(Resolution.Week, instrument);
-              exportFile.Resolution = Resolution.Week;
+              exportFile.Filename = getExportFileName(Resolution.Weeks, instrument);
+              exportFile.Resolution = Resolution.Weeks;
               exportFile.Instrument = instrument;
               exportFileList.Push(exportFile);
             }
@@ -175,8 +175,8 @@ namespace TradeSharp.CoreUI.Services
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
-              exportFile.Filename = getExportFileName(Resolution.Month, instrument);
-              exportFile.Resolution = Resolution.Month;
+              exportFile.Filename = getExportFileName(Resolution.Months, instrument);
+              exportFile.Resolution = Resolution.Months;
               exportFile.Instrument = instrument;
               exportFileList.Push(exportFile);
             }
@@ -304,19 +304,19 @@ namespace TradeSharp.CoreUI.Services
         case MassImportExportStructure.DiretoriesAndFiles:          
           switch (resolution)
           {
-            case Resolution.Minute:
+            case Resolution.Minutes:
               resolutionStr = IMassExportInstrumentDataService.TokenMinute;
               break;
-            case Resolution.Hour:
+            case Resolution.Hours:
               resolutionStr = IMassExportInstrumentDataService.TokenHour;
               break;
-            case Resolution.Day:
+            case Resolution.Days:
               resolutionStr = IMassExportInstrumentDataService.TokenDay;
               break;
-            case Resolution.Week:
+            case Resolution.Weeks:
               resolutionStr = IMassExportInstrumentDataService.TokenWeek;
               break;
-            case Resolution.Month:
+            case Resolution.Months:
               resolutionStr = IMassExportInstrumentDataService.TokenMonth;
               break;
           }

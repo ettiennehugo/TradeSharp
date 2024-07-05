@@ -27,7 +27,7 @@ namespace TradeSharp.CoreUI.Repositories
     {
       DataProvider = string.Empty;
       Instrument = null;
-      Resolution = Resolution.Day;
+      Resolution = Resolution.Days;
       m_database = database;
       m_index = 0;
       m_count = 0;

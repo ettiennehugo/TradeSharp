@@ -890,11 +890,11 @@ namespace TradeSharp.Data
       switch (Resolution)
       {
         //candlestick data
-        case Resolution.Minute:
-        case Resolution.Hour:
-        case Resolution.Day:
-        case Resolution.Week:
-        case Resolution.Month:
+        case Resolution.Minutes:
+        case Resolution.Hours:
+        case Resolution.Days:
+        case Resolution.Weeks:
+        case Resolution.Months:
           Data = new DataCacheBars(count);
           break;
         //tick data
