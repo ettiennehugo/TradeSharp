@@ -79,34 +79,35 @@ namespace TradeSharp.WinDataManager.Services
       await dlg.ShowAsync();
     }
 
-    public Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message)
+    public async Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message)
     {
-      StatusBarText.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+      await Task.Run(() =>
       {
-        //see glyphs used at - https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-ui-symbol-font
-        switch (severity)
+        StatusBarText.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
         {
-          case StatusMessageSeverity.Success:
-            StatusBarIcon.Glyph = "\uE73E";
-            break;
-          case StatusMessageSeverity.Information:
-            StatusBarIcon.Glyph = "\uE946";
-            break;
-          case StatusMessageSeverity.Warning:
-            StatusBarIcon.Glyph = "\uE128";
-            break;
-          case StatusMessageSeverity.Error:
-            StatusBarIcon.Glyph = "\uE783";
-            break;
-        }
+          //see glyphs used at - https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-ui-symbol-font
+          switch (severity)
+          {
+            case StatusMessageSeverity.Success:
+              StatusBarIcon.Glyph = "\uE73E";
+              break;
+            case StatusMessageSeverity.Information:
+              StatusBarIcon.Glyph = "\uE946";
+              break;
+            case StatusMessageSeverity.Warning:
+              StatusBarIcon.Glyph = "\uE128";
+              break;
+            case StatusMessageSeverity.Error:
+              StatusBarIcon.Glyph = "\uE783";
+              break;
+          }
 
-        if (title.Length != 0)
-          StatusBarText.Text = $"{title} - {message}";
-        else
-          StatusBarText.Text = $"{message}";
+          if (title.Length != 0)
+            StatusBarText.Text = $"{title} - {message}";
+          else
+            StatusBarText.Text = $"{message}";
+        });
       });
-
-      return Task.CompletedTask;
     }
 
     /// <summary>
@@ -191,9 +192,7 @@ namespace TradeSharp.WinDataManager.Services
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
-
       if (result == ContentDialogResult.Primary) return view.Holiday;
-
       return null;
     }
 
@@ -211,9 +210,7 @@ namespace TradeSharp.WinDataManager.Services
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
-
       if (result == ContentDialogResult.Primary) return view.Holiday;
-
       return null;
     }
 
@@ -571,117 +568,128 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public Task ShowMassDataImportAsync(string dataProvider)
+    public async Task ShowMassDataImportAsync(string dataProvider)
     {
-      //https://learn.microsoft.com/en-us/windows/apps/get-started/samples#windows-app-sdk--winui-3-samples
-      Window window = new Window();
-      window.Title = "Mass Import of Instrument Data";
-      WinCoreUI.Views.MassImportInstrumentDataView importView = new WinCoreUI.Views.MassImportInstrumentDataView();
-      importView.ParentWindow = window;   //set so view can close the window
-      importView.DataProvider = dataProvider;
-      window.Content = importView;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 850));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      ResetSizeable(window);
-      CenterWindow(window);
-      window.Activate();
-      return Task.CompletedTask;
+      await Task.Run(() =>
+      {
+        //https://learn.microsoft.com/en-us/windows/apps/get-started/samples#windows-app-sdk--winui-3-samples
+        Window window = new Window();
+        window.Title = "Mass Import of Instrument Data";
+        WinCoreUI.Views.MassImportInstrumentDataView importView = new WinCoreUI.Views.MassImportInstrumentDataView();
+        importView.ParentWindow = window;   //set so view can close the window
+        importView.DataProvider = dataProvider;
+        window.Content = importView;
+        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 850));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+        ResetSizeable(window);
+        CenterWindow(window);
+        window.Activate();
+      });
     }
 
-    public Task ShowMassDataExportAsync(string dataProvider)
+    public async Task ShowMassDataExportAsync(string dataProvider)
     {
-      Window window = new Window();
-      window.Title = "Mass Export of Instrument Data";
-      WinCoreUI.Views.MassExportInstrumentDataView exportView = new WinCoreUI.Views.MassExportInstrumentDataView();
-      exportView.ParentWindow = window;   //set so view can close the window
-      exportView.DataProvider = dataProvider;
-      window.Content = exportView;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 930));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      ResetSizeable(window);
-      CenterWindow(window);
-      window.Activate();
-      return Task.CompletedTask;
+      await Task.Run(() => {
+        Window window = new Window();
+        window.Title = "Mass Export of Instrument Data";
+        WinCoreUI.Views.MassExportInstrumentDataView exportView = new WinCoreUI.Views.MassExportInstrumentDataView();
+        exportView.ParentWindow = window;   //set so view can close the window
+        exportView.DataProvider = dataProvider;
+        window.Content = exportView;
+        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 930));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+        ResetSizeable(window);
+        CenterWindow(window);
+        window.Activate();
+      }); 
     }
 
-    public Task ShowMassDataCopyAsync(string dataProvider)
+    public async Task ShowMassDataCopyAsync(string dataProvider)
     {
-      Window window = new Window();
-      window.Title = "Mass Copy of Instrument Data";
-      WinCoreUI.Views.MassCopyInstrumentDataView copyView = new WinCoreUI.Views.MassCopyInstrumentDataView();
-      copyView.ParentWindow = window;   //set so view can close the window
-      copyView.DataProvider = dataProvider;
-      window.Content = copyView;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 520));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      ResetSizeable(window);
-      CenterWindow(window);
-      window.Activate();
-      return Task.CompletedTask;
+      await Task.Run(() =>
+      {
+        Window window = new Window();
+        window.Title = "Mass Copy of Instrument Data";
+        WinCoreUI.Views.MassCopyInstrumentDataView copyView = new WinCoreUI.Views.MassCopyInstrumentDataView();
+        copyView.ParentWindow = window;   //set so view can close the window
+        copyView.DataProvider = dataProvider;
+        window.Content = copyView;
+        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 520));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+        ResetSizeable(window);
+        CenterWindow(window);
+        window.Activate();
+      });
     }
 
-    public Task ShowMassDataDownloadAsync(string dataProvider)
+    public async Task ShowMassDataDownloadAsync(string dataProvider)
     {
-      Window window = new Window();
-      window.Title = "Mass Download of Instrument Data";
-      WinCoreUI.Views.MassDownloadInstrumentDataView downloadView = new WinCoreUI.Views.MassDownloadInstrumentDataView();
-      downloadView.ParentWindow = window;   //set so view can close the window
-      downloadView.DataProvider = dataProvider;
-      window.Content = downloadView;
-      //window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 660));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      ResetSizeable(window);
-      CenterWindow(window);
-      window.Activate();
-      return Task.CompletedTask;
+      await Task.Run(() => {
+        Window window = new Window();
+        window.Title = "Mass Download of Instrument Data";
+        WinCoreUI.Views.MassDownloadInstrumentDataView downloadView = new WinCoreUI.Views.MassDownloadInstrumentDataView();
+        downloadView.ParentWindow = window;   //set so view can close the window
+        downloadView.DataProvider = dataProvider;
+        window.Content = downloadView;
+        //window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1170, 660));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+        ResetSizeable(window);
+        CenterWindow(window);
+        window.Activate();
+      });      
     }
 
     /// <summary>
     /// Shows the account dialog with all the brokers and their associated accounts.
     /// </summary>
-    public Task ShowAccountDialogAsync()
+    public async Task ShowAccountDialogAsync()
     {
-      Window window = new Window();
-      window.Title = "Accounts";
-      WinCoreUI.Views.AccountsView accountsView = new WinCoreUI.Views.AccountsView();
-      accountsView.ParentWindow = window;
-      window.Content = accountsView;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      ResetSizeable(window);
-      CenterWindow(window);
-      window.Activate();
-      return Task.CompletedTask;
+      await Task.Run(() => {
+        Window window = new Window();
+        window.Title = "Accounts";
+        WinCoreUI.Views.AccountsView accountsView = new WinCoreUI.Views.AccountsView();
+        accountsView.ParentWindow = window;
+        window.Content = accountsView;
+        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+        ResetSizeable(window);
+        CenterWindow(window);
+        window.Activate();
+      });
     }
 
     /// <summary>
     /// Shows the account dialog for the specified broker.
     /// </summary>
-    public Task ShowAccountDialogAsync(IBrokerPlugin broker)
+    public async Task ShowAccountDialogAsync(IBrokerPlugin broker)
     {
-      Window window = new Window();
-      window.Title = $"Accounts - {broker.Name}";
-      WinCoreUI.Views.AccountsView accountsView = new WinCoreUI.Views.AccountsView(broker);
-      accountsView.ParentWindow = window;
-      window.Content = accountsView;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      ResetSizeable(window);
-      CenterWindow(window);
-      window.Activate();
-      return Task.CompletedTask;
+      await Task.Run(() =>
+      {
+        Window window = new Window();
+        window.Title = $"Accounts - {broker.Name}";
+        WinCoreUI.Views.AccountsView accountsView = new WinCoreUI.Views.AccountsView(broker);
+        accountsView.ParentWindow = window;
+        window.Content = accountsView;
+        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+        ResetSizeable(window);
+        CenterWindow(window);
+        window.Activate();
+      });
     }
 
     /// <summary>
     /// Shows the account dialog for the specified account.
     /// </summary>
-    public Task ShowAccountDialogAsync(IBrokerPlugin broker, Data.Account account)
+    public async Task ShowAccountDialogAsync(IBrokerPlugin broker, Data.Account account)
     {
-      Window window = new Window();
-      window.Title = $"Account - {account.Name}";
-      WinCoreUI.Views.AccountView accountsView = new WinCoreUI.Views.AccountView(broker, account);
-      accountsView.ParentWindow = window;
-      window.Content = accountsView;
-      window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
-      ResetSizeable(window);
-      CenterWindow(window);
-      window.Activate();
-      return Task.CompletedTask;
+      await Task.Run(() =>
+      {
+        Window window = new Window();
+        window.Title = $"Account - {account.Name}";
+        WinCoreUI.Views.AccountView accountsView = new WinCoreUI.Views.AccountView(broker, account);
+        accountsView.ParentWindow = window;
+        window.Content = accountsView;
+        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(3000, 2000));   //NOTE: Setting the client size from the download view actual width/height does not work since those values are not computed correctly.
+        ResetSizeable(window);
+        CenterWindow(window);
+        window.Activate();
+      });
     }
 
     //properties
