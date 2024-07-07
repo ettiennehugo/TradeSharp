@@ -24,6 +24,7 @@ namespace TradeSharp.CoreUI.Services
     Instrument? Instrument { get; set; }
     Resolution Resolution { get; set; }
     bool MassOperation { get; set; }   //sets when the service is used for mass operations on the data
+    string PriceFormatMask { get; }
 
     //methods
     int Delete(IList<TItem> items);   //mass delete of items

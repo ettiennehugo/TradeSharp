@@ -3,10 +3,9 @@ using System;
 using System.Collections.Generic;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.CoreUI.ViewModels;
-using TradeSharp.WinDataManager.Services;
-using TradeSharp.WinDataManager.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Threading.Tasks;
+using TradeSharp.WinCoreUI.Services;
 
 namespace TradeSharp.WinDataManager.ViewModels
 {
@@ -25,7 +24,7 @@ namespace TradeSharp.WinDataManager.ViewModels
     
 
     //attributes
-    private readonly InitNavigationService m_initNavigationService;
+    private readonly IInitNavigationService m_initNavigationService;
 
     /// <summary>
     /// Page configuration used by the navigation service.
@@ -46,7 +45,7 @@ namespace TradeSharp.WinDataManager.ViewModels
     };
 
     //constructors
-    public MainWindowViewModel(InitNavigationService initNavigationService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService) 
+    public MainWindowViewModel(IInitNavigationService initNavigationService, INavigationService navigationService, IDialogService dialogService) : base(navigationService, dialogService) 
     {
       m_initNavigationService = initNavigationService;
     }

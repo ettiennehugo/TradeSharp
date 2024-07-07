@@ -1,16 +1,14 @@
 ﻿using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using TradeSharp.WinCoreUI.Services;
 
 namespace TradeSharp.WinDataManager.Services
 {
   /// <summary>
   /// Special service to initialise the navigation service at application startup.
   /// </summary>
-  public class InitNavigationService
+  public class InitNavigationService: IInitNavigationService
   {
     //constants
 

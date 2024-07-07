@@ -26,6 +26,12 @@
     double Low { get; set; }
     double Close { get; set; }
     double Volume { get; set; }
+    string PriceFormatMask { get; set; }
+    string FormattedOpen { get; }
+    string FormattedHigh { get; }
+    string FormattedLow { get; }
+    string FormattedClose { get; }
+    string FormattedVolume { get; }
 
     //methods
     IBarData Clone();

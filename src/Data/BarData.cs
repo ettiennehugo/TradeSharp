@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using TradeSharp.Common;
 
 namespace TradeSharp.Data
 {
@@ -31,10 +32,11 @@ namespace TradeSharp.Data
       Volume = double.MinValue;
     }
 
-    public BarData(Resolution resolution, DateTime dateTime, double open, double high, double low, double close, double volume)
+    public BarData(Resolution resolution, DateTime dateTime, string formatMask, double open, double high, double low, double close, double volume)
     {
       Resolution = resolution; 
       DateTime = dateTime;
+      PriceFormatMask = formatMask;
       Open = open;
       High = high;
       Low = low;
@@ -56,11 +58,17 @@ namespace TradeSharp.Data
     [ObservableProperty] private double m_low;
     [ObservableProperty] private double m_close;
     [ObservableProperty] private double m_volume;
+    [ObservableProperty] private string m_priceFormatMask = Constants.DefaultPriceFormatMask;
+    public string FormattedOpen { get => Open.ToString(PriceFormatMask); }
+    public string FormattedHigh { get => High.ToString(PriceFormatMask); }
+    public string FormattedLow { get => Low.ToString(PriceFormatMask); }
+    public string FormattedClose { get => Close.ToString(PriceFormatMask); }
+    public string FormattedVolume { get => Volume.ToString(PriceFormatMask); }
 
     //methods
     public IBarData Clone()
     {
-      return new BarData(Resolution, DateTime, Open, High, Low, Close, Volume); 
+      return new BarData(Resolution, DateTime, PriceFormatMask, Open, High, Low, Close, Volume); 
     }
 
     //NOTE: The equals is used for searching collections to find bar data.

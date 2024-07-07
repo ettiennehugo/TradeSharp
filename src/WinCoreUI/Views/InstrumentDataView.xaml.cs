@@ -1,8 +1,6 @@
-using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TradeSharp.CoreUI.ViewModels;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
@@ -38,6 +36,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_pluginViewModel.PluginsToDisplay = PluginsToDisplay.DataProviders;
       InstrumentViewModel = (IInstrumentViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentViewModel));
       m_dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
+      PriceFormatMask = "0.00";
       this.InitializeComponent();
     }
 
@@ -51,6 +50,7 @@ namespace TradeSharp.WinCoreUI.Views
     public IPlugin SelectedDataProvider { get; set; }
     public IList<IPlugin> DataProviders { get => m_pluginViewModel.Items; }
     public IInstrumentViewModel InstrumentViewModel { get; set; }
+    public string PriceFormatMask { get; set; }
 
     //methods
     private void m_refreshCommand_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)

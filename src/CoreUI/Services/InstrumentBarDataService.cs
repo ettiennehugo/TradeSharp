@@ -209,7 +209,7 @@ namespace TradeSharp.CoreUI.Services
       fromRepository.DataProvider = DataProvider;
       fromRepository.Instrument = Instrument;
       fromRepository.Resolution = from;
-      IList<IBarData> fromBarData = fromRepository.GetItems(internalFromDateTime, internalToDateTime);
+      IList<IBarData> fromBarData = fromRepository.GetItems(internalFromDateTime, internalToDateTime);    //we don't care about the format mask for copying
 
       toRepository.DataProvider = DataProvider;
       toRepository.Instrument = Instrument;
@@ -225,7 +225,7 @@ namespace TradeSharp.CoreUI.Services
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Hour != bar.DateTime.Hour)
             {
-              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
               toBarData.Add(toBar);
             }
             else //keep constructing bar while it's in the same to-resolution
@@ -251,7 +251,7 @@ namespace TradeSharp.CoreUI.Services
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Day != bar.DateTime.Day)
             {
-              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
               toBarData.Add(toBar);
             }
             else //keep constructing bar while it's in the same to-resolution
@@ -278,7 +278,7 @@ namespace TradeSharp.CoreUI.Services
             //we always end the week on a Sunday and use Monday as the start of the week
             if (toBar == null || (toBar.DateTime.DayOfWeek != DayOfWeek.Monday && bar.DateTime.DayOfWeek == DayOfWeek.Monday ))
             {
-              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
               toBarData.Add(toBar);
             }
             else //keep constructing bar while it's in the same to-resolution
@@ -304,7 +304,7 @@ namespace TradeSharp.CoreUI.Services
           foreach (IBarData bar in fromBarData)
             if (toBar == null || toBar.DateTime.Month != bar.DateTime.Month)
             {
-              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+              toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
               toBarData.Add(toBar);
             }
             else //keep constructing bar while it's in the same to-resolution
@@ -394,7 +394,7 @@ namespace TradeSharp.CoreUI.Services
               {
                 if (toBar == null || toBar.DateTime.Hour != bar.DateTime.Hour)
                 {
-                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
                   toBarData.Add(toBar);
                 }
                 else //keep constructing bar while it's in the same to-resolution
@@ -419,7 +419,7 @@ namespace TradeSharp.CoreUI.Services
               {
                 if (toBar == null || toBar.DateTime.Day != bar.DateTime.Day)
                 {
-                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
                   toBarData.Add(toBar);
                 }
                 else //keep constructing bar while it's in the same to-resolution
@@ -449,7 +449,7 @@ namespace TradeSharp.CoreUI.Services
                 //      * We are good with considering the first and last weeks of the year to be "partial" weeks.
                 if (toBar == null || ISOWeek.GetWeekOfYear(toBar.DateTime) != ISOWeek.GetWeekOfYear(bar.DateTime))
                 {
-                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
                   toBarData.Add(toBar);
                 }
                 else //keep constructing bar while it's in the same to-resolution
@@ -474,7 +474,7 @@ namespace TradeSharp.CoreUI.Services
               {
                 if (toBar == null || toBar.DateTime.Month != bar.DateTime.Month)
                 {
-                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                  toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
                   toBarData.Add(toBar);
                 }
                 else //keep constructing bar while it's in the same to-resolution
@@ -523,6 +523,7 @@ namespace TradeSharp.CoreUI.Services
     public Instrument? Instrument { get => m_repository.Instrument; set => m_repository.Instrument = value; }
     public Resolution Resolution { get => m_repository.Resolution; set => m_repository.Resolution = value; }
     public bool MassOperation { get; set; }
+    public string PriceFormatMask { get => m_repository.PriceFormatMask; }
     public event EventHandler<IBarData?>? SelectedItemChanged;
     public IBarData? SelectedItem
     {
@@ -748,7 +749,7 @@ namespace TradeSharp.CoreUI.Services
               //filter the imported date/time according to 
               if (!filterBar)
               {
-                bars.Add(new BarData(Resolution, (DateTime)dateTime!, open, high, low, close, volume));
+                bars.Add(new BarData(Resolution, (DateTime)dateTime!, PriceFormatMask, open, high, low, close, volume));
                 barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
               }
             }
@@ -853,7 +854,7 @@ namespace TradeSharp.CoreUI.Services
             double close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
             double volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<double>();
 
-            bars.Add(new BarData(Resolution, dateTime, open, high, low, close, volume));
+            bars.Add(new BarData(Resolution, dateTime, PriceFormatMask, open, high, low, close, volume));
             barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
           }
 

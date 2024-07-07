@@ -1,11 +1,12 @@
 ﻿using System;
 using Microsoft.UI.Xaml.Data;
-using TradeSharp.Data;
 
 namespace TradeSharp.WinCoreUI.Common
 {
   /// <summary>
   /// Value converter that applies a format mask to an output value.
+  /// NOTE: XAML does NOT support binding to the ConverterParameter, to bind to the format mask parameter use a IMultiValueConverter instead that allows binding to multiple parameters
+  ///       the first input parameter should be the value to convert and the second input parameter should be the format mask.
   /// </summary>
   public class FormatMaskConverter : IValueConverter
   {
@@ -46,4 +47,6 @@ namespace TradeSharp.WinCoreUI.Common
       throw new NotImplementedException();
     }
   }
+
+
 }

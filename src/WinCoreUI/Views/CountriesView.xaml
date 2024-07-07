@@ -30,7 +30,6 @@
         </winui:DataGridTemplateColumn>
         <winui:DataGridTextColumn x:Name="m_columnISORegionName" Width="Auto" Header="ISO Code" Binding="{Binding CountryInfo.RegionInfo.TwoLetterISORegionName, Mode=OneWay}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnRegion" Width="Auto" Header="Region" Binding="{Binding CountryInfo.RegionInfo.EnglishName, Mode=OneWay}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnLanguage" Width="Auto" Header="Language" Binding="{Binding CountryInfo.CultureInfo.EnglishName, Mode=OneTime}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnCurrencySymbol" Width="Auto" Header="Currency Symbol" Binding="{Binding CountryInfo.RegionInfo.CurrencySymbol, Mode=OneTime}" IsReadOnly="True"/>
         <winui:DataGridTextColumn x:Name="m_columnCurrencyName" Width="Auto" Header="Currency Name" Binding="{Binding CountryInfo.RegionInfo.CurrencyEnglishName, Mode=OneTime}" IsReadOnly="True"/>
       </winui:DataGrid.Columns>

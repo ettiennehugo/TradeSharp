@@ -40,10 +40,10 @@ namespace TradeSharp.WinCoreUI.Common
     {
       string result = "<No country>";
 
-      if (value is Guid && (Guid)value != Guid.Empty) 
+      if (value is Guid && (Guid)value != Guid.Empty)
       {
         Country? country = m_database.GetCountry((Guid)value);
-        result = country?.CountryInfo.CultureInfo.DisplayName ?? "<No country>";
+        result = country != null ? $"{country.CountryInfo.RegionInfo.Name} - {country.CountryInfo.RegionInfo.EnglishName}" : "<Country definition not found>";
       }
 
       return result;
@@ -54,7 +54,7 @@ namespace TradeSharp.WinCoreUI.Common
       string displayName = value.ToString();
 
       IList<Country> countries = m_database.GetCountries();
-      Country? country = countries.FirstOrDefault<Country>(x => x.CountryInfo.CultureInfo.DisplayName == displayName);
+      Country? country = countries.FirstOrDefault<Country>(x => x.CountryInfo.RegionInfo.DisplayName.Contains(displayName));
 
       return country?.Id ?? Guid.Empty;
     }

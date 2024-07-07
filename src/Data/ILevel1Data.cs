@@ -24,13 +24,17 @@ namespace TradeSharp.Data
 
 
     //properties
-    public DateTime DateTime { get; set; }
-    public double Bid { get; set; }
-    public double BidSize { get; set; }
-    public double Ask { get; set; }
-    public double AskSize { get; set; }
-    public double Last { get; set; }
-    public double LastSize { get; set; }
+    DateTime DateTime { get; set; }
+    double Bid { get; set; }
+    double BidSize { get; set; }
+    double Ask { get; set; }
+    double AskSize { get; set; }
+    double Last { get; set; }
+    double LastSize { get; set; }
+    string FormatMask { get; set; }
+    string FormattedBid { get; }
+    string FormattedAsk { get; }
+    string FormattedLast { get; }
 
     //methods
 

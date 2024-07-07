@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using TradeSharp.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Repositories
@@ -21,9 +22,10 @@ namespace TradeSharp.CoreUI.Repositories
     private IDatabase m_database;
     private long m_index;   //current index for paged reading of bar data
     private long m_count;   //number of bar data items on the database
+    protected string m_priceFormatMask;
 
     //constructors
-    public InstrumentBarDataRepository(IDatabase database) 
+    public InstrumentBarDataRepository(IDatabase database)
     {
       DataProvider = string.Empty;
       Instrument = null;
@@ -31,6 +33,7 @@ namespace TradeSharp.CoreUI.Repositories
       m_database = database;
       m_index = 0;
       m_count = 0;
+      m_priceFormatMask = Constants.DefaultPriceFormatMask;
     }
 
     //finalizers
@@ -52,38 +55,38 @@ namespace TradeSharp.CoreUI.Repositories
     public IBarData? GetItem(DateTime id)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, id);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, id, PriceFormatMask);
     }
 
     public IList<IBarData> GetItems()
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, DateTime.MinValue, DateTime.MaxValue, PriceFormatMask);
     }
 
     public IList<IBarData> GetItems(DateTime start, DateTime end)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, start, end);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, start, end, PriceFormatMask);
     }
 
     public IList<IBarData> GetItems(int index, int count)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, index, count);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, index, count, PriceFormatMask);
     }
 
     public IList<IBarData> GetItems(DateTime start, DateTime end, int index, int count)
     {
       throwIfNotKeyed();
-      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, start, end, index, count);
+      return m_database.GetBarData(DataProvider, Instrument!.Ticker, Resolution, start, end, index, count, PriceFormatMask);
     }
 
     public bool Add(IBarData item)
     {
       throwIfNotKeyed();
       m_database.UpdateData(DataProvider, Instrument!.Ticker, Resolution, item.DateTime, item.Open, item.High, item.Low, item.Close, item.Volume);
-      return true; 
+      return true;
     }
 
     public bool Update(IBarData item)
@@ -134,6 +137,7 @@ namespace TradeSharp.CoreUI.Repositories
     public string DataProvider { get; set; }
     public Instrument? Instrument { get; set; }
     public Resolution Resolution { get; set; }
+    public string PriceFormatMask { get => m_priceFormatMask; }
     public bool HasMoreItems => DataProvider != string.Empty && Instrument != null && m_index < m_count;
 
     //methods
@@ -141,6 +145,21 @@ namespace TradeSharp.CoreUI.Repositories
     {
       if (DataProvider == string.Empty) throw new KeyNotFoundException("DataProvider must have a value.");
       if (Instrument == null) throw new KeyNotFoundException("Instrument must have a value.");
+    }
+
+    protected void updatePriceValueFormatMask()
+    {
+      m_priceFormatMask = Constants.DefaultPriceFormatMask;
+      if (Instrument != null)
+      {
+        m_priceFormatMask = "0:0"; //need to at least have a value with zero decimals
+
+        if (Instrument.PriceDecimals > 0)
+        {
+          m_priceFormatMask += ".";
+          for (int i = 0; i < Instrument.PriceDecimals; i++) m_priceFormatMask += "0";
+        }
+      }
     }
   }
 }

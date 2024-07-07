@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:data="using:TradeSharp.Data"
     mc:Ignorable="d">
   <Page.Resources>
     <Style x:Key="ImageButtonStyle" TargetType="Button">
@@ -43,7 +44,17 @@
       <Image x:Name="m_logoImage" Source="{x:Bind ExchangeLogoPath, Mode=OneWay}" Stretch="Uniform" MaxWidth="128" MaxHeight="128"/>
     </Button>
     <TextBox x:Name="m_name" Text="{x:Bind Exchange.Name, Mode=TwoWay}" PlaceholderText="New exchange name" Grid.Column="2" Grid.Row="0"/>
-    <ComboBox x:Name="m_countryId" ItemsSource="{x:Bind Countries, Mode=OneTime}" DisplayMemberPath="CountryInfo.CultureInfo.DisplayName" SelectionChanged="m_countryId_SelectionChanged" Grid.Column="2" Grid.Row="1"/>
+    <ComboBox x:Name="m_countryId" ItemsSource="{x:Bind Countries, Mode=OneTime}" SelectionChanged="m_countryId_SelectionChanged" Grid.Column="2" Grid.Row="1">
+      <ComboBox.ItemTemplate>
+        <DataTemplate x:DataType="data:Country">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{x:Bind CountryInfo.RegionInfo.Name}"/>
+            <TextBlock Margin="5,0" Text="-"/>
+            <TextBlock Text="{x:Bind CountryInfo.RegionInfo.EnglishName}"/>
+          </StackPanel>
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
     <ComboBox x:Name="m_timeZone" ItemsSource="{x:Bind TimeZones, Mode=OneTime}" DisplayMemberPath="DisplayName" SelectedItem="{x:Bind Exchange.TimeZone, Mode=OneTime}" SelectionChanged="m_timeZone_SelectionChanged" IsTextSearchEnabled="True" Grid.Column="2" Grid.Row="2"/>
     <TextBox x:Name="m_tag" Text="{x:Bind Exchange.Tag, Mode=TwoWay}" PlaceholderText="Tag value" Grid.Column="2" Grid.Row="3"/>
     <NumberBox x:Name="m_priceDecimals" Text="{x:Bind Exchange.DefaultPriceDecimals, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0" Maximum="10" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="4"/>

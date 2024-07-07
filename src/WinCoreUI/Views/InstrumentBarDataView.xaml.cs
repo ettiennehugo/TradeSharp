@@ -1,6 +1,7 @@
 using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using TradeSharp.Common;
 using TradeSharp.Data;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -29,7 +30,7 @@ namespace TradeSharp.WinCoreUI.Views
     public InstrumentBarDataView()
     {
       this.InitializeComponent();
-      BarData = new BarData(Resolution, DateTime.Now, 0, 0, 0, 0, 0);
+      BarData = new BarData(Resolution, DateTime.Now, Constants.DefaultPriceFormatMask, 0, 0, 0, 0, 0);
     }
 
     public InstrumentBarDataView(IBarData barData)

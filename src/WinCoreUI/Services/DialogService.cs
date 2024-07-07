@@ -16,6 +16,7 @@ using TradeSharp.CoreUI.Views;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI;
 using Windows.Graphics;
+using TradeSharp.WinCoreUI.Services;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -156,7 +157,7 @@ namespace TradeSharp.WinDataManager.Services
       return result!;
     }
 
-    protected InitNavigationService getInitNavigationService() => (InitNavigationService)((IApplication)Application.Current).Services.GetService(typeof(InitNavigationService));
+    protected IInitNavigationService getInitNavigationService() => (IInitNavigationService)((IApplication)Application.Current).Services.GetService(typeof(IInitNavigationService));
 
     public async Task<CountryInfo?> ShowSelectCountryAsync()
     {
@@ -570,7 +571,7 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task ShowMassDataImportAsync(string dataProvider)
     {
-      await Task.Run(() =>
+      PostUIUpdate(() =>
       {
         //https://learn.microsoft.com/en-us/windows/apps/get-started/samples#windows-app-sdk--winui-3-samples
         Window window = new Window();
@@ -588,7 +589,7 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task ShowMassDataExportAsync(string dataProvider)
     {
-      await Task.Run(() => {
+      PostUIUpdate(() => {
         Window window = new Window();
         window.Title = "Mass Export of Instrument Data";
         WinCoreUI.Views.MassExportInstrumentDataView exportView = new WinCoreUI.Views.MassExportInstrumentDataView();
@@ -604,7 +605,7 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task ShowMassDataCopyAsync(string dataProvider)
     {
-      await Task.Run(() =>
+      PostUIUpdate(() =>
       {
         Window window = new Window();
         window.Title = "Mass Copy of Instrument Data";
@@ -621,7 +622,7 @@ namespace TradeSharp.WinDataManager.Services
 
     public async Task ShowMassDataDownloadAsync(string dataProvider)
     {
-      await Task.Run(() => {
+      PostUIUpdate(() => {
         Window window = new Window();
         window.Title = "Mass Download of Instrument Data";
         WinCoreUI.Views.MassDownloadInstrumentDataView downloadView = new WinCoreUI.Views.MassDownloadInstrumentDataView();
@@ -633,7 +634,7 @@ namespace TradeSharp.WinDataManager.Services
         ResetSizeable(window);
         CenterWindow(window);
         window.Activate();
-      });      
+      });
     }
 
     /// <summary>
@@ -641,7 +642,7 @@ namespace TradeSharp.WinDataManager.Services
     /// </summary>
     public async Task ShowAccountDialogAsync()
     {
-      await Task.Run(() => {
+      PostUIUpdate(() => {
         Window window = new Window();
         window.Title = "Accounts";
         WinCoreUI.Views.AccountsView accountsView = new WinCoreUI.Views.AccountsView();
@@ -659,7 +660,7 @@ namespace TradeSharp.WinDataManager.Services
     /// </summary>
     public async Task ShowAccountDialogAsync(IBrokerPlugin broker)
     {
-      await Task.Run(() =>
+      PostUIUpdate(() =>
       {
         Window window = new Window();
         window.Title = $"Accounts - {broker.Name}";
@@ -678,7 +679,7 @@ namespace TradeSharp.WinDataManager.Services
     /// </summary>
     public async Task ShowAccountDialogAsync(IBrokerPlugin broker, Data.Account account)
     {
-      await Task.Run(() =>
+      PostUIUpdate(() =>
       {
         Window window = new Window();
         window.Title = $"Account - {account.Name}";

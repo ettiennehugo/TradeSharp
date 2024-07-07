@@ -76,8 +76,8 @@ namespace TradeSharp.WinDataManager
           services.AddSingleton<IConfigurationService, ConfigurationService>();
           services.AddSingleton<IDatabase, SqliteDatabase>();    //Sqlite is currently the only supported data store, if this changes we need to base this off configuration and add the services dynamically
           services.AddSingleton<IDialogService, DialogService>();
+          services.AddSingleton<IInitNavigationService, InitNavigationService>();
           services.AddSingleton<INavigationService, NavigationService>();
-          services.AddSingleton<InitNavigationService>();
           services.AddSingleton<MainWindowViewModel>();
           services.AddSingleton<IDataProviderRepository, DataProviderRepository>();
           services.AddSingleton<ICountryRepository, CountryRepository>();

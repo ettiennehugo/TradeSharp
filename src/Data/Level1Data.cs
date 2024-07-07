@@ -31,7 +31,7 @@ namespace TradeSharp.Data
       LastSize = double.MinValue;
     }
 
-    public Level1Data(DateTime dateTime, double bid, double bidSize, double ask, double askSize, double last, double lastSize)
+    public Level1Data(DateTime dateTime, string priceFormatMask, double bid, double bidSize, double ask, double askSize, double last, double lastSize)
     {
       DateTime = dateTime;
       Bid = bid;
@@ -40,6 +40,7 @@ namespace TradeSharp.Data
       AskSize = askSize;
       Last = last;
       LastSize = lastSize;
+      FormatMask = priceFormatMask;
     }
 
     //finalizers
@@ -56,6 +57,10 @@ namespace TradeSharp.Data
     [ObservableProperty] double m_askSize;
     [ObservableProperty] double m_last;
     [ObservableProperty] double m_lastSize;
+    [ObservableProperty] string m_formatMask;
+    public string FormattedBid => string.Format(FormatMask, Bid);
+    public string FormattedAsk => string.Format(FormatMask, Ask);
+    public string FormattedLast => string.Format(FormatMask, Last);
 
     //methods
 

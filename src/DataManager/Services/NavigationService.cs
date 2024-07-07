@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TradeSharp.CoreUI.Events;
 using TradeSharp.CoreUI.Services;
+using TradeSharp.WinCoreUI.Services;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -32,10 +33,10 @@ namespace TradeSharp.WinDataManager.Services
 
 
     //attributes
-    private readonly InitNavigationService m_initNavigationService;
+    private readonly IInitNavigationService m_initNavigationService;
 
     //constructors
-    public NavigationService(InitNavigationService initNavigationService)
+    public NavigationService(IInitNavigationService initNavigationService)
     {
       m_initNavigationService = initNavigationService;
       WeakReferenceMessenger.Default.Register<NavigationMessage>(this);

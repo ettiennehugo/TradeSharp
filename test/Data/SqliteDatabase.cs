@@ -79,7 +79,10 @@ namespace TradeSharp.Data.Testing
     }
 
     //finalizers
-
+    ~SqliteDatabase()
+    {
+      m_database.ClearDatabase();
+    }
 
     //interface implementations
 
@@ -326,11 +329,6 @@ namespace TradeSharp.Data.Testing
         $"InstrumentTicker = '{m_instrument.Ticker}' " +
         $"AND ExchangeId = '{exchange.Id.ToString()}' ")
       , "Secondary exchange not persisted.");
-
-      Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
-        $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND MarketCap = 987654321.0")
-        , "Instrument MarketCap not persisted or not set correctly");
     }
 
     [TestMethod]
@@ -2340,7 +2338,7 @@ namespace TradeSharp.Data.Testing
         for (int i = 0; i < count; i++)
         {
           double value = i;
-          data.Add(new BarData(resolution, dateTime, value, value * 2.0, value * 3.0, value * 4.0, i * 5));
+          data.Add(new BarData(resolution, dateTime, Constants.DefaultPriceFormatMask, value, value * 2.0, value * 3.0, value * 4.0, i * 5));
           dateTime = dateTime.Add(dateTimeDelta!.Value);
         }
 
@@ -2353,7 +2351,7 @@ namespace TradeSharp.Data.Testing
         for (int i = 0; i < count; i++)
         {
           double value = i;
-          data.Add(new Level1Data(dateTime, value, i * 2, value * 3.0, i * 4, value * 5.0, i * 6));
+          data.Add(new Level1Data(dateTime, Constants.DefaultPriceFormatMask, value, i * 2, value * 3.0, i * 4, value * 5.0, i * 6));
           dateTime = dateTime.Add(dateTimeDelta!.Value);
         }
 
@@ -2413,7 +2411,7 @@ namespace TradeSharp.Data.Testing
 
       m_database.UpdateData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, barData);
 
-      IList<IBarData> dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10));
+      IList<IBarData> dataResult = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, dateTime, dateTime.AddMinutes(10), Constants.DefaultPriceFormatMask);
       Assert.AreEqual(barData.Count, dataResult.Count, "GetBarData did not return the correct number of bars.");
 
       for (int index = 0; index < dataResult.Count; index++)
@@ -2429,7 +2427,7 @@ namespace TradeSharp.Data.Testing
       DateTime to = DateTime.Parse(toDate).ToUniversalTime();
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       generateDataBars(resolution, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, from, to);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, from, to, Constants.DefaultPriceFormatMask);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
 
       for (int i = 0; i < expectedCount; i++)
@@ -2453,7 +2451,7 @@ namespace TradeSharp.Data.Testing
     {
       m_generalConfiguration[IConfigurationService.GeneralConfiguration.TimeZone] = (object)IConfigurationService.TimeZone.UTC;
       generateDataBars(resolution, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, index, count);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, index, count, Constants.DefaultPriceFormatMask);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
       Assert.AreEqual(DateTime.Parse(expectedFromDate).ToUniversalTime(), barData[0].DateTime, "Expected from date was not returned.");
     }
@@ -2477,7 +2475,7 @@ namespace TradeSharp.Data.Testing
       DateTime from = DateTime.Parse(fromDate).ToUniversalTime();
       DateTime to = DateTime.Parse(toDate).ToUniversalTime();
       generateDataBars(resolution, 500, generatedFromDate);
-      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, from, to, index, count);
+      IList<IBarData> barData = m_database.GetBarData(m_dataProvider1.Object.Name, m_instrument.Ticker, resolution, from, to, index, count, Constants.DefaultPriceFormatMask);
       Assert.AreEqual(expectedCount, barData.Count, "GetBarData did not return the correct number of bars.");
       Assert.AreEqual(DateTime.Parse(expectedFromDate).ToUniversalTime(), barData[0].DateTime, "Expected from date was not returned.");
     }

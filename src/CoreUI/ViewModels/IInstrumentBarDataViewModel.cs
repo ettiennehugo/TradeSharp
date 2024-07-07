@@ -28,7 +28,7 @@ namespace TradeSharp.CoreUI.ViewModels
     int Count { get; }
     DateTime FromDateTime { get; set; }
     DateTime ToDateTime { get; set; }
-    string PriceValueFormatMask { get; }
+    string PriceFormatMask { get; }
 
     AsyncRelayCommand CopyToAllCommandAsync { get; }
     AsyncRelayCommand CopyToDayCommandAsync { get; }

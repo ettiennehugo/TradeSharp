@@ -1979,7 +1979,7 @@ namespace TradeSharp.Data
       return dataCache;
     }
 
-    public IBarData? GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime)
+    public IBarData? GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime, string priceFormatMask)
     {
       if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
 
@@ -2006,7 +2006,7 @@ namespace TradeSharp.Data
 
       using (SqliteDataReader reader = ExecuteReader(command))
         if (reader.Read())
-          return new BarData(resolution, convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6));
+          return new BarData(resolution, convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange), priceFormatMask, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6));
 
       return null;
     }
@@ -2048,7 +2048,7 @@ namespace TradeSharp.Data
       return Convert.ToInt32(commandObj.ExecuteScalar());  //NOTE: This places an upper limit on the number of rows to be stored in the database of int.MaxValue.
     }
 
-    public IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to)
+    public IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to, string priceFormatMask)
     {
       if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
 
@@ -2084,7 +2084,7 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
-          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
+          result.Add(new BarData(resolution, dateTime, priceFormatMask, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
         }
       }
 
@@ -2095,7 +2095,7 @@ namespace TradeSharp.Data
     /// Supports paged loading of the data from the database. NOTE: The database layer does NOT support all or merging of the actual and syntehtic price data type as it would require
     /// storing of state information in order to support proper paging, for this reason an abstraction layer above the database is required to merge the data if required.
     /// </summary>
-    public IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, int index, int count)
+    public IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, int index, int count, string priceFormatMask)
     {
       if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
 
@@ -2126,7 +2126,7 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
-          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
+          result.Add(new BarData(resolution, dateTime, priceFormatMask, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
         }
       }
 
@@ -2137,7 +2137,7 @@ namespace TradeSharp.Data
     /// Supports paged loading of the data from the database with date filtering. NOTE: The database layer does NOT support all or merging of the actual and syntehtic price data type as it would require
     /// storing of state information in order to support proper paging, for this reason an abstraction layer above the database is required to merge the data if required.
     /// </summary>
-    public IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to, int index, int count)
+    public IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to, int index, int count, string priceFormatMask)
     {
       if (resolution == Resolution.Level1) throw new ArgumentException("GetBarData can not return level 1 data using interface IBarData, use ILevelData instead.");
 
@@ -2174,14 +2174,14 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           var dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(1)), timeZoneToUse, exchange);
-          result.Add(new BarData(resolution, dateTime, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
+          result.Add(new BarData(resolution, dateTime, priceFormatMask, reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
         }
       }
 
       return result;
     }
 
-    public ILevel1Data? GetLevel1Data(string dataProviderName, string ticker, DateTime dateTime)
+    public ILevel1Data? GetLevel1Data(string dataProviderName, string ticker, DateTime dateTime, string priceFormatMask)
     {
       //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
       DateTime dateTimeUtc = dateTime.ToUniversalTime();
@@ -2208,7 +2208,7 @@ namespace TradeSharp.Data
 
       using (SqliteDataReader reader = ExecuteReader(command))
         if (reader.Read())
-          return new Level1Data(convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange), reader.GetDouble(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6));
+          return new Level1Data(convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange), priceFormatMask, reader.GetDouble(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6));
 
       return null;
     }
@@ -2218,7 +2218,7 @@ namespace TradeSharp.Data
       return x.DateTime.CompareTo(y.DateTime);
     }
 
-    public IList<ILevel1Data> GetLevel1Data(string dataProviderName, string ticker, DateTime from, DateTime to)
+    public IList<ILevel1Data> GetLevel1Data(string dataProviderName, string ticker, DateTime from, DateTime to, string priceFormatMask)
     {
       //bar data selection must always be based in UTC datetime - we force this on the database layer to make sure we avoid unintended bugs where selections are unintentionally with mixed DateTime kinds.
       DateTime fromUtc = from.ToUniversalTime();
@@ -2253,7 +2253,7 @@ namespace TradeSharp.Data
         while (reader.Read())
         {
           DateTime dateTime = convertDateTimeBasedOnConfiguration(DateTime.FromBinary(reader.GetInt64(0)), timeZoneToUse, exchange);
-          result.Add(new Level1Data(dateTime, reader.GetDouble(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
+          result.Add(new Level1Data(dateTime, priceFormatMask, reader.GetDouble(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6)));
         }
 
       return result;

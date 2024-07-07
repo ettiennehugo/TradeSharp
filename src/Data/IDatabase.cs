@@ -1059,14 +1059,14 @@ namespace TradeSharp.Data
 
     int GetDataCount(string dataProviderName, string ticker, Resolution resolution);
     int GetDataCount(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to);
-    IBarData? GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime);
-    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to);
-    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, int index, int count);
-    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to, int index, int count);
+    IBarData? GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime dateTime, string priceFormatMask);
+    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to, string priceFormatMask);
+    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, int index, int count, string priceFormatMask);
+    IList<IBarData> GetBarData(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to, int index, int count, string priceFormatMask);
 
-    ILevel1Data? GetLevel1Data(string dataProviderName, string ticker, DateTime dateTime);
+    ILevel1Data? GetLevel1Data(string dataProviderName, string ticker, DateTime dateTime, string priceFormatMask);
     //TODO: Add Level1 paging functions similar to the GetBarData ones above.
-    IList<ILevel1Data> GetLevel1Data(string dataProviderName, string ticker, DateTime from, DateTime to);
+    IList<ILevel1Data> GetLevel1Data(string dataProviderName, string ticker, DateTime from, DateTime to, string priceFormatMask);
     DataCache GetDataCache(string dataProviderName, string ticker, Resolution resolution, DateTime from, DateTime to);
   }
 }

@@ -12,10 +12,7 @@ namespace TradeSharp.CoreUI.ViewModels
   public partial class InstrumentBarDataViewModel : ListViewModel<IBarData>, IInstrumentBarDataViewModel
   {
     //constants
-    /// <summary>
-    /// Supported filter fields for the instrument bar data service.
-    /// </summary>
-    public const string DefaultPriceValueFormatMask = "0:0.00";
+
 
     //enums
 
@@ -32,7 +29,6 @@ namespace TradeSharp.CoreUI.ViewModels
     protected DateTime m_fromDateTime;
     protected DateTime m_toDateTime;
     protected Dictionary<string, object> m_filter;
-    protected string m_priceValueFormatMask;
 
     //constructors
     public InstrumentBarDataViewModel(IInstrumentBarDataService itemService, INavigationService navigationService, IDialogService dialogService, ILogger<InstrumentBarDataViewModel> logger) : base(itemService, navigationService, dialogService) //need to get a transient instance of the service uniquely associated with this view model
@@ -43,7 +39,6 @@ namespace TradeSharp.CoreUI.ViewModels
       m_barDataService.RefreshEvent += onServiceRefresh;
       m_dataProvider = string.Empty;
       m_filter = new Dictionary<string, object>();
-      m_priceValueFormatMask = DefaultPriceValueFormatMask;
       Resolution = Resolution.Days;
       DataProvider = string.Empty;
       Instrument = null;
@@ -226,7 +221,6 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         SetProperty(ref m_instrument, value);
         m_barDataService.Instrument = value;
-        updatePriceValueFormatMask();
         RefreshCommandAsync.ExecuteAsync(null);
         NotifyCanExecuteChanged();
       }
@@ -254,27 +248,12 @@ namespace TradeSharp.CoreUI.ViewModels
       set => m_toDateTime = value;
     }
 
-    public string PriceValueFormatMask { get => m_priceValueFormatMask; } //string.Format value format mask for the price values based on Instrument
+    public string PriceFormatMask { get => m_barDataService.PriceFormatMask; }
 
     //methods
     protected virtual bool isKeyed()
     {
       return DataProvider != string.Empty && Instrument != null;
-    }
-
-    protected void updatePriceValueFormatMask()
-    {
-      m_priceValueFormatMask = DefaultPriceValueFormatMask;
-      if (Instrument != null)
-      {
-        m_priceValueFormatMask = "0:0"; //need to at least have a value with zero decimals
-
-        if (Instrument.PriceDecimals > 0)
-        {
-          m_priceValueFormatMask += ".";
-          for (int i = 0; i < Instrument.PriceDecimals; i++) m_priceValueFormatMask += "0";
-        }
-      }
     }
   }
 }

@@ -54,9 +54,6 @@ namespace TradeSharp.WinCoreUI.Views
     {
       ViewModel.FindText = m_findInstrumentGroupFilter.Text;
       if (ViewModel.FindText == "") ViewModel.ClearFilterCommand.Execute(null);
-
-      
-
     }
 
     private void m_findInstrumentGroupFilter_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)

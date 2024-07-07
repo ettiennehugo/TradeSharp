@@ -23,6 +23,7 @@ namespace TradeSharp.CoreUI.Repositories
     string DataProvider { get; set; }
     Instrument? Instrument { get; set; }
     Resolution Resolution { get; set; }
+    public string PriceFormatMask { get; }
     bool HasMoreItems { get; }
 
     //methods

@@ -6,16 +6,17 @@ using Microsoft.UI.Xaml.Controls;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.ViewModels;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Data;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Events;
 
 namespace TradeSharp.WinCoreUI.Views
 {
-    /// <summary>
-    /// Control to display bar data for a given instrument.
-    /// </summary>
-    public sealed partial class InstrumentBarsDataView : UserControl
+  /// <summary>
+  /// Control to display bar data for a given instrument.
+  /// </summary>
+  public sealed partial class InstrumentBarsDataView : UserControl
   {
     //constants
     /// <summary>
@@ -44,28 +45,11 @@ namespace TradeSharp.WinCoreUI.Views
     private IExchangeViewModel m_exchangeViewModel;
     private ILogger<InstrumentBarDataView> m_logger;
 
-    //constructors
-    public InstrumentBarsDataView()
-    {
-      m_configurationService = (IConfigurationService)IApplication.Current.Services.GetService(typeof(IConfigurationService));
-      m_exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
-      ViewModel = (ViewModels.InstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
-      ViewModel.Resolution = Resolution;
-      ViewModel.RefreshEvent += onViewModelRefresh;
-      m_logger = (ILogger<InstrumentBarDataView>)IApplication.Current.Services.GetService(typeof(ILogger<InstrumentBarDataView>));
-      this.InitializeComponent();
-    }
-
-    //finalizers
-
-
-    //interface implementations
-
-
     //properties
     public static readonly DependencyProperty DataProviderProperty = DependencyProperty.Register("DataProvider", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata(""));
     public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register("Resolution", typeof(Resolution), typeof(InstrumentBarsDataView), new PropertyMetadata(Resolution.Days));
     public static readonly DependencyProperty InstrumentProperty = DependencyProperty.Register("Instrument", typeof(Instrument), typeof(InstrumentBarsDataView), new PropertyMetadata(null));
+    public static readonly DependencyProperty PriceFormatMaskProperty = DependencyProperty.Register("PriceFormatMask", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata("0.00"));   //default to 2 decimal places
     public static readonly DependencyProperty FilterStartTooltipProperty = DependencyProperty.Register("FilterStartTooltip", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata("Filter start date/time"));
     public static readonly DependencyProperty FilterEndTooltipProperty = DependencyProperty.Register("FilterEndTooltip", typeof(string), typeof(InstrumentBarsDataView), new PropertyMetadata("Filter end date/time"));
 
@@ -108,6 +92,24 @@ namespace TradeSharp.WinCoreUI.Views
     public string FilterStartTooltip { get => (string)GetValue(FilterStartTooltipProperty); internal set { SetValue(FilterStartTooltipProperty, value); } }
     public string FilterEndTooltip { get => (string)GetValue(FilterEndTooltipProperty); internal set { SetValue(FilterEndTooltipProperty, value); } }
     public ViewModels.InstrumentBarDataViewModel ViewModel { get; internal set; }
+
+    //constructors
+    public InstrumentBarsDataView()
+    {
+      m_configurationService = (IConfigurationService)IApplication.Current.Services.GetService(typeof(IConfigurationService));
+      m_exchangeViewModel = (IExchangeViewModel)IApplication.Current.Services.GetService(typeof(IExchangeViewModel));
+      ViewModel = (ViewModels.InstrumentBarDataViewModel)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataViewModel));
+      ViewModel.Resolution = Resolution;
+      ViewModel.RefreshEvent += onViewModelRefresh;
+      m_logger = (ILogger<InstrumentBarDataView>)IApplication.Current.Services.GetService(typeof(ILogger<InstrumentBarDataView>));
+      this.InitializeComponent();
+    }
+
+    //finalizers
+
+
+    //interface implementations
+
 
     //methods
     private void refreshCopyMenu()
@@ -251,7 +253,7 @@ namespace TradeSharp.WinCoreUI.Views
           break;
         case IConfigurationService.TimeZone.Exchange:
           if (exchange == null) throw new ArgumentException("Exchange must be specified when using Exchange time zone.");
-          result =  utcDateTime.Subtract(exchange.TimeZone.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
+          result = utcDateTime.Subtract(exchange.TimeZone.GetUtcOffset(utcDateTime));    //can not use the BaseUtcOffset, we need to use the conversion function to take into account daylight savings time
           break;
       }
 

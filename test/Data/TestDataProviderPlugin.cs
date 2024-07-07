@@ -36,6 +36,7 @@ namespace TradeSharp.Data.Testing
     public virtual event ConnectionStatusHandler? ConnectionStatus;
     public virtual event RequestErrorHandler? RequestError;
     public virtual event DataDownloadCompleteHandler? DataDownloadComplete;
+    public virtual event RealTimeDataUpdateHandler? RealTimeDataUpdate;
 
     //constructors
     public TestDataProviderPlugin()
