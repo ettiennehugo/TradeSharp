@@ -70,19 +70,23 @@ namespace TradeSharp.WinCoreUI.Views
           case Resolution.Minutes:
             m_date.DayVisible = true;
             m_time.IsEnabled = true;
+            Time = BarData.DateTime.TimeOfDay;
             break;
           case Resolution.Hours:
             m_date.DayVisible = true;
             m_time.IsEnabled = true;
+            Time = BarData.DateTime.TimeOfDay;
             break;
           case Resolution.Days:
           case Resolution.Weeks:
             m_date.DayVisible = true;
             m_time.IsEnabled = false;
+            m_time.Time = new TimeSpan(0, 0, 0);
             break;
           case Resolution.Months:
             m_date.DayVisible = false;
             m_time.IsEnabled = false;
+            m_time.Time = new TimeSpan(0, 0, 0);
             break;
         }
       }
@@ -96,7 +100,6 @@ namespace TradeSharp.WinCoreUI.Views
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
       Date = BarData.DateTime;
-      Time = BarData.DateTime.TimeOfDay;
       //IsLoading is already set at the beginning of this method and the modification of Date above would fire the change below
       //causing corruption of the BarData.DateTime to the initial Time field value
       m_dateTimeInitialized = true;
