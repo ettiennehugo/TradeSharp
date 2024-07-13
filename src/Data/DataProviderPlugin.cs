@@ -51,6 +51,7 @@ namespace TradeSharp.Data
 
     //interface implementations
     public abstract bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end);
+    public abstract bool Subscribe(Instrument instrument, Resolution resolution);
 
     //methods
     protected virtual void raiseRequestError(string message, Exception? exception = null) { RequestError?.Invoke(this, new RequestErrorArgs(message, exception)); }

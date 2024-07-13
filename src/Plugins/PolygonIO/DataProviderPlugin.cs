@@ -30,6 +30,7 @@ namespace TradeSharp.PolygonIO
     protected int m_requestLimit;
     protected IDialogService m_dialogService;
     protected IDatabase m_database;
+    protected ICountryService m_countryService;
     protected IExchangeService m_exchangeService;
     protected IInstrumentService m_instrumentService;
     protected Cache m_cache;
@@ -58,6 +59,7 @@ namespace TradeSharp.PolygonIO
       IsConnected = true;   //uses a REST API so we're always connected when there is a network available
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
       m_database = (IDatabase)ServiceHost.Services.GetService(typeof(IDatabase))!;
+      m_countryService = (ICountryService)ServiceHost.Services.GetService(typeof(ICountryService))!;
       m_exchangeService = (IExchangeService)ServiceHost.Services.GetService(typeof(IExchangeService))!;
       m_instrumentService = (IInstrumentService)ServiceHost.Services.GetService(typeof(IInstrumentService))!;
       m_apiKey = (string)Configuration.Configuration[Constants.ConfigApiKey];
@@ -80,7 +82,8 @@ namespace TradeSharp.PolygonIO
       m_client.StockQuotesHandler += handleQuote;
 
       Commands.Add(new PluginCommand { Name = "Download Exchanges", Tooltip = "Download Polygon Exhange definitions to local cache", Icon = "\uE896", Command = new AsyncRelayCommand(OnDownloadExchangesAsync, () => IsConnected) });
-      Commands.Add(new PluginCommand { Name = "Download Tickers", Tooltip = "Download Polygon Ticker definitions to local cache", Icon = "\uE826", Command = new AsyncRelayCommand(OnDownloadTickersAsync, () => IsConnected) });
+      Commands.Add(new PluginCommand { Name = "Download Tickers", Tooltip = "Download Polygon Tickers to local cache", Icon = "\uE78C", Command = new AsyncRelayCommand(OnDownloadTickersAsync, () => IsConnected) });
+      Commands.Add(new PluginCommand { Name = "Download Ticker Details", Tooltip = "Download Polygon Ticker Details to local cache", Icon = "\uE826", Command = new AsyncRelayCommand(OnDownloadTickerDetailsAsync, () => IsConnected) });
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
       Commands.Add(new PluginCommand { Name = "Copy Exchanges", Tooltip = "Copy Exchanges from local cache to TradeSharp Exchagnes", Icon = "\uF22C", Command = new AsyncRelayCommand(OnCopyExchangesToTradeSharpAsync) });
       Commands.Add(new PluginCommand { Name = "Copy Tickers", Tooltip = "Copy Tickers from local cache to TradeSharp Instruments", Icon = "\uE8C8", Command = new AsyncRelayCommand(OnUpdateInstrumentsFromTickersAsync) });
@@ -94,28 +97,52 @@ namespace TradeSharp.PolygonIO
 
     }
 
+    public override bool Subscribe(Instrument instrument, Resolution resolution)
+    {
+
+      //TODO
+      // - Resolve the next historical data for the requested definition
+      //   - Do one download request for the historical data from the previous bar end to the current time in the current bar, e.g. 1 week data would request the daily data from the end of the
+      //     last week to the current time in the current week
+      //   - Create a subscription entry for the instrument, resolution and historical bar data retrieved
+      // - Subscribe to the trade updates
+      // - For each new trade coming in
+      //   - get the subscription entry
+      //   - merge in the new trade data (open, high, low, close)
+      //   - raise the real-time update event for the specific entry
+      
+      throw new NotImplementedException();
+
+    }
+
     //methods
     protected async Task OnDownloadExchangesAsync()
     {
-      var command = new DownloadExchanges(m_dialogService, m_exchangeService, m_database, m_cache);
+      var command = new DownloadExchanges(m_logger, m_dialogService, m_exchangeService, m_database, m_client, m_cache);
       await command.Run();
     }
 
     protected async Task OnDownloadTickersAsync()
     {
-      var command = new DownloadTickers(m_dialogService, m_instrumentService, m_database, m_cache);
+      var command = new DownloadTickers(m_logger, m_dialogService, m_instrumentService, m_database, m_client, m_cache);
+      await command.Run();
+    }
+
+    protected async Task OnDownloadTickerDetailsAsync()
+    {
+      var command = new DownloadTickerDetails(m_logger, m_dialogService, m_instrumentService, m_database, m_client, m_cache);
       await command.Run();
     }
 
     protected async Task OnCopyExchangesToTradeSharpAsync()
     {
-      var command = new CopyExchangesToTradeSharp(m_dialogService, m_exchangeService, m_database, m_cache);
+      var command = new UpdateExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_database, m_cache);
       await command.Run();
     }
 
     protected async Task OnUpdateInstrumentsFromTickersAsync()
     {
-      var command = new UpdateInstrumentsFromTickers(m_dialogService, m_instrumentService, m_database, m_cache);
+      var command = new UpdateInstrumentsFromTickers(m_logger, m_dialogService, m_exchangeService, m_instrumentService, m_database, m_cache);
       await command.Run();
     }
 

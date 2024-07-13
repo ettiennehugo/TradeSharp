@@ -4,6 +4,27 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace TradeSharp.Common
 {
   /// <summary>
+  /// Country code information.
+  /// </summary>
+  public struct CountryCode
+  {
+    public string IsoCode { get; }
+    public string TwoLetterCode { get; }
+    public string ThreeLetterCode { get; }
+    public string EnglishName { get; }
+    public string CurrencyCode { get; }
+
+    public CountryCode(string isoCode, string twoLetterCode, string threeLetterCode, string englishName, string currencyCode)
+    {
+      IsoCode = isoCode;
+      TwoLetterCode = twoLetterCode;
+      ThreeLetterCode = threeLetterCode;
+      EnglishName = englishName;
+      CurrencyCode = currencyCode;
+    }
+  }
+
+  /// <summary>
   /// Country information for available set of countries.
   /// </summary>
   public class CountryInfo : ObservableObject
@@ -15,49 +36,48 @@ namespace TradeSharp.Common
     public const string InternationalId = "999";
 
     /// <summary>
-    /// Set of defined countries with three letter iso-codes and English names.
+    /// Set of defined countries with three letter iso-codes, English names, and currencies.
     /// </summary>
-    private static readonly List<(string, string, string, string)> s_countryCodes = new List<(string, string, string, string)>()
-      {
-        ("en-AU", "AU", "AUS", "Australia"),
-        ("nl-BE", "BE", "BEL", "Belgium"),
-        ("en-CA", "CA", "CAN", "Canada"),
-        ("en-KY", "KY", "CYM", "Cayman Islands"),
-        ("fi-FI", "FI", "FIN", "Finland"),
-        ("fr-FR", "FR", "FRA", "France"),
-        ("de-DE", "DE", "DEU", "Germany"),
-        ("gr-GR", "GR", "GRC", "Greece"),
-        ("it-VA", "VA", "VAT", "Holy See (the)"),
-        ("is-IS", "IS", "ISL", "Iceland"),
-        ("hi-IN", "IN", "IND", "India"),
-        ("ar-IR", "IR", "IRN", "Iran (Islamic Republic of)"),
-        ("en-IE", "IE", "IRL", "Ireland"),
-        ("en-IM", "IM", "IMN", "Isle of Man"),
-        ("he-IL", "IL", "ISR", "Israel"),
-        ("it-IT", "IT", "ITA", "Italy"),
-        ("jp-JP", "JP", "JPN", "Japan"),
-        ("ar-JO", "JO", "JOR", "Jordan"),
-        ("de-LU", "LU", "LUX", "Luxembourg"),
-        ("es-MX", "MX", "MEX", "Mexico"),
-        ("nl-NL", "NL", "NLD", "Netherlands (the)"),
-        ("en-NZ", "NZ", "NZL", "New Zealand"),
-        ("nn-NO", "NO", "NOR", "Norway"),
-        ("ur-PK", "PK", "PAK", "Pakistan"),
-        ("pl-PL", "PL", "POL", "Poland"),
-        ("pt-PT", "PT", "PRT", "Portugal"),
-        ("ar-QA", "QA", "QAT", "Qatar"),
-        ("ru-RU", "RU", "RUS", "Russian Federation"),
-        ("en-SG", "SG", "SGP", "Singapore"),
-        ("en-ZA", "ZA", "ZAF", "South Africa"),
-        ("se-SE", "SE", "SWE", "Sweden"),
-        ("de-CH", "CH", "CHE", "Switzerland"),
-        ("th-TH", "TH", "THA", "Thailand"),
-        ("ar-TR", "TR", "TUR", "Turkey"),
-        ("ar-AE", "AE", "ARE", "United Arab Emirates"),
-        ("en-GB", "GB", "GBR", "United Kingdom of Great Britain and Northern Ireland"),
-        ("en-US", "US", "USA", "United States of America"),
-
-      };
+    private static readonly List<CountryCode> s_countryCodes = new List<CountryCode>()
+    {
+      new CountryCode("en-AU", "AU", "AUS", "Australia", "AUD"),
+      new CountryCode("nl-BE", "BE", "BEL", "Belgium", "EUR"),
+      new CountryCode("en-CA", "CA", "CAN", "Canada", "CAD"),
+      new CountryCode("en-KY", "KY", "CYM", "Cayman Islands", "KYD"),
+      new CountryCode("fi-FI", "FI", "FIN", "Finland", "EUR"),
+      new CountryCode("fr-FR", "FR", "FRA", "France", "EUR"),
+      new CountryCode("de-DE", "DE", "DEU", "Germany", "EUR"),
+      new CountryCode("gr-GR", "GR", "GRC", "Greece", "EUR"),
+      new CountryCode("it-VA", "VA", "VAT", "Holy See (the)", "EUR"),
+      new CountryCode("is-IS", "IS", "ISL", "Iceland", "ISK"),
+      new CountryCode("hi-IN", "IN", "IND", "India", "INR"),
+      new CountryCode("ar-IR", "IR", "IRN", "Iran (Islamic Republic of)", "IRR"),
+      new CountryCode("en-IE", "IE", "IRL", "Ireland", "EUR"),
+      new CountryCode("en-IM", "IM", "IMN", "Isle of Man", "GBP"),
+      new CountryCode("he-IL", "IL", "ISR", "Israel", "ILS"),
+      new CountryCode("it-IT", "IT", "ITA", "Italy", "EUR"),
+      new CountryCode("jp-JP", "JP", "JPN", "Japan", "JPY"),
+      new CountryCode("ar-JO", "JO", "JOR", "Jordan", "JOD"),
+      new CountryCode("de-LU", "LU", "LUX", "Luxembourg", "EUR"),
+      new CountryCode("es-MX", "MX", "MEX", "Mexico", "MXN"),
+      new CountryCode("nl-NL", "NL", "NLD", "Netherlands (the)", "EUR"),
+      new CountryCode("en-NZ", "NZ", "NZL", "New Zealand", "NZD"),
+      new CountryCode("nn-NO", "NO", "NOR", "Norway", "NOK"),
+      new CountryCode("ur-PK", "PK", "PAK", "Pakistan", "PKR"),
+      new CountryCode("pl-PL", "PL", "POL", "Poland", "PLN"),
+      new CountryCode("pt-PT", "PT", "PRT", "Portugal", "EUR"),
+      new CountryCode("ar-QA", "QA", "QAT", "Qatar", "QAR"),
+      new CountryCode("ru-RU", "RU", "RUS", "Russian Federation", "RUB"),
+      new CountryCode("en-SG", "SG", "SGP", "Singapore", "SGD"),
+      new CountryCode("en-ZA", "ZA", "ZAF", "South Africa", "ZAR"),
+      new CountryCode("se-SE", "SE", "SWE", "Sweden", "SEK"),
+      new CountryCode("de-CH", "CH", "CHE", "Switzerland", "CHF"),
+      new CountryCode("th-TH", "TH", "THA", "Thailand", "THB"),
+      new CountryCode("ar-TR", "TR", "TUR", "Turkey", "TRY"),
+      new CountryCode("ar-AE", "AE", "ARE", "United Arab Emirates", "AED"),
+      new CountryCode("en-GB", "GB", "GBR", "United Kingdom of Great Britain and Northern Ireland", "GBP"),
+      new CountryCode("en-US", "US", "USA", "United States of America", "USD"),
+    };
 
     //enums
 
@@ -85,6 +105,25 @@ namespace TradeSharp.Common
     //  internationalCulture.Register();
     //}
 
+    //finalizers
+
+
+    //interface implementations
+
+
+    //properties
+    public static IList<CountryCode> CountryCodes { get => s_countryCodes; }
+    public string ImagePath { get => m_imagePath; set => SetProperty(ref m_imagePath, value); }
+    public CultureInfo CultureInfo { get => m_cultureInfo; set => SetProperty(ref m_cultureInfo, value); }
+    public RegionInfo RegionInfo { get => m_regionInfo; set => SetProperty(ref m_regionInfo, value); }
+
+    //methods
+
+
+    //types
+
+
+    //constructors
     public CountryInfo(string isoCode, CultureInfo cultureInfo, RegionInfo regionInfo)
     {
       m_isoCode = isoCode;
@@ -104,12 +143,6 @@ namespace TradeSharp.Common
     //interface implementations
 
 
-    //properties
-    public static IList<(string, string, string, string)> CountryCodes { get => s_countryCodes; }
-    public string ImagePath { get => m_imagePath; set => SetProperty(ref m_imagePath, value); }
-    public CultureInfo CultureInfo { get => m_cultureInfo; set => SetProperty(ref m_cultureInfo, value); }
-    public RegionInfo RegionInfo { get => m_regionInfo; set => SetProperty(ref m_regionInfo, value); }
-
     //methods
     public static CountryInfo? GetCountryInfo(string isoCode)
     {
@@ -126,5 +159,5 @@ namespace TradeSharp.Common
       }
     }
   }
-
 }
+

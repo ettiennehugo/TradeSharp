@@ -8,9 +8,9 @@ namespace TradeSharp.PolygonIO.Messages
   public class TickerDetailsBrandingDto
   {
     [JsonPropertyName("icon_url")]
-    public string IconUrl { get; set; }
+    public string IconUrl { get; set; } = string.Empty;
 
     [JsonPropertyName("logo_url")]
-    public string LogoUrl { get; set; }
+    public string LogoUrl { get; set; } = string.Empty;
   }
 }

@@ -9,10 +9,10 @@ namespace TradeSharp.PolygonIO.Messages
   public class StockQuotesDto
   {
     [JsonPropertyName("ev")]
-    public string EventType { get; set; }
+    public string EventType { get; set; } = string.Empty;
 
     [JsonPropertyName("sym")]
-    public string Symbol { get; set; }
+    public string Symbol { get; set; } = string.Empty;
 
     [JsonPropertyName("bx")]
     public int BidExchangeId { get; set; }

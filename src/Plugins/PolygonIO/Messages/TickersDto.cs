@@ -11,36 +11,36 @@ namespace TradeSharp.PolygonIO.Messages
     public bool Active { get; set; }
 
     [JsonPropertyName("cik")]
-    public string Cik { get; set; }
+    public string Cik { get; set; } = string.Empty;
 
     [JsonPropertyName("composite_figi")]
-    public string CompositeFigi { get; set; }
+    public string CompositeFigi { get; set; } = string.Empty;
 
     [JsonPropertyName("currency_name")]
-    public string CurrencyName { get; set; }
+    public string CurrencyName { get; set; } = string.Empty;
 
     [JsonPropertyName("last_updated_utc")]
-    public DateTime LastUpdatedUtc { get; set; }
+    public DateTime LastUpdatedUtc { get; set; } = DateTime.Now;
 
     [JsonPropertyName("locale")]
-    public string Locale { get; set; }
+    public string Locale { get; set; } = string.Empty;
 
     [JsonPropertyName("market")]
-    public string Market { get; set; }
+    public string Market { get; set; } = string.Empty;
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("primary_exchange")]
-    public string PrimaryExchange { get; set; }
+    public string PrimaryExchange { get; set; } = string.Empty;
 
     [JsonPropertyName("share_class_figi")]
-    public string ShareClassFigi { get; set; }
+    public string ShareClassFigi { get; set; } = string.Empty;
 
     [JsonPropertyName("ticker")]
-    public string Ticker { get; set; }
+    public string Ticker { get; set; } = string.Empty;
 
     [JsonPropertyName("type")]
-    public string Type { get; set; }
+    public string Type { get; set; } = string.Empty;
   }
 }

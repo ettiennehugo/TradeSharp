@@ -4,7 +4,7 @@ using TradeSharp.Data;
 using TradeSharp.PolygonIO.Messages;
 using System.Text;
 using System.Net.WebSockets;
-using System.Threading;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.PolygonIO
 {
@@ -73,53 +73,60 @@ namespace TradeSharp.PolygonIO
     public string GetQuotesUri(string ticker, DateTime startDate, DateTime endDate) => $"{BaseUrl}/v3/quotes/{ticker}?limit={m_requestLimit}&timestamp.gte={startDate.ToUniversalTime().ToString("o")}&timestamp.lte={endDate.ToUniversalTime().ToString("o")}&sort=timestamp&apiKey={m_apiKey}";
     public string GetConditionsUri(AssetClass assetClass) => $"{BaseUrl}/v3/reference/conditions?asset_class={assetClass.ToString().ToLower()}&limit=1000&apiKey={m_apiKey}";
 
-    public async Task<IList<Messages.ExchangeDto>> GetExchanges()
+    public async Task<IList<Messages.ExchangeDto>> GetExchanges(IProgressDialog? progressDialog)
     {
       var exchanges = new List<Messages.ExchangeDto>();
       var uri = GetExchangesUri();
-      var exchangeResult = await GetPolygonApi<ExchangeResponseDto>(uri);
+      var exchangeResult = await GetPolygonApi<ExchangeResponseDto>(uri, progressDialog);
       if (exchangeResult?.Results is not null)
         exchanges.AddRange(exchangeResult.Results);
 
       return exchanges;
     }
 
-    public async Task<IList<Messages.TickersDto>> GetTickers()
+    public async Task<IList<Messages.TickersDto>> GetTickers(IProgressDialog? progressDialog)
     {
       var tickers = new List<Messages.TickersDto>();
       var uri = GetTickersUri("");
-      var tickerResult = await GetPolygonApi<TickersResponseDto>(uri);
+      var tickerResult = await GetPolygonApi<TickersResponseDto>(uri, progressDialog);
+      int tickerCount = 0;
       if (tickerResult?.Results is not null)
+      {
         tickers.AddRange(tickerResult.Results);
+        progressDialog?.LogInformation($"Received {tickerCount} to {tickerCount + tickerResult.Results.Count - 1} tickers");
+        tickerCount += tickerResult.Results.Count;
+      }
 
       while (tickerResult?.NextUrl != null)
       {
-        tickerResult = await GetPolygonApi<TickersResponseDto>(tickerResult.NextUrl + "&apiKey=" + m_apiKey);
+        tickerResult = await GetPolygonApi<TickersResponseDto>(tickerResult.NextUrl + "&apiKey=" + m_apiKey, progressDialog);
         tickers.AddRange(tickerResult?.Results);
+        progressDialog?.LogInformation($"Received {tickerCount} to {tickerCount + tickerResult.Results.Count} tickers");
+        tickerCount += tickerResult.Results.Count;
       }
 
       return tickers;
     }
 
-    public async Task<Messages.TickerDetailsDto> GetTickerDetails(string ticker)
+    public async Task<Messages.TickerDetailsResponseDto> GetTickerDetails(string ticker, IProgressDialog? progressDialog)
     {
       var uri = GetTickerDetailsUri(ticker);
-      return await GetPolygonApi<Messages.TickerDetailsDto>(uri);
+      return await GetPolygonApi<Messages.TickerDetailsResponseDto>(uri, progressDialog);
     }
 
-    public async Task<IList<Messages.BarDataDto>> GetHistoricalData(string ticker, Resolution resolution, DateTime startDate, DateTime endDate)
+    public async Task<IList<Messages.BarDataDto>> GetHistoricalData(string ticker, Resolution resolution, DateTime startDate, DateTime endDate, IProgressDialog? progressDialog)
     {
       var allStockAggregates = new List<Messages.BarDataDto>();
       var startDateUnix = new DateTimeOffset(startDate).ToUnixTimeMilliseconds();
       var endDateUnix = new DateTimeOffset(endDate).ToUnixTimeMilliseconds(); // TODO: Second resolution can be 1 too many
       var uri = GetStockAggregatesUri(ticker, resolution, startDateUnix, endDateUnix);
-      var aggregateResult = await GetPolygonApi<BarDataResponseDto>(uri);
+      var aggregateResult = await GetPolygonApi<BarDataResponseDto>(uri, progressDialog);
       if (aggregateResult?.Results is not null)
         allStockAggregates.AddRange(aggregateResult.Results);
 
       while (aggregateResult?.NextUrl != null)
       {
-        aggregateResult = await GetPolygonApi<BarDataResponseDto>(aggregateResult.NextUrl + "&apiKey=" + m_apiKey);
+        aggregateResult = await GetPolygonApi<BarDataResponseDto>(aggregateResult.NextUrl + "&apiKey=" + m_apiKey, progressDialog);
         allStockAggregates.AddRange(aggregateResult!.Results);
       }
 
@@ -136,6 +143,7 @@ namespace TradeSharp.PolygonIO
       {
         var uri = GetSubscriptionUri(realTime);
         await socket.ConnectAsync(new Uri(uri), cancellationToken);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"auth\",\"params\":\"" + m_apiKey + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
         await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"AM." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
         await AwaitSubscriptionResponse(socket, cancellationToken, BarDataM1Handler);
       }
@@ -151,6 +159,7 @@ namespace TradeSharp.PolygonIO
       {
         var uri = GetSubscriptionUri(realTime);
         await socket.ConnectAsync(new Uri(uri), cancellationToken);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"auth\",\"params\":\"" + m_apiKey + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
         await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"A." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
         await AwaitSubscriptionResponse(socket, cancellationToken, BarDataS1Handler);
       }
@@ -163,6 +172,7 @@ namespace TradeSharp.PolygonIO
       {
         var uri = GetSubscriptionUri(realTime);
         await socket.ConnectAsync(new Uri(uri), cancellationToken);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"auth\",\"params\":\"" + m_apiKey + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
         await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"T." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
         await AwaitSubscriptionResponse(socket, cancellationToken, StockTradesHandler);
       }
@@ -175,33 +185,26 @@ namespace TradeSharp.PolygonIO
       {
         var uri = GetSubscriptionUri(realTime);
         await socket.ConnectAsync(new Uri(uri), cancellationToken);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"auth\",\"params\":\"" + m_apiKey + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
         await socket.SendAsync(Encoding.UTF8.GetBytes("{\"action\":\"subscribe\",\"params\":\"Q." + ticker + "\"}"), WebSocketMessageType.Text, true, cancellationToken);
         await AwaitSubscriptionResponse(socket, cancellationToken, StockQuotesHandler);
       }
     }
 
-    private async Task<T?> GetPolygonApi<T>(string url)
+    private async Task<T?> GetPolygonApi<T>(string url, IProgressDialog? progressDialog)
     {
-      var response = await m_httpClient.GetStringAsync(url);
-      var options = new JsonSerializerOptions
+      var responseMessage = await m_httpClient.GetAsync(url);
+      if (!responseMessage.IsSuccessStatusCode)
       {
-        PropertyNameCaseInsensitive = true
-      };
-      try
-      {
-        var data = JsonSerializer.Deserialize<T>(response, options);
-        return data;
-      }
-      catch (JsonException ex)
-      {
-        m_logger.LogError($"Error deserializing: {ex.Path}");
-      }
-      catch (Exception ex)
-      {
-        m_logger.LogError("Error deserializing: " + ex.Message);
+        m_logger.LogError($"Error getting data from {url}: {responseMessage.ReasonPhrase}");
+        progressDialog?.LogError($"Error getting data from {url}: {responseMessage.ReasonPhrase}");
+        return default;
       }
 
-      return default;
+      var response = await responseMessage.Content.ReadAsStringAsync();
+      var options = new JsonSerializerOptions { AllowTrailingCommas = true };
+      var data = JsonSerializer.Deserialize<T>(response, options);
+      return data;
     }
 
     private async Task AwaitSubscriptionResponse<T>(WebSocket socket, CancellationToken cancellationToken, Action<T> handler)

@@ -8,15 +8,15 @@ namespace TradeSharp.PolygonIO.Messages
   public class TickerDetailsAddressDto
   {
     [JsonPropertyName("address1")]
-    public string Address1 { get; set; }
+    public string Address { get; set; } = string.Empty;
 
     [JsonPropertyName("city")]
-    public string City { get; set; }
+    public string City { get; set; } = string.Empty;
 
     [JsonPropertyName("postal_code")]
-    public string PostalCode { get; set; }
+    public string PostalCode { get; set; } = string.Empty;
 
     [JsonPropertyName("state")]
-    public string State { get; set; }
+    public string State { get; set; } = string.Empty;
   }
 }

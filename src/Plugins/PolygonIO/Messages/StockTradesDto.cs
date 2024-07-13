@@ -9,16 +9,16 @@ namespace TradeSharp.PolygonIO.Messages
   public class StockTradesDto
   {
     [JsonPropertyName("ev")]
-    public string EventType { get; set; }
+    public string EventType { get; set; } = string.Empty;
 
     [JsonPropertyName("sym")]
-    public string Symbol { get; set; }
+    public string Symbol { get; set; } = string.Empty;
 
     [JsonPropertyName("x")]
     public int ExchangeId { get; set; }   ///https://polygon.io/docs/stocks/get_v3_reference_exchanges
 
     [JsonPropertyName("i")]
-    public string TradeId { get; set; }
+    public string TradeId { get; set; } = string.Empty;
 
     [JsonPropertyName("z")]
     public int Tape { get; set; } //see declared Contants class

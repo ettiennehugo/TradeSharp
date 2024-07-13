@@ -59,6 +59,7 @@ namespace TradeSharp.Data.Testing
     public void Disconnect() { IsConnected = false; }
     public void ShowSettings() { }
     public bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end) { return true; }
+    public bool Subscribe(Instrument instrument, Resolution resolution) { return true; }
 
     //methods
     public void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }

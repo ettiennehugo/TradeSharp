@@ -11,15 +11,15 @@ namespace TradeSharp.PolygonIO.Messages
     public int Count { get; set; }
 
     [JsonPropertyName("next_url")]
-    public string NextUrl { get; set; }
+    public string NextUrl { get; set; } = string.Empty;
 
     [JsonPropertyName("request_id")]
-    public string RequestId { get; set; }
+    public string RequestId { get; set; } = string.Empty;
 
     [JsonPropertyName("results")]
-    public IList<TickersDto> Results { get; set; }
+    public IList<TickersDto> Results { get; set; } = new List<TickersDto>();
 
     [JsonPropertyName("status")]
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
   }
 }

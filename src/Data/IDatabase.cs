@@ -578,16 +578,27 @@ namespace TradeSharp.Data
 
 
     //attributes
-    protected double m_marketCap;
-    protected double m_fiftyTwoWeekHigh;
-    protected double m_fiftyTwoWeekLow;
+
+
+    //properties
+    [ObservableProperty] double m_marketCap;
+    [ObservableProperty] double m_sharesOutstanding;
+    [ObservableProperty] double m_employeeCount;
+    [ObservableProperty] string m_address;
+    [ObservableProperty] string m_city;
+    [ObservableProperty] string m_state;
+    [ObservableProperty] string m_zip;
+    [ObservableProperty] string m_phoneNumber;
+    [ObservableProperty] string m_url;
+    [ObservableProperty] double m_fiftyTwoWeekHigh;
+    [ObservableProperty] double m_fiftyTwoWeekLow;
 
     //constructors
     public Stock(string ticker, Attributes attributeSet, string tag, InstrumentType type, IList<string> alternateTickers, string name, string description, DateTime inceptionDate, int priceDecimals, int minimumMovement, int bigPointValue, Guid primaryExhangeId, IList<Guid> secondaryExchangeIds, string extendedProperties): base(ticker, attributeSet, tag, type, alternateTickers, name, description, inceptionDate, priceDecimals, minimumMovement, bigPointValue, primaryExhangeId, secondaryExchangeIds, extendedProperties) 
     {
-      m_marketCap = MarketCapInvalid;
-      m_fiftyTwoWeekHigh = FiftyTwoWeekHighInvalid;
-      m_fiftyTwoWeekLow = FiftyTwoWeekLowInvalid;
+      MarketCap = MarketCapInvalid;
+      FiftyTwoWeekHigh = FiftyTwoWeekHighInvalid;
+      FiftyTwoWeekLow = FiftyTwoWeekLowInvalid;
     }
 
     //finalizers
@@ -595,17 +606,6 @@ namespace TradeSharp.Data
 
     //interface implementations
 
-
-    //properties
-
-    // Check which of these fields can be integrated into the extended properties.
-    //https://ibkrcampus.com/ibkr-api-page/cpapi/#market-data-fields
-
-    public double MarketCap 
-    {
-      get { return m_marketCap; } 
-      set { SetProperty(ref m_marketCap, value); } 
-    }
 
     //methods
 

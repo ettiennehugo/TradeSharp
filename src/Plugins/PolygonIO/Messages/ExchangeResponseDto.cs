@@ -8,15 +8,15 @@ namespace TradeSharp.PolygonIO.Messages
   public class ExchangeResponseDto
   {
     [JsonPropertyName("request_id")]
-    public string RequestId { get; set; }
+    public string RequestId { get; set; } = string.Empty;
 
     [JsonPropertyName("status")]
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 
     [JsonPropertyName("count")]
     public int Count { get; set; }
 
     [JsonPropertyName("results")]
-    public IList<ExchangeDto> Results { get; set; }
+    public IList<ExchangeDto> Results { get; set; } = new List<ExchangeDto>();
   }
 }

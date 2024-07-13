@@ -8,13 +8,13 @@ namespace TradeSharp.PolygonIO.Messages
   public class TickerDetailsResponseDto
   {
     [JsonPropertyName("request_id")]
-    public string RequestId { get; set; }
+    public string RequestId { get; set; } = string.Empty;
 
     [JsonPropertyName("status")]
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 
     [JsonPropertyName("results")]
-    public IList<TickerDetailsDto> Results { get; set; }
+    public TickerDetailsDto Result { get; set; }
 
   }
 }

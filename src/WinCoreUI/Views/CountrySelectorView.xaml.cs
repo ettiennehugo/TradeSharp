@@ -31,7 +31,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_countries = new List<CountryInfo>();
       foreach (var countryKey in CountryInfo.CountryCodes)
       {
-        CountryInfo? country = CountryInfo.GetCountryInfo(countryKey.Item1);
+        CountryInfo? country = CountryInfo.GetCountryInfo(countryKey.IsoCode);
         if (country != null) m_countries.Add(country);
       }
       SelectedCountry = null;
@@ -55,6 +55,7 @@ namespace TradeSharp.WinCoreUI.Views
     }
 
     //methods
+
 
   }
 }

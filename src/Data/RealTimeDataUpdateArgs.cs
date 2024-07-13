@@ -17,7 +17,7 @@
     //properties
     public Instrument Instrument { get; protected set; }
     public Resolution Resolution { get; protected set; }
-    public IList<BarData> Bars { get; protected set; }
+    public IList<BarData> Bars { get; protected set; }        //can return multiple bar updates when the bar resolution is very small, e.g. 1-second
     public IList<Level1Data> Level1 { get; protected set; }
 
     //constructors

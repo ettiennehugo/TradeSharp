@@ -8,10 +8,10 @@ namespace TradeSharp.PolygonIO.Messages
   public class BarDataResponseDto
   {
     [JsonPropertyName("request_id")]
-    public string RequestId { get; set; }
+    public string RequestId { get; set; } = string.Empty;
 
     [JsonPropertyName("ticker")]
-    public string Ticker { get; set; }
+    public string Ticker { get; set; } = string.Empty;
 
     [JsonPropertyName("queryCount")]
     public int QueryCount { get; set; }
@@ -26,9 +26,9 @@ namespace TradeSharp.PolygonIO.Messages
     public IList<BarDataDto> Results { get; set; }
 
     [JsonPropertyName("next_url")]
-    public string NextUrl { get; set; }
+    public string NextUrl { get; set; } = string.Empty;
 
     [JsonPropertyName("status")]
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
   }
 }

@@ -576,10 +576,18 @@ namespace TradeSharp.Data
         if (instrument is Stock stock)
         {
           ExecuteCommand(
-            $"INSERT OR REPLACE INTO {TableStock} (Ticker, MarketCap) " +
+            $"INSERT OR REPLACE INTO {TableStock} (Ticker, MarketCap, SharesOutstanding, EmployeeCount, Address, City, State, Zip, PhoneNumber, WebsiteUrl) " +
               $"VALUES (" +
-                $"'{instrument.Ticker}', " +
-                $"'{stock.MarketCap}'" +
+                $"'{ToSqlSafeString(instrument.Ticker)}', " +
+                $"{stock.MarketCap}, " +
+                $"{stock.SharesOutstanding}, " +
+                $"{stock.EmployeeCount}, " +
+                $"'{ToSqlSafeString(stock.Address)}', " +
+                $"'{ToSqlSafeString(stock.City)}', " +
+                $"'{ToSqlSafeString(stock.State)}', " +
+                $"'{ToSqlSafeString(stock.Zip)}', " +
+                $"'{ToSqlSafeString(stock.PhoneNumber)}', " +
+                $"'{ToSqlSafeString(stock.Url)}' " +
               $")"
           );
         }
@@ -1223,8 +1231,19 @@ namespace TradeSharp.Data
             case InstrumentType.Stock:
               Stock stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
 
-              using (var stockReader = ExecuteReader($"SELECT MarketCap FROM {TableStock} WHERE Ticker = '{ticker}'"))
-                if (stockReader.Read()) stock.MarketCap = stockReader.GetDouble(0);
+              using (var stockReader = ExecuteReader($"SELECT * FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read())
+                {
+                  stock.MarketCap = stockReader.GetDouble(1);
+                  stock.SharesOutstanding = stockReader.GetDouble(2);
+                  stock.EmployeeCount = stockReader.GetInt32(3);
+                  stock.Address = FromSqlSafeString(stockReader.GetString(4));
+                  stock.City = FromSqlSafeString(stockReader.GetString(5));
+                  stock.State = FromSqlSafeString(stockReader.GetString(6));
+                  stock.Zip = FromSqlSafeString(stockReader.GetString(7));
+                  stock.PhoneNumber = FromSqlSafeString(stockReader.GetString(8));
+                  stock.Url = FromSqlSafeString(stockReader.GetString(9));
+                }
 
               return stock;
             default:
@@ -1271,10 +1290,18 @@ namespace TradeSharp.Data
         if (instrument is Stock stock)
         {
           ExecuteCommand(
-            $"INSERT OR REPLACE INTO {TableStock} (Ticker, MarketCap) " +
+            $"INSERT OR REPLACE INTO {TableStock} (Ticker, MarketCap, SharesOutstanding, EmployeeCount, Address, City, State, Zip, PhoneNumber, WebsiteUrl) " +
               $"VALUES (" +
                 $"'{instrument.Ticker}', " +
-                $"'{stock.MarketCap}'" +
+                $"{stock.MarketCap}," +
+                $"{stock.SharesOutstanding}, " +
+                $"{stock.EmployeeCount}, " +
+                $"'{ToSqlSafeString(stock.Address)}', " +
+                $"'{ToSqlSafeString(stock.City)}', " +
+                $"'{ToSqlSafeString(stock.State)}', " +
+                $"'{ToSqlSafeString(stock.Zip)}', " +
+                $"'{ToSqlSafeString(stock.PhoneNumber)}', " +
+                $"'{ToSqlSafeString(stock.Url)}'" +
               $")"
           );
         }
@@ -2525,7 +2552,15 @@ namespace TradeSharp.Data
       CreateTable(TableStock,
       @"
         Ticker TEXT PRIMARY KEY ON CONFLICT REPLACE,
-        MarketCap REAL
+        MarketCap REAL,
+        SharesOutstanding REAL,
+        EmployeeCount NUMBER,
+        Address TEXT,
+        City TEXT,
+        State TEXT,
+        Zip TEXT,
+        PhoneNumber TEXT,
+        WebsiteUrl TEXT
       ");
     }
 
