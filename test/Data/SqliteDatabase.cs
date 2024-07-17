@@ -73,7 +73,7 @@ namespace TradeSharp.Data.Testing
       //create common attributes used for testing
       m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "en-US");
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-      m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
       IList<string> alternateTickers = new List<string> { "ATEST1", "ATEST2" };
       m_instrument = new Stock("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, alternateTickers, "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty); //database layer stores dates in UTC
     }
@@ -145,7 +145,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
-        $"AND Tag = '{holiday.Tag}' " +
+        $"AND Tag = '{holiday.TagStr}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)holiday.Type} " +
         $"AND Month = {(int)holiday.Month} " +
@@ -166,7 +166,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
-        $"AND Tag = '{holiday.Tag}' " +
+        $"AND Tag = '{holiday.TagStr}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)holiday.Type} " +
         $"AND Month = {(int)holiday.Month} " +
@@ -198,7 +198,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
-        $"AND Tag = '{holiday.Tag}' " +
+        $"AND Tag = '{holiday.TagStr}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)holiday.Type} " +
         $"AND Month = {(int)holiday.Month} " +
@@ -219,7 +219,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableHoliday,
         $"Id = '{holiday.Id.ToString()}' " +
-        $"AND Tag = '{holiday.Tag}' " +
+        $"AND Tag = '{holiday.TagStr}' " +
         $"AND ParentId = '{holiday.ParentId.ToString()}' " +
         $"AND HolidayType = {(int)holiday.Type} " +
         $"AND Month = {(int)holiday.Month} " +
@@ -241,7 +241,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
-        $"AND Tag = '{session.Tag}' " +
+        $"AND Tag = '{session.TagStr}' " +
         $"AND ExchangeId = '{session.ExchangeId.ToString()}' " +
         $"AND DayOfWeek = {(int)session.DayOfWeek} " +
         $"AND StartTime = {session.Start.Ticks} " +
@@ -291,7 +291,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup.Id.ToString()}' " +
-        $"AND Tag = '{instrumentGroup.Tag}' " +
+        $"AND Tag = '{instrumentGroup.TagStr}' " +
         $"AND ParentId = '{instrumentGroup.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup.Name}' " +
         $"AND Description = '{instrumentGroup.Description}' " +
@@ -311,7 +311,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND Tag = '{m_instrument.Tag}' " +
+        $"AND Tag = '{m_instrument.TagStr}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
@@ -322,7 +322,7 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void CreateInstrument_AdditionalExchangePersistData_Success()
     {
-      Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "SecondaryTestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "SecondaryTestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
       m_database.AddInstrumentToExchange(m_instrument.Ticker, exchange.Id);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentSecondaryExchange,
@@ -340,7 +340,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND Tag = '{m_instrument.Tag}' " +
+        $"AND Tag = '{m_instrument.TagStr}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
@@ -362,7 +362,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableFundamentals,
         $"Id = '{fundamental.Id.ToString()}' " +
-        $"AND Tag = '{fundamental.Tag}' " +
+        $"AND Tag = '{fundamental.TagStr}' " +
         $"AND Category = {(int)fundamental.Category} " +
         $"AND ReleaseInterval = {(int)fundamental.ReleaseInterval}")
       , "Fundamental not persisted to database.");
@@ -376,7 +376,7 @@ namespace TradeSharp.Data.Testing
       m_database.CreateHoliday(holiday);
 
       holiday.ParentId = Guid.NewGuid();
-      holiday.Tag = "NewTagValue";
+      holiday.TagStr = "NewTagValue";
       holiday.Month = Months.February;
       holiday.DayOfMonth = 2;
       holiday.DayOfWeek = DayOfWeek.Monday;
@@ -389,7 +389,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.IsNotNull(holidayFromDB, "Holiday returned as null");
       Assert.AreEqual(holiday.ParentId, holidayFromDB.ParentId, "Holiday parent not updated in database.");
-      Assert.AreEqual(holiday.Tag, holidayFromDB.Tag, "Holiday tag not updated in database.");
+      Assert.AreEqual(holiday.TagStr, holidayFromDB.TagStr, "Holiday tag not updated in database.");
       Assert.AreEqual(holiday.Month, holidayFromDB.Month, "Holiday month not updated in database.");
       Assert.AreEqual(holiday.DayOfMonth, holidayFromDB.DayOfMonth, "Holiday day of month not updated in database.");
       Assert.AreEqual(holiday.DayOfWeek, holidayFromDB.DayOfWeek, "Holiday day of week not updated in database.");
@@ -412,7 +412,7 @@ namespace TradeSharp.Data.Testing
       TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
 
       m_exchange.Name = "New Exchange";
-      m_exchange.Tag = "NewTagValue";
+      m_exchange.TagStr = "NewTagValue";
       m_exchange.CountryId = germany.Id;
       m_exchange.TimeZone = timeZone;
 
@@ -420,7 +420,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableExchange,
         $"Id = '{m_exchange.Id.ToString()}' " +
-        $"AND Tag = '{m_exchange.Tag}' " +
+        $"AND Tag = '{m_exchange.TagStr}' " +
         $"AND Name = '{m_exchange.Name}' " +
         $"AND CountryId = '{germany.Id.ToString()}' " +
         $"AND TimeZone = '{timeZone.ToSerializedString()}'")
@@ -437,7 +437,7 @@ namespace TradeSharp.Data.Testing
       m_database.CreateSession(session);
 
       session.Name = "New Name";
-      session.Tag = "NewTagValue";
+      session.TagStr = "NewTagValue";
       session.DayOfWeek = DayOfWeek.Tuesday;
       session.Start = startTime.AddMinutes(5);
       session.End = endTime.AddMinutes(5);
@@ -446,7 +446,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableSession,
         $"Id = '{session.Id.ToString()}' " +
-        $"AND Tag = '{m_database.ToSqlSafeString(session.Tag)}' " +
+        $"AND Tag = '{m_database.ToSqlSafeString(session.TagStr)}' " +
         $"AND Name = '{m_database.ToSqlSafeString(session.Name)}' " +
         $"AND ExchangeId = '{session.ExchangeId.ToString()}' " +
         $"AND DayOfWeek = {(int)DayOfWeek.Tuesday} " +
@@ -467,7 +467,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND Tag = '{m_instrument.Tag}' " +
+        $"AND Tag = '{m_instrument.TagStr}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
@@ -479,15 +479,15 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void UpdateInstrument_ChangeAllAttributes_Success()
     {
-      Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "SecondaryTestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Exchange exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "SecondaryTestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
       DateTime dateTime = DateTime.Now.AddDays(3);
 
       m_database.CreateInstrument(m_instrument);
 
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
 
-      m_instrument.Tag = "NewTagValue";
+      m_instrument.TagStr = "NewTagValue";
       m_instrument.PrimaryExchangeId = exchange.Id;
       m_instrument.InceptionDate = dateTime;
       m_instrument.SecondaryExchangeIds = new List<Guid> { secondExchange.Id, thirdExchange.Id };
@@ -496,7 +496,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND Tag = '{m_instrument.Tag}' " +
+        $"AND Tag = '{m_instrument.TagStr}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{exchange.Id.ToString()}' " +
         $"AND InceptionDate = {dateTime.ToUniversalTime().ToBinary()}")
@@ -520,7 +520,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND Tag = '{m_instrument.Tag}' " +
+        $"AND Tag = '{m_instrument.TagStr}' " +
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
@@ -1433,7 +1433,7 @@ namespace TradeSharp.Data.Testing
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroup,
         $"Id = '{instrumentGroup.Id.ToString()}' " +
-        $"AND Tag = '{instrumentGroup.Tag}' " +
+        $"AND Tag = '{instrumentGroup.TagStr}' " +
         $"AND ParentId = '{instrumentGroup.ParentId.ToString()}' " +
         $"AND Name = '{instrumentGroup.Name}' " +
         $"AND Description = '{instrumentGroup.Description}' " +
@@ -1674,7 +1674,7 @@ namespace TradeSharp.Data.Testing
       Assert.AreEqual(countryHolidayDayOfMonth.Id, countryHolidayOfMonthReturned.Id, "Holiday Id mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.ParentId, countryHolidayOfMonthReturned.ParentId, "Parent Id mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.Name, countryHolidayOfMonthReturned.Name, "Name mismatch");
-      Assert.AreEqual(countryHolidayDayOfMonth.Tag, countryHolidayOfMonthReturned.Tag, "Tag mismatch");
+      Assert.AreEqual(countryHolidayDayOfMonth.TagStr, countryHolidayOfMonthReturned.TagStr, "Tag mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.Type, countryHolidayOfMonthReturned.Type, "Type mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.Month, countryHolidayOfMonthReturned.Month, "Month mismatch");
       Assert.AreEqual(countryHolidayDayOfMonth.DayOfMonth, countryHolidayOfMonthReturned.DayOfMonth, "DayOfMonth mismatch");
@@ -1686,7 +1686,7 @@ namespace TradeSharp.Data.Testing
       Assert.IsNotNull(countryHolidayOfWeekReturned, "CountryDayOfWeek not returned");
       Assert.AreEqual(countryHolidayDayOfWeek.Id, countryHolidayOfWeekReturned.Id, "Holiday Id mismatch");
       Assert.AreEqual(countryHolidayDayOfWeek.ParentId, countryHolidayOfWeekReturned.ParentId, "Parent Id mismatch");
-      Assert.AreEqual(countryHolidayDayOfWeek.Tag, countryHolidayOfWeekReturned.Tag, "Tag mismatch");
+      Assert.AreEqual(countryHolidayDayOfWeek.TagStr, countryHolidayOfWeekReturned.TagStr, "Tag mismatch");
       Assert.AreEqual(countryHolidayDayOfWeek.Name, countryHolidayOfWeekReturned.Name, "Name mismatch");
       Assert.AreEqual(countryHolidayDayOfWeek.Type, countryHolidayOfWeekReturned.Type, "Type mismatch");
       Assert.AreEqual(countryHolidayDayOfWeek.Month, countryHolidayOfWeekReturned.Month, "Month mismatch");
@@ -1765,8 +1765,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetExchanges_ReturnPersistedData_Success()
     {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
 
       m_database.CreateExchange(m_exchange);
       m_database.CreateExchange(secondExchange);
@@ -1819,8 +1819,8 @@ namespace TradeSharp.Data.Testing
       TimeOnly postMarketStartTime = new TimeOnly(16, 0);
       TimeOnly postMarketEndTime = new TimeOnly(21, 00);
 
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
 
       Session preFirstMarketSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Pre-market Session", m_exchange.Id, DayOfWeek.Monday, preMarketStartTime, preMarketEndTime);
       Session mainFirstSession = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", "Main Session", m_exchange.Id, DayOfWeek.Monday, mainStartTime, mainEndTime);
@@ -1925,8 +1925,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstruments_ReturnsSecondaryExchanges_Success()
     {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
       m_instrument = new Instrument("TEST", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "TestInstrument", "TestInstrumentDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id }, string.Empty);
       m_database.CreateInstrument(m_instrument);
 
@@ -2186,8 +2186,8 @@ namespace TradeSharp.Data.Testing
     [TestMethod]
     public void GetInstrument_ByTicker_Success()
     {
-      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
-      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty);
+      Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Second test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
+      Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "Third test exchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
       Instrument stock = new Instrument("STOCK", Instrument.DefaultAttributeSet, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id }, string.Empty);
 
       m_database.CreateInstrument(stock);

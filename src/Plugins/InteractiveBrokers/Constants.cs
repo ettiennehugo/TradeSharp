@@ -5,6 +5,12 @@
   /// </summary>
   public class Constants
   {
+    //general constants
+    public const string TagDataId = "InteractiveBrokers";    //tag data ID for the InteractiveBrokers plugin
+    public const int TagDataVersionMajor = 1;                //tag major version
+    public const int TagDataVersionMinor = 0;                //tag minor version
+    public const int TagDataVersionPatch = 0;                //tag patch version
+
     //sleep time between requests in milliseconds - set limit to be under 50 requests per second https://ibkrcampus.com/ibkr-api-page/twsapi-doc/#requests-limitations
     //NOTE: If you set this too short it looks like the IB API starts failing and some responses are not properly processed.
     public const int IntraRequestSleep = 50;

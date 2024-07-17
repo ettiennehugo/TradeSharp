@@ -269,7 +269,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       List<InstrumentGroup> missingInstrumentGroups = new List<InstrumentGroup>();
 
       //determine non-IB industry groups to validate
-      InstrumentGroup? rootGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.Tag == Constants.DefaultRootInstrumentGroupTag);
+      InstrumentGroup? rootGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.TagStr.Contains(Constants.DefaultRootInstrumentGroupTag));
 
       List<InstrumentGroup> groupsToValidate;
       if (rootGroup != null)

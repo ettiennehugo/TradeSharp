@@ -63,7 +63,7 @@ namespace TradeSharp.Data
   }
 
   /// <summary>
-  /// Base class for data store service objects.
+  /// Base class for data store service objects. This class is used to define the basic properties and methods that all data store service objects
   /// </summary>
   public partial class DataObject : ObservableObject
   {
@@ -73,12 +73,48 @@ namespace TradeSharp.Data
     {
       Id = id;
       AttributeSet = attributeSet;
-      Tag = tag;
+      m_tagStr = tag;
     }
 
     [ObservableProperty] private Guid m_id;
     [ObservableProperty] private Attributes m_attributeSet;
-    [ObservableProperty] private string m_tag;    //general string data to be used for whatever purpose necessary
+    
+    protected string m_tagStr;
+    public string TagStr {
+      get => m_tagStr;
+      set {
+        if (TagStr != value)
+        {
+          m_tagStr = value;
+          m_tag = null; //clear the tag value since it has changed
+          OnPropertyChanged("TagStr");
+        }
+      } 
+    }
+
+    protected TagValue? m_tag = null;
+    public TagValue Tag { 
+      get {
+        //lazy load the tag value since parsing the JSON could be expensive
+        if (m_tag == null)
+        {
+          if (TagStr.Length > 0)
+          {
+            try
+            {
+              m_tag = TagValue.From(TagStr);
+            }
+            catch (Exception)
+            {
+              m_tag = new TagValue();
+            }
+          }
+          else
+            m_tag = new TagValue();
+        }
+          return m_tag!;
+      } 
+    }
 
     public bool HasAttribute(Attributes attribute)
     {
@@ -119,8 +155,8 @@ namespace TradeSharp.Data
     private static string s_internationalIdStr = "11111111-1111-1111-1111-111111111111";
     private static Guid s_internationalId = Guid.Parse(s_internationalIdStr);
     public static Guid InternationalId { get => s_internationalId; }
-    private static string s_internationalIsoCode = CountryInfo.InternationalId;
-    public static string InternationalIsoCode { get => s_internationalIsoCode; } //three letter iso codes use alphabetical characters so using numbers should be good
+    private static string s_internationalIsoCode = CountryInfo.InternationalsoCode;
+    public static string InternationalIsoCode = s_internationalIsoCode; //three letter iso codes use alphabetical characters so using numbers should be good
 
     /// <summary>
     /// Return the flag image path to use for the given country code.
@@ -206,13 +242,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Holiday(Id, AttributeSet, Tag, ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
+      return new Holiday(Id, AttributeSet, Tag.ToJson(), ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
     }
 
     public void Update(Holiday item)
     {
       AttributeSet = item.AttributeSet;
-      Tag = item.Tag;
+      TagStr = item.TagStr;
       ParentId = item.ParentId;
       Name = item.Name;
       Type = item.Type;
@@ -302,7 +338,8 @@ namespace TradeSharp.Data
     /// <summary>
     /// Logo path representing the blank logo for exchanges that do not yet have a logo assignment.
     /// </summary>
-    private static string s_blankLogoPath = GetLogoPath(Guid.Empty);
+    public static Guid BlankLogoId { get => Guid.Empty; }
+    private static string s_blankLogoPath = GetLogoPath(BlankLogoId);
     public static string BlankLogoPath { get => s_blankLogoPath;  }
 
     /// <summary>
@@ -354,7 +391,7 @@ namespace TradeSharp.Data
       File.Copy(newLogoImagePath, exchange.LogoPath);
     }
 
-    public Exchange(Guid id, Attributes attributeSet, string tag, Guid countryId, string name, TimeZoneInfo timeZone, int defaultPriceDecimals, int defaultMinimumMovement, int defaultBigPointValue, Guid logoId): base(id, attributeSet, tag)
+    public Exchange(Guid id, Attributes attributeSet, string tag, Guid countryId, string name, TimeZoneInfo timeZone, int defaultPriceDecimals, int defaultMinimumMovement, int defaultBigPointValue, Guid logoId, string url): base(id, attributeSet, tag)
     {
       CountryId = countryId;
       Name = name;
@@ -364,6 +401,7 @@ namespace TradeSharp.Data
       DefaultBigPointValue = defaultBigPointValue;
       LogoId = logoId;
       LogoPath = GetLogoPath(logoId);
+      Url = url;
     }
 
     [ObservableProperty] private Guid m_countryId;
@@ -375,6 +413,7 @@ namespace TradeSharp.Data
     [ObservableProperty] private int m_defaultBigPointValue;
     [ObservableProperty] private Guid m_logoId; //logo Id is used for filename under assets\exchangeLogos
     [ObservableProperty] private string m_logoPath;
+    [ObservableProperty] private string m_url;
 
     public bool Equals(Exchange? other)
     {
@@ -383,13 +422,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Exchange(Id, AttributeSet, Tag, CountryId, Name, TimeZone, DefaultPriceDecimals, DefaultMinimumMovement, DefaultBigPointValue, LogoId);
+      return new Exchange(Id, AttributeSet, Tag.ToJson(), CountryId, Name, TimeZone, DefaultPriceDecimals, DefaultMinimumMovement, DefaultBigPointValue, LogoId, Url);
     }
 
     public void Update(Exchange item)
     {
       AttributeSet = item.AttributeSet;
-      Tag = item.Tag;
+      TagStr = item.TagStr;
       CountryId = item.CountryId;
       Name = item.Name;
       TimeZone = item.TimeZone;
@@ -397,6 +436,7 @@ namespace TradeSharp.Data
       DefaultMinimumMovement = item.DefaultMinimumMovement;
       DefaultBigPointValue = item.DefaultBigPointValue;
       LogoId = item.LogoId;
+      Url = item.Url;
     }
   }
 
@@ -427,13 +467,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Session(Id, AttributeSet, Tag, Name, ExchangeId, DayOfWeek, Start, End);
+      return new Session(Id, AttributeSet, Tag.ToJson(), Name, ExchangeId, DayOfWeek, Start, End);
     }
 
     public void Update(Session item)
     {
       AttributeSet = item.AttributeSet;
-      Tag = item.Tag;
+      TagStr = item.TagStr;
       Name = item.Name;
       ExchangeId = item.ExchangeId;
       DayOfWeek = item.DayOfWeek;
@@ -532,13 +572,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Instrument(Ticker, AttributeSet, Tag, Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds), ExtendedProperties);
+      return new Instrument(Ticker, AttributeSet, Tag.ToJson(), Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds), ExtendedProperties);
     }
 
     public void Update(Instrument item)
     {
       AttributeSet = item.AttributeSet;
-      Tag = item.Tag;
+      TagStr = item.TagStr;
       Type = item.Type;
       Ticker = item.Ticker;
       AlternateTickers = item.AlternateTickers;
@@ -680,13 +720,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new InstrumentGroup(Id, AttributeSet, Tag, ParentId, Name, new List<string>(AlternateNames), Description, UserId, new List<string>(Instruments));
+      return new InstrumentGroup(Id, AttributeSet, Tag.ToJson(), ParentId, Name, new List<string>(AlternateNames), Description, UserId, new List<string>(Instruments));
     }
 
     public void Update(InstrumentGroup item)
     {
       AttributeSet = item.AttributeSet;
-      Tag = item.Tag;
+      TagStr = item.TagStr;
       ParentId = item.ParentId;
       Name = item.Name;
       AlternateNames = item.AlternateNames;
@@ -720,13 +760,13 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Fundamental(Id, AttributeSet, Tag, Name, Description, Category, ReleaseInterval);
+      return new Fundamental(Id, AttributeSet, Tag.ToJson(), Name, Description, Category, ReleaseInterval);
     }
 
     public void Update(Fundamental item)
     {
       AttributeSet = item.AttributeSet;
-      Tag = item.Tag;
+      TagStr = item.TagStr;
       Name = item.Name;
       Description = item.Description;
       Category = item.Category;

@@ -477,7 +477,7 @@ namespace TradeSharp.CoreUI.Services
         IList<InstrumentGroup> persistedInstrumentGroups = m_instrumentGroupRepository.GetItems();
         foreach (InstrumentGroup instrumentGroup in persistedInstrumentGroups)
         {
-          string tag = instrumentGroup.Tag.Length != 0 ? instrumentGroup.Tag : instrumentGroup.Name;
+          string tag = instrumentGroup.TagStr.Length != 0 ? instrumentGroup.TagStr : instrumentGroup.Name;
           definedInstrumentGroups.Add(instrumentGroup);
 
           //update any instrument groups defined in the file with the existing parentId and Id keys defined for the instrument group
@@ -643,7 +643,7 @@ namespace TradeSharp.CoreUI.Services
       line += ",";
       line += TradeSharp.Common.Utilities.MakeCsvSafe(node.Item.UserId);
       line += ",";
-      line += TradeSharp.Common.Utilities.MakeCsvSafe(node.Item.Tag);
+      line += TradeSharp.Common.Utilities.MakeCsvSafe(node.Item.TagStr);
       line += ",";
       int attributeSet = (int)node.Item.AttributeSet;
       line += attributeSet.ToString();
@@ -947,11 +947,25 @@ namespace TradeSharp.CoreUI.Services
         [tokenJsonAlternateNames] = new JsonArray(),
         [tokenJsonDescription] = instrumentGroup.Description,
         [tokenJsonUserId] = instrumentGroup.UserId,
-        [tokenJsonTag] = instrumentGroup.Tag,
+        [tokenJsonTag] = string.Empty,
         [tokenJsonAttributes] = ((int)instrumentGroup.AttributeSet).ToString(),   //need to first cast to an integer otherwise it renders the tokens/words of the attribute set
         [tokenJsonInstruments] = new JsonArray(),
         [tokenJsonChildren] = new JsonArray()
       };
+
+      //add the tag value that can contain JSON data
+      if (!string.IsNullOrEmpty(instrumentGroup.TagStr))
+      {
+        try
+        {
+          var tagJsonNode = JsonNode.Parse(instrumentGroup.TagStr);
+          node[tokenJsonTag] = tagJsonNode;
+        }
+        catch (JsonException ex)
+        {
+          m_logger.LogError($"Error parsing JSON for TagStr: {ex.Message}");
+        }
+      }
 
       JsonArray alternateNames = node[tokenJsonAlternateNames]!.AsArray();
       foreach (string alternateName in instrumentGroup.AlternateNames) alternateNames.Add(alternateName);

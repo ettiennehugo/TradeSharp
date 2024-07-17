@@ -61,7 +61,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       progress.ShowAsync();
       
       //define root group associated with the interactive borker classifications
-      InstrumentGroup? rootGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.Tag == Constants.DefaultRootInstrumentGroupTag);
+      InstrumentGroup? rootGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.TagStr.Contains(Constants.DefaultRootInstrumentGroupTag));
       if (rootGroup == null)
       {
         rootGroup = new InstrumentGroup(Guid.NewGuid(), Attributes.None /* not editable */, Constants.DefaultRootInstrumentGroupTag, InstrumentGroup.InstrumentGroupRoot, Constants.DefaultRootInstrumentGroupName, Array.Empty<string>(), Constants.DefaultRootInstrumentGroupName, "", Array.Empty<string>());
@@ -81,7 +81,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         //add instrument group to the list of defined instrument groups
         if (currentGroup != null && currentGroup.ParentId == rootGroup.Id)
         {
-          var metaData = deserializeMetaData(instrumentGroup.Tag);
+          var metaData = deserializeMetaData(instrumentGroup.TagStr);
           definedInstrumentGroups.Add(new Tuple<string, string, string, InstrumentGroup>(metaData!.Industry, metaData!.Category, metaData!.SubCategory, instrumentGroup));
        
         }

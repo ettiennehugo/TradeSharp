@@ -33,7 +33,7 @@ namespace TradeSharp.Common
     /// <summary>
     /// Default Id used for international objects - will default to the local system settings.
     /// </summary>
-    public const string InternationalId = "999";
+    public const string InternationalsoCode = "999";
 
     /// <summary>
     /// Set of defined countries with three letter iso-codes, English names, and currencies.
@@ -131,10 +131,10 @@ namespace TradeSharp.Common
       m_regionInfo = regionInfo;
       string tradeSharpHome = Environment.GetEnvironmentVariable(Constants.TradeSharpHome) ?? throw new ArgumentException($"Environment variable \"{Constants.TradeSharpHome}\" not defined.");
 
-      if (m_isoCode != InternationalId)
+      if (m_isoCode != InternationalsoCode)
         m_imagePath = $"{tradeSharpHome}\\data\\assets\\countryflags\\w80\\{regionInfo.TwoLetterISORegionName}.png";
       else
-        m_imagePath = $"{tradeSharpHome}\\data\\assets\\countryflags\\w80\\{InternationalId}.png";    //HACK: Since we can not create a custom culture we settle for a different icon and the user's local settings (see below).
+        m_imagePath = $"{tradeSharpHome}\\data\\assets\\countryflags\\w80\\{InternationalsoCode}.png";    //HACK: Since we can not create a custom culture we settle for a different icon and the user's local settings (see below).
     }
 
     //finalizers
@@ -146,7 +146,7 @@ namespace TradeSharp.Common
     //methods
     public static CountryInfo? GetCountryInfo(string isoCode)
     {
-      if (isoCode == InternationalId)
+      if (isoCode == InternationalsoCode)
       {
         //return special international culture and region
         return new CountryInfo(isoCode, CultureInfo.CurrentCulture, RegionInfo.CurrentRegion);
@@ -157,6 +157,27 @@ namespace TradeSharp.Common
         CultureInfo cultureInfo = new CultureInfo(isoCode);
         return new CountryInfo(isoCode, cultureInfo, regionInfo);
       }
+    }
+
+    public static CountryInfo? FromCurrency(string currentCode)
+    {
+      CountryCode? countryCode = s_countryCodes.FirstOrDefault((countryCode) => countryCode.CurrencyCode == currentCode.ToUpper());  
+      if (countryCode != null) return GetCountryInfo(countryCode.Value.IsoCode);
+      return null;
+    }
+
+    public static CountryInfo? FromTwoLetterIso(string twoLetterIso)
+    {
+      CountryCode? countryCode = s_countryCodes.FirstOrDefault((countryCode) => countryCode.TwoLetterCode == twoLetterIso.ToUpper());
+      if (countryCode != null) return GetCountryInfo(countryCode.Value.IsoCode);
+      return null;
+    }
+
+    public static CountryInfo? FromThreeLetterIso(string threeLetterIso)
+    {
+      CountryCode? countryCode = s_countryCodes.FirstOrDefault((countryCode) => countryCode.ThreeLetterCode == threeLetterIso.ToUpper());
+      if (countryCode != null) return GetCountryInfo(countryCode.Value.IsoCode);
+      return null;
     }
   }
 }

@@ -32,14 +32,16 @@
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
+      <RowDefinition Height="auto"/>
     </Grid.RowDefinitions>
     <TextBlock x:Name="m_nameLbl" Text="Name" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="0"/>
     <TextBlock x:Name="m_countryLbl" Text="Country" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="1"/>
     <TextBlock x:Name="m_timeZoneLbl" Text="Time Zone" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="2"/>
-    <TextBlock x:Name="m_tagLbl" Text="Tag" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="3"/>
-    <TextBlock x:Name="m_priceDecimalsLbl" Text="Price Decimals" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="4"/>
-    <TextBlock x:Name="m_minimumMoveLbl" Text="Minimum Movement" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="5"/>
-    <TextBlock x:Name="m_bigPointValueLbl" Text="Big Point Value" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="6"/>
+    <TextBlock x:Name="m_urlLbl" Text="Website" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="3"/>
+    <TextBlock x:Name="m_tagLbl" Text="Tag" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="4"/>
+    <TextBlock x:Name="m_priceDecimalsLbl" Text="Price Decimals" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="5"/>
+    <TextBlock x:Name="m_minimumMoveLbl" Text="Minimum Movement" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="6"/>
+    <TextBlock x:Name="m_bigPointValueLbl" Text="Big Point Value" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="1" Grid.Row="7"/>
     <Button x:Name="m_logo" Click="m_logo_Click" Style="{StaticResource ImageButtonStyle}" Margin="5,5" ToolTipService.ToolTip="Click to change logo" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="1" Grid.RowSpan="7">
       <Image x:Name="m_logoImage" Source="{x:Bind ExchangeLogoPath, Mode=OneWay}" Stretch="Uniform" MaxWidth="128" MaxHeight="128"/>
     </Button>
@@ -56,9 +58,10 @@
       </ComboBox.ItemTemplate>
     </ComboBox>
     <ComboBox x:Name="m_timeZone" ItemsSource="{x:Bind TimeZones, Mode=OneTime}" DisplayMemberPath="DisplayName" SelectedItem="{x:Bind Exchange.TimeZone, Mode=OneTime}" SelectionChanged="m_timeZone_SelectionChanged" IsTextSearchEnabled="True" Grid.Column="2" Grid.Row="2"/>
-    <TextBox x:Name="m_tag" Text="{x:Bind Exchange.Tag, Mode=TwoWay}" PlaceholderText="Tag value" Grid.Column="2" Grid.Row="3"/>
-    <NumberBox x:Name="m_priceDecimals" Text="{x:Bind Exchange.DefaultPriceDecimals, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0" Maximum="10" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="4"/>
-    <NumberBox x:Name="m_minimumMovement" Text="{x:Bind Exchange.DefaultMinimumMovement, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0.01" SmallChange="0.01" LargeChange="1" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="5"/>
-    <NumberBox x:Name="m_bigPointValue" Text="{x:Bind Exchange.DefaultBigPointValue, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0.01" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="6"/>
+    <TextBox x:Name="m_url" Text="{x:Bind Exchange.Url, Mode=TwoWay}" PlaceholderText="www.nyse.com" Grid.Column="2" Grid.Row="3"/>
+    <TextBox x:Name="m_tag" Text="{x:Bind Exchange.TagStr, Mode=TwoWay}" PlaceholderText="Tag value JSON" Grid.Column="2" Grid.Row="4"/>
+    <NumberBox x:Name="m_priceDecimals" Text="{x:Bind Exchange.DefaultPriceDecimals, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0" Maximum="10" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="5"/>
+    <NumberBox x:Name="m_minimumMovement" Text="{x:Bind Exchange.DefaultMinimumMovement, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0.01" SmallChange="0.01" LargeChange="1" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="6"/>
+    <NumberBox x:Name="m_bigPointValue" Text="{x:Bind Exchange.DefaultBigPointValue, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0.01" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="7"/>
   </Grid>
 </Page>

@@ -29,6 +29,6 @@
     <TextBlock x:Name="m_descriptionLabel" Text="Description" Grid.Column="0" Grid.Row="2"/>
     <TextBox x:Name="m_description" Text="{x:Bind InstrumentGroup.Description, Mode=TwoWay}" PlaceholderText="New instrument group description" Grid.Column="1" Grid.Row="2"/>
     <TextBlock x:Name="m_tagLabel" Text="Tag" Grid.Column="0" Grid.Row="3"/>
-    <TextBox x:Name="m_tag" Text="{x:Bind InstrumentGroup.Tag, Mode=TwoWay}" PlaceholderText="Tag value" Grid.Column="1" Grid.Row="3"/>
+    <TextBox x:Name="m_tag" Text="{x:Bind InstrumentGroup.TagStr, Mode=TwoWay}" PlaceholderText="Tag value JSON" Grid.Column="1" Grid.Row="3"/>
   </Grid>
 </Page>

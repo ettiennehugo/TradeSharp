@@ -115,7 +115,7 @@
               <TextBlock MaxWidth="150" Text="{x:Bind PriceDecimals, Mode=OneWay}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2, 0, 0, 0" Grid.Column="6"/>
               <TextBlock MaxWidth="150" Text="{x:Bind MinimumMovement, Mode=OneWay}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2, 0, 0, 0" Grid.Column="7"/>
               <TextBlock MaxWidth="150" Text="{x:Bind BigPointValue, Mode=OneWay}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2, 0, 0, 0" Grid.Column="8"/>
-              <TextBlock MaxWidth="400" Text="{x:Bind Tag, Mode=OneWay}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2, 0, 0, 0" Grid.Column="9"/>
+              <TextBlock MaxWidth="400" Text="{x:Bind TagStr, Mode=OneWay}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2, 0, 0, 0" Grid.Column="9"/>
             </Grid>
           </Border>
         </DataTemplate>

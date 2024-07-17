@@ -85,16 +85,15 @@ namespace TradeSharp.PolygonIO
       Commands.Add(new PluginCommand { Name = "Download Tickers", Tooltip = "Download Polygon Tickers to local cache", Icon = "\uE78C", Command = new AsyncRelayCommand(OnDownloadTickersAsync, () => IsConnected) });
       Commands.Add(new PluginCommand { Name = "Download Ticker Details", Tooltip = "Download Polygon Ticker Details to local cache", Icon = "\uE826", Command = new AsyncRelayCommand(OnDownloadTickerDetailsAsync, () => IsConnected) });
       Commands.Add(new PluginCommand { Name = PluginCommand.Separator });
-      Commands.Add(new PluginCommand { Name = "Copy Exchanges", Tooltip = "Copy Exchanges from local cache to TradeSharp Exchagnes", Icon = "\uF22C", Command = new AsyncRelayCommand(OnCopyExchangesToTradeSharpAsync) });
+      Commands.Add(new PluginCommand { Name = "Define Countries", Tooltip = "Define countries required for Exchanges", Icon = "\uF49A", Command = new AsyncRelayCommand(OnDefineCountriesForExchangesAsync) });
+      Commands.Add(new PluginCommand { Name = "Copy Exchanges", Tooltip = "Copy Exchanges from local cache to TradeSharp Exchanges", Icon = "\uF22C", Command = new AsyncRelayCommand(OnCopyExchangesToTradeSharpAsync) });
       Commands.Add(new PluginCommand { Name = "Copy Tickers", Tooltip = "Copy Tickers from local cache to TradeSharp Instruments", Icon = "\uE8C8", Command = new AsyncRelayCommand(OnUpdateInstrumentsFromTickersAsync) });
     }
 
     public override bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end)
     {
-
-      //TODO
-      throw new NotImplementedException();
-
+      m_client.GetHistoricalData(instrument.Ticker, resolution, start, end, null);
+      return true;
     }
 
     public override bool Subscribe(Instrument instrument, Resolution resolution)
@@ -134,6 +133,12 @@ namespace TradeSharp.PolygonIO
       await command.Run();
     }
 
+    protected async Task OnDefineCountriesForExchangesAsync()
+    {
+      var command = new CountriesForExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_database, m_cache);
+      await command.Run();
+    }
+
     protected async Task OnCopyExchangesToTradeSharpAsync()
     {
       var command = new UpdateExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_database, m_cache);
@@ -149,7 +154,7 @@ namespace TradeSharp.PolygonIO
     protected void handleBarDataM1(BarDataM1ResultDto data)
     {
 
-      //TODO
+      //TODO - implement real-time bar data handling
       throw new NotImplementedException();
 
     }
@@ -157,7 +162,7 @@ namespace TradeSharp.PolygonIO
     protected void handleBarDataS1(BarDataS1ResultDto data)
     {
 
-      //TODO
+      //TODO - implement real-time bar data handling
       throw new NotImplementedException();
 
     }
@@ -165,7 +170,7 @@ namespace TradeSharp.PolygonIO
     protected void handleTrade(StockTradesResultDto data)
     {
 
-      //TODO
+      //TODO - implement real-time bar data handling
       throw new NotImplementedException();
 
     }
@@ -173,7 +178,7 @@ namespace TradeSharp.PolygonIO
     protected void handleQuote(StockQuotesResultDto data) 
     {
 
-      //TODO
+      //TODO - implement real-time bar data handling
       throw new NotImplementedException();
 
     }

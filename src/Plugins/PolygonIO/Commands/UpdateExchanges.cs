@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using TradeSharp.CoreUI.Services;
+using System.Text.Json;
+using TradeSharp.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.PolygonIO.Commands
@@ -55,26 +57,60 @@ namespace TradeSharp.PolygonIO.Commands
 			progressDialog.Maximum = exchanges.Count;
 			foreach (var pioExchange in exchanges)
 			{
-        try
-        {
-					Data.Exchange? exchange = m_exchangeService.Items.FirstOrDefault(e => e.Name == pioExchange.Name);
+				if (pioExchange.IsTradeSharpSupported())
+				{
+          try
+          {
+            Data.Exchange? exchange = m_exchangeService.Items.FirstOrDefault(e => (e.Id != Data.Exchange.InternationalId) && (e.Name == pioExchange.Name || e.Name == pioExchange.Acronym || e.TagStr.Contains(pioExchange.Name)));
 
-          if (exchange == null)
-					{
-            exchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributeSet, pioExchange.Acronym, Country.InternationalId, pioExchange.Name, TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Data.Exchange.InternationalId);
-            m_exchangeService.Update(exchange);
-						updateService = true;
+						//try to parse the exchange from any tag data related to the Polygon plugin
+						if (exchange == null)
+						{
+							foreach (var definedExchange in m_exchangeService.Items)
+              {
+                if (!string.IsNullOrEmpty(definedExchange.TagStr))
+                {
+									var polygonEntries = definedExchange.Tag.Entries.Where(e => e.Provider == Constants.TagDataId && e.Version.Major <= Constants.TagDataVersionMajor).ToList();
+									foreach (var polygonEntry in polygonEntries)
+									{
+										
+
+										//TODO - check if this exchange matches any of the Polygon exchange data retrieved.
+
+
+									}
+                }
+              }
+						}
+
+            if (exchange == null)
+            {
+							Country? country = m_countryService.Items.FirstOrDefault(c => c.IsoCode != Data.Country.InternationalIsoCode && c.CountryInfo.RegionInfo.TwoLetterISORegionName == pioExchange.Locale.ToUpper());
+							Guid countryId = country?.Id ?? Country.InternationalId;
+              exchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributeSet, JsonSerializer.Serialize(pioExchange), countryId, pioExchange.Name, TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Data.Exchange.BlankLogoId, string.Empty);
+							exchange.Url = pioExchange.Url;
+              m_exchangeService.Add(exchange);
+              updateService = true;
+            }
+						else if (exchange.Id != Data.Exchange.InternationalId && !exchange.Url.Equals(pioExchange.Url))	//ignore global exchange and check if the URL has changed
+						{
+							//update the defined exchange with data from Polygon
+							exchange.Url = pioExchange.Url;
+							m_exchangeService.Update(exchange);
+							updateService = true;
+						}
+          }
+          catch (Exception ex)
+          {
+            m_logger.LogError($"Failed to update exchange {pioExchange.Name} - {ex.Message}");
           }
         }
-        catch (Exception ex)
-        {
-          m_logger.LogError($"Failed to update exchange {pioExchange.Name} - {ex.Message}");
-        }
+				else
+					progressDialog.LogWarning($"{pioExchange.Name} (Asset Class - {pioExchange.AssetClass}) is not supported by TradeSharp");
 
-				progressDialog.Progress++;
+        progressDialog.Progress++;
 				if (progressDialog.CancellationTokenSource.IsCancellationRequested) break;
       }
-
 
 			if (updateService)
 			{

@@ -1,4 +1,7 @@
-﻿namespace TradeSharp.Common
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace TradeSharp.Common
 {
   /// <summary>
   /// General utilities used throughout the application.
@@ -101,7 +104,7 @@
       }
     }
 
-    public static void Sort<TSource, TKey>(IList<TSource> collection, Func<TSource,TKey> keySelector) where TSource : IComparable
+    public static void Sort<TSource, TKey>(IList<TSource> collection, Func<TSource, TKey> keySelector) where TSource : IComparable
     {
       List<TSource> sorted = collection.OrderBy(keySelector).ToList();
       for (int i = 0; i < sorted.Count(); i++)
@@ -124,4 +127,30 @@
       collection.Add(item); //item larger than all others, add it to the end of collection
     }
   }
+
+  /// <summary>
+  /// Used for serialization/deserialization of string fields that contain raw JSON.
+  /// </summary>
+  public class RawJsonConverter : JsonConverter<string>
+  {
+    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+      using (var jsonDoc = JsonDocument.ParseValue(ref reader))
+      {
+        return jsonDoc.RootElement.GetRawText();
+      }
+    }
+
+    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+    {
+      using (var jsonDoc = JsonDocument.Parse(value))
+      {
+        jsonDoc.RootElement.WriteTo(writer);
+      }
+    }
+  }
+
+
+
+
 }

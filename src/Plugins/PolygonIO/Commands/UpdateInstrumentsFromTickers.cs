@@ -46,6 +46,7 @@ namespace TradeSharp.PolygonIO.Commands
     //interface implementations
     public async Task Run()
     {
+      bool updateService = false;
       var progressDialog = m_dialogService.CreateProgressDialog("Updating Instruments", m_logger);
       progressDialog.StatusMessage = "Updating instruments";
       await progressDialog.ShowAsync();
@@ -56,7 +57,7 @@ namespace TradeSharp.PolygonIO.Commands
 
       foreach (var pioTicker in tickers)
       {
-        if (isTradeSharpSupported(pioTicker))
+        if (pioTicker.IsTradeSharpSupported())
         {
           try
           {
@@ -65,22 +66,24 @@ namespace TradeSharp.PolygonIO.Commands
 
             //find the exchange associated with the Instrument
             Guid exchangeId = Data.Exchange.InternationalId;
-            var exchange = m_exchangeService.Items.FirstOrDefault(e => e.Name == pioTicker.PrimaryExchange);
+            var exchange = m_exchangeService.Items.FirstOrDefault(e => e.Name == pioTicker.PrimaryExchange || e.TagStr.Contains(pioTicker.PrimaryExchange));
             if (exchange != null) exchangeId = exchange.Id;
 
             //create update the instrument
+            bool instrumentCreated = false;
             if (instrument == null)
             {
+              instrumentCreated = true;
+              progressDialog.LogInformation($"Creating new instrument {pioTicker.Ticker} - {pioTicker.Name}");
               if (pioTicker.Market == Constants.TickerMarketStocks)
-              {
-                instrument = new Data.Stock(pioTicker.Ticker, Instrument.DefaultAttributeSet, pioTicker.Ticker, getInstrumentType(pioTicker), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
-              }
+                instrument = new Data.Stock(pioTicker.Ticker, Instrument.DefaultAttributeSet, pioTicker.Ticker, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
               else
-                instrument = new Data.Instrument(pioTicker.Ticker, Instrument.DefaultAttributeSet, pioTicker.Ticker, getInstrumentType(pioTicker), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
+                instrument = new Data.Instrument(pioTicker.Ticker, Instrument.DefaultAttributeSet, pioTicker.Ticker, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
             }
 
             if (pioTickerDetails != null && instrument is Stock stock)
             {
+              if (!instrumentCreated) progressDialog.LogInformation($"Updating stock {pioTicker.Ticker} - {pioTicker.Name}");
               stock.InceptionDate = pioTickerDetails.ListDate;
               stock.MarketCap = pioTickerDetails.MarketCap;
               stock.SharesOutstanding = pioTickerDetails.ShareClassSharesOutstanding;
@@ -93,11 +96,8 @@ namespace TradeSharp.PolygonIO.Commands
               stock.Url = pioTickerDetails.HomepageUrl;
             }
 
-
-            //TODO: Update item in Items list.
-
-
             m_instrumentService.Update(instrument);
+            updateService = true;
           }
           catch (Exception ex)
           {
@@ -111,33 +111,17 @@ namespace TradeSharp.PolygonIO.Commands
         if (progressDialog.CancellationTokenSource.Token.IsCancellationRequested) break;
       }
 
-      progressDialog.Complete = true;
-      
+      if (updateService)
+      {
+        progressDialog.LogInformation("Refreshing instrument model");
+        m_instrumentService.Refresh();
+      }
+        
+      progressDialog.Complete = true;      
     }
 
     //methods
-    protected bool isTradeSharpSupported(Tickers ticker)
-    {
-      if (ticker.Market.Equals(Constants.TickerMarketStocks, StringComparison.OrdinalIgnoreCase) || ticker.Market.Equals(Constants.TickerMarketOTC, StringComparison.OrdinalIgnoreCase))
-      {
-        if (ticker.Type.Equals(Constants.TickerTypeCommonStock) || ticker.Market.Equals(Constants.TickerMarketOTC, StringComparison.OrdinalIgnoreCase)) return true;
-        if (ticker.Type.Equals(Constants.TickerTypeETF)) return true;
-      }
-      if (ticker.Market.Equals(Constants.TickerMarketForex, StringComparison.OrdinalIgnoreCase)) return true;
 
-      return false;
-    }
 
-    protected InstrumentType getInstrumentType(Tickers ticker)
-    {
-      if (string.IsNullOrEmpty(ticker.Market)) return InstrumentType.Unknown;
-      if (ticker.Market.Equals(Constants.TickerMarketStocks, StringComparison.OrdinalIgnoreCase) || ticker.Market.Equals(Constants.TickerMarketOTC, StringComparison.OrdinalIgnoreCase))
-      {
-        if (ticker.Type.Equals(Constants.TickerTypeCommonStock) || ticker.Market.Equals(Constants.TickerMarketOTC, StringComparison.OrdinalIgnoreCase)) return InstrumentType.Stock;
-        if (ticker.Type.Equals(Constants.TickerTypeETF)) return InstrumentType.ETF;
-      }
-      if (ticker.Market.Equals(Constants.TickerMarketForex, StringComparison.OrdinalIgnoreCase)) return InstrumentType.Forex;
-      return InstrumentType.Unknown;
-    }
   }
 }

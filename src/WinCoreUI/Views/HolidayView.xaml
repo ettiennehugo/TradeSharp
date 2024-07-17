@@ -45,6 +45,6 @@
     <ComboBox x:Name="m_dayOfWeek" SelectedIndex="{x:Bind Holiday.DayOfWeek, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="4"/>
     <ComboBox x:Name="m_weekOfMonth" SelectedIndex="{x:Bind Holiday.WeekOfMonth, Mode=TwoWay, Converter={StaticResource WeekOfMonthValueConverter}}" Grid.Column="1" Grid.Row="5"/>
     <ComboBox x:Name="m_moveWeekendHoliday" SelectedIndex="{x:Bind Holiday.MoveWeekendHoliday, Mode=TwoWay, Converter={StaticResource EnumValueDescriptionConverter}}" Grid.Column="1" Grid.Row="6"/>
-    <TextBox x:Name="m_tag" Text="{x:Bind Holiday.Tag, Mode=TwoWay}" PlaceholderText="Tag value" Grid.Column="1" Grid.Row="7"/>
+    <TextBox x:Name="m_tag" Text="{x:Bind Holiday.TagStr, Mode=TwoWay}" PlaceholderText="Tag value JSON" Grid.Column="1" Grid.Row="7"/>
   </Grid>
 </Page>

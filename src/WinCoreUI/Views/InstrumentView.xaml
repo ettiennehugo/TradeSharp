@@ -56,7 +56,7 @@
     <NumberBox x:Name="m_priceDecimals" Text="{x:Bind Instrument.PriceDecimals, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="1" Minimum="0" Maximum="10" Grid.Column="1" Grid.Row="7"/>
     <NumberBox x:Name="m_minimumMovement" Text="{x:Bind Instrument.MinimumMovement, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Maximum="100" Grid.Column="1" Grid.Row="8"/>
     <NumberBox x:Name="m_bigPointValue" Text="{x:Bind Instrument.BigPointValue, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Grid.Column="1" Grid.Row="9"/>
-    <TextBox x:Name="m_tag" Text="{x:Bind Instrument.Tag, Mode=TwoWay}" PlaceholderText="Tag value" Grid.Column="1" Grid.Row="10"/>
+    <TextBox x:Name="m_tag" Text="{x:Bind Instrument.TagStr, Mode=TwoWay}" PlaceholderText="Tag value JSON" Grid.Column="1" Grid.Row="10"/>
     <TextBox x:Name="m_extendedProperties" Text="{x:Bind Instrument.ExtendedProperties, Mode=TwoWay}" PlaceholderText="Extended Properties JSON" Grid.Column="1" Grid.Row="11"/>
   </Grid>
 </Page>

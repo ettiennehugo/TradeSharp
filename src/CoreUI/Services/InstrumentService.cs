@@ -318,7 +318,7 @@ namespace TradeSharp.CoreUI.Services
                 if (Guid.TryParse(exchangeStr, out Guid exchangeId))
                   primaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == exchangeId);
                 else
-                  primaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Name.ToLower() == exchangeStr!.ToLower() || e.Tag.ToLower() == exchangeStr.ToLower());
+                  primaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Name.ToLower() == exchangeStr!.ToLower() || e.TagStr.Contains(exchangeStr));
               }
 
               if (primaryExchange == null)
@@ -347,7 +347,7 @@ namespace TradeSharp.CoreUI.Services
                     else
                     {
                       //try to match the secondary exchange using it's name or tag
-                      Exchange? definedExchange = m_exchangeService.Items.FirstOrDefault(e => e.Name.ToLower() == secondaryExchangeStr.ToLower() || e.Tag.ToLower() == secondaryExchangeStr.ToLower());
+                      Exchange? definedExchange = m_exchangeService.Items.FirstOrDefault(e => e.Name.ToLower() == secondaryExchangeStr.ToLower() || e.TagStr.Contains(secondaryExchangeStr));
                       if (definedExchange != null)
                         secondaryExchanges.Add(definedExchange.Id);
                       else
@@ -567,7 +567,7 @@ namespace TradeSharp.CoreUI.Services
                 primaryExchange = definedExchange;
                 break;
               }
-              else if (definedExchange.Tag.ToLower() == exchange.ToLower())
+              else if (definedExchange.TagStr.Contains(exchange))
               {
                 primaryExchange = definedExchange;
                 break;
@@ -598,7 +598,7 @@ namespace TradeSharp.CoreUI.Services
             IList<Guid> secondaryExchangeIds = new List<Guid>();
             foreach (string secondaryExchange in secondaryExchanges)
             {
-              Exchange? definedExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id.ToString() == secondaryExchange || e.Name.ToUpper() == secondaryExchange.ToUpper() || e.Tag.ToUpper() == secondaryExchange.ToUpper());
+              Exchange? definedExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id.ToString() == secondaryExchange || e.Name.ToUpper() == secondaryExchange.ToUpper() || e.TagStr.Contains(secondaryExchange.ToUpper()));
               if (definedExchange != null)
                 secondaryExchangeIds.Add(definedExchange.Id);
               else
@@ -708,7 +708,7 @@ namespace TradeSharp.CoreUI.Services
             [tokenJsonAlternateTickers] = new JsonArray(),
             [tokenJsonName] = instrument.Name,
             [tokenJsonDescription] = instrument.Description,
-            [tokenJsonTag] = instrument.Tag,
+            [tokenJsonTag] = string.Empty,
             [tokenJsonExchange] = exchange!.Name,
             [tokenJsonInceptionDate1] = instrument.InceptionDate.ToString(),
             [tokenJsonPriceDecimals1] = instrument.PriceDecimals,
@@ -718,6 +718,20 @@ namespace TradeSharp.CoreUI.Services
             [tokenJsonAttributes] = ((int)instrument.AttributeSet),   //need to first cast to an integer otherwise it renders the tokens/words of the attribute set
             [tokenJsonSecondaryExchanges] = new JsonArray()
           };
+
+          //add the JSON tag data if it exists
+          if (!string.IsNullOrEmpty(instrument.TagStr))
+          {
+            try
+            {
+              var tagJsonNode = JsonNode.Parse(instrument.TagStr);
+              instrumentJson[tokenJsonTag] = tagJsonNode;
+            }
+            catch (JsonException ex)
+            {
+              m_logger.LogError($"Error parsing JSON for TagStr: {ex.Message}");
+            }
+          }
 
           if (instrument.AlternateTickers.Count > 0)
           {

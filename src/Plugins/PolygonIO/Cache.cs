@@ -20,6 +20,11 @@ namespace TradeSharp.PolygonIO
     public string ParticipantId { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
+
+    public bool IsTradeSharpSupported()
+    {
+      return AssetClass.Equals(Constants.AssetClassStock, StringComparison.OrdinalIgnoreCase) || AssetClass.Equals(Constants.AssetClassForex, StringComparison.OrdinalIgnoreCase); ;
+    }
   }
 
   public class Tickers
@@ -36,6 +41,30 @@ namespace TradeSharp.PolygonIO
     public string PrimaryExchange { get; set; } = string.Empty;
     public string ShareClassFigi { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
+
+    public bool IsTradeSharpSupported()
+    {
+      if (Market.Equals(Constants.TickerMarketStocks, StringComparison.OrdinalIgnoreCase) || Market.Equals(Constants.TickerMarketOTC, StringComparison.OrdinalIgnoreCase))
+      {
+        if (Type.Equals(Constants.TickerTypeCommonStock)) return true;
+        if (Type.Equals(Constants.TickerTypeETF)) return true;
+      }
+      if (Market.Equals(Constants.TickerMarketForex, StringComparison.OrdinalIgnoreCase)) return true;
+
+      return false;
+    }
+
+    public InstrumentType GetInstrumentType()
+    {
+      if (string.IsNullOrEmpty(Market)) return InstrumentType.Unknown;
+      if (Market.Equals(Constants.TickerMarketStocks, StringComparison.OrdinalIgnoreCase) || Market.Equals(Constants.TickerMarketOTC, StringComparison.OrdinalIgnoreCase))
+      {
+        if (Type.Equals(Constants.TickerTypeCommonStock) || Market.Equals(Constants.TickerMarketOTC, StringComparison.OrdinalIgnoreCase)) return InstrumentType.Stock;
+        if (Type.Equals(Constants.TickerTypeETF)) return InstrumentType.ETF;
+      }
+      if (Market.Equals(Constants.TickerMarketForex, StringComparison.OrdinalIgnoreCase)) return InstrumentType.Forex;
+      return InstrumentType.Unknown;
+    }
   }
 
   /// <summary>
@@ -276,14 +305,14 @@ namespace TradeSharp.PolygonIO
             Name = FromSqlSafeString(reader.GetString(3)), // Name
             Description = FromSqlSafeString(reader.GetString(4)), // Description
             Market = FromSqlSafeString(reader.GetString(5)), // Market
-            Locale = FromSqlSafeString(reader.GetString(6)), // Locale
-            CurrencyName = FromSqlSafeString(reader.GetString(7)), // CurrencyName
-            PrimaryExchange = FromSqlSafeString(reader.GetString(8)), // PrimaryExchange
-            Cik = FromSqlSafeString(reader.GetString(9)), // Cik
-            CompositeFigi = FromSqlSafeString(reader.GetString(10)), // CompositeFigi
-            ShareClassFigi = FromSqlSafeString(reader.GetString(11)), // ShareClassFigi
-            ShareClassSharesOutstanding = reader.GetInt64(12), // ShareClassSharesOutstanding
-            MarketCap = reader.GetInt64(13), // MarketCap
+            MarketCap = reader.GetInt64(6), // MarketCap
+            Locale = FromSqlSafeString(reader.GetString(7)), // Locale
+            CurrencyName = FromSqlSafeString(reader.GetString(8)), // CurrencyName
+            PrimaryExchange = FromSqlSafeString(reader.GetString(9)), // PrimaryExchange
+            Cik = FromSqlSafeString(reader.GetString(10)), // Cik
+            CompositeFigi = FromSqlSafeString(reader.GetString(11)), // CompositeFigi
+            ShareClassFigi = FromSqlSafeString(reader.GetString(12)), // ShareClassFigi
+            ShareClassSharesOutstanding = reader.GetInt64(13), // ShareClassSharesOutstanding
             TotalEmployees = reader.GetInt32(14), // TotalEmployees
             Phone = FromSqlSafeString(reader.GetString(15)), // Phone
             Address = FromSqlSafeString(reader.GetString(16)), // Address
@@ -382,7 +411,7 @@ namespace TradeSharp.PolygonIO
       lock (this)
       {
         ExecuteCommand(
-          $"INSERT OR REPLACE INTO {TableTickerDetails} (Ticker, TickerRoot, Type, Name, Description, Market, MarketCap, Locale, CurrencyName, PrimaryExchange, Cik, CompositeFigi, ShareClassFigi, ShareClassSharesOutstanding, TotalEmployees, PhoneNumber, Address, City, State, PostalCode, SicCode, SicDescription, HomepageUrl, LogoUrl, IconUrl, ListDate, RoundLot, WeightedSharesOutstanding) " +
+          $"INSERT OR REPLACE INTO {TableTickerDetails} (Ticker, TickerRoot, Type, Name, Description, Market, MarketCap, Locale, CurrencyName, PrimaryExchange, Cik, CompositeFigi, ShareClassFigi, ShareClassSharesOutstanding, TotalEmployees, PhoneNumber, Address, City, State, PostalCode, SicCode, SicDescription, HomepageUrl, LogoUrl, IconUrl, ListDate, RoundLot, WeightedSharesOutstanding, Active) " +
             $"VALUES (" +
               $"'{ToSqlSafeString(tickerDetails.Ticker)}'," +
               $"'{ToSqlSafeString(tickerDetails.TickerRoot)}'," +
@@ -411,7 +440,8 @@ namespace TradeSharp.PolygonIO
               $"'{ToSqlSafeString(tickerDetails.IconUrl)}', " +
               $"{tickerDetails.ListDate.ToBinary()}, " +
               $"{tickerDetails.RoundLot}, " +
-              $"'{tickerDetails.WeightedSharesOutstanding}'" +
+              $"'{tickerDetails.WeightedSharesOutstanding}', " +
+              $"{tickerDetails.Active}" +
             $")"
         );
       }

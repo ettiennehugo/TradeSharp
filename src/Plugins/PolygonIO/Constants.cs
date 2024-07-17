@@ -11,6 +11,10 @@ namespace TradeSharp.PolygonIO
     //general constants
     public const string Name = "PolygonIO";
     public const string Description = "Polygon.io data provider plugin";
+    public const string TagDataId = "PolygonIO";
+    public const int TagDataVersionMajor = 1;                //tag major version
+    public const int TagDataVersionMinor = 0;                //tag minor version
+    public const int TagDataVersionPatch = 0;                //tag patch version
 
     //configuration constants
     public const string CacheKey = "Cache";
@@ -21,6 +25,15 @@ namespace TradeSharp.PolygonIO
     public const int TapeNYSE = 1;
     public const int TapeAMEX = 2;
     public const int TapeNasdaq = 3;
+
+    //locale values used by exchanges
+    public const string LocaleGlobal = "global";
+
+    //asset classes returned for exchanges
+    public const string AssetClassStock = "stocks";
+    public const string AssetClassForex = "fx";
+    public const string AssetClassCrypto = "crypto";
+    public const string AssetClassOptions = "options";
 
     //ticker market constants
     public const string TickerMarketStocks = "stocks";

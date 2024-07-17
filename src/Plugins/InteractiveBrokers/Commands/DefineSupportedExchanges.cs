@@ -70,7 +70,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       bool definedAnExchange = false;
       ICountryService countryService = m_serviceHost.Host.Services.GetService<ICountryService>()!;
       foreach (Exchange exchange in Exchanges) {
-        var definedExchange = m_serviceHost.ExchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == exchange.Name.ToUpper() || e.Tag.ToUpper().Contains(exchange.Tag));
+        var definedExchange = m_serviceHost.ExchangeService.Items.FirstOrDefault((e) => e.Name.ToUpper() == exchange.Name.ToUpper() || e.TagStr.Contains(exchange.Tag));
         Data.Country? country = countryService.Items.FirstOrDefault((c) => c.IsoCode == exchange.CountryIsoCode);
 
         if (country == null)
@@ -82,7 +82,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
         if (definedExchange == null)
         {
           progress.LogInformation($"Defining exchange \"{exchange.Name}\"");
-          var newExchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributeSet, exchange.Tag, country!.Id, exchange.Name, exchange.TimeZone, 2, 1, 1, Guid.Empty);
+          var newExchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributeSet, exchange.Tag, country!.Id, exchange.Name, exchange.TimeZone, 2, 1, 1, Guid.Empty, string.Empty);
           m_serviceHost.Database.CreateExchange(newExchange);
           defineStockSessions(newExchange);
           definedAnExchange = true;
