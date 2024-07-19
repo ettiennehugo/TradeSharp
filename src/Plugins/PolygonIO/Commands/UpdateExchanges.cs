@@ -70,25 +70,40 @@ namespace TradeSharp.PolygonIO.Commands
               {
                 if (!string.IsNullOrEmpty(definedExchange.TagStr))
                 {
-									var polygonEntries = definedExchange.Tag.Entries.Where(e => e.Provider == Constants.TagDataId && e.Version.Major <= Constants.TagDataVersionMajor).ToList();
+									var polygonEntries = definedExchange.Tag.GetEntries(Constants.TagDataId, Constants.TagDataVersionMajor);
 									foreach (var polygonEntry in polygonEntries)
 									{
-										
-
-										//TODO - check if this exchange matches any of the Polygon exchange data retrieved.
-
-
+										try
+										{
+											var metaData = JsonSerializer.Deserialize<Exchange>(polygonEntry.Value);											
+											if (metaData != null)
+											{
+                        if (pioExchange.Mic == metaData.Mic && pioExchange.OperatingMic == metaData.OperatingMic)
+                        {
+													exchange = definedExchange;
+                          break;
+                        }
+                      }
+											else
+												progressDialog.LogWarning($"Failed to parse Polygon exchange data for {definedExchange.Name} (TagEntryVersion: {polygonEntry.Version.Major}.{polygonEntry.Version.Minor}.{polygonEntry.Version.Patch})");
+                    }
+										catch (Exception ex)
+                    {
+                      progressDialog.LogError($"Failed to parse Polygon exchange data for {definedExchange.Name} - {ex.Message} (TagEntryVersion: {polygonEntry.Version.Major}.{polygonEntry.Version.Minor}.{polygonEntry.Version.Patch})");
+                    }
 									}
                 }
               }
 						}
 
+						//create the exchange if nothing was found
             if (exchange == null)
             {
 							Country? country = m_countryService.Items.FirstOrDefault(c => c.IsoCode != Data.Country.InternationalIsoCode && c.CountryInfo.RegionInfo.TwoLetterISORegionName == pioExchange.Locale.ToUpper());
 							Guid countryId = country?.Id ?? Country.InternationalId;
               exchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributeSet, JsonSerializer.Serialize(pioExchange), countryId, pioExchange.Name, TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Data.Exchange.BlankLogoId, string.Empty);
 							exchange.Url = pioExchange.Url;
+              exchange.Tag.Update(Constants.TagDataId, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(pioExchange));
               m_exchangeService.Add(exchange);
               updateService = true;
             }
@@ -96,7 +111,8 @@ namespace TradeSharp.PolygonIO.Commands
 						{
 							//update the defined exchange with data from Polygon
 							exchange.Url = pioExchange.Url;
-							m_exchangeService.Update(exchange);
+              exchange.Tag.Update(Constants.TagDataId, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(pioExchange));
+              m_exchangeService.Update(exchange);
 							updateService = true;
 						}
           }

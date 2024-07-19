@@ -10,7 +10,6 @@ namespace TradeSharp.InteractiveBrokers.Commands
   /// </summary>
   public class InstrumentGroupMetaData
   {
-    public int Version { get; set; } = 0;
     public string Industry { get; set; } = "";
     public string Category { get; set; } = "";
     public string SubCategory { get; set; } = "";
@@ -22,7 +21,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
   public class CopyIBClassesToInstrumentGroups
   {
     //constants
-    public const int CurrentMetaDataVersion = 1;
+
 
     //enums
 
@@ -60,7 +59,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
       progress.Maximum += contracts.Count;
       progress.ShowAsync();
       
-      //define root group associated with the interactive borker classifications
+      //define root group associated with the interactive broker classifications
       InstrumentGroup? rootGroup = m_serviceHost.InstrumentGroupService.Items.FirstOrDefault((g) => g.Name == Constants.DefaultRootInstrumentGroupName && g.TagStr.Contains(Constants.DefaultRootInstrumentGroupTag));
       if (rootGroup == null)
       {
@@ -81,9 +80,8 @@ namespace TradeSharp.InteractiveBrokers.Commands
         //add instrument group to the list of defined instrument groups
         if (currentGroup != null && currentGroup.ParentId == rootGroup.Id)
         {
-          var metaData = deserializeMetaData(instrumentGroup.TagStr);
-          definedInstrumentGroups.Add(new Tuple<string, string, string, InstrumentGroup>(metaData!.Industry, metaData!.Category, metaData!.SubCategory, instrumentGroup));
-       
+          var metaData = deserializeMetaData(instrumentGroup, progress);
+          definedInstrumentGroups.Add(new Tuple<string, string, string, InstrumentGroup>(metaData!.Industry, metaData!.Category, metaData!.SubCategory, instrumentGroup));       
         }
         
         progress.Progress++;
@@ -154,12 +152,26 @@ namespace TradeSharp.InteractiveBrokers.Commands
 
     private string serializeMetaData(string industry, string category, string subCategory)
     {
-      return JsonSerializer.Serialize(new InstrumentGroupMetaData { Version = CurrentMetaDataVersion, Industry = industry, Category = category, SubCategory = subCategory });
+      Common.TagValue tagValue = new Common.TagValue();
+      tagValue.Update(Constants.TagDataId, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(new InstrumentGroupMetaData { Industry = industry, Category = category, SubCategory = subCategory }));
+      return tagValue.ToJson();
     }
 
-    private InstrumentGroupMetaData? deserializeMetaData(string value)
+    private InstrumentGroupMetaData? deserializeMetaData(InstrumentGroup instrumentGroup, IProgressDialog progressDialog)
     {
-      return JsonSerializer.Deserialize<InstrumentGroupMetaData>(value);
+      Common.TagEntry? entry = instrumentGroup.Tag.BestMatch(Constants.TagDataId, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch);
+
+      if (entry == null) return null;
+
+      try
+      {
+        return JsonSerializer.Deserialize<InstrumentGroupMetaData>(entry.Value);
+      }
+      catch (Exception e)
+      {
+        progressDialog.LogError($"Failed to deserialize meta-data for instrument group {instrumentGroup.Name}: {e.Message}");
+        return null;
+      }
     }
   }
 }

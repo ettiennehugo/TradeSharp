@@ -7,8 +7,8 @@ namespace TradeSharp.Common
   /// </summary>
   public class TagValue
   {
-		//constants
-
+    //constants
+    public const int IgnoreVersion = -1;
 
 		//enums
 
@@ -17,10 +17,10 @@ namespace TradeSharp.Common
 
 
 		//attributes
-
+    protected List<TagEntry> m_entries = new List<TagEntry>();
 
 		//properties
-		public List<TagEntry> Entries { get; } = new List<TagEntry>();
+		public IEnumerable<TagEntry> Entries { get => m_entries; }
 
     //constructors
     public static TagValue? From(string json)
@@ -44,9 +44,9 @@ namespace TradeSharp.Common
 
     public TagValue(TagValue value) //copy constructor
     {
-      Entries.Clear();
+      m_entries.Clear();
       foreach (var entry in value.Entries)
-        Entries.Add(entry);
+        m_entries.Add(entry);
     }
 
     //finalizers
@@ -61,44 +61,86 @@ namespace TradeSharp.Common
       return JsonSerializer.Serialize(this);
     }
 
-    bool HasEntry(string provider)
+    public bool HasEntry(string provider, int majorVersion, int minorVersion = IgnoreVersion, int patchVersion = IgnoreVersion)
     {
-      return Entries.FirstOrDefault((e) => e.Provider == provider) != null;
+      return Entries.FirstOrDefault((e) => e.Provider == provider && e.Version.Major == majorVersion && (minorVersion == IgnoreVersion || e.Version.Minor == minorVersion) && (e.Version.Patch == IgnoreVersion || e.Version.Patch == patchVersion)) != null;
     }
 
-    bool HasEntry(string provider, int majorVersion)
+    public TagEntry? GetEntry(string provider, int majorVersion, int minorVersion = IgnoreVersion, int patchVersion = IgnoreVersion)
     {
-      return Entries.FirstOrDefault((e) => e.Provider == provider && e.Version.Major == majorVersion) != null;
+      return Entries.FirstOrDefault((e) => e.Provider == provider && e.Version.Major == majorVersion && (minorVersion == IgnoreVersion || e.Version.Minor == minorVersion) && (e.Version.Patch == IgnoreVersion || e.Version.Patch == patchVersion));
     }
 
-    bool HasEntry(string provider, int majorVersion, int minorVersion)
+    public IList<TagEntry> GetEntries(string provider, int majorVersion, int minorVersion = IgnoreVersion, int patchVersion = IgnoreVersion)
     {
-      return Entries.FirstOrDefault((e) => e.Provider == provider && e.Version.Major == majorVersion && e.Version.Minor == minorVersion) != null;
+      return Entries.Where((e) => e.Provider == provider && e.Version.Major == majorVersion && (minorVersion == IgnoreVersion || e.Version.Minor == minorVersion) && (e.Version.Patch == IgnoreVersion || e.Version.Patch == patchVersion)).ToList();
     }
 
-    bool HasEntry(string provider, int majorVersion, int minorVersion, int patchVersion)
+    /// <summary>
+    /// Add/update the specified tag entry.
+    /// </summary>
+    public void Update(TagEntry entry)
     {
-      return Entries.FirstOrDefault((e) => e.Provider == provider && e.Version.Major == majorVersion && e.Version.Minor == minorVersion && e.Version.Patch == patchVersion) != null;
+      m_entries.RemoveAll((e) => e.Provider == entry.Provider && e.Version.Major == entry.Version.Major && e.Version.Minor == entry.Version.Minor && e.Version.Patch == entry.Version.Patch);
+      m_entries.Add(entry);
     }
 
-    TagEntry? GetEntry(string provider)
+    public void Update(string provider, int majorVersion, int minorVersion, int patchVersion, string value)
     {
-      return Entries.FirstOrDefault((e) => e.Provider == provider);
+      var tagEntry = new TagEntry();
+      tagEntry.Provider = provider;
+      tagEntry.Version.Major = majorVersion;
+      tagEntry.Version.Minor = minorVersion;
+      tagEntry.Version.Patch = patchVersion;
+      tagEntry.Value = value;
+      Update(tagEntry);
     }
 
-    TagEntry? GetEntry(string provider, int majorVersion)
+    /// <summary>
+    /// Remove all the entries matching the specified provider and version information.
+    /// </summary>
+    public void Remove(string provider, int majorVersion = IgnoreVersion, int minorVersion = IgnoreVersion, int patchVersion = IgnoreVersion)
     {
-      return Entries.FirstOrDefault((e) => e.Provider == provider && e.Version.Major == majorVersion);
+      m_entries.RemoveAll((e) => e.Provider == provider && (majorVersion == IgnoreVersion || e.Version.Major == majorVersion) && (minorVersion == IgnoreVersion || e.Version.Minor == minorVersion) && (e.Version.Patch == IgnoreVersion || e.Version.Patch == patchVersion));
     }
 
-    TagEntry? GetEntry(string provider, int majorVersion, int minorVersion)
+    /// <summary>
+    /// Finds the best matching entry based on the provider and version information supplied.
+    /// </summary>
+    public TagEntry? BestMatch(string provider, int majorVersion, int minorVersion = -1, int patchVersion = -1)
     {
-      return Entries.FirstOrDefault((e) => e.Provider == provider && e.Version.Major == majorVersion && e.Version.Minor == minorVersion);
-    }
+      TagEntry? result = null;
+      var matchingEntries = Entries.Where((e) => e.Provider == provider && e.Version.Major <= majorVersion).ToList();
 
-    TagEntry? GetEntry(string provider, int majorVersion, int minorVersion, int patchVersion)
-    {
-      return Entries.FirstOrDefault((e) => e.Provider == provider && e.Version.Major == majorVersion && e.Version.Minor == minorVersion && e.Version.Patch == patchVersion);
+      foreach (var entry in matchingEntries)
+      {
+        if (entry.Version.Major == majorVersion)
+        {
+          if (entry.Version.Minor == minorVersion)
+          {
+            if (entry.Version.Patch == patchVersion)
+            {
+              result = entry;
+              break;
+            }
+            else if (entry.Version.Patch < patchVersion)
+            {
+              result = entry;
+            }
+          }
+          else if (entry.Version.Minor < minorVersion)
+          {
+            result = entry;
+          }
+        }
+        else if (entry.Version.Major < majorVersion)
+        {
+          result = entry;
+        }
+      }
+
+      return result;
+
     }
   }
 }
