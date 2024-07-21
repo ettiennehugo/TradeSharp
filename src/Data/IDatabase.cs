@@ -657,6 +657,12 @@ namespace TradeSharp.Data
       MarketCap = MarketCapInvalid;
       FiftyTwoWeekHigh = FiftyTwoWeekHighInvalid;
       FiftyTwoWeekLow = FiftyTwoWeekLowInvalid;
+      Address = string.Empty;
+      City = string.Empty;
+      State = string.Empty;
+      Zip = string.Empty;
+      PhoneNumber = string.Empty;
+      Url = string.Empty;
     }
 
     //finalizers

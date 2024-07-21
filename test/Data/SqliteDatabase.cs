@@ -297,7 +297,7 @@ namespace TradeSharp.Data.Testing
         $"AND Name = '{instrumentGroup.Name}' " +
         $"AND Description = '{instrumentGroup.Description}' " +
         $"AND UserId = '{instrumentGroup.UserId}' " +
-        $"AND AlternateNames = '{string.Join(',',instrumentGroup.AlternateNames)}'")
+        $"AND AlternateNames = '{Common.Utilities.ToCsv<string>(instrumentGroup.AlternateNames)}'")
       , "Instrument group not persisted to database.");
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrumentGroupInstrument,
         $"InstrumentGroupId = '{instrumentGroup.Id.ToString()}' " +
@@ -316,7 +316,7 @@ namespace TradeSharp.Data.Testing
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
-        $"AND AlternateTickers = '{string.Join(',',m_instrument.AlternateTickers)}'")
+        $"AND AlternateTickers = '{Common.Utilities.ToCsv<string>(m_instrument.AlternateTickers)}'")
       , "Instrument not persisted to database.");
     }
 
@@ -337,6 +337,13 @@ namespace TradeSharp.Data.Testing
     {
       Stock stock = (Stock)m_instrument;
       stock.MarketCap = 1234567890;
+      stock.Address = "1234 Test St";
+      stock.City = "Test City";
+      stock.State = "TS";
+      stock.Zip = "12345";
+      stock.PhoneNumber = "123-456-7890";
+      stock.Url = "www.test.com";
+
       m_database.CreateInstrument(m_instrument);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
@@ -345,12 +352,18 @@ namespace TradeSharp.Data.Testing
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
-        $"AND AlternateTickers = '{string.Join(',', m_instrument.AlternateTickers)}'")
+        $"AND AlternateTickers = '{Common.Utilities.ToCsv<string>(m_instrument.AlternateTickers)}'")
       , "Instrument not persisted to database.");
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND MarketCap = 1234567890")
+        $"AND MarketCap = {stock.MarketCap.ToString("F0")} " +
+        $"AND Address = '{stock.Address}' " +
+        $"AND City = '{stock.City}' " +
+        $"AND State = '{stock.State}' " +
+        $"AND Zip = '{stock.Zip}' " +
+        $"AND PhoneNumber = '{stock.PhoneNumber}' " +
+        $"AND WebsiteUrl = '{stock.Url}'")
         , "Instrument MarketCap not persisted or not set correctly");
     }
 
@@ -520,6 +533,12 @@ namespace TradeSharp.Data.Testing
     {
       Stock stock = (Stock)m_instrument;
       stock.MarketCap = 1234567890;
+      stock.Address = "1234 Test St";
+      stock.City = "Test City";
+      stock.State = "TS";
+      stock.Zip = "12345";
+      stock.PhoneNumber = "123-456-7890";
+      stock.Url = "www.test.com";
       m_database.CreateInstrument(m_instrument);
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableInstrument,
@@ -528,20 +547,38 @@ namespace TradeSharp.Data.Testing
         $"AND Type = {(int)m_instrument.Type} " +
         $"AND PrimaryExchangeId = '{m_instrument.PrimaryExchangeId.ToString()}' " +
         $"AND InceptionDate = {m_instrument.InceptionDate.ToUniversalTime().ToBinary()} " +
-        $"AND AlternateTickers = '{string.Join(',', m_instrument.AlternateTickers)}'")
+        $"AND AlternateTickers = '{Common.Utilities.ToCsv<string>(m_instrument.AlternateTickers)}'")
       , "Instrument not persisted to database.");
 
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND MarketCap = 1234567890")
-        , "Stock attributes not persisted or not set correctly");
+        $"AND MarketCap = {stock.MarketCap.ToString("F0")} " +
+        $"AND Address = '{stock.Address}' " +
+        $"AND City = '{stock.City}' " +
+        $"AND State = '{stock.State}' " +
+        $"AND Zip = '{stock.Zip}' " +
+        $"AND PhoneNumber = '{stock.PhoneNumber}' " +
+        $"AND WebsiteUrl = '{stock.Url}'")
+        , "Instrument MarketCap not persisted or not set correctly");
 
       stock.MarketCap = 987654321;
+      stock.Address = "1234 New Test St";
+      stock.City = "New Test City";
+      stock.State = "NS";
+      stock.Zip = "54321";
+      stock.PhoneNumber = "098-765-4321";
+      stock.Url = "www.newtest.com";
       m_database.UpdateInstrument(m_instrument);
       Assert.AreEqual(1, m_database.GetRowCount(Data.SqliteDatabase.TableStock,
         $"Ticker = '{m_instrument.Ticker}' " +
-        $"AND MarketCap = 987654321")
-        , "Stock attributes not correctly updated");
+        $"AND MarketCap = {stock.MarketCap.ToString("F0")} " +
+        $"AND Address = '{stock.Address}' " +
+        $"AND City = '{stock.City}' " +
+        $"AND State = '{stock.State}' " +
+        $"AND Zip = '{stock.Zip}' " +
+        $"AND PhoneNumber = '{stock.PhoneNumber}' " +
+        $"AND WebsiteUrl = '{stock.Url}'")
+        , "Instrument MarketCap not persisted or not set correctly");
     }
 
     [TestMethod]

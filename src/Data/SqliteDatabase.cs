@@ -560,7 +560,7 @@ namespace TradeSharp.Data
               $"{instrument.PriceDecimals}, " +
               $"{instrument.MinimumMovement}, " +
               $"{instrument.BigPointValue}," +
-              $"'{ToSqlSafeString(string.Join(',', instrument.AlternateTickers))}'," +
+              $"'{ToSqlSafeString(Common.Utilities.ToCsv<string>(instrument.AlternateTickers))}'," +
               $"'{ToSqlSafeString(instrument.ExtendedProperties)}'" +
             $")"
         );
