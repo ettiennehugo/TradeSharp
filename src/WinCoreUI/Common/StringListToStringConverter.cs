@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml.Data;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.WinCoreUI.Common
 {
@@ -52,7 +53,15 @@ namespace TradeSharp.WinCoreUI.Common
     {
       if (value is string stringValue)
       {
-        return new List<string>(stringValue.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        if (targetType == typeof(List<string>))
+        {
+          return new List<string>(stringValue.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
+        
+        if (targetType == typeof(ObservableCollection<string>))
+        {
+          return new ObservableCollection<string>(stringValue.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
       }
 
       return value;

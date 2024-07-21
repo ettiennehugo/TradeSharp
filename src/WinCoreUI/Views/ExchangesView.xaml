@@ -13,6 +13,7 @@
     Loaded="Page_Loaded">
   <Page.Resources>
     <wcuic:CountryIdToDisplayNameConverter x:Key="CountryIdToDisplayNameConverter"/>
+    <wcuic:StringListToStringConverter x:Key="StringListToStringConverter"/>
   </Page.Resources>
   <Grid x:Name="m_main" RowDefinitions="Auto, 300, 2*">
     <StackPanel x:Name="m_commandBarLayout"  Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
@@ -33,17 +34,18 @@
             </DataTemplate>
           </winui:DataGridTemplateColumn.CellTemplate>
         </winui:DataGridTemplateColumn>
-        <winui:DataGridTextColumn x:Name="m_columnName" Width="Auto" Header="Name" Binding="{Binding Name}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnCountry" Width="Auto" Header="Country" Binding="{Binding CountryId, Converter={StaticResource CountryIdToDisplayNameConverter}}" IsReadOnly="True"/>
-        <winui:DataGridTextColumn x:Name="m_columnTimeZone" Width="Auto" Header="Time Zone" Binding="{Binding TimeZone}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnName" Width="Auto" Header="Name" Binding="{Binding Name, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnCountry" Width="Auto" Header="Country" Binding="{Binding CountryId, Converter={StaticResource CountryIdToDisplayNameConverter}, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnTimeZone" Width="Auto" Header="Time Zone" Binding="{Binding TimeZone, Mode=OneWay}" IsReadOnly="True"/>
         <winui:DataGridTemplateColumn x:Name="m_columnUrl" Width="Auto" Header="Website" IsReadOnly="True">
           <winui:DataGridTemplateColumn.CellTemplate>
             <DataTemplate>
-               <HyperlinkButton x:Name="m_columnUrlTemplate" NavigateUri="{Binding Url}" Content="{Binding Url}" Margin="5,5"/>
+              <HyperlinkButton x:Name="m_columnUrlTemplate" NavigateUri="{Binding Url}" Content="{Binding Url, Mode=OneWay}" Margin="5,5"/>
             </DataTemplate>
           </winui:DataGridTemplateColumn.CellTemplate>
         </winui:DataGridTemplateColumn>
-        <winui:DataGridTextColumn x:Name="m_columnTag" Width="Auto" MaxWidth="500" Header="Tag" Binding="{Binding TagStr}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_alternateNames" Width="Auto" MaxWidth="500" Header="Alternate Names" Binding="{Binding AlternateNames, Converter={StaticResource StringListToStringConverter}, Mode=OneWay}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnTag" Width="Auto" MaxWidth="500" Header="Tag" Binding="{Binding TagStr, Mode=OneWay}" IsReadOnly="True"/>
       </winui:DataGrid.Columns>
     </winui:DataGrid>
     <TabView x:Name="m_tabView" TabWidthMode="Equal" SelectedIndex="0" IsAddTabButtonVisible="False" Grid.Row="2" Grid.Column="0">

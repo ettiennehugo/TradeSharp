@@ -421,7 +421,7 @@ namespace TradeSharp.Data
 
     [ObservableProperty] private Guid m_countryId;
     [ObservableProperty] private string m_name;
-    public ObservableCollection<string> AlternateNames;
+    public ObservableCollection<string> AlternateNames { get; set; }
     [ObservableProperty] private TimeZoneInfo m_timeZone;
     [ObservableProperty] private int m_defaultPriceDecimals;
     public double DefaultPriceScale { get => 1 / Math.Pow(10, DefaultPriceDecimals); }
