@@ -147,7 +147,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
           m_progress.LogError($"Exchange {stock.PrimaryExch} not found for stock {stock.Symbol} and no valid alternatives from \"{stock.ValidExchanges}\"");
         else
         {
-          instrument = new Instrument(contract.Symbol, Instrument.DefaultAttributeSet, contract.Symbol, instrumentType, Array.Empty<string>(), name, name /*this is correct, see note above*/, inceptionDate, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchange.Id, secondaryExchangeIds, "");
+          instrument = new Instrument(contract.Symbol, Instrument.DefaultAttributes, contract.Symbol, instrumentType, Array.Empty<string>(), name, name /*this is correct, see note above*/, inceptionDate, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchange.Id, secondaryExchangeIds, "");
           m_serviceHost.InstrumentService.Add(instrument);
         }
       }

@@ -13,47 +13,47 @@ namespace TradeSharp.CoreUI.Testing.Services
     //constants
     static string[] csvWithIds = [
       "parentid,id,name,alternatenames,description,userid,tag,attributes,tickers",
-      "11111111-1111-1111-1111-111111111111,12121212-1212-1212-1212-121212121212,MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,0,0,",
-      "12121212-1212-1212-1212-121212121212,13131313-1313-1313-1313-131313131313,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,25,0,",
-      "12121212-1212-1212-1212-121212121212,14141414-1414-1414-1414-141414141414,Communication Services,\"Comms Services,Coms\",Communication Services,50,50,0,",
-      "13131313-1313-1313-1313-131313131313,15151515-1515-1515-1515-151515151515,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,2510,0,",
-      "14141414-1414-1414-1414-141414141414,16161616-1616-1616-1616-161616161616,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,5020,0,",
-      "13131313-1313-1313-1313-131313131313,17171717-1717-1717-1717-171717171717,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,251010,0,",
-      "14141414-1414-1414-1414-141414141414,18181818-1818-1818-1818-181818181818,Entertainment,Entertain,Entertainment,502020,502020,0,",
-      "18181818-1818-1818-1818-181818181818,19191919-1919-1919-1919-191919191919,Movies & Entertainment,\"Movies, Film Entertainment\",Movies & Entertainment,50202010,50202010,0,\"DISP,NFLX\"",
-      "18181818-1818-1818-1818-181818181818,21212121-2121-2121-2121-212121212121,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment\",Interactive Entertainment,50202020,50202020,0,\"MSFT,AAPL\"",
-      "17171717-1717-1717-1717-171717171717,22222222-2222-2222-2222-222222222222,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers\",Automotive Parts & Equipment,25101010,25101010,0,\"AUTO,PEP\"",
-      "17171717-1717-1717-1717-171717171717,23232323-2323-2323-2323-232323232323,Tires & Rubber,\"Tires+Rubber,TiresRubber\",Tires & Rubber,25101020,25101020,0,\"GOOD,MICH\""
+      "11111111-1111-1111-1111-111111111111,12121212-1212-1212-1212-121212121212,MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,\"{\"\"Entries\"\":[]}\",0,",
+      "12121212-1212-1212-1212-121212121212,13131313-1313-1313-1313-131313131313,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,\"{\"\"Entries\"\":[]}\",0,",
+      "12121212-1212-1212-1212-121212121212,14141414-1414-1414-1414-141414141414,Communication Services,\"Comms Services,Coms\",Communication Services,50,\"{\"\"Entries\"\":[]}\",0,",
+      "13131313-1313-1313-1313-131313131313,15151515-1515-1515-1515-151515151515,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,\"{\"\"Entries\"\":[]}\",0,",
+      "14141414-1414-1414-1414-141414141414,16161616-1616-1616-1616-161616161616,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,\"{\"\"Entries\"\":[]}\",0,",
+      "13131313-1313-1313-1313-131313131313,17171717-1717-1717-1717-171717171717,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,\"{\"\"Entries\"\":[]}\",0,",
+      "14141414-1414-1414-1414-141414141414,18181818-1818-1818-1818-181818181818,Entertainment,Entertain,Entertainment,502020,\"{\"\"Entries\"\":[]}\",0,",
+      "18181818-1818-1818-1818-181818181818,19191919-1919-1919-1919-191919191919,Movies & Entertainment,\"Movies, Film Entertainment\",Movies & Entertainment,50202010,\"{\"\"Entries\"\":[]}\",0,\"DISP,NFLX\"",
+      "18181818-1818-1818-1818-181818181818,21212121-2121-2121-2121-212121212121,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment\",Interactive Entertainment,50202020,\"{\"\"Entries\"\":[]}\",0,\"MSFT,AAPL\"",
+      "17171717-1717-1717-1717-171717171717,22222222-2222-2222-2222-222222222222,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers\",Automotive Parts & Equipment,25101010,\"{\"\"Entries\"\":[]}\",0,\"AUTO,PEP\"",
+      "17171717-1717-1717-1717-171717171717,23232323-2323-2323-2323-232323232323,Tires & Rubber,\"Tires+Rubber,TiresRubber\",Tires & Rubber,25101020,\"{\"\"Entries\"\":[]}\",0,\"GOOD,MICH\""
     ];
 
     static string[] csvWithNames = [
       "parentname,name,alternatenames,description,userid,tag,attributes,tickers",
-      ",MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,0,0,,",
-      "MSCI GICS,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,25,0,",
-      "MSCI Global Industry Classification Standard,Communication Services,\"Comms Services,Coms\",Communication Services,50,50,0,",
-      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,2510,0,",
-      "Coms,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,5020,0,",
-      "Auto & Comp,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,251010,0,",
-      "Media&Ent,Entertainment,Entertain,Entertainment,502020,502020,0,,",
-      "Entertainment,Movies & Entertainment,\"Movies, Film Entertainment\",Movies & Entertainment,50202010,50202010,0,\"DISP,NFLX\"",
-      "Entertain,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment\",Interactive Entertainment,50202020,50202020,0,\"MSFT,AAPL\"",
-      "Automotive Components,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers\",Automotive Parts & Equipment,25101010,25101010,0,\"AUTO,PEP\"",
-      "Automotive,Tires & Rubber,\"Tires+Rubber,TiresRubber\",Tires & Rubber,25101020,25101020,0,\"GOOD,MICH\""
+      ",MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,\"{\"\"Entries\"\":[]}\",0,",
+      "MSCI GICS,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,\"{\"\"Entries\"\":[]}\",0,",
+      "MSCI Global Industry Classification Standard,Communication Services,\"Comms Services,Coms\",Communication Services,50,\"{\"\"Entries\"\":[]}\",0,",
+      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,\"{\"\"Entries\"\":[]}\",0,",
+      "Coms,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,\"{\"\"Entries\"\":[]}\",0,",
+      "Auto & Comp,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,\"{\"\"Entries\"\":[]}\",0,",
+      "Media&Ent,Entertainment,Entertain,Entertainment,502020,\"{\"\"Entries\"\":[]}\",0,,",
+      "Entertainment,Movies & Entertainment,\"Movies, Film Entertainment\",Movies & Entertainment,50202010,\"{\"\"Entries\"\":[]}\",0,\"DISP,NFLX\"",
+      "Entertain,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment\",Interactive Entertainment,50202020,\"{\"\"Entries\"\":[]}\",0,\"MSFT,AAPL\"",
+      "Automotive Components,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers\",Automotive Parts & Equipment,25101010,\"{\"\"Entries\"\":[]}\",0,\"AUTO,PEP\"",
+      "Automotive,Tires & Rubber,\"Tires+Rubber,TiresRubber\",Tires & Rubber,25101020,\"{\"\"Entries\"\":[]}\",0,\"GOOD,MICH\""
     ];
 
     static string[] csvWithNamesAndUpdates = [
       "parentname,name,alternatenames,description,userid,tag,attributes,tickers",
-      ",MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,0,0,,",
-      "MSCI GICS,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,25,0,",
-      "MSCI Global Industry Classification Standard,Communication Services,\"Comms Services,Coms\",Communication Services,50,50,0,",
-      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,2510,0,",
-      "Coms,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,5020,0,",
-      "Auto & Comp,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,251010,0,",
-      "Media&Ent,Entertainment,Entertain,Entertainment,502020,502020,0,,",
-      "Entertainment,Movies & Entertainment,\"Movies, Film Entertainment, Films\",Movies & Entertainment,50202010,50202010,0,\"DISP,NFLX,ROKU\"",
-      "Entertain,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment, Home Entertainment\",Interactive Entertainment,50202020,50202020,0,\"MSFT,AAPL,GOOG\"",
-      "Automotive Components,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers, Car Parts\",Automotive Parts & Equipment,25101010,25101010,0,\"AUTO,PEP,ORLY\"",
-      "Automotive,Tires & Rubber,\"Tires+Rubber,TiresRubber,Automotive Rubber\",Tires & Rubber,25101020,25101020,0,\"GOOD,MICH,FIRE\""
+      ",MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,\"{\"\"Entries\"\":[]}\",0,",
+      "MSCI GICS,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,\"{\"\"Entries\"\":[]}\",0,",
+      "MSCI Global Industry Classification Standard,Communication Services,\"Comms Services,Coms\",Communication Services,50,\"{\"\"Entries\"\":[]}\",0,",
+      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,\"{\"\"Entries\"\":[]}\",0,",
+      "Coms,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,\"{\"\"Entries\"\":[]}\",0,",
+      "Auto & Comp,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,\"{\"\"Entries\"\":[]}\",0,",
+      "Media&Ent,Entertainment,Entertain,Entertainment,502020,\"{\"\"Entries\"\":[]}\",0,,",
+      "Entertainment,Movies & Entertainment,\"Movies, Film Entertainment, Films\",Movies & Entertainment,50202010,\"{\"\"Entries\"\":[]}\",0,\"DISP,NFLX,ROKU\"",
+      "Entertain,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment, Home Entertainment\",Interactive Entertainment,50202020,\"{\"\"Entries\"\":[]}\",0,\"MSFT,AAPL,GOOG\"",
+      "Automotive Components,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers, Car Parts\",Automotive Parts & Equipment,25101010,\"{\"\"Entries\"\":[]}\",0,\"AUTO,PEP,ORLY\"",
+      "Automotive,Tires & Rubber,\"Tires+Rubber,TiresRubber,Automotive Rubber\",Tires & Rubber,25101020,\"{\"\"Entries\"\":[]}\",0,\"GOOD,MICH,FIRE\""
     ];
 
     static private string[] jsonWithNames =
@@ -64,7 +64,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "  \"AlternateNames\":[\"MSCI GICS\",\"MSCI GICS Standard\"],",
       "  \"Description\": \"MSCI Global Industry Classification Standard\",",
       "  \"UserId\": \"0\",",
-      "  \"Tag\": \"0\",",
+      "  \"Tag\": {\"Entries\":[]},",
       "  \"Attributes\": \"0\",",
       "  \"Instruments\": [],",
       "  \"Children\": ",
@@ -74,7 +74,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "      \"AlternateNames\":[\"Comms Services\", \"Coms\"],",
       "      \"Description\": \"Communication Services\",",
       "      \"UserId\": \"50\",",
-      "      \"Tag\": \"50\",",
+      "      \"Tag\": {\"Entries\":[]},",
       "      \"Attributes\": \"0\",",
       "      \"Instruments\": [],",
       "      \"Children\": ",
@@ -84,7 +84,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "          \"AlternateNames\":[\"Media \u0026 Ent\",\"Media\u0026Ent\"],",
       "          \"Description\": \"Media \u0026 Entertainment\",",
       "          \"UserId\": \"5020\",",
-      "          \"Tag\": \"5020\",",
+      "          \"Tag\": {\"Entries\":[]},",
       "          \"Attributes\": \"0\",",
       "          \"Instruments\": [],",
       "          \"Children\":",
@@ -94,7 +94,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "              \"AlternateNames\":[\"Entertain\"],",
       "              \"Description\": \"Entertainment\",",
       "              \"UserId\": \"502020\",",
-      "              \"Tag\": \"502020\",",
+      "              \"Tag\": {\"Entries\":[]},",
       "              \"Attributes\": \"0\",",
       "              \"Instruments\": [],",
       "              \"Children\": [",
@@ -103,7 +103,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Movies\",\"Film Entertainment\"],",
       "                  \"Description\": \"Movies \u0026 Entertainment\",",
       "                  \"UserId\": \"50202010\",",
-      "                  \"Tag\": \"50202010\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"DISP\",\"NFLX\"],",
       "                  \"Children\": []",
@@ -113,7 +113,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Inter Home Ent\",\"Interactive Entertainment\"],",
       "                  \"Description\": \"Interactive Entertainment\",",
       "                  \"UserId\": \"50202020\",",
-      "                  \"Tag\": \"50202020\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"MSFT\",\"AAPL\"],",
       "                  \"Children\": []",
@@ -129,7 +129,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "      \"AlternateNames\":[\"Consumer Disc\",\"Con Disc\"],",
       "      \"Description\": \"Consumer Discretionary\",",
       "      \"UserId\": \"25\",",
-      "      \"Tag\": \"25\",",
+      "      \"Tag\": {\"Entries\":[]},",
       "      \"Attributes\": \"0\",",
       "      \"Instruments\": [],",
       "      \"Children\": ",
@@ -139,7 +139,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "          \"AlternateNames\":[\"Auto \u0026 Comp\",\"Auto\u0026Comp\"],",
       "          \"Description\": \"Automobiles \u0026 Components\",",
       "          \"UserId\": \"2510\",",
-      "          \"Tag\": \"2510\",",
+      "          \"Tag\": {\"Entries\":[]},",
       "          \"Attributes\": \"0\",",
       "          \"Instruments\": [],",
       "          \"Children\": ",
@@ -149,7 +149,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "              \"AlternateNames\":[\"Automotive Components\",\"Automotive\"],",
       "              \"Description\": \"Automobile Components\",",
       "              \"UserId\": \"251010\",",
-      "              \"Tag\": \"251010\",",
+      "              \"Tag\": {\"Entries\":[]},",
       "              \"Attributes\": \"0\",",
       "              \"Instruments\": [],",
       "              \"Children\": ",
@@ -159,7 +159,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Auto Parts\",\"Auto Parts Suppliers\"],",
       "                  \"Description\": \"Automotive Parts \u0026 Equipment\",",
       "                  \"UserId\": \"25101010\",",
-      "                  \"Tag\": \"25101010\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"AUTO\",\"PEP\"],",
       "                  \"Children\": []",
@@ -169,7 +169,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Tires+Rubber\",\"TiresRubber\"],",
       "                  \"Description\": \"Tires \u0026 Rubber\",",
       "                  \"UserId\": \"25101020\",",
-      "                  \"Tag\": \"25101020\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"GOOD\",\"MICH\"],",
       "                  \"Children\": []",
@@ -193,7 +193,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "  \"AlternateNames\":[\"MSCI GICS\",\"MSCI GICS Standard\"],",
       "  \"Description\": \"MSCI Global Industry Classification Standard\",",
       "  \"UserId\": \"0\",",
-      "  \"Tag\": \"0\",",
+      "  \"Tag\": {\"Entries\":[]},",
       "  \"Attributes\": \"0\",",
       "  \"Instruments\": [],",
       "  \"Children\": ",
@@ -203,7 +203,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "      \"AlternateNames\":[\"Comms Services\", \"Coms\"],",
       "      \"Description\": \"Communication Services\",",
       "      \"UserId\": \"50\",",
-      "      \"Tag\": \"50\",",
+      "      \"Tag\": {\"Entries\":[]},",
       "      \"Attributes\": \"0\",",
       "      \"Instruments\": [],",
       "      \"Children\": ",
@@ -213,7 +213,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "          \"AlternateNames\":[\"Media \u0026 Ent\",\"Media\u0026Ent\"],",
       "          \"Description\": \"Media \u0026 Entertainment\",",
       "          \"UserId\": \"5020\",",
-      "          \"Tag\": \"5020\",",
+      "          \"Tag\": {\"Entries\":[]},",
       "          \"Attributes\": \"0\",",
       "          \"Instruments\": [],",
       "          \"Children\":",
@@ -223,7 +223,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "              \"AlternateNames\":[\"Entertain\"],",
       "              \"Description\": \"Entertainment\",",
       "              \"UserId\": \"502020\",",
-      "              \"Tag\": \"502020\",",
+      "              \"Tag\": {\"Entries\":[]},",
       "              \"Attributes\": \"0\",",
       "              \"Instruments\": [],",
       "              \"Children\": [",
@@ -232,7 +232,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Movies\",\"Film Entertainment\",\"Films\"],",
       "                  \"Description\": \"Movies \u0026 Entertainment\",",
       "                  \"UserId\": \"50202010\",",
-      "                  \"Tag\": \"50202010\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"DISP\",\"NFLX\",\"ROKU\"],",
       "                  \"Children\": []",
@@ -242,7 +242,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Inter Home Ent\",\"Interactive Entertainment\",\"Home Entertainment\"],",
       "                  \"Description\": \"Interactive Entertainment\",",
       "                  \"UserId\": \"50202020\",",
-      "                  \"Tag\": \"50202020\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"MSFT\",\"AAPL\",\"GOOG\"],",
       "                  \"Children\": []",
@@ -258,7 +258,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "      \"AlternateNames\":[\"Consumer Disc\",\"Con Disc\"],",
       "      \"Description\": \"Consumer Discretionary\",",
       "      \"UserId\": \"25\",",
-      "      \"Tag\": \"25\",",
+      "      \"Tag\": {\"Entries\":[]},",
       "      \"Attributes\": \"0\",",
       "      \"Instruments\": [],",
       "      \"Children\": ",
@@ -268,7 +268,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "          \"AlternateNames\":[\"Auto \u0026 Comp\",\"Auto\u0026Comp\"],",
       "          \"Description\": \"Automobiles \u0026 Components\",",
       "          \"UserId\": \"2510\",",
-      "          \"Tag\": \"2510\",",
+      "          \"Tag\": {\"Entries\":[]},",
       "          \"Attributes\": \"0\",",
       "          \"Instruments\": [],",
       "          \"Children\": ",
@@ -278,7 +278,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "              \"AlternateNames\":[\"Automotive Components\",\"Automotive\"],",
       "              \"Description\": \"Automobile Components\",",
       "              \"UserId\": \"251010\",",
-      "              \"Tag\": \"251010\",",
+      "              \"Tag\": {\"Entries\":[]},",
       "              \"Attributes\": \"0\",",
       "              \"Instruments\": [],",
       "              \"Children\": ",
@@ -288,7 +288,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Auto Parts\",\"Auto Parts Suppliers\",\"Car Parts\"],",
       "                  \"Description\": \"Automotive Parts \u0026 Equipment\",",
       "                  \"UserId\": \"25101010\",",
-      "                  \"Tag\": \"25101010\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"AUTO\",\"PEP\",\"ORLY\"],",
       "                  \"Children\": []",
@@ -298,7 +298,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Tires+Rubber\",\"TiresRubber\",\"Automotive Rubber\"],",
       "                  \"Description\": \"Tires \u0026 Rubber\",",
       "                  \"UserId\": \"25101020\",",
-      "                  \"Tag\": \"25101020\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"GOOD\",\"MICH\",\"FIRE\"],",
       "                  \"Children\": []",
@@ -323,7 +323,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "  \"AlternateNames\":[\"MSCI GICS\",\"MSCI GICS Standard\"],",
       "  \"Description\": \"MSCI Global Industry Classification Standard\",",
       "  \"UserId\": \"0\",",
-      "  \"Tag\": \"0\",",
+      "  \"Tag\": {\"Entries\":[]},",
       "  \"Attributes\": \"0\",",
       "  \"Instruments\": [],",
       "  \"Children\": ",
@@ -334,7 +334,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "      \"AlternateNames\":[\"Comms Services\", \"Coms\"],",
       "      \"Description\": \"Communication Services\",",
       "      \"UserId\": \"50\",",
-      "      \"Tag\": \"50\",",
+      "      \"Tag\": {\"Entries\":[]},",
       "      \"Attributes\": \"0\",",
       "      \"Instruments\": [],",
       "      \"Children\": ",
@@ -345,7 +345,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "          \"AlternateNames\":[\"Media \u0026 Ent\",\"Media\u0026Ent\"],",
       "          \"Description\": \"Media \u0026 Entertainment\",",
       "          \"UserId\": \"5020\",",
-      "          \"Tag\": \"5020\",",
+      "          \"Tag\": {\"Entries\":[]},",
       "          \"Attributes\": \"0\",",
       "          \"Instruments\": [],",
       "          \"Children\":",
@@ -356,7 +356,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "              \"AlternateNames\":[\"Entertain\"],",
       "              \"Description\": \"Entertainment\",",
       "              \"UserId\": \"502020\",",
-      "              \"Tag\": \"502020\",",
+      "              \"Tag\": {\"Entries\":[]},",
       "              \"Attributes\": \"0\",",
       "              \"Instruments\": [],",
       "              \"Children\": [",
@@ -366,7 +366,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Movies\",\"Film Entertainment\"],",
       "                  \"Description\": \"Movies \u0026 Entertainment\",",
       "                  \"UserId\": \"50202010\",",
-      "                  \"Tag\": \"50202010\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"DISP\",\"NFLX\"],",
       "                  \"Children\": []",
@@ -377,7 +377,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Inter Home Ent\",\"Interactive Entertainment\"],",
       "                  \"Description\": \"Interactive Entertainment\",",
       "                  \"UserId\": \"50202020\",",
-      "                  \"Tag\": \"50202020\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"MSFT\",\"AAPL\"],",
       "                  \"Children\": []",
@@ -394,7 +394,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "      \"AlternateNames\":[\"Consumer Disc\",\"Con Disc\"],",
       "      \"Description\": \"Consumer Discretionary\",",
       "      \"UserId\": \"25\",",
-      "      \"Tag\": \"25\",",
+      "      \"Tag\": {\"Entries\":[]},",
       "      \"Attributes\": \"0\",",
       "      \"Instruments\": [],",
       "      \"Children\": ",
@@ -405,7 +405,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "          \"AlternateNames\":[\"Auto \u0026 Comp\",\"Auto\u0026Comp\"],",
       "          \"Description\": \"Automobiles \u0026 Components\",",
       "          \"UserId\": \"2510\",",
-      "          \"Tag\": \"2510\",",
+      "          \"Tag\": {\"Entries\":[]},",
       "          \"Attributes\": \"0\",",
       "          \"Instruments\": [],",
       "          \"Children\": ",
@@ -416,7 +416,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "              \"AlternateNames\":[\"Automotive Components\",\"Automotive\"],",
       "              \"Description\": \"Automobile Components\",",
       "              \"UserId\": \"251010\",",
-      "              \"Tag\": \"251010\",",
+      "              \"Tag\": {\"Entries\":[]},",
       "              \"Attributes\": \"0\",",
       "              \"Instruments\": [],",
       "              \"Children\": ",
@@ -427,7 +427,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Auto Parts\",\"Auto Parts Suppliers\"],",
       "                  \"Description\": \"Automotive Parts \u0026 Equipment\",",
       "                  \"UserId\": \"25101010\",",
-      "                  \"Tag\": \"25101010\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"AUTO\",\"PEP\"],",
       "                  \"Children\": []",
@@ -438,7 +438,7 @@ namespace TradeSharp.CoreUI.Testing.Services
       "                  \"AlternateNames\":[\"Tires+Rubber\",\"TiresRubber\"],",
       "                  \"Description\": \"Tires \u0026 Rubber\",",
       "                  \"UserId\": \"25101020\",",
-      "                  \"Tag\": \"25101020\",",
+      "                  \"Tag\": {\"Entries\":[]},",
       "                  \"Attributes\": \"0\",",
       "                  \"Instruments\": [\"GOOD\",\"MICH\"],",
       "                  \"Children\": []",
@@ -507,23 +507,23 @@ namespace TradeSharp.CoreUI.Testing.Services
       Debugging.InstrumentGroupImport = true;
 
       //create the test country, exchange, and instruments
-      m_country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, "TagValue", "en-US");
+      m_country = new Country(Guid.NewGuid(), Country.DefaultAttributes, "TagValue", "en-US");
       m_timeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-      m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "TagValue", m_country.Id, "TestExchange", m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
+      m_exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributes, "TagValue", m_country.Id, "TestExchange", Array.Empty<string>(), m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
 
       //create the test stock instruments and instrument groups
-      m_msft = new Stock("MSFT", Instrument.DefaultAttributeSet, "MSFT", InstrumentType.Stock, Array.Empty<string>(), "Microsoft", "Microsoft Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_aapl = new Stock("AAPL", Instrument.DefaultAttributeSet, "AAPL", InstrumentType.Stock, Array.Empty<string>(), "Apple", "Apple Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_goog = new Stock("GOOG", Instrument.DefaultAttributeSet, "GOOG", InstrumentType.Stock, Array.Empty<string>(), "Google", "Google Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_disp = new Stock("DISP", Instrument.DefaultAttributeSet, "DISP", InstrumentType.Stock, Array.Empty<string>(), "Disney", "Disney Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_nflx = new Stock("NFLX", Instrument.DefaultAttributeSet, "NFLX", InstrumentType.Stock, Array.Empty<string>(), "Netflix", "Netflix Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_roku = new Stock("ROKU", Instrument.DefaultAttributeSet, "ROKU", InstrumentType.Stock, Array.Empty<string>(), "Roku", "Roku Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_auto = new Stock("AUTO", Instrument.DefaultAttributeSet, "AUTO", InstrumentType.Stock, Array.Empty<string>(), "Autozone", "Autozone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_pep = new Stock("PEP", Instrument.DefaultAttributeSet, "PEP", InstrumentType.Stock, Array.Empty<string>(), "Pep Boys", "Pep Boys Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_orly = new Stock("ORLY", Instrument.DefaultAttributeSet, "ORLY", InstrumentType.Stock, Array.Empty<string>(), "O'Reiley", "O'Reiley Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_good = new Stock("GOOD", Instrument.DefaultAttributeSet, "GOOD", InstrumentType.Stock, Array.Empty<string>(), "Goodyear", "Goodyear Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_mich = new Stock("MICH", Instrument.DefaultAttributeSet, "MICH", InstrumentType.Stock, Array.Empty<string>(), "Michelin", "Michelin Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
-      m_fire = new Stock("FIRE", Instrument.DefaultAttributeSet, "FIRE", InstrumentType.Stock, Array.Empty<string>(), "Firestone", "Firestone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_msft = new Stock("MSFT", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Microsoft", "Microsoft Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_aapl = new Stock("AAPL", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Apple", "Apple Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_goog = new Stock("GOOG", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Google", "Google Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_disp = new Stock("DISP", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Disney", "Disney Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_nflx = new Stock("NFLX", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Netflix", "Netflix Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_roku = new Stock("ROKU", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Roku", "Roku Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_auto = new Stock("AUTO", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Autozone", "Autozone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_pep = new Stock("PEP", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Pep Boys", "Pep Boys Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_orly = new Stock("ORLY", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "O'Reiley", "O'Reiley Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_good = new Stock("GOOD", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Goodyear", "Goodyear Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_mich = new Stock("MICH", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Michelin", "Michelin Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
+      m_fire = new Stock("FIRE", Instrument.DefaultAttributes, TagValue.EmptyJson, InstrumentType.Stock, Array.Empty<string>(), "Firestone", "Firestone Corporation", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty);
 
       m_instruments = new List<Instrument>();
       m_instruments =
@@ -542,17 +542,17 @@ namespace TradeSharp.CoreUI.Testing.Services
         m_fire,
       ];
 
-      m_msciGics = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "0", InstrumentGroup.InstrumentGroupRoot, "MSCI Global Industry Classification Standard", new List<string> { "MSCI GICS", "MSCI GICS Standard" }, "MSCI Global Industry Classification Standard", "0", Array.Empty<string>());
-      m_communicationServices = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50", m_msciGics.Id, "Communication Services", new List<string> { "Coms", "Comms Services" }, "Communication Services", "50", Array.Empty<string>());
-      m_mediaAndEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "5020", m_communicationServices.Id, "Media & Entertainment", new List<string> { "Media & Ent", "Media&Ent" }, "Media & Entertainment", "5020", Array.Empty<string>());
-      m_entertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "502020", m_mediaAndEntertainment.Id, "Entertainment", new List<string> { "Entertain" }, "Entertainment", "502020", Array.Empty<string>());
-      m_moviesEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202010", m_entertainment.Id, "Movies & Entertainment", new List<string> { "Movies", "Film Entertainment" }, "Movies & Entertainment", "50202010", new List<string> { m_disp.Ticker, m_nflx.Ticker });
-      m_interactiveHomeEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "50202020", m_entertainment.Id, "Interactive Home Entertainment", new List<string> { "Inter Home Ent", "Interactive Entertainment" }, "Interactive Entertainment", "50202020", new List<string> { m_msft.Ticker, m_aapl.Ticker });
-      m_consumerDiscretionary = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25", m_msciGics.Id, "Consumer Discretionary", new List<string> { "Consumer Disc", "Con Disc" }, "Consumer Discretionary", "25", Array.Empty<string>());
-      m_automobilesAndComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "2510", m_consumerDiscretionary.Id, "Automobiles & Components", new List<string> { "Auto & Comp", "Auto&Comp" }, "Automobiles & Components", "2510", Array.Empty<string>());
-      m_automobileComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "251010", m_automobilesAndComponents.Id, "Automobile Components", new List<string> { "Automotive Components", "Automotive" }, "Automobile Components", "251010", Array.Empty<string>());
-      m_automotivePartsAndEquipment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101010", m_automobileComponents.Id, "Automotive Parts & Equipment", new List<string> { "Auto Parts", "Auto Parts Suppliers" }, "Automotive Parts & Equipment", "25101010", new List<string> { m_auto.Ticker, m_pep.Ticker });
-      m_tiresAndRubber = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, "25101020", m_automobileComponents.Id, "Tires & Rubber", new List<string> { "Tires+Rubber", "TiresRubber" }, "Tires & Rubber", "25101020", new List<string> { m_good.Ticker, m_mich.Ticker });
+      m_msciGics = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, InstrumentGroup.InstrumentGroupRoot, "MSCI Global Industry Classification Standard", new List<string> { "MSCI GICS", "MSCI GICS Standard" }, "MSCI Global Industry Classification Standard", "0", Array.Empty<string>());
+      m_communicationServices = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_msciGics.Id, "Communication Services", new List<string> { "Coms", "Comms Services" }, "Communication Services", "50", Array.Empty<string>());
+      m_mediaAndEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_communicationServices.Id, "Media & Entertainment", new List<string> { "Media & Ent", "Media&Ent" }, "Media & Entertainment", "5020", Array.Empty<string>());
+      m_entertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_mediaAndEntertainment.Id, "Entertainment", new List<string> { "Entertain" }, "Entertainment", "502020", Array.Empty<string>());
+      m_moviesEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_entertainment.Id, "Movies & Entertainment", new List<string> { "Movies", "Film Entertainment" }, "Movies & Entertainment", "50202010", new List<string> { m_disp.Ticker, m_nflx.Ticker });
+      m_interactiveHomeEntertainment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_entertainment.Id, "Interactive Home Entertainment", new List<string> { "Inter Home Ent", "Interactive Entertainment" }, "Interactive Entertainment", "50202020", new List<string> { m_msft.Ticker, m_aapl.Ticker });
+      m_consumerDiscretionary = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_msciGics.Id, "Consumer Discretionary", new List<string> { "Consumer Disc", "Con Disc" }, "Consumer Discretionary", "25", Array.Empty<string>());
+      m_automobilesAndComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_consumerDiscretionary.Id, "Automobiles & Components", new List<string> { "Auto & Comp", "Auto&Comp" }, "Automobiles & Components", "2510", Array.Empty<string>());
+      m_automobileComponents = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_automobilesAndComponents.Id, "Automobile Components", new List<string> { "Automotive Components", "Automotive" }, "Automobile Components", "251010", Array.Empty<string>());
+      m_automotivePartsAndEquipment = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_automobileComponents.Id, "Automotive Parts & Equipment", new List<string> { "Auto Parts", "Auto Parts Suppliers" }, "Automotive Parts & Equipment", "25101010", new List<string> { m_auto.Ticker, m_pep.Ticker });
+      m_tiresAndRubber = new InstrumentGroup(Guid.NewGuid(), (Attributes)0, TagValue.EmptyJson, m_automobileComponents.Id, "Tires & Rubber", new List<string> { "Tires+Rubber", "TiresRubber" }, "Tires & Rubber", "25101020", new List<string> { m_good.Ticker, m_mich.Ticker });
       m_instrumentGroups = new List<InstrumentGroup>();
       m_instrumentGroups =
       [
@@ -675,7 +675,7 @@ namespace TradeSharp.CoreUI.Testing.Services
         Assert.IsTrue(listEquals(expectedGroup.AlternateNames, importedGroup.AlternateNames), $"AlternateNames for {importedGroup.Name} is not correct.");
         Assert.AreEqual(expectedGroup.Description, importedGroup.Description, $"Description for {importedGroup.Name} is not correct.");
         Assert.AreEqual(expectedGroup.UserId, importedGroup.UserId, $"UserId for {importedGroup.Name} is not correct.");
-        Assert.AreEqual(expectedGroup.Tag, importedGroup.Tag, $"Tag for {importedGroup.Name} is not correct.");
+        Assert.AreEqual(expectedGroup.TagStr, importedGroup.TagStr, $"Tag for {importedGroup.Name} is not correct.");
         Assert.AreEqual(expectedGroup.AttributeSet, importedGroup.AttributeSet, $"Attributes for {importedGroup.Name} is not correct.");
         Assert.IsTrue(listEquals(expectedGroup.Instruments, importedGroup.Instruments), $"Instruments for {importedGroup.Name} is not correct.");
       }

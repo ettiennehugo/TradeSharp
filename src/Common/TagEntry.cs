@@ -22,6 +22,7 @@ namespace TradeSharp.Common
 		//properties
 		public string Provider { get; set; } = string.Empty;
 		public TagEntryVersion Version { get; set; } = new TagEntryVersion();
+		public DateTime LastUpdated { get; set; } = DateTime.MinValue;
 
 		[JsonConverter(typeof(RawJsonConverter))]			//value field should contain raw JSON data
 		public string Value { get; set; } = string.Empty;

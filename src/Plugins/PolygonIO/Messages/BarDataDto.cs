@@ -8,22 +8,22 @@ namespace TradeSharp.PolygonIO.Messages
   public class BarDataDto
   {
     [JsonPropertyName("o")]
-    public decimal OpenPrice { get; set; }
+    public double Open { get; set; }
 
     [JsonPropertyName("c")]
-    public decimal ClosePrice { get; set; }
+    public double Close { get; set; }
 
     [JsonPropertyName("h")]
-    public decimal HighPrice { get; set; }
+    public double High { get; set; }
 
     [JsonPropertyName("l")]
-    public decimal LowPrice { get; set; }
+    public double Low { get; set; }
 
     [JsonPropertyName("v")]
-    public decimal Volume { get; set; }
+    public double Volume { get; set; }
 
     [JsonPropertyName("vw")]
-    public decimal VWAP { get; set; }
+    public double VWAP { get; set; }
 
     [JsonPropertyName("t")]
     public long Timestamp { get; set; }

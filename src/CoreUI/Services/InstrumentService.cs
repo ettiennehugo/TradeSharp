@@ -154,7 +154,7 @@ namespace TradeSharp.CoreUI.Services
     public void Refresh()
     {
       //need to lock the refresh in case the cache is being updated by another thread
-      lock(this)
+      lock (this)
       {
         LoadedState = Common.LoadedState.Loading;
         Items.Clear();
@@ -271,7 +271,7 @@ namespace TradeSharp.CoreUI.Services
               InstrumentType type = InstrumentType.None;
               string? typeStr = (string?)(fileInstrumentJson![tokenJsonType]!.AsValue().Deserialize(typeof(string)));
               if ((typeStr == null || !Enum.TryParse(typeStr, out type)) && Debugging.ImportExport) m_logger.LogError($"Failed to parse instrument type for instrument \"{ticker}\", defaulting to None.");
-              string tag = (string?)(fileInstrumentJson![tokenJsonTag]!.AsValue().Deserialize(typeof(string))) ?? ticker;
+              string tag = fileInstrumentJson![tokenJsonTag]!.ToJsonString() ?? TagValue.EmptyJson;
               string? exchangeStr = (string?)(fileInstrumentJson![tokenJsonExchange]!.AsValue().Deserialize(typeof(string)));
               DateTime inceptionDate = Constants.DefaultMinimumDateTime;
               string? inceptionDateStr = fileInstrumentJson.ContainsKey(tokenJsonInceptionDate1) ? (string?)(fileInstrumentJson![tokenJsonInceptionDate1]!.AsValue().Deserialize(typeof(string))) : null;
@@ -290,7 +290,7 @@ namespace TradeSharp.CoreUI.Services
               if (marketCap == 0) marketCap = fileInstrumentJson.ContainsKey(tokenJsonMarketCap4) ? (double?)(fileInstrumentJson[tokenJsonMarketCap4]!.AsValue().Deserialize(typeof(double))) ?? 0 : 0;
 
               //attribute can be parsed a string or integer or integer string value ("3") - we support conversion of all three cases
-              Attributes attributes = InstrumentGroup.DefaultAttributeSet;
+              Attributes attributes = InstrumentGroup.DefaultAttributes;
               JsonNode? attributesNode = fileInstrumentJson.ContainsKey(tokenJsonAttributes) ? fileInstrumentJson[tokenJsonAttributes] : null;
               if (attributesNode != null)
               {
@@ -318,7 +318,24 @@ namespace TradeSharp.CoreUI.Services
                 if (Guid.TryParse(exchangeStr, out Guid exchangeId))
                   primaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == exchangeId);
                 else
+                {
                   primaryExchange = m_exchangeService.Items.FirstOrDefault(e => e.Name.ToLower() == exchangeStr!.ToLower() || e.TagStr.Contains(exchangeStr));
+
+                  if (primaryExchange == null)
+                  {
+                    foreach (var exchangeItem in m_exchangeService.Items)
+                    {
+                      foreach (var alternateName in exchangeItem.AlternateNames)
+                        if (alternateName.ToLower() == exchangeStr.ToLower())
+                        {
+                          primaryExchange = exchangeItem;
+                          break;
+                        }
+
+                      if (primaryExchange != null) break;
+                    }
+                  }
+                }
               }
 
               if (primaryExchange == null)
@@ -348,6 +365,22 @@ namespace TradeSharp.CoreUI.Services
                     {
                       //try to match the secondary exchange using it's name or tag
                       Exchange? definedExchange = m_exchangeService.Items.FirstOrDefault(e => e.Name.ToLower() == secondaryExchangeStr.ToLower() || e.TagStr.Contains(secondaryExchangeStr));
+
+                      if (definedExchange == null)
+                      {
+                        foreach (var exchangeItem in m_exchangeService.Items)
+                        {
+                          foreach (var alternateName in exchangeItem.AlternateNames)
+                            if (alternateName.ToLower() == secondaryExchangeStr.ToLower())
+                            {
+                              definedExchange = exchangeItem;
+                              break;
+                            }
+
+                          if (definedExchange != null) break;
+                        }
+                      }
+
                       if (definedExchange != null)
                         secondaryExchanges.Add(definedExchange.Id);
                       else
@@ -477,7 +510,7 @@ namespace TradeSharp.CoreUI.Services
             string exchange = "";
             DateTime inceptionDate = DateTime.MinValue;
             string tag = "";
-            Attributes attributes = Instrument.DefaultAttributeSet;
+            Attributes attributes = Instrument.DefaultAttributes;
             int priceDecimals = -1;
             int minimumMovement = -1;
             int bigPointValue = -1;
@@ -572,6 +605,17 @@ namespace TradeSharp.CoreUI.Services
                 primaryExchange = definedExchange;
                 break;
               }
+              else
+              {
+                foreach (var alternateName in definedExchange.AlternateNames)
+                  if (alternateName.ToLower() == exchange.ToLower())
+                  {
+                    primaryExchange = definedExchange;
+                    break;
+                  }
+
+                if (primaryExchange != null) break;
+              }
             }
 
             Guid exchangeId = Exchange.InternationalId;
@@ -599,6 +643,23 @@ namespace TradeSharp.CoreUI.Services
             foreach (string secondaryExchange in secondaryExchanges)
             {
               Exchange? definedExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id.ToString() == secondaryExchange || e.Name.ToUpper() == secondaryExchange.ToUpper() || e.TagStr.Contains(secondaryExchange.ToUpper()));
+
+              //try to find exchange based on alternate names
+              if (definedExchange == null)
+              {
+                foreach (var exchangeItem in m_exchangeService.Items)
+                {
+                  foreach (var alternateName in exchangeItem.AlternateNames)
+                    if (alternateName.ToUpper() == secondaryExchange.ToUpper())
+                    {
+                      definedExchange = exchangeItem;
+                      break;
+                    }
+
+                  if (definedExchange != null) break;
+                }
+              }
+
               if (definedExchange != null)
                 secondaryExchangeIds.Add(definedExchange.Id);
               else
@@ -817,10 +878,10 @@ namespace TradeSharp.CoreUI.Services
           instrumentDefinition += ",";
           instrumentDefinition += TradeSharp.Common.Utilities.ToCsv(instrument.AlternateTickers);
           instrumentDefinition += ",";
-          instrumentDefinition += instrument.Name;
+          instrumentDefinition += TradeSharp.Common.Utilities.MakeCsvSafe(instrument.Name);
           instrumentDefinition += ",";
-          instrumentDefinition += instrument.Description;
-          instrumentDefinition += ", ";
+          instrumentDefinition += TradeSharp.Common.Utilities.MakeCsvSafe(instrument.Description);
+          instrumentDefinition += ",";
           instrumentDefinition += instrument.PrimaryExchangeId.ToString();
           instrumentDefinition += ",";
           instrumentDefinition += instrument.InceptionDate.ToString();
@@ -833,7 +894,7 @@ namespace TradeSharp.CoreUI.Services
           instrumentDefinition += ",";
           instrumentDefinition += instrument is Stock stock ? stock.MarketCap : 0;
           instrumentDefinition += ",";
-          instrumentDefinition += instrument.Tag;
+          instrumentDefinition += TradeSharp.Common.Utilities.MakeCsvSafe(instrument.TagStr);
           instrumentDefinition += ",";
           instrumentDefinition += Common.Utilities.secondaryExchangeNamesCsv(instrument, secondaryExchanges, m_logger);
           instrumentDefinition += ",";

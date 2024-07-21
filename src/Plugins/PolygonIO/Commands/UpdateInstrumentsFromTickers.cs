@@ -76,9 +76,9 @@ namespace TradeSharp.PolygonIO.Commands
               instrumentCreated = true;
               progressDialog.LogInformation($"Creating new instrument {pioTicker.Ticker} - {pioTicker.Name}");
               if (pioTicker.Market == Constants.TickerMarketStocks)
-                instrument = new Data.Stock(pioTicker.Ticker, Instrument.DefaultAttributeSet, pioTicker.Ticker, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
+                instrument = new Data.Stock(pioTicker.Ticker, Instrument.DefaultAttributes, pioTicker.Ticker, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
               else
-                instrument = new Data.Instrument(pioTicker.Ticker, Instrument.DefaultAttributeSet, pioTicker.Ticker, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
+                instrument = new Data.Instrument(pioTicker.Ticker, Instrument.DefaultAttributes, pioTicker.Ticker, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
             }
 
             if (pioTickerDetails != null && instrument is Stock stock)

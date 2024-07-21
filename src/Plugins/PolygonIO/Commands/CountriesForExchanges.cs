@@ -73,7 +73,7 @@ namespace TradeSharp.PolygonIO.Commands
                 }
                 else
                 {
-                  country = new Country(Guid.NewGuid(), Country.DefaultAttributeSet, countryInfo.RegionInfo.TwoLetterISORegionName, countryInfo.CultureInfo.Name);
+                  country = new Country(Guid.NewGuid(), Country.DefaultAttributes, countryInfo.RegionInfo.TwoLetterISORegionName, countryInfo.CultureInfo.Name);
                   progressDialog.LogInformation($"Creating country {country.CountryInfo.RegionInfo.Name} - {country.CountryInfo.RegionInfo.ThreeLetterISORegionName}");
                   m_countryService.Add(country);
                   updateService = true;

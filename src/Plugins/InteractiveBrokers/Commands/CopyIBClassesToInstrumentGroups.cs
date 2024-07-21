@@ -153,7 +153,7 @@ namespace TradeSharp.InteractiveBrokers.Commands
     private string serializeMetaData(string industry, string category, string subCategory)
     {
       Common.TagValue tagValue = new Common.TagValue();
-      tagValue.Update(Constants.TagDataId, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(new InstrumentGroupMetaData { Industry = industry, Category = category, SubCategory = subCategory }));
+      tagValue.Update(Constants.TagDataId, DateTime.UtcNow, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(new InstrumentGroupMetaData { Industry = industry, Category = category, SubCategory = subCategory }));
       return tagValue.ToJson();
     }
 

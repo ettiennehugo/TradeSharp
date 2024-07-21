@@ -380,8 +380,8 @@ namespace TradeSharp.CoreUI.Services
             List<string> alternateNames = new List<string>();
             string description = "";
             string userId = "";
-            string tag = "";
-            Attributes attributes = InstrumentGroup.DefaultAttributeSet;
+            string tag = TagValue.EmptyJson;
+            Attributes attributes = InstrumentGroup.DefaultAttributes;
             List<string> tickers = new List<string>();
 
             lineNo++;
@@ -477,7 +477,6 @@ namespace TradeSharp.CoreUI.Services
         IList<InstrumentGroup> persistedInstrumentGroups = m_instrumentGroupRepository.GetItems();
         foreach (InstrumentGroup instrumentGroup in persistedInstrumentGroups)
         {
-          string tag = instrumentGroup.TagStr.Length != 0 ? instrumentGroup.TagStr : instrumentGroup.Name;
           definedInstrumentGroups.Add(instrumentGroup);
 
           //update any instrument groups defined in the file with the existing parentId and Id keys defined for the instrument group
@@ -532,18 +531,18 @@ namespace TradeSharp.CoreUI.Services
             switch (importSettings.ReplaceBehavior)
             {
               case ImportReplaceBehavior.Skip:
-                if (Debugging.InstrumentGroupImport) m_logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag}");
+                if (Debugging.InstrumentGroupImport) m_logger.LogWarning($"Skipping - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}");
                 skippedCount++;
                 break;
               case ImportReplaceBehavior.Replace:
                 //will update the name, description and tag and remove instrument associations
-                if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}, {fileInstrumentGroup.Tag}");
+                if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description} => {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}, {fileInstrumentGroup.Tag}");
                 m_instrumentGroupRepository.Update(new InstrumentGroup(definedInstrumentGroup.Id, fileInstrumentGroup.Attributes, fileInstrumentGroup.Tag, definedInstrumentGroup.ParentId, fileInstrumentGroup.Name, fileInstrumentGroup.AlternateNames, fileInstrumentGroup.Description, fileInstrumentGroup.UserId, fileInstrumentGroup.Tickers));
                 replacedCount++;
                 break;
               case ImportReplaceBehavior.Update:
                 //will update the name and description and keep all the associated instruments                  
-                if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}, {fileInstrumentGroup.Tag}");
+                if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description} => {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}, {fileInstrumentGroup.Tag}");
 
                 foreach (string alternateName in definedInstrumentGroup.AlternateNames)
                 {
@@ -562,7 +561,7 @@ namespace TradeSharp.CoreUI.Services
           }
           else
           {
-            if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Creating - {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}, {fileInstrumentGroup.Tag}");
+            if (Debugging.InstrumentGroupImport) m_logger.LogInformation($"Creating - {fileInstrumentGroup.Name}, {fileInstrumentGroup.Description}");
             m_instrumentGroupRepository.Add(new InstrumentGroup(fileInstrumentGroup.Id, fileInstrumentGroup.Attributes, fileInstrumentGroup.Tag, fileInstrumentGroup.ParentId, fileInstrumentGroup.Name, fileInstrumentGroup.AlternateNames, fileInstrumentGroup.Description, fileInstrumentGroup.UserId, fileInstrumentGroup.Tickers));
             createdCount++;
           }
@@ -791,7 +790,7 @@ namespace TradeSharp.CoreUI.Services
       string userId = "";
       string tag = "";
       string? attributesStr = null;
-      Attributes attributes = InstrumentGroup.DefaultAttributeSet;
+      Attributes attributes = InstrumentGroup.DefaultAttributes;
 
       try
       {
@@ -799,9 +798,9 @@ namespace TradeSharp.CoreUI.Services
         name = (string)(node[tokenJsonName]!.AsValue().Deserialize(typeof(string)))!;
         description = (string?)(node[tokenJsonDescription]!.AsValue().Deserialize(typeof(string))) ?? name;
         userId = node.ContainsKey(tokenJsonUserId) ? (string?)(node[tokenJsonUserId]!.AsValue().Deserialize(typeof(string)))! : name;
-        tag = node.ContainsKey(tokenJsonTag) ? (string?)(node[tokenJsonTag]!.AsValue().Deserialize(typeof(string)))! : name;
+        tag = node.ContainsKey(tokenJsonTag) ? node[tokenJsonTag]!.ToJsonString() : TagValue.EmptyJson;
         attributesStr = node.ContainsKey(tokenJsonAttributes) ? (string?)(node[tokenJsonAttributes]!.AsValue().Deserialize(typeof(string)))! : null;
-        attributes = InstrumentGroup.DefaultAttributeSet;
+        attributes = InstrumentGroup.DefaultAttributes;
 
         if (Enum.TryParse(typeof(Attributes), attributesStr, out object? result))
           attributes = (Attributes)result;
@@ -849,13 +848,13 @@ namespace TradeSharp.CoreUI.Services
               break;
             case ImportReplaceBehavior.Replace:
               //replacing name, description, tag and all defined instruments
-              logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {name}, {description}, {tag}");
+              logger.LogInformation($"Replacing - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description} => {name}, {description}, {tag}");
               m_instrumentGroupRepository.Update(fileInstrumentGroup);
               counts.Replaced++;
               break;
             case ImportReplaceBehavior.Update:
               //updating name, description, tag and merge in defined alternate names and instruments
-              logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description}, {definedInstrumentGroup.Tag} => {name}, {description}, {tag}");
+              logger.LogInformation($"Updating - {definedInstrumentGroup.Name}, {definedInstrumentGroup.Description} => {name}, {description}, {tag}");
 
               foreach (string alternateName in definedInstrumentGroup.AlternateNames)
               {

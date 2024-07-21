@@ -16,56 +16,52 @@
     <NavigationView x:Name="m_navigationView" IsBackButtonVisible="Collapsed" Grid.Row="1" Grid.Column="0">
       <NavigationView.MenuItems>
         <NavigationViewItemHeader x:Name="m_plugins" Content="Plugin's"/>
-        <NavigationViewItem x:Name="m_nvvMainBrokers" Content="Brokers" Tag="DataManager.Brokers">
+        <NavigationViewItem x:Name="m_nvvMainBrokers" Content="Brokers" Tag="DataManager.Brokers" ToolTipService.ToolTip="Broker Plugins and Services">
           <NavigationViewItem.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE17B;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
-        <NavigationViewItem x:Name="m_dataProviders" Content="Data Providers" Tag="DataManager.DataProviders">
+        <NavigationViewItem x:Name="m_dataProviders" Content="Data Providers" Tag="DataManager.DataProviders" ToolTipService.ToolTip="Data Provider Plugins and Services">
           <NavigationViewItem.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE705;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
-        <NavigationViewItem x:Name="m_extensions" Content="Extensions" Tag="DataManager.Extensions">
+        <NavigationViewItem x:Name="m_extensions" Content="Extensions" Tag="DataManager.Extensions" ToolTipService.ToolTip="Extension Plugins and Services">
           <NavigationViewItem.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE81E;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
         <NavigationViewItemHeader x:Name="m_model" Content="Model"/>
-        <NavigationViewItem x:Name="m_countries" Content="Countries" Tag="DataManager.Countries">
+        <NavigationViewItem x:Name="m_countries" Content="Countries" Tag="DataManager.Countries"  ToolTipService.ToolTip="Country definitions">
           <NavigationViewItem.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE128;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
-        <NavigationViewItem x:Name="m_exchanges" Content="Exchanges" Tag="DataManager.Exchanges">
+        <NavigationViewItem x:Name="m_exchanges" Content="Exchanges" Tag="DataManager.Exchanges" ToolTipService.ToolTip="Exchange definitions">
           <NavigationViewItem.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xF22C;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
-        <!--<NavigationViewItem x:Name="m_fundamentals" Content="Fundamentals" Tag="DataManager.Fundamentals">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D2;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>-->
-        <NavigationViewItem x:Name="m_instrumentGroups" Content="Instrument Groups" Tag="DataManager.InstrumentGroups">
+        <NavigationViewItem x:Name="m_instrumentGroups" Content="Instrument Groups" Tag="DataManager.InstrumentGroups"  ToolTipService.ToolTip="Instrument Groups, Instrument Associations and Utilities">
           <NavigationViewItem.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE15C;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
-        <NavigationViewItem x:Name="m_instruments" Content="Instruments" Tag="DataManager.Instruments">
+        <NavigationViewItem x:Name="m_instruments" Content="Instruments" Tag="DataManager.Instruments"  ToolTipService.ToolTip="Instrument Definitions">
           <NavigationViewItem.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74C;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
         <NavigationViewItemHeader x:Name="m_data" Content="Data"/>
-        <!--<NavigationViewItem x:Name="m_nvvMainFundamentalData" Content="Fundamental Data" Tag="DataManager.FundamentalData">
-        <NavigationViewItem.Icon>
-          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE71D;"/>
-        </NavigationViewItem.Icon>
-      </NavigationViewItem>-->
-        <NavigationViewItem x:Name="m_instrumentData" Content="Instrument Data" Tag="DataManager.InstrumentData">
+        <NavigationViewItem x:Name="m_instrumentData" Content="Instrument Data" Tag="DataManager.InstrumentData"  ToolTipService.ToolTip="Instrument Data Maintenance">
           <NavigationViewItem.Icon>
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItemHeader x:Name="m_utilities" Content="Utilities"/>
+        <NavigationViewItem x:Name="m_taskScheduling" Content="Task Scheduling" Tag="DataManager.TaskScheduling"  ToolTipService.ToolTip="Schedule Maintenance Tasks">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE835;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
       </NavigationView.MenuItems>

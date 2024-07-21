@@ -32,7 +32,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       InitializeComponent();
       m_name.Text = "New Session";
-      Session = new Session(Guid.NewGuid(), Session.DefaultAttributeSet, "TagValue", m_name.Text, parentId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59));
+      Session = new Session(Guid.NewGuid(), Session.DefaultAttributes, string.Empty, m_name.Text, parentId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59));
     }
 
     public SessionView(Session session)

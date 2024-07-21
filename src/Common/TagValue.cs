@@ -9,15 +9,16 @@ namespace TradeSharp.Common
   {
     //constants
     public const int IgnoreVersion = -1;
+    public const string EmptyJson = "{\"Entries\":[]}";   //representation of empty JSON data
 
-		//enums
-
-
-		//types
+  //enums
 
 
-		//attributes
-    protected List<TagEntry> m_entries = new List<TagEntry>();
+  //types
+
+
+  //attributes
+  protected List<TagEntry> m_entries = new List<TagEntry>();
 
 		//properties
 		public IEnumerable<TagEntry> Entries { get => m_entries; }
@@ -48,6 +49,9 @@ namespace TradeSharp.Common
       foreach (var entry in value.Entries)
         m_entries.Add(entry);
     }
+
+    //events
+    public event EventHandler<TagEntry?>? EntriesChanged;
 
     //finalizers
 
@@ -83,12 +87,14 @@ namespace TradeSharp.Common
     {
       m_entries.RemoveAll((e) => e.Provider == entry.Provider && e.Version.Major == entry.Version.Major && e.Version.Minor == entry.Version.Minor && e.Version.Patch == entry.Version.Patch);
       m_entries.Add(entry);
+      EntriesChanged?.Invoke(this, entry);
     }
 
-    public void Update(string provider, int majorVersion, int minorVersion, int patchVersion, string value)
+    public void Update(string provider, DateTime lastUpdated, int majorVersion, int minorVersion, int patchVersion, string value)
     {
       var tagEntry = new TagEntry();
       tagEntry.Provider = provider;
+      tagEntry.LastUpdated = lastUpdated;
       tagEntry.Version.Major = majorVersion;
       tagEntry.Version.Minor = minorVersion;
       tagEntry.Version.Patch = patchVersion;
@@ -101,7 +107,9 @@ namespace TradeSharp.Common
     /// </summary>
     public void Remove(string provider, int majorVersion = IgnoreVersion, int minorVersion = IgnoreVersion, int patchVersion = IgnoreVersion)
     {
-      m_entries.RemoveAll((e) => e.Provider == provider && (majorVersion == IgnoreVersion || e.Version.Major == majorVersion) && (minorVersion == IgnoreVersion || e.Version.Minor == minorVersion) && (e.Version.Patch == IgnoreVersion || e.Version.Patch == patchVersion));
+      int removeCount = m_entries.RemoveAll((e) => e.Provider == provider && (majorVersion == IgnoreVersion || e.Version.Major == majorVersion) && (minorVersion == IgnoreVersion || e.Version.Minor == minorVersion) && (e.Version.Patch == IgnoreVersion || e.Version.Patch == patchVersion));
+      if (removeCount > 0)
+        EntriesChanged?.Invoke(this, null);
     }
 
     /// <summary>

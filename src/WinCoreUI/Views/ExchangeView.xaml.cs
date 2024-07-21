@@ -40,7 +40,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       loadCountries();
       loadTimeZones();
-      Exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributeSet, "", Guid.Empty, "", TimeZoneInfo.Local, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
+      Exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributes, "", Guid.Empty, "", Array.Empty<string>(), TimeZoneInfo.Local, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
       ExchangeLogoPath = Data.Exchange.GetLogoPath(Guid.Empty);
       this.InitializeComponent();
       m_countryId.SelectedIndex = 0; 

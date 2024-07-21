@@ -121,19 +121,19 @@ namespace TradeSharp.Data
 
     public void CreateCountry(Country country)
     {
-      lock (this) ExecuteCommand($"INSERT OR REPLACE INTO {TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet}, '{ToSqlSafeString(country.Tag.ToJson())}','{country.IsoCode}')");
+      lock (this) ExecuteCommand($"INSERT OR REPLACE INTO {TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet}, '{ToSqlSafeString(country.TagStr)}','{country.IsoCode}')");
     }
 
     public void UpdateCountry(Country country)
     {
       lock (this)
       {
-        ExecuteCommand($"INSERT OR REPLACE INTO {TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet}, '{ToSqlSafeString(country.Tag.ToJson())}','{country.IsoCode}')");
+        ExecuteCommand($"INSERT OR REPLACE INTO {TableCountry} VALUES('{country.Id.ToString()}', {(long)country.AttributeSet}, '{ToSqlSafeString(country.TagStr)}','{country.IsoCode}')");
 
         ExecuteCommand(
           $"UPDATE OR FAIL {TableExchange} " +
             $"SET AttributeSet = {(long)country.AttributeSet}, " +
-                $"Tag = '{ToSqlSafeString(country.Tag.ToJson())}', " +
+                $"Tag = '{ToSqlSafeString(country.TagStr)}', " +
             //$"IsoCode = '{country.IsoCode}' " +   //no update of the IsoCode, is only set on creation
             $"WHERE Id = '{country.Id.ToString()}'"
           );
@@ -181,11 +181,11 @@ namespace TradeSharp.Data
     public void CreateExchange(Exchange exchange)
     {
       ExecuteCommand(
-        $"INSERT OR REPLACE INTO {TableExchange} (Id, AttributeSet, Tag, CountryId, Name, TimeZone, LogoId, DefaultPriceDecimals, DefaultMinimumMovement, DefaultBigPointValue, Url) " +
+        $"INSERT OR REPLACE INTO {TableExchange} (Id, AttributeSet, Tag, CountryId, Name, TimeZone, LogoId, DefaultPriceDecimals, DefaultMinimumMovement, DefaultBigPointValue, Url, AlternateNames) " +
           $"VALUES (" +
             $"'{exchange.Id.ToString()}', " +
             $"{(long)exchange.AttributeSet}, " +
-            $"'{ToSqlSafeString(exchange.Tag.ToJson())}', " +
+            $"'{ToSqlSafeString(exchange.TagStr)}', " +
             $"'{exchange.CountryId.ToString()}', " +
             $"'{ToSqlSafeString(exchange.Name)}', " +
             $"'{exchange.TimeZone.ToSerializedString()}', " +
@@ -193,7 +193,8 @@ namespace TradeSharp.Data
             $"{exchange.DefaultPriceDecimals}, " +
             $"{exchange.DefaultMinimumMovement}, " +
             $"{exchange.DefaultBigPointValue}, " +
-            $"'{ToSqlSafeString(exchange.Url)}'" +
+            $"'{ToSqlSafeString(exchange.Url)}', " +
+            $"'{ToSqlSafeString(Common.Utilities.ToCsv(exchange.AlternateNames))}'" +
           $")"
       );
     }
@@ -204,7 +205,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {TableExchange} WHERE Id = '{id.ToString()}'"))
         if (reader.Read())
-          result = new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), TimeZoneInfo.FromSerializedString(reader.GetString(5)), reader.GetInt32(7), reader.GetInt32(8), reader.GetInt32(9), reader.GetGuid(6), reader.GetString(10));
+          result = new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), TimeZoneInfo.FromSerializedString(reader.GetString(5)), reader.GetInt32(7), reader.GetInt32(8), reader.GetInt32(9), reader.GetGuid(6), reader.GetString(10));
 
       return result;
     }
@@ -215,7 +216,7 @@ namespace TradeSharp.Data
 
       using (var reader = ExecuteReader($"SELECT * FROM {TableExchange} ORDER BY Name ASC"))
         while (reader.Read())
-          result.Add(new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), TimeZoneInfo.FromSerializedString(reader.GetString(5)), reader.GetInt32(7), reader.GetInt32(8), reader.GetInt32(9), reader.GetGuid(6), reader.GetString(10)));
+          result.Add(new Exchange(reader.GetGuid(0), (Attributes)reader.GetInt64(1), reader.GetString(2), reader.GetGuid(3), reader.GetString(4), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), TimeZoneInfo.FromSerializedString(reader.GetString(5)), reader.GetInt32(7), reader.GetInt32(8), reader.GetInt32(9), reader.GetGuid(6), reader.GetString(10)));
 
       return result;
     }
@@ -228,13 +229,14 @@ namespace TradeSharp.Data
             $"SET CountryId = '{exchange.CountryId.ToString()}', " +
                 $"Name = '{ToSqlSafeString(exchange.Name)}', " +
                 $"AttributeSet = {(long)exchange.AttributeSet}, " +
-                $"Tag = '{ToSqlSafeString(exchange.Tag.ToJson())}', " +
+                $"Tag = '{ToSqlSafeString(exchange.TagStr)}', " +
                 $"TimeZone = '{exchange.TimeZone.ToSerializedString()}', " +
                 $"LogoId = '{exchange.LogoId}', " +
                 $"DefaultPriceDecimals = {exchange.DefaultPriceDecimals}, " +
                 $"DefaultMinimumMovement = {exchange.DefaultMinimumMovement}, " +
                 $"DefaultBigPointValue = {exchange.DefaultBigPointValue}, " +
-                $"Url = '{ToSqlSafeString(exchange.Url)}'" +
+                $"Url = '{ToSqlSafeString(exchange.Url)}', " +
+                $"AlternateNames = '{ToSqlSafeString(Common.Utilities.ToCsv(exchange.AlternateNames))}'" +
             $"WHERE Id = '{exchange.Id.ToString()}'"
         );
     }
@@ -270,7 +272,7 @@ namespace TradeSharp.Data
             $"VALUES (" +
               $"'{holiday.Id.ToString()}', " +
               $"{(long)holiday.AttributeSet}, " +
-              $"'{ToSqlSafeString(holiday.Tag.ToJson())}', " +
+              $"'{ToSqlSafeString(holiday.TagStr)}', " +
               $"'{holiday.ParentId.ToString()}', " +
               $"'{ToSqlSafeString(holiday.Name)}', " +
               $"{(int)holiday.Type}, " +
@@ -324,7 +326,7 @@ namespace TradeSharp.Data
             $"SET ParentId = '{holiday.ParentId.ToString()}', " +
                 $"Name = '{ToSqlSafeString(holiday.Name)}', " +
                 $"AttributeSet = {(long)holiday.AttributeSet}, " +
-                $"Tag = '{ToSqlSafeString(holiday.Tag.ToJson())}', " +
+                $"Tag = '{ToSqlSafeString(holiday.TagStr)}', " +
                 $"HolidayType = {(int)holiday.Type}, " +
                 $"Month = {(int)holiday.Month}, " +
                 $"DayOfMonth = {(int)holiday.DayOfMonth}, " +
@@ -348,7 +350,7 @@ namespace TradeSharp.Data
           $"VALUES (" +
             $"'{session.Id.ToString()}', " +
             $"{(long)session.AttributeSet}, " +
-            $"'{ToSqlSafeString(session.Tag.ToJson())}', " +
+            $"'{ToSqlSafeString(session.TagStr)}', " +
             $"'{ToSqlSafeString(session.Name)}', " +
             $"'{session.ExchangeId.ToString()}', " +
             $"{(int)session.DayOfWeek}, " +
@@ -396,7 +398,7 @@ namespace TradeSharp.Data
             $"SET Name = '{ToSqlSafeString(session.Name)}', " +
                 $"ExchangeId = '{session.ExchangeId.ToString()}', " +
                 $"AttributeSet = {(long)session.AttributeSet}, " +
-                $"Tag = '{ToSqlSafeString(session.Tag.ToJson())}', " +
+                $"Tag = '{ToSqlSafeString(session.TagStr)}', " +
                 $"DayOfWeek = {(int)session.DayOfWeek}, " +
                 $"StartTime = {session.Start.Ticks}, " +
                 $"EndTime = {session.End.Ticks} " +
@@ -417,12 +419,12 @@ namespace TradeSharp.Data
           $"VALUES (" +
             $"'{instrumentGroup.Id.ToString()}', " +
             $"{(long)instrumentGroup.AttributeSet}, " +
-            $"'{ToSqlSafeString(instrumentGroup.Tag.ToJson())}', " +
+            $"'{ToSqlSafeString(instrumentGroup.TagStr)}', " +
             $"'{instrumentGroup.ParentId.ToString()}', " +
             $"'{ToSqlSafeString(instrumentGroup.Name)}', " +
             $"'{ToSqlSafeString(instrumentGroup.Description)}', " +
             $"'{ToSqlSafeString(instrumentGroup.UserId)}', " +
-            $"'{ToSqlSafeString(string.Join(',', instrumentGroup.AlternateNames))}' " +
+            $"'{ToSqlSafeString(Common.Utilities.ToCsv<string>(instrumentGroup.AlternateNames))}' " +
           $")"
         );
 
@@ -488,7 +490,7 @@ namespace TradeSharp.Data
           $"UPDATE OR FAIL {TableInstrumentGroup} SET " +
               $"ParentId = '{instrumentGroup.ParentId.ToString()}', " +
               $"AttributeSet = {(long)instrumentGroup.AttributeSet}, " +
-              $"Tag = '{ToSqlSafeString(instrumentGroup.Tag.ToJson())}', " +
+              $"Tag = '{ToSqlSafeString(instrumentGroup.TagStr)}', " +
               $"Name = '{ToSqlSafeString(instrumentGroup.Name)}', " +
               $"Description = '{ToSqlSafeString(instrumentGroup.Description)}', " +
               $"UserId = '{ToSqlSafeString(instrumentGroup.UserId)}', " +
@@ -549,7 +551,7 @@ namespace TradeSharp.Data
             $"VALUES (" +
               $"'{instrument.Ticker}', " +
               $"{(long)instrument.AttributeSet}, " +
-              $"'{ToSqlSafeString(instrument.Tag.ToJson())}', " +
+              $"'{ToSqlSafeString(instrument.TagStr)}', " +
               $"{(int)instrument.Type}, " +
               $"'{ToSqlSafeString(instrument.Name)}', " +
               $"'{ToSqlSafeString(instrument.Description)}', " +
@@ -1263,7 +1265,7 @@ namespace TradeSharp.Data
         ExecuteCommand(
           $"UPDATE OR FAIL {TableInstrument} " +
             $"SET AttributeSet = '{(long)instrument.AttributeSet}', " +
-                $"Tag = '{ToSqlSafeString(instrument.Tag.ToJson())}', " +
+                $"Tag = '{ToSqlSafeString(instrument.TagStr)}', " +
                 $"Name = '{ToSqlSafeString(instrument.Name)}', " +
                 $"Description = '{ToSqlSafeString(instrument.Description)}', " +
                 $"PrimaryExchangeId = '{instrument.PrimaryExchangeId.ToString()}', " +
@@ -1355,7 +1357,7 @@ namespace TradeSharp.Data
             $"VALUES (" +
               $"'{fundamental.Id.ToString()}', " +
               $"{(long)fundamental.AttributeSet}, " +
-              $"'{ToSqlSafeString(fundamental.Tag.ToJson())}', " +
+              $"'{ToSqlSafeString(fundamental.TagStr)}', " +
               $"'{ToSqlSafeString(fundamental.Name)}', " +
               $"'{ToSqlSafeString(fundamental.Description)}', " +
               $"{(int)fundamental.Category}, " +
@@ -2389,14 +2391,14 @@ namespace TradeSharp.Data
       {
         base.CreateDefaultObjects();
         if (GetRowCount(TableCountry, $"Id == '{Country.InternationalId.ToString()}'") == 0) CreateCountry(new Country(Country.InternationalId, Attributes.None, "", Country.InternationalIsoCode));
-        if (GetRowCount(TableExchange, $"Id == '{Exchange.InternationalId.ToString()}'") == 0) CreateExchange(new Exchange(Exchange.InternationalId, Attributes.None, "", Country.InternationalId, "Global Exchange", TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, string.Empty));
-        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Monday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Monday", Exchange.InternationalId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Tuesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Tuesday", Exchange.InternationalId, DayOfWeek.Tuesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Wednesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Wednesday", Exchange.InternationalId, DayOfWeek.Wednesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Thursday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Thursday", Exchange.InternationalId, DayOfWeek.Thursday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Friday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Friday", Exchange.InternationalId, DayOfWeek.Friday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Saturday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Saturday", Exchange.InternationalId, DayOfWeek.Saturday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
-        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Sunday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, "", "Sunday", Exchange.InternationalId, DayOfWeek.Sunday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+        if (GetRowCount(TableExchange, $"Id == '{Exchange.InternationalId.ToString()}'") == 0) CreateExchange(new Exchange(Exchange.InternationalId, Attributes.None, "", Country.InternationalId, "Global Exchange", Array.Empty<string>(), TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, string.Empty));
+        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Monday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, string.Empty, "Monday", Exchange.InternationalId, DayOfWeek.Monday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Tuesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, string.Empty, "Tuesday", Exchange.InternationalId, DayOfWeek.Tuesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Wednesday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, string.Empty, "Wednesday", Exchange.InternationalId, DayOfWeek.Wednesday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Thursday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, string.Empty, "Thursday", Exchange.InternationalId, DayOfWeek.Thursday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Friday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, string.Empty, "Friday", Exchange.InternationalId, DayOfWeek.Friday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Saturday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, string.Empty, "Saturday", Exchange.InternationalId, DayOfWeek.Saturday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
+        if (GetRowCount(TableSession, $"ExchangeId == '{Exchange.InternationalId.ToString()}' AND DayOfWeek == {(int)DayOfWeek.Sunday}") == 0) CreateSession(new Session(Guid.NewGuid(), Attributes.None, string.Empty, "Sunday", Exchange.InternationalId, DayOfWeek.Sunday, new TimeOnly(0, 0), new TimeOnly(23, 59)));
       }
     }
 
@@ -2481,7 +2483,8 @@ namespace TradeSharp.Data
         DefaultPriceDecimals INTEGER,
         DefaultMinimumMovement INTEGER,
         DefaultBigPointValue INTERGER,
-        Url TEXT
+        Url TEXT,
+        AlternateNames TEXT
       ");
     }
 

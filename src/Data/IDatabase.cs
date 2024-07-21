@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using TradeSharp.Common;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 
 namespace TradeSharp.Data
 {
@@ -67,7 +68,7 @@ namespace TradeSharp.Data
   /// </summary>
   public partial class DataObject : ObservableObject
   {
-    public const Attributes DefaultAttributeSet = Attributes.Editable | Attributes.Deletable;
+    public const Attributes DefaultAttributes = Attributes.Editable | Attributes.Deletable;
 
     public DataObject(Guid id, Attributes attributeSet, string tag)
     {
@@ -92,6 +93,8 @@ namespace TradeSharp.Data
       } 
     }
 
+    public bool HasTagData { get => !string.IsNullOrEmpty(TagStr) && TagStr != TagValue.EmptyJson; }
+
     protected TagValue? m_tag = null;
     public TagValue Tag { 
       get {
@@ -111,8 +114,9 @@ namespace TradeSharp.Data
           }
           else
             m_tag = new TagValue();
+          m_tag.EntriesChanged += handleTagChange;
         }
-          return m_tag!;
+        return m_tag!;
       } 
     }
 
@@ -141,6 +145,16 @@ namespace TradeSharp.Data
       else
         SetAttribute(attribute);
       return HasAttribute(attribute);
+    }
+
+    /// <summary>
+    /// Reflect changes to the Tag object into the TagStr JSON string. This is important to keep
+    /// the database data stored from the string in sync with the object.
+    /// </summary>
+    protected void handleTagChange(object sender, TagEntry? entry)
+    {      
+      OnPropertyChanged("Tag");
+      TagStr = Tag.ToJson();
     }
   }
 
@@ -242,7 +256,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Holiday(Id, AttributeSet, Tag.ToJson(), ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
+      return new Holiday(Id, AttributeSet, TagStr, ParentId, Name, Type, Month, DayOfMonth, DayOfWeek, WeekOfMonth, MoveWeekendHoliday);
     }
 
     public void Update(Holiday item)
@@ -391,10 +405,11 @@ namespace TradeSharp.Data
       File.Copy(newLogoImagePath, exchange.LogoPath);
     }
 
-    public Exchange(Guid id, Attributes attributeSet, string tag, Guid countryId, string name, TimeZoneInfo timeZone, int defaultPriceDecimals, int defaultMinimumMovement, int defaultBigPointValue, Guid logoId, string url): base(id, attributeSet, tag)
+    public Exchange(Guid id, Attributes attributeSet, string tag, Guid countryId, string name, IList<string> alternateNames, TimeZoneInfo timeZone, int defaultPriceDecimals, int defaultMinimumMovement, int defaultBigPointValue, Guid logoId, string url): base(id, attributeSet, tag)
     {
       CountryId = countryId;
       Name = name;
+      AlternateNames = new ObservableCollection<string>(alternateNames);
       TimeZone = timeZone;
       DefaultPriceDecimals = defaultPriceDecimals;
       DefaultMinimumMovement = defaultMinimumMovement;
@@ -406,6 +421,7 @@ namespace TradeSharp.Data
 
     [ObservableProperty] private Guid m_countryId;
     [ObservableProperty] private string m_name;
+    public ObservableCollection<string> AlternateNames;
     [ObservableProperty] private TimeZoneInfo m_timeZone;
     [ObservableProperty] private int m_defaultPriceDecimals;
     public double DefaultPriceScale { get => 1 / Math.Pow(10, DefaultPriceDecimals); }
@@ -422,7 +438,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Exchange(Id, AttributeSet, Tag.ToJson(), CountryId, Name, TimeZone, DefaultPriceDecimals, DefaultMinimumMovement, DefaultBigPointValue, LogoId, Url);
+      return new Exchange(Id, AttributeSet, TagStr, CountryId, Name, AlternateNames, TimeZone, DefaultPriceDecimals, DefaultMinimumMovement, DefaultBigPointValue, LogoId, Url);
     }
 
     public void Update(Exchange item)
@@ -431,6 +447,8 @@ namespace TradeSharp.Data
       TagStr = item.TagStr;
       CountryId = item.CountryId;
       Name = item.Name;
+      AlternateNames.Clear();
+      foreach (var name in item.AlternateNames) AlternateNames.Add(name);
       TimeZone = item.TimeZone;
       DefaultPriceDecimals = item.DefaultPriceDecimals;
       DefaultMinimumMovement = item.DefaultMinimumMovement;
@@ -467,7 +485,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Session(Id, AttributeSet, Tag.ToJson(), Name, ExchangeId, DayOfWeek, Start, End);
+      return new Session(Id, AttributeSet, TagStr, Name, ExchangeId, DayOfWeek, Start, End);
     }
 
     public void Update(Session item)
@@ -572,7 +590,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Instrument(Ticker, AttributeSet, Tag.ToJson(), Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds), ExtendedProperties);
+      return new Instrument(Ticker, AttributeSet, TagStr, Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds), ExtendedProperties);
     }
 
     public void Update(Instrument item)
@@ -663,7 +681,7 @@ namespace TradeSharp.Data
     {
       ParentId = parentId;
       Name = name;
-      AlternateNames = alternateNames;
+      AlternateNames = new ObservableCollection<string>(alternateNames);
       Description = description;
       UserId = userId;
       Instruments = instruments;
@@ -671,7 +689,7 @@ namespace TradeSharp.Data
 
     [ObservableProperty] private Guid m_parentId;
     [ObservableProperty] private string m_name;
-    [ObservableProperty] private IList<string> m_alternateNames;
+    public ObservableCollection<string> AlternateNames;
     [ObservableProperty] private string m_description;
     [ObservableProperty] private string m_userId;   //specific Id to be used by the user, can be used in data file exports/imports to identify the group
     [ObservableProperty] private IList<string> m_instruments; //instruments associated with the group
@@ -720,7 +738,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new InstrumentGroup(Id, AttributeSet, Tag.ToJson(), ParentId, Name, new List<string>(AlternateNames), Description, UserId, new List<string>(Instruments));
+      return new InstrumentGroup(Id, AttributeSet, TagStr, ParentId, Name, new List<string>(AlternateNames), Description, UserId, new List<string>(Instruments));
     }
 
     public void Update(InstrumentGroup item)
@@ -760,7 +778,7 @@ namespace TradeSharp.Data
 
     public object Clone()
     {
-      return new Fundamental(Id, AttributeSet, Tag.ToJson(), Name, Description, Category, ReleaseInterval);
+      return new Fundamental(Id, AttributeSet, TagStr, Name, Description, Category, ReleaseInterval);
     }
 
     public void Update(Fundamental item)

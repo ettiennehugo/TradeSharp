@@ -32,6 +32,7 @@ namespace TradeSharp.PolygonIO
     protected IDatabase m_database;
     protected ICountryService m_countryService;
     protected IExchangeService m_exchangeService;
+    protected ISessionService m_sessionService;
     protected IInstrumentService m_instrumentService;
     protected Cache m_cache;
     protected Client m_client;
@@ -61,6 +62,7 @@ namespace TradeSharp.PolygonIO
       m_database = (IDatabase)ServiceHost.Services.GetService(typeof(IDatabase))!;
       m_countryService = (ICountryService)ServiceHost.Services.GetService(typeof(ICountryService))!;
       m_exchangeService = (IExchangeService)ServiceHost.Services.GetService(typeof(IExchangeService))!;
+      m_sessionService = (ISessionService)ServiceHost.Services.GetService(typeof(ISessionService))!;
       m_instrumentService = (IInstrumentService)ServiceHost.Services.GetService(typeof(IInstrumentService))!;
       m_apiKey = (string)Configuration.Configuration[Constants.ConfigApiKey];
 
@@ -92,7 +94,19 @@ namespace TradeSharp.PolygonIO
 
     public override bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end)
     {
-      m_client.GetHistoricalData(instrument.Ticker, resolution, start, end, null);
+      Task.Run(async () => {
+        var data = await m_client.GetHistoricalData(instrument.Ticker, resolution, start, end, null);
+        if (data != null)
+        { 
+          IList<IBarData> bars = new List<IBarData>();
+          foreach (var barDto in data)
+          {
+            var bar = new BarData(resolution, barDto.DateTime, Common.Constants.DefaultPriceFormatMask, barDto.Open, barDto.High, barDto.Low, barDto.Close, barDto.Volume);
+            bars.Add(bar);
+          }
+          m_database.UpdateData(this.Name, instrument.Ticker, resolution, bars);
+        }
+      });
       return true;
     }
 
@@ -141,7 +155,7 @@ namespace TradeSharp.PolygonIO
 
     protected async Task OnCopyExchangesToTradeSharpAsync()
     {
-      var command = new UpdateExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_database, m_cache);
+      var command = new UpdateExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_sessionService, m_database, m_cache);
       await command.Run();
     }
 

@@ -15,16 +15,16 @@ namespace TradeSharp.PolygonIO.Messages
     public string Symbol { get; set; }
 
     [JsonPropertyName("o")]
-    public decimal Open { get; set; }
+    public double Open { get; set; }
 
     [JsonPropertyName("c")]
-    public decimal Close { get; set; }
+    public double Close { get; set; }
 
     [JsonPropertyName("h")]
-    public decimal High { get; set; }
+    public double High { get; set; }
 
     [JsonPropertyName("l")]
-    public decimal Low { get; set; }
+    public double Low { get; set; }
 
     [JsonPropertyName("v")]
     public long TickVolume { get; set; }
@@ -36,10 +36,10 @@ namespace TradeSharp.PolygonIO.Messages
     public long AverageTradeVolume { get; set; }
 
     [JsonPropertyName("a")]
-    public decimal DayVWAP { get; set; }
+    public double DayVWAP { get; set; }
 
     [JsonPropertyName("vw")]
-    public decimal VWAP { get; set; }
+    public double VWAP { get; set; }
 
     [JsonPropertyName("s")]
     public long StartTimestamp { get; set; }

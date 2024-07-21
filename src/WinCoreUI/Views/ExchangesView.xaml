@@ -43,7 +43,7 @@
             </DataTemplate>
           </winui:DataGridTemplateColumn.CellTemplate>
         </winui:DataGridTemplateColumn>
-        <winui:DataGridTextColumn x:Name="m_columnTag" Width="Auto" Header="Tag" Binding="{Binding Tag}" IsReadOnly="True"/>
+        <winui:DataGridTextColumn x:Name="m_columnTag" Width="Auto" MaxWidth="500" Header="Tag" Binding="{Binding TagStr}" IsReadOnly="True"/>
       </winui:DataGrid.Columns>
     </winui:DataGrid>
     <TabView x:Name="m_tabView" TabWidthMode="Equal" SelectedIndex="0" IsAddTabButtonVisible="False" Grid.Row="2" Grid.Column="0">

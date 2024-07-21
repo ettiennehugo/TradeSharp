@@ -193,4 +193,13 @@
   <ItemGroup>
     <Resource Remove="Views\AccountsView.xaml" />
   </ItemGroup>
+  <ItemGroup>
+    <CustomAdditionalCompileInputs Remove="Views\TaskSchedulingView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Views\TaskSchedulingView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Remove="Views\TaskSchedulingView.xaml" />
+  </ItemGroup>
 </Project>

@@ -30,7 +30,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       m_database = (IDatabase)IApplication.Current.Services.GetService(typeof(IDatabase));
       Exchanges = m_database.GetExchanges();
-      Instrument = new Instrument("", Instrument.DefaultAttributeSet, "", InstrumentType.Stock, Array.Empty<string>(), "", "", DateTime.Today, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, Array.Empty<Guid>(), string.Empty);
+      Instrument = new Instrument("", Instrument.DefaultAttributes, "", InstrumentType.Stock, Array.Empty<string>(), "", "", DateTime.Today, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, Array.Empty<Guid>(), string.Empty);
       this.InitializeComponent();
     }
 

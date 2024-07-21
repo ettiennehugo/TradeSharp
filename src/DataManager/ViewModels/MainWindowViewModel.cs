@@ -6,6 +6,7 @@ using TradeSharp.CoreUI.ViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Threading.Tasks;
 using TradeSharp.WinCoreUI.Services;
+using TradeSharp.WinDataManager.Views;
 
 namespace TradeSharp.WinDataManager.ViewModels
 {
@@ -41,6 +42,7 @@ namespace TradeSharp.WinDataManager.ViewModels
       { INavigationService.DataManager.InstrumentGroups, typeof(WinCoreUI.Views.InstrumentGroupsView) },
       //{ INavigationService.DataManager.FundamentalData, typeof(BlankView) },
       { INavigationService.DataManager.InstrumentData, typeof(WinCoreUI.Views.InstrumentDataView) },
+      { INavigationService.DataManager.TaskScheduling,  typeof(WinCoreUI.Views.TaskSchedulingView) },
       { INavigationService.DataManager.Settings, typeof(WinDataManager.Views.SettingsView) }
     };
 
@@ -68,45 +70,8 @@ namespace TradeSharp.WinDataManager.ViewModels
       {
         //clear any status information displayed
         StatusMessage = "";
-
-        switch (navigationItem.Tag)
-        {
-          case INavigationService.DataManager.Brokers:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.DataProviders:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.Extensions:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.Countries:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.Exchanges:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.Fundamentals:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.Instruments:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.InstrumentGroups:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.FundamentalData:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.InstrumentData:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          case INavigationService.DataManager.Settings:
-            m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
-            break;
-          default:
-            break;
-        }
+        if (!string.IsNullOrEmpty(navigationItem.Tag.ToString()))
+          m_navigationService.NavigateToAsync(navigationItem.Tag.ToString());
       }
     }
 
