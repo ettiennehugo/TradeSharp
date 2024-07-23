@@ -749,7 +749,7 @@ namespace TradeSharp.Data
     }
 
     /// <summary>
-    /// Supports loading of all instruments, this method could take a long time to run so do run it asynchronously in the view model.
+    /// Supports loading of all instruments, this method could take a long time to run so run it asynchronously in the view model.
     /// </summary>
     public IList<Instrument> GetInstruments()
     {
@@ -783,7 +783,30 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+          switch (instrumentType)
+          {
+            case InstrumentType.Stock:
+              var stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+              using (var stockReader = ExecuteReader($"SELECT * FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read())
+                {
+                  stock.MarketCap = stockReader.GetDouble(1);
+                  stock.SharesOutstanding = stockReader.GetDouble(2);
+                  stock.EmployeeCount = stockReader.GetInt32(3);
+                  stock.Address = stockReader.GetString(4);
+                  stock.City = stockReader.GetString(5);
+                  stock.State = stockReader.GetString(6);
+                  stock.Zip = stockReader.GetString(7);
+                  stock.PhoneNumber = stockReader.GetString(8);
+                  stock.Url = stockReader.GetString(9);
+                }
+              result.Add(stock);
+              break;
+            default:
+              result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+              break;
+          }
         }
 
       return result;
@@ -850,11 +873,35 @@ namespace TradeSharp.Data
         {
           List<Guid> secondaryExchangeIds = new List<Guid>();
           string ticker = reader.GetString(0);
+          InstrumentType instrumentType = (InstrumentType)reader.GetInt32(3);
 
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+          switch (instrumentType)
+          {
+            case InstrumentType.Stock:
+              var stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+              using (var stockReader = ExecuteReader($"SELECT * FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read())
+                {
+                  stock.MarketCap = stockReader.GetDouble(1);
+                  stock.SharesOutstanding = stockReader.GetDouble(2);
+                  stock.EmployeeCount = stockReader.GetInt32(3);
+                  stock.Address = stockReader.GetString(4);
+                  stock.City = stockReader.GetString(5);
+                  stock.State = stockReader.GetString(6);
+                  stock.Zip = stockReader.GetString(7);
+                  stock.PhoneNumber = stockReader.GetString(8);
+                  stock.Url = stockReader.GetString(9);
+                }
+              result.Add(stock);
+              break;
+            default:
+              result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+              break;
+          }
         }
 
       return result;
@@ -925,7 +972,30 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+          switch (instrumentType)
+          {
+            case InstrumentType.Stock:
+              var stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+              using (var stockReader = ExecuteReader($"SELECT * FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read())
+                {
+                  stock.MarketCap = stockReader.GetDouble(1);
+                  stock.SharesOutstanding = stockReader.GetDouble(2);
+                  stock.EmployeeCount = stockReader.GetInt32(3);
+                  stock.Address = stockReader.GetString(4);
+                  stock.City = stockReader.GetString(5);
+                  stock.State = stockReader.GetString(6);
+                  stock.Zip = stockReader.GetString(7);
+                  stock.PhoneNumber = stockReader.GetString(8);
+                  stock.Url = stockReader.GetString(9);
+                }
+              result.Add(stock);
+              break;
+            default:
+              result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+              break;
+          }
         }
 
       return result;
@@ -991,11 +1061,35 @@ namespace TradeSharp.Data
         {
           List<Guid> secondaryExchangeIds = new List<Guid>();
           string ticker = reader.GetString(0);
+          InstrumentType instrumentType = (InstrumentType)reader.GetInt32(3);
 
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+          switch (instrumentType)
+          {
+            case InstrumentType.Stock:
+              var stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+              using (var stockReader = ExecuteReader($"SELECT * FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read())
+                {
+                  stock.MarketCap = stockReader.GetDouble(1);
+                  stock.SharesOutstanding = stockReader.GetDouble(2);
+                  stock.EmployeeCount = stockReader.GetInt32(3);
+                  stock.Address = stockReader.GetString(4);
+                  stock.City = stockReader.GetString(5);
+                  stock.State = stockReader.GetString(6);
+                  stock.Zip = stockReader.GetString(7);
+                  stock.PhoneNumber = stockReader.GetString(8);
+                  stock.Url = stockReader.GetString(9);
+                }
+              result.Add(stock);
+              break;
+            default:
+              result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+              break;
+          }
         }
 
       return result;
@@ -1065,7 +1159,30 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+          switch (instrumentType)
+          {
+            case InstrumentType.Stock:
+              var stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+              using (var stockReader = ExecuteReader($"SELECT * FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read())
+                {
+                  stock.MarketCap = stockReader.GetDouble(1);
+                  stock.SharesOutstanding = stockReader.GetDouble(2);
+                  stock.EmployeeCount = stockReader.GetInt32(3);
+                  stock.Address = stockReader.GetString(4);
+                  stock.City = stockReader.GetString(5);
+                  stock.State = stockReader.GetString(6);
+                  stock.Zip = stockReader.GetString(7);
+                  stock.PhoneNumber = stockReader.GetString(8);
+                  stock.Url = stockReader.GetString(9);
+                }
+              result.Add(stock);
+              break;
+            default:
+              result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+              break;
+          }
         }
 
       return result;
@@ -1134,11 +1251,35 @@ namespace TradeSharp.Data
         {
           List<Guid> secondaryExchangeIds = new List<Guid>();
           string ticker = reader.GetString(0);
+          InstrumentType instrumentType = (InstrumentType)reader.GetInt32(3);
 
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+          switch (instrumentType)
+          {
+            case InstrumentType.Stock:
+              var stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+              using (var stockReader = ExecuteReader($"SELECT * FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read())
+                {
+                  stock.MarketCap = stockReader.GetDouble(1);
+                  stock.SharesOutstanding = stockReader.GetDouble(2);
+                  stock.EmployeeCount = stockReader.GetInt32(3);
+                  stock.Address = stockReader.GetString(4);
+                  stock.City = stockReader.GetString(5);
+                  stock.State = stockReader.GetString(6);
+                  stock.Zip = stockReader.GetString(7);
+                  stock.PhoneNumber = stockReader.GetString(8);
+                  stock.Url = stockReader.GetString(9);
+                }
+              result.Add(stock);
+              break;
+            default:
+              result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+              break;
+          }
         }
 
       return result;
@@ -1211,7 +1352,30 @@ namespace TradeSharp.Data
           using (var secondaryExchangeReader = ExecuteReader($"SELECT ExchangeId FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{ticker}'"))
             while (secondaryExchangeReader.Read()) secondaryExchangeIds.Add(secondaryExchangeReader.GetGuid(0));
 
-          result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), (InstrumentType)reader.GetInt32(3), Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+          switch (instrumentType)
+          {
+            case InstrumentType.Stock:
+              var stock = new Stock(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12));
+
+              using (var stockReader = ExecuteReader($"SELECT * FROM {TableStock} WHERE Ticker = '{ticker}'"))
+                if (stockReader.Read())
+                {
+                  stock.MarketCap = stockReader.GetDouble(1);
+                  stock.SharesOutstanding = stockReader.GetDouble(2);
+                  stock.EmployeeCount = stockReader.GetInt32(3);
+                  stock.Address = stockReader.GetString(4);
+                  stock.City = stockReader.GetString(5);
+                  stock.State = stockReader.GetString(6);
+                  stock.Zip = stockReader.GetString(7);
+                  stock.PhoneNumber = stockReader.GetString(8);
+                  stock.Url = stockReader.GetString(9);
+                }
+              result.Add(stock);
+              break;
+            default:
+              result.Add(new Instrument(ticker, (Attributes)reader.GetInt64(1), reader.GetString(2), instrumentType, Common.Utilities.FromCsv(FromSqlSafeString(reader.GetString(11))), reader.GetString(4), reader.GetString(5), DateTime.FromBinary(reader.GetInt64(7)), reader.GetInt32(8), reader.GetInt32(9), reader.GetInt32(10), reader.GetGuid(6), secondaryExchangeIds, reader.GetString(12)));
+              break;
+          }
         }
 
       return result;

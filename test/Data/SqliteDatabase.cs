@@ -2027,7 +2027,7 @@ namespace TradeSharp.Data.Testing
       for (int i = 0; i < 200; i++)
       {
         string formattedNumber = i.ToString("D3");
-        m_database.CreateInstrument(new Instrument($"STOCK{formattedNumber}", Instrument.DefaultAttributes, $"STOCK{formattedNumber}", InstrumentType.Stock, Array.Empty<string>(), $"Stock Name {formattedNumber}", $"Stock Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty));  //database layer stores dates in UTC
+        m_database.CreateInstrument(new Stock($"STOCK{formattedNumber}", Instrument.DefaultAttributes, $"STOCK{formattedNumber}", InstrumentType.Stock, Array.Empty<string>(), $"Stock Name {formattedNumber}", $"Stock Description {formattedNumber}", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, Array.Empty<Guid>(), string.Empty));  //database layer stores dates in UTC
       }
       for (int i = 0; i < 200; i++)
       {
@@ -2087,6 +2087,7 @@ namespace TradeSharp.Data.Testing
 
       foreach (Instrument instrument in actualInstruments)
       {
+        if (instrumentType == InstrumentType.Stock) Assert.IsTrue(instrument is Stock, "Stock type instrument is not a stock instance");
         Assert.AreEqual(instrumentType, instrument.Type, $"Instrument {instrument.Ticker} did not have the correct type");
         if (tickerFilter != string.Empty) Assert.IsTrue(Regex.IsMatch(instrument.Ticker, tickerRegex));
         if (nameFilter != string.Empty) Assert.IsTrue(Regex.IsMatch(instrument.Name, nameRegex));
@@ -2161,6 +2162,7 @@ namespace TradeSharp.Data.Testing
 
       foreach (Instrument instrument in actualInstruments)
       {
+        if (instrumentType == InstrumentType.Stock) Assert.IsTrue(instrument is Stock, "Stock type instrument is not a stock instance");
         Assert.AreEqual(instrumentType, instrument.Type, $"Instrument {instrument.Ticker} did not have the correct type");
         if (tickerFilter != string.Empty) Assert.IsTrue(Regex.IsMatch(instrument.Ticker, tickerRegex));
         if (nameFilter != string.Empty) Assert.IsTrue(Regex.IsMatch(instrument.Name, nameRegex));
@@ -2229,12 +2231,13 @@ namespace TradeSharp.Data.Testing
     {
       Exchange secondExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributes, "TagValue", m_country.Id, "Second test exchange", Array.Empty<string>(), m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
       Exchange thirdExchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributes, "TagValue", m_country.Id, "Third test exchange", Array.Empty<string>(), m_timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
-      Instrument stock = new Instrument("STOCK", Instrument.DefaultAttributes, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id }, string.Empty);
+      Instrument stock = new Stock("STOCK", Instrument.DefaultAttributes, "TagValue", InstrumentType.Stock, Array.Empty<string>(), "Stock", "StockDescription", DateTime.Now.ToUniversalTime(), Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, m_exchange.Id, new List<Guid> { secondExchange.Id, thirdExchange.Id }, string.Empty);
 
       m_database.CreateInstrument(stock);
 
       Instrument? retrievedStock = m_database.GetInstrument(stock.Ticker);
 
+      Assert.IsTrue(retrievedStock is Stock, "Retrieved instrument is not a stock instance.");
       Assert.IsNotNull(retrievedStock, "Data store did not return the stock.");
       Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == secondExchange.Id).Single());
       Assert.IsNotNull(retrievedStock.SecondaryExchangeIds.Where(x => x == thirdExchange.Id).Single());
