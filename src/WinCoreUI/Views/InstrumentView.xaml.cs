@@ -14,7 +14,7 @@ namespace TradeSharp.WinCoreUI.Views
   {
 
     //constants
-
+    public const int DetailViewRow = 12;
 
     //enums
 
@@ -40,6 +40,7 @@ namespace TradeSharp.WinCoreUI.Views
       Exchanges = m_database.GetExchanges();
       Instrument = instrument;
       this.InitializeComponent();
+      addStockView();
     }
 
     //finalizers
@@ -64,7 +65,20 @@ namespace TradeSharp.WinCoreUI.Views
     }
 
     //methods
-
-
+    /// <summary>
+    /// Add additional fields for the stock instrument type.
+    /// </summary>
+    private void addStockView()
+    {
+      if (Instrument is Stock stock)
+      {
+        var stockInstrumentView = new StockInstrumentView(stock);
+        m_main.RowDefinitions.Add(new RowDefinition());
+        m_main.Children.Add(stockInstrumentView);
+        stockInstrumentView.SetValue(Grid.RowProperty, DetailViewRow);
+        stockInstrumentView.SetValue(Grid.ColumnProperty, 0);
+        stockInstrumentView.SetValue(Grid.ColumnSpanProperty, 2);
+      }
+    }
   }
 }

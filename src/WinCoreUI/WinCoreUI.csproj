@@ -197,9 +197,15 @@
     <CustomAdditionalCompileInputs Remove="Views\TaskSchedulingView.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Views\StockInstrumentView.xaml" />
     <None Remove="Views\TaskSchedulingView.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Resource Remove="Views\TaskSchedulingView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\StockInstrumentView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>

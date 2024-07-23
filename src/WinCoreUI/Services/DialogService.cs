@@ -27,7 +27,8 @@ namespace TradeSharp.WinDataManager.Services
   {
 
     //constants
-
+    public const double MaxWidthPercentage = 0.8;
+    public const double MaxHeightPercentage = 0.8;    
 
     //enums
 
@@ -169,7 +170,9 @@ namespace TradeSharp.WinDataManager.Services
         Content = view,
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary
+        DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -190,6 +193,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -208,6 +213,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -226,6 +233,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -259,6 +268,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -291,6 +302,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -310,6 +323,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -330,6 +345,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -350,6 +367,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -371,6 +390,8 @@ namespace TradeSharp.WinDataManager.Services
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
         Width = 575,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -392,6 +413,8 @@ namespace TradeSharp.WinDataManager.Services
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
         Width = 575,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -412,6 +435,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -432,6 +457,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -453,8 +480,8 @@ namespace TradeSharp.WinDataManager.Services
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
         Width = 575,
-        MaxWidth = 1920,
-        MaxHeight = 1080,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -476,6 +503,8 @@ namespace TradeSharp.WinDataManager.Services
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
         Width = 575,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -499,6 +528,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -519,6 +550,8 @@ namespace TradeSharp.WinDataManager.Services
         PrimaryButtonText = "OK",
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -540,6 +573,8 @@ namespace TradeSharp.WinDataManager.Services
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
         Width = 575,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();
@@ -561,6 +596,8 @@ namespace TradeSharp.WinDataManager.Services
         CloseButtonText = "Cancel",
         DefaultButton = ContentDialogButton.Primary,
         Width = 575,
+        MaxWidth = getInitNavigationService().Frame.XamlRoot.Size.Width * MaxWidthPercentage,
+        MaxHeight = getInitNavigationService().Frame.XamlRoot.Size.Height * MaxHeightPercentage,
       };
 
       ContentDialogResult result = await dialog.ShowAsync();

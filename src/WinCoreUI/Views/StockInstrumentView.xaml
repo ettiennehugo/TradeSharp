@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="TradeSharp.WinCoreUI.Views.StockInstrumentView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TradeSharp.WinCoreUI.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+  <Grid ColumnDefinitions="150, 300" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
+    <TextBlock x:Name="m_marketCapLabel" Text="Market Cap" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
+    <TextBlock x:Name="m_sharedOutstandingLabel" Text="Shares Outstanding" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1"/>
+    <TextBlock x:Name="m_employeeCountLabel" Text="Employee Count" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2"/>
+    <TextBlock x:Name="m_addressLabel" Text="Address" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3"/>
+    <TextBlock x:Name="m_cityLabel" Text="City" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4"/>
+    <TextBlock x:Name="m_stateLabel" Text="State" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5"/>
+    <TextBlock x:Name="m_zipLabel" Text="Zip" VerticalAlignment="Center" Grid.Column="0" Grid.Row="6"/>
+    <TextBlock x:Name="m_phoneNumberLabel" Text="Phone" VerticalAlignment="Center" Grid.Column="0" Grid.Row="7"/>
+    <TextBlock x:Name="m_websiteLabel" Text="Website" VerticalAlignment="Center" Grid.Column="0" Grid.Row="8"/>
+    <TextBox x:Name="m_marketCap" Text="{x:Bind Stock.MarketCap}" Grid.Column="1" Grid.Row="0" InputScope="Number"/>
+    <TextBox x:Name="m_sharesOutstanding" Text="{x:Bind Stock.SharesOutstanding}" Grid.Column="1" Grid.Row="1" InputScope="Number"/>
+    <TextBox x:Name="m_employeeCount" Text="{x:Bind Stock.EmployeeCount}" Grid.Column="1" Grid.Row="2" InputScope="Number"/>
+    <TextBox x:Name="m_address" Text="{x:Bind Stock.Address}" Grid.Column="1" Grid.Row="3"/>
+    <TextBox x:Name="m_city" Text="{x:Bind Stock.City}" Grid.Column="1" Grid.Row="4"/>
+    <TextBox x:Name="m_state" Text="{x:Bind Stock.State}" Grid.Column="1" Grid.Row="5"/>
+    <TextBox x:Name="m_zip" Text="{x:Bind Stock.Zip}" Grid.Column="1" Grid.Row="6"/>
+    <TextBox x:Name="m_phoneNumber" Text="{x:Bind Stock.PhoneNumber}" Grid.Column="1" Grid.Row="7" InputScope="TelephoneNumber"/>
+    <TextBox x:Name="m_webite" Text="{x:Bind Stock.Url}" Grid.Column="1" Grid.Row="8" InputScope="Url"/>
+  </Grid>
+</UserControl>

@@ -1,9 +1,19 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Data;
 
 namespace TradeSharp.PolygonIO.Commands
 {
+  /// <summary>
+  /// Payload for the Polygon IO instrument metadata.
+  /// </summary>
+  public class InstrumentMetaDataV1
+  {
+    public Tickers Ticker { get; set; } = null;
+    public TickerDetails Details { get; set; } = null;
+  }
+
 	/// <summary>
 	/// Update the TradeSharp instrument definitions from the cached Polygon ticker definitions.
 	/// </summary>
@@ -76,9 +86,9 @@ namespace TradeSharp.PolygonIO.Commands
               instrumentCreated = true;
               progressDialog.LogInformation($"Creating new instrument {pioTicker.Ticker} - {pioTicker.Name}");
               if (pioTicker.Market == Constants.TickerMarketStocks)
-                instrument = new Data.Stock(pioTicker.Ticker, Instrument.DefaultAttributes, pioTicker.Ticker, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
+                instrument = new Data.Stock(pioTicker.Ticker, Instrument.DefaultAttributes, string.Empty, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
               else
-                instrument = new Data.Instrument(pioTicker.Ticker, Instrument.DefaultAttributes, pioTicker.Ticker, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
+                instrument = new Data.Instrument(pioTicker.Ticker, Instrument.DefaultAttributes, string.Empty, pioTicker.GetInstrumentType(), Array.Empty<string>(), pioTicker.Name, pioTicker.Name, Common.Constants.DefaultMinimumDateTime, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, exchangeId, Array.Empty<Guid>(), string.Empty);
             }
 
             if (pioTickerDetails != null && instrument is Stock stock)
@@ -96,7 +106,12 @@ namespace TradeSharp.PolygonIO.Commands
               stock.Url = pioTickerDetails.HomepageUrl;
             }
 
-            m_instrumentService.Update(instrument);
+            var metaData = new InstrumentMetaDataV1 { Ticker = pioTicker, Details = pioTickerDetails };
+            instrument.Tag.Update(Constants.TagDataId, DateTime.UtcNow, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(metaData));
+            if (instrumentCreated)
+              m_instrumentService.Add(instrument);
+            else
+              m_instrumentService.Update(instrument);
             updateService = true;
           }
           catch (Exception ex)
