@@ -14,7 +14,7 @@ namespace TradeSharp.WinCoreUI.Views
   {
 
     //constants
-    public const int DetailViewRow = 12;
+
 
     //enums
 
@@ -75,7 +75,7 @@ namespace TradeSharp.WinCoreUI.Views
         var stockInstrumentView = new StockInstrumentView(stock);
         m_main.RowDefinitions.Add(new RowDefinition());
         m_main.Children.Add(stockInstrumentView);
-        stockInstrumentView.SetValue(Grid.RowProperty, DetailViewRow);
+        stockInstrumentView.SetValue(Grid.RowProperty, m_main.RowDefinitions.Count - 1);
         stockInstrumentView.SetValue(Grid.ColumnProperty, 0);
         stockInstrumentView.SetValue(Grid.ColumnSpanProperty, 2);
       }
