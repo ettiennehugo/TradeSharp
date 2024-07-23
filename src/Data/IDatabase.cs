@@ -588,7 +588,7 @@ namespace TradeSharp.Data
       return Ticker.GetHashCode() + AlternateTickers.GetHashCode();
     }
 
-    public object Clone()
+    public virtual object Clone()
     {
       return new Instrument(Ticker, AttributeSet, TagStr, Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds), ExtendedProperties);
     }
@@ -672,8 +672,22 @@ namespace TradeSharp.Data
 
 
     //methods
-
-
+    public override object Clone()
+    {
+      var clone = new Stock(Ticker, AttributeSet, TagStr, Type, new List<string>(AlternateTickers), Name, Description, InceptionDate, PriceDecimals, MinimumMovement, BigPointValue, PrimaryExchangeId, new List<Guid>(SecondaryExchangeIds), ExtendedProperties);
+      clone.MarketCap = MarketCap;
+      clone.SharesOutstanding = SharesOutstanding;
+      clone.EmployeeCount = EmployeeCount;
+      clone.Address = Address;
+      clone.City = City;
+      clone.State = State;
+      clone.Zip = Zip;
+      clone.PhoneNumber = PhoneNumber;
+      clone.Url = Url;
+      clone.FiftyTwoWeekHigh = FiftyTwoWeekHigh;
+      clone.FiftyTwoWeekLow = FiftyTwoWeekLow;
+      return clone;
+    }
   }
 
   /// <summary>
