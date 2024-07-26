@@ -30,7 +30,13 @@
           </AppBarButton.Icon>
         </AppBarButton>
         <AppBarSeparator x:Name="m_multiSelectSeparator" Visibility="{x:Bind MultiSelectVisible, Mode=OneWay}"/>
-        <AppBarButton Icon="Add" Command="{x:Bind ViewModel.AddCommand}" ToolTipService.ToolTip="Add instrument" IsCompact="True" Visibility="{x:Bind AddVisible, Mode=OneWay}"/>
+        <AppBarButton Icon="Add" ToolTipService.ToolTip="Add new instrument" IsCompact="True" Visibility="{x:Bind AddVisible, Mode=OneWay}">
+          <AppBarButton.Flyout>
+            <MenuFlyout>
+              <MenuFlyoutItem Text="Stock" Command="{x:Bind ViewModel.AddStockCommand}" ToolTipService.ToolTip="Add new stock"/>
+            </MenuFlyout>
+          </AppBarButton.Flyout>
+        </AppBarButton>
         <AppBarButton Icon="Edit" Command="{x:Bind ViewModel.UpdateCommand}" ToolTipService.ToolTip="Update instrument" IsCompact="True" Visibility="{x:Bind EditVisible, Mode=OneWay}"/>
         <AppBarButton Icon="Delete" Command="{x:Bind ViewModel.DeleteCommandAsync}" Click="DeleteBarButton_Click" ToolTipService.ToolTip="Delete instrument" IsCompact="True"  Visibility="{x:Bind DeleteVisible, Mode=OneWay}"/>
         <AppBarSeparator x:Name="m_addEditDeleteSeparator" Visibility="{x:Bind AddEditDeleteSeparatorVisible, Mode=OneWay}"/>

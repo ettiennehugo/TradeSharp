@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
+using CommunityToolkit.Mvvm.Input;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -22,7 +23,10 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //constructors
-    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) { }
+    public InstrumentViewModel(IInstrumentService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService) 
+    {
+      AddStockCommand = new RelayCommand(OnAddStock);
+    }
 
     //finalizers
 
@@ -30,7 +34,14 @@ namespace TradeSharp.CoreUI.ViewModels
     //interface implementations
     public override async void OnAdd()
     {
-      Instrument? newInstrument = await m_dialogService.ShowCreateInstrumentAsync();
+      Instrument? newInstrument = await m_dialogService.ShowCreateInstrumentAsync(InstrumentType.None);
+      if (newInstrument != null)
+        m_itemsService.Add(newInstrument);
+    }
+
+    public virtual async void OnAddStock()
+    {
+      Instrument? newInstrument = await m_dialogService.ShowCreateInstrumentAsync(InstrumentType.Stock);
       if (newInstrument != null)
         m_itemsService.Add(newInstrument);
     }
@@ -38,11 +49,7 @@ namespace TradeSharp.CoreUI.ViewModels
     public override async void OnUpdate()
     {
       if (SelectedItem != null)
-      {
-        var updatedSession = await m_dialogService.ShowUpdateInstrumentAsync(SelectedItem);
-        if (updatedSession != null)
-          m_itemsService.Update(updatedSession);
-      }
+        await m_dialogService.ShowUpdateInstrumentAsync(SelectedItem);
     }
 
     public override async Task OnImportAsync()
@@ -63,7 +70,7 @@ namespace TradeSharp.CoreUI.ViewModels
     }
 
     //properties    
-
+    public RelayCommand AddStockCommand { get; set; }
 
     //methods
 

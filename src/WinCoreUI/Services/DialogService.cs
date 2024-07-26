@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI;
 using Windows.Graphics;
 using TradeSharp.WinCoreUI.Services;
+using TradeSharp.WinCoreUI.Views;
 
 namespace TradeSharp.WinDataManager.Services
 {
@@ -68,6 +69,26 @@ namespace TradeSharp.WinDataManager.Services
     public void PostUIUpdate(Action updateAction)
     {
       UIDispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => { updateAction(); });
+    }
+
+    public async Task<T> PostUIUpdateAsync<T>(Func<T> updateFunc)
+    {
+      var tcs = new TaskCompletionSource<T>();
+
+      UIDispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+      {
+        try
+        {
+          var result = updateFunc();
+          tcs.SetResult(result);
+        }
+        catch (Exception ex)
+        {
+          tcs.SetException(ex);
+        }
+      });
+
+      return await tcs.Task;
     }
 
     public async Task ShowPopupMessageAsync(string message)
@@ -318,44 +339,26 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public async Task<Instrument> ShowCreateInstrumentAsync()
+    public Task<Instrument> ShowCreateInstrumentAsync(InstrumentType instrumentType)
     {
-      WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView();
-      ContentDialog dialog = new ContentDialog()
+      return PostUIUpdateAsync(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-        Title = "Create Instrument",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
-
-      ContentDialogResult result = await dialog.ShowAsync();
-      if (result == ContentDialogResult.Primary) return view.Instrument;
-
-      return null;
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView(instrumentType, window);
+        window.Title = $"Create new instrument";
+        window.Activate();
+        return view.Instrument;
+      });
     }
 
-    public async Task<Instrument> ShowUpdateInstrumentAsync(Instrument instrument)
+    public async Task ShowUpdateInstrumentAsync(Instrument instrument)
     {
-      WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView((Instrument)instrument.Clone());
-      ContentDialog dialog = new ContentDialog()
-      {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-        Title = "Update Instrument",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary
-      };
-
-      ContentDialogResult result = await dialog.ShowAsync();
-      if (result == ContentDialogResult.Primary) return view.Instrument;
-
-      return null;
+      await Task.Run(() => {
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView((Instrument)instrument.Clone(), window);
+        window.Title = $"Update - {instrument.Ticker}";
+        window.Activate();
+      });
     }
 
     public async Task<ImportSettings?> ShowImportInstrumentsAsync()

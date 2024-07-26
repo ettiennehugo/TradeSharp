@@ -286,7 +286,8 @@ namespace TradeSharp.CoreUI.Services
 
 
     //methods
-    void PostUIUpdate(Action updateAction);
+    void PostUIUpdate(Action updateAction);     //post void return action to the UI thread
+    Task<T> PostUIUpdateAsync<T>(Func<T> updateAction);   //post return type T action to the UI thread
     Task ShowPopupMessageAsync(string message);
     Task ShowStatusMessageAsync(StatusMessageSeverity severity, string title, string message);
     IProgressDialog CreateProgressDialog(string title, ILogger? logger);
@@ -303,8 +304,8 @@ namespace TradeSharp.CoreUI.Services
     Task<Session?> ShowCreateSessionAsync(Guid parentId);
     Task<Session?> ShowUpdateSessionAsync(Session session);
 
-    Task<Instrument?> ShowCreateInstrumentAsync();
-    Task<Instrument?> ShowUpdateInstrumentAsync(Instrument instrument);
+    Task<Instrument?> ShowCreateInstrumentAsync(InstrumentType instrumentType);
+    Task ShowUpdateInstrumentAsync(Instrument instrument);
     Task<ImportSettings?> ShowImportInstrumentsAsync();
     Task<ExportSettings?> ShowExportInstrumentsAsync();
 
