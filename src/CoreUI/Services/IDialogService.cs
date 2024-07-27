@@ -295,8 +295,8 @@ namespace TradeSharp.CoreUI.Services
 
     void ShowCreateCountryAsync();
 
-    Task<Holiday?> ShowCreateHolidayAsync(Guid parentId);
-    Task<Holiday?> ShowUpdateHolidayAsync(Holiday holiday);
+    void ShowCreateHolidayAsync(Guid parentId);
+    void ShowUpdateHolidayAsync(Holiday holiday);
 
     Task<Exchange?> ShowCreateExchangeAsync();
     Task<Exchange?> ShowUpdateExchangeAsync(Exchange exchange);

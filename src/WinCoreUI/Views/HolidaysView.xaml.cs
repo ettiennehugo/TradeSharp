@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.ViewModels;
+using TradeSharp.Data;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -55,7 +56,12 @@ namespace TradeSharp.WinCoreUI.Views
     public IHolidayViewModel ViewModel { get; }
 
     //methods
-
-
+    private void OnHolidaysSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      if (m_holidays.SelectedItem != null)
+      {
+        ViewModel.SelectedItem = m_holidays.SelectedItem as Holiday;
+      }
+    }
   }
 }

@@ -193,40 +193,26 @@ namespace TradeSharp.WinDataManager.Services
       });
     }
 
-    public async Task<Holiday> ShowCreateHolidayAsync(Guid parentId)
+    public void ShowCreateHolidayAsync(Guid parentId)
     {
-      WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView(parentId);
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Title = "Create Holiday",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
-
-      ContentDialogResult result = await dialog.ShowAsync();
-      if (result == ContentDialogResult.Primary) return view.Holiday;
-      return null;
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView(parentId, window);
+        window.Title = "Create holiday";
+        window.Activate();
+      });
     }
 
-    public async Task<Holiday?> ShowUpdateHolidayAsync(Holiday holiday)
+    public void ShowUpdateHolidayAsync(Holiday holiday)
     {
-      WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView((Holiday)holiday.Clone());
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Title = "Update Holiday",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
-
-      ContentDialogResult result = await dialog.ShowAsync();
-      if (result == ContentDialogResult.Primary) return view.Holiday;
-      return null;
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView((Holiday)holiday.Clone(), window);
+        window.Title = $"Update holiday - ${holiday.Name}";
+        window.Activate();
+      });
     }
 
     public async Task<Exchange?> ShowCreateExchangeAsync()

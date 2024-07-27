@@ -67,12 +67,16 @@ namespace TradeSharp.CoreUI.Services
     //methods
     public bool Add(Holiday item)
     {
-      return m_holidayRepository.Add(item);
+      bool result = m_holidayRepository.Add(item);
+      if (result) Items.Add(item);
+      return result;
     }
 
     public bool Delete(Holiday item)
     {
-      return m_holidayRepository.Delete(item);
+      var result = m_holidayRepository.Delete(item);
+      if (result) Items.Remove(item);
+      return result;
     }
 
     public void Refresh()
@@ -87,7 +91,16 @@ namespace TradeSharp.CoreUI.Services
 
     public bool Update(Holiday item)
     {
-      return m_holidayRepository.Update(item);
+      var result = m_holidayRepository.Update(item);
+      if (result)
+      {
+        var existingItem = Items.FirstOrDefault((i) => i.Id == item.Id);
+        if (existingItem != null)
+          existingItem.Update(item);
+        else
+          Items.Add(item);
+      }
+      return result;
     }
 
     public bool Copy(Holiday item) => throw new NotImplementedException();

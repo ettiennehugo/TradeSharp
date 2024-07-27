@@ -15,12 +15,13 @@
     <wincoreuicommon:MonthValueConverter x:Key="MonthValueConverter"/>
     <wincoreuicommon:WeekOfMonthValueConverter x:Key="WeekOfMonthValueConverter"/>
   </Page.Resources>
-  <Grid>
+  <Grid x:Name="m_main" Margin="5,5">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="auto"/>
       <ColumnDefinition Width="auto"/>
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
+      <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
@@ -46,5 +47,9 @@
     <ComboBox x:Name="m_weekOfMonth" SelectedIndex="{x:Bind Holiday.WeekOfMonth, Mode=TwoWay, Converter={StaticResource WeekOfMonthValueConverter}}" Grid.Column="1" Grid.Row="5"/>
     <ComboBox x:Name="m_moveWeekendHoliday" SelectedIndex="{x:Bind Holiday.MoveWeekendHoliday, Mode=TwoWay, Converter={StaticResource EnumValueDescriptionConverter}}" Grid.Column="1" Grid.Row="6"/>
     <TextBox x:Name="m_tag" Text="{x:Bind Holiday.TagStr, Mode=TwoWay}" PlaceholderText="Tag value JSON" Grid.Column="1" Grid.Row="7"/>
+    <StackPanel x:Name="m_buttonBar" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,0" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2">
+      <Button x:Name="m_okButton" Content="OK" Click="m_okButton_Click"/>
+      <Button x:Name="m_cancelButton" Content="Cancel" Click="m_cancelButton_Click"/>
+    </StackPanel>
   </Grid>
 </Page>

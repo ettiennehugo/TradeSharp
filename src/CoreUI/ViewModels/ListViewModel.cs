@@ -4,6 +4,7 @@ using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Events;
+using System.Diagnostics;
 
 namespace TradeSharp.CoreUI.ViewModels
 {
@@ -147,24 +148,34 @@ namespace TradeSharp.CoreUI.ViewModels
       return Task.Run(() =>
       {
         int count = 0;
-        if (target is TItem)
+        if (target is TItem item)
         {
-          TItem item = (TItem)target;
           Items.Remove(item);
           m_itemsService.Delete(item);
           count++;
         }
-        else if (target is IList<TItem>)
+        else if (target is IList<TItem> items)
         {
-          IList<TItem> items = (IList<TItem>)target;
-          foreach (TItem item in items)
+          foreach (TItem it in items)
           {
-            m_itemsService.Delete(item);
+            m_itemsService.Delete(it);
             count++;
           }
 
           OnRefresh();
         }
+        else if (SelectedItem != null)
+        {
+          m_dialogService.PostUIUpdate(() => {
+            m_itemsService.Delete(SelectedItem);
+            Items.Remove(SelectedItem);
+            SelectedItem = Items.FirstOrDefault();
+            count++;
+          });
+        }
+        else
+          //selected item is bound to target that can not be converted to the object selection
+          Debugger.Break();
       });
     }
 

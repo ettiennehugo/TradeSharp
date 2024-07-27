@@ -17,7 +17,7 @@ namespace TradeSharp.WinCoreUI.Views
   {
     //constants
     public const int Width = 1621;
-    public const int Height = 249;
+    public const int Height = 168;
 
     //enums
 

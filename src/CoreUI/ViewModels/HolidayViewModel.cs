@@ -41,31 +41,14 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //methods
-    public override async void OnAdd()
+    public override void OnAdd()
     {
-      Holiday? newHoliday = await m_dialogService.ShowCreateHolidayAsync(m_itemsService.ParentId);
-      if (newHoliday != null)
-      {
-        if (m_itemsService.Items.Contains(newHoliday))
-          await m_dialogService.ShowPopupMessageAsync("The holiday you are trying to add already exists in the database.");
-        else
-        {
-          m_itemsService.Add(newHoliday);
-          Items.Add(newHoliday);
-          SelectedItem = newHoliday;
-        }
-      }
+      m_dialogService.ShowCreateHolidayAsync(m_itemsService.ParentId);
     }
 
-    public override async void OnUpdate()
+    public override void OnUpdate()
     {
-      if (SelectedItem != null)
-      {
-        var updatedHoliday = await m_dialogService.ShowUpdateHolidayAsync(SelectedItem);
-        if (updatedHoliday != null)
-          m_itemsService.Update(updatedHoliday);
-        //TBD: Will need a refresh of the list item here to make sure the UI updates.
-      }
+      m_dialogService.ShowUpdateHolidayAsync(SelectedItem);
     }
   }
 }

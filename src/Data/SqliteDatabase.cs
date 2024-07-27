@@ -322,18 +322,21 @@ namespace TradeSharp.Data
     {
       lock (this)
         ExecuteCommand(
-          $"UPDATE OR FAIL {TableHoliday} " +
-            $"SET ParentId = '{holiday.ParentId.ToString()}', " +
-                $"Name = '{ToSqlSafeString(holiday.Name)}', " +
-                $"AttributeSet = {(long)holiday.AttributeSet}, " +
-                $"Tag = '{ToSqlSafeString(holiday.TagStr)}', " +
-                $"HolidayType = {(int)holiday.Type}, " +
-                $"Month = {(int)holiday.Month}, " +
-                $"DayOfMonth = {(int)holiday.DayOfMonth}, " +
-                $"WeekOfMonth = {(int)holiday.WeekOfMonth}, " +
-                $"DayOfWeek = {(int)holiday.DayOfWeek}, " +
-                $"MoveWeekendHoliday = {(int)holiday.MoveWeekendHoliday} " +
-            $"WHERE Id = '{holiday.Id.ToString()}'"
+          $"INSERT OR REPLACE INTO {TableHoliday} " +
+          $"(Id, ParentId, Name, AttributeSet, Tag, HolidayType, Month, DayOfMonth, WeekOfMonth, DayOfWeek, MoveWeekendHoliday) " +
+          $"VALUES (" +
+              $"'{holiday.Id.ToString()}', " +
+              $"'{holiday.ParentId.ToString()}', " +
+              $"'{ToSqlSafeString(holiday.Name)}', " +
+              $"{(long)holiday.AttributeSet}, " +
+              $"'{ToSqlSafeString(holiday.TagStr)}', " +
+              $"{(int)holiday.Type}, " +
+              $"{(int)holiday.Month}, " +
+              $"{(int)holiday.DayOfMonth}, " +
+              $"{(int)holiday.WeekOfMonth}, " +
+              $"{(int)holiday.DayOfWeek}, " +
+              $"{(int)holiday.MoveWeekendHoliday}" +
+          $")"
         );
     }
 

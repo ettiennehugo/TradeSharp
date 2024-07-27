@@ -1,22 +1,11 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using TradeSharp.Common;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using TradeSharp.Data;
-using TradeSharp.WinCoreUI.Common;
-using System.ComponentModel;
-using System.Reflection;
+using TradeSharp.CoreUI.Services;
+using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,10 +15,11 @@ namespace TradeSharp.WinCoreUI.Views
   /// <summary>
   /// Holiday definition view used to create/view/update a holiday.
   /// </summary>
-  public sealed partial class HolidayView : Page
+  public sealed partial class HolidayView : Page, IWindowedView
   {
     //constants
-
+    public const int Width = 628;
+    public const int Height = 607;
 
     //enums
 
@@ -39,19 +29,26 @@ namespace TradeSharp.WinCoreUI.Views
 
     //attributes
     private Guid m_parentId;
+    private IHolidayService m_holidayService;
 
     //constructors
-    public HolidayView(Guid parentId)
+    public HolidayView(Guid parentId, ViewWindow parent)
     {
+      m_holidayService = (IHolidayService)IApplication.Current.Services.GetService(typeof(IHolidayService));
+      ParentWindow = parent;
       this.InitializeComponent();
+      setParentProperties();
       m_parentId = parentId;
       m_name.Text = "New Holiday";
       Holiday = new Holiday(Guid.NewGuid(), Holiday.DefaultAttributes, "", m_parentId, m_name.Text, HolidayType.DayOfMonth, Months.January, 1, DayOfWeek.Monday, WeekOfMonth.First, MoveWeekendHoliday.DontAdjust);
     }
 
-    public HolidayView(Holiday holiday)
+    public HolidayView(Holiday holiday, ViewWindow parent)
     {
+      m_holidayService = (IHolidayService)IApplication.Current.Services.GetService(typeof(IHolidayService));
+      ParentWindow = parent;
       this.InitializeComponent();
+      setParentProperties();
       m_parentId = holiday.ParentId;
       Holiday = holiday;
     }
@@ -70,14 +67,17 @@ namespace TradeSharp.WinCoreUI.Views
       set => SetValue(s_holidayProperty, value);
     }
 
+    public ViewWindow ParentWindow { get; private set; }
+    public UIElement UIElement => this;
+
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_holidayType, typeof(HolidayType));
-      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_month, typeof(Months));
-      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_dayOfWeek, typeof(DayOfWeek));
-      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_weekOfMonth, typeof(WeekOfMonth));
-      WinCoreUI.Common.Utilities.populateComboBoxFromEnum(ref m_moveWeekendHoliday, typeof(MoveWeekendHoliday));
+      Common.Utilities.populateComboBoxFromEnum(ref m_holidayType, typeof(HolidayType));
+      Common.Utilities.populateComboBoxFromEnum(ref m_month, typeof(Months));
+      Common.Utilities.populateComboBoxFromEnum(ref m_dayOfWeek, typeof(DayOfWeek));
+      Common.Utilities.populateComboBoxFromEnum(ref m_weekOfMonth, typeof(WeekOfMonth));
+      Common.Utilities.populateComboBoxFromEnum(ref m_moveWeekendHoliday, typeof(MoveWeekendHoliday));
     }
 
     private void m_holidayType_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -105,6 +105,26 @@ namespace TradeSharp.WinCoreUI.Views
       for (int day = 1; day <= days; day++) m_dayOfMonth.Items.Add(day.ToString());
       if (selectedDay + 1 >= days) m_dayOfMonth.SelectedIndex = days;
       if (selectedDay == -1) m_dayOfMonth.SelectedIndex = 0;
+    }
+
+    private void setParentProperties()
+    {
+      ParentWindow.View = this;   //need to set this only once the view screen elements are created
+      ParentWindow.ResetSizeable();
+      ParentWindow.HideMinimizeAndMaximizeButtons();
+      ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(Width, Height));
+      ParentWindow.CenterWindow();
+    }
+
+    private void m_okButton_Click(object sender, RoutedEventArgs e)
+    {
+      m_holidayService.Update(Holiday);
+      ParentWindow.Close();
+    }
+
+    private void m_cancelButton_Click(object sender, RoutedEventArgs e)
+    {
+      ParentWindow.Close();
     }
   }
 }
