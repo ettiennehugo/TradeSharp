@@ -193,7 +193,7 @@ namespace TradeSharp.WinDataManager.Services
       });
     }
 
-    public void ShowCreateHolidayAsync(Guid parentId)
+    public Task<Holiday?> ShowCreateHolidayAsync(Guid parentId)
     {
       PostUIUpdate(() =>
       {
@@ -202,9 +202,11 @@ namespace TradeSharp.WinDataManager.Services
         window.Title = "Create holiday";
         window.Activate();
       });
+
+      return Task.FromResult<Holiday?>(null);
     }
 
-    public void ShowUpdateHolidayAsync(Holiday holiday)
+    public Task<Holiday?> ShowUpdateHolidayAsync(Holiday holiday)
     {
       PostUIUpdate(() =>
       {
@@ -213,71 +215,34 @@ namespace TradeSharp.WinDataManager.Services
         window.Title = $"Update holiday - ${holiday.Name}";
         window.Activate();
       });
+
+      return Task.FromResult<Holiday?>(null);
     }
 
-    public async Task<Exchange?> ShowCreateExchangeAsync()
+    public Task<Exchange?> ShowCreateExchangeAsync()
     {
-      WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView();
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Title = "Create Exchange",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView(window);
+        window.Title = "Create exchange";
+        window.Activate();
+      });
 
-      ContentDialogResult result = await dialog.ShowAsync();
-
-      if (result == ContentDialogResult.Primary)
-      {
-        string logoFilename = Exchange.GetLogoPath(view.Exchange.LogoId);
-        if (view.ExchangeLogoPath != logoFilename)
-          try
-          {
-            Exchange.ReplaceLogo(view.Exchange, view.ExchangeLogoPath);
-          }
-          catch (Exception e)
-          {
-            await ShowPopupMessageAsync(e.Message);
-          }
-
-        return view.Exchange;
-      }
-      return null;
+      return Task.FromResult<Exchange?>(null);
     }
 
-    public async Task<Exchange?> ShowUpdateExchangeAsync(Exchange exchange)
+    public Task<Exchange?> ShowUpdateExchangeAsync(Exchange exchange)
     {
-      WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView((Exchange)exchange.Clone());
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Title = "Update Exchange",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView((Exchange)exchange.Clone(), window);
+        window.Title = $"Update holiday - ${exchange.Name}";
+        window.Activate();
+      });
 
-      ContentDialogResult result = await dialog.ShowAsync();
-
-      if (result == ContentDialogResult.Primary)
-      {
-        try
-        {
-          Exchange.ReplaceLogo(view.Exchange, view.ExchangeLogoPath);
-        }
-        catch (Exception e)
-        {
-          await ShowPopupMessageAsync(e.Message);
-        }
-
-        return view.Exchange;
-      }
-
-      return null;
+      return Task.FromResult<Exchange?>(null);
     }
 
     public async Task<Session?> ShowCreateSessionAsync(Guid parentId)
@@ -320,24 +285,28 @@ namespace TradeSharp.WinDataManager.Services
 
     public Task<Instrument> ShowCreateInstrumentAsync(InstrumentType instrumentType)
     {
-      return PostUIUpdateAsync(() =>
+      PostUIUpdate(() =>
       {
         ViewWindow window = new ViewWindow();
         WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView(instrumentType, window);
         window.Title = $"Create new instrument";
         window.Activate();
-        return view.Instrument;
       });
+
+      return Task.FromResult<Instrument?>(null);
     }
 
-    public async Task ShowUpdateInstrumentAsync(Instrument instrument)
+    public Task<Instrument?> ShowUpdateInstrumentAsync(Instrument instrument)
     {
-      await Task.Run(() => {
+      PostUIUpdate(() =>
+      {
         ViewWindow window = new ViewWindow();
         WinCoreUI.Views.InstrumentView view = new WinCoreUI.Views.InstrumentView((Instrument)instrument.Clone(), window);
         window.Title = $"Update - {instrument.Ticker}";
         window.Activate();
       });
+
+      return Task.FromResult<Instrument?>(null);
     }
 
     public async Task<ImportSettings?> ShowImportInstrumentsAsync()

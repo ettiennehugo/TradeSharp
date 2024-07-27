@@ -20,13 +20,14 @@
     </Style>
     <wincoreuicommon:StringListToStringConverter x:Key="StringListToStringConverter"/>
   </Page.Resources>
-  <Grid>
+  <Grid x:Name="m_main" Margin="5,5">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="auto"/>
       <ColumnDefinition Width="auto"/>
       <ColumnDefinition Width="auto"/>
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
+      <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
@@ -68,5 +69,9 @@
     <NumberBox x:Name="m_priceDecimals" Text="{x:Bind Exchange.DefaultPriceDecimals, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0" Maximum="10" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="6"/>
     <NumberBox x:Name="m_minimumMovement" Text="{x:Bind Exchange.DefaultMinimumMovement, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0.01" SmallChange="0.01" LargeChange="1" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="7"/>
     <NumberBox x:Name="m_bigPointValue" Text="{x:Bind Exchange.DefaultBigPointValue, Mode=TwoWay}" Width="120" HorizontalAlignment="Left" Minimum="0.01" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact" Grid.Column="2" Grid.Row="8"/>
+    <StackPanel x:Name="m_buttonBar" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="9" Grid.ColumnSpan="3">
+      <Button x:Name="m_okButton" Content="OK" Click="m_okButton_Click"/>
+      <Button x:Name="m_cancelButton" Content="Cancel" Click="m_cancelButton_Click"/>
+    </StackPanel>
   </Grid>
 </Page>

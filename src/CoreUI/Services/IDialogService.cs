@@ -295,8 +295,8 @@ namespace TradeSharp.CoreUI.Services
 
     void ShowCreateCountryAsync();
 
-    void ShowCreateHolidayAsync(Guid parentId);
-    void ShowUpdateHolidayAsync(Holiday holiday);
+    Task<Holiday?> ShowCreateHolidayAsync(Guid parentId);
+    Task<Holiday?> ShowUpdateHolidayAsync(Holiday holiday);
 
     Task<Exchange?> ShowCreateExchangeAsync();
     Task<Exchange?> ShowUpdateExchangeAsync(Exchange exchange);
@@ -305,7 +305,7 @@ namespace TradeSharp.CoreUI.Services
     Task<Session?> ShowUpdateSessionAsync(Session session);
 
     Task<Instrument?> ShowCreateInstrumentAsync(InstrumentType instrumentType);
-    Task ShowUpdateInstrumentAsync(Instrument instrument);
+    Task<Instrument?> ShowUpdateInstrumentAsync(Instrument instrument);
     Task<ImportSettings?> ShowImportInstrumentsAsync();
     Task<ExportSettings?> ShowExportInstrumentsAsync();
 

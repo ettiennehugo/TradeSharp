@@ -10,6 +10,7 @@ using WinRT.Interop;
 using Windows.Storage;
 using System.ComponentModel;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -20,11 +21,11 @@ namespace TradeSharp.WinCoreUI.Views
   /// Exchange definition view used to create/view/update an exchange.
   /// </summary>
   [INotifyPropertyChanged]
-  public sealed partial class ExchangeView : Page
+  public sealed partial class ExchangeView : Page, IWindowedView
   {
-
     //constants
-
+    public const int Width = 1198;
+    public const int Height = 660;
 
     //enums
 
@@ -33,26 +34,32 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-
+    private IExchangeService m_exchangeService;
 
     //constructors
-    public ExchangeView()
-    {
+    public ExchangeView(ViewWindow parent)
+    { 
+      ParentWindow = parent;
+      m_exchangeService = (IExchangeService)IApplication.Current.Services.GetService(typeof(IExchangeService));
       loadCountries();
       loadTimeZones();
       Exchange = new Exchange(Guid.NewGuid(), Exchange.DefaultAttributes, "", Guid.Empty, "", Array.Empty<string>(), TimeZoneInfo.Local, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Guid.Empty, string.Empty);
       ExchangeLogoPath = Data.Exchange.GetLogoPath(Guid.Empty);
       this.InitializeComponent();
+      setParentProperties();
       m_countryId.SelectedIndex = 0; 
     }
 
-    public ExchangeView(Exchange exchange)
+    public ExchangeView(Exchange exchange, ViewWindow parent)
     {
+      ParentWindow = parent;
+      m_exchangeService = (IExchangeService)IApplication.Current.Services.GetService(typeof(IExchangeService));
       loadCountries();
       loadTimeZones();
       Exchange = exchange;
       ExchangeLogoPath = Exchange.LogoPath;
       this.InitializeComponent();
+      setParentProperties();
 
       m_countryId.SelectedIndex = 0;  //default to first valid country
       for (int i = 0; i < Countries.Count; i++)
@@ -80,10 +87,22 @@ namespace TradeSharp.WinCoreUI.Views
     //properties
     public IList<Country> Countries { get; internal set; }
     public IList<TimeZoneInfo> TimeZones { get; internal set; }
+    public ViewWindow ParentWindow { get; private set; }
+    public UIElement UIElement => this;
+
     [ObservableProperty] private Exchange? m_exchange;
     [ObservableProperty] private string m_exchangeLogoPath;
 
     //methods
+    private void setParentProperties()
+    {
+      ParentWindow.View = this;   //need to set this only once the view screen elements are created
+      ParentWindow.ResetSizeable();
+      ParentWindow.HideMinimizeAndMaximizeButtons();
+      ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(Width, Height));
+      ParentWindow.CenterWindow();
+    }
+
     private void loadCountries()
     {
       //load defined countries
@@ -127,5 +146,15 @@ namespace TradeSharp.WinCoreUI.Views
       if (file != null) ExchangeLogoPath = file.Path;
     }
 
+    private void m_okButton_Click(object sender, RoutedEventArgs e)
+    {
+      m_exchangeService.Update(Exchange);
+      ParentWindow.Close();
+    }
+
+    private void m_cancelButton_Click(object sender, RoutedEventArgs e)
+    {
+      ParentWindow.Close();
+    }
   }
 }
