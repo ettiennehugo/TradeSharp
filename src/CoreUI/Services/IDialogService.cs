@@ -293,7 +293,7 @@ namespace TradeSharp.CoreUI.Services
     IProgressDialog CreateProgressDialog(string title, ILogger? logger);
     ICorrectiveLoggerDialog CreateCorrectiveLoggerDialog(string title, LogEntry? entry = null); //adds given log entry to display it in the dialog (typically a collapsible log entry
 
-    Task<CountryInfo?> ShowSelectCountryAsync();
+    void ShowCreateCountryAsync();
 
     Task<Holiday?> ShowCreateHolidayAsync(Guid parentId);
     Task<Holiday?> ShowUpdateHolidayAsync(Holiday holiday);

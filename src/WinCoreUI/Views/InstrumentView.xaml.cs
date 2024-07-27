@@ -49,7 +49,7 @@ namespace TradeSharp.WinCoreUI.Views
           Instrument = new Stock("", Instrument.DefaultAttributes, "", InstrumentType.Stock, Array.Empty<string>(), "", "", DateTime.Today, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, Array.Empty<Guid>(), string.Empty);
           break;
         default:
-          Instrument = new Instrument("", Instrument.DefaultAttributes, "", InstrumentType.Stock, Array.Empty<string>(), "", "", DateTime.Today, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, Array.Empty<Guid>(), string.Empty);
+          Instrument = new Instrument("", Instrument.DefaultAttributes, "", InstrumentType.None, Array.Empty<string>(), "", "", DateTime.Today, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Exchange.InternationalId, Array.Empty<Guid>(), string.Empty);
           break;
       }
 

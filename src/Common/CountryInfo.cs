@@ -114,6 +114,7 @@ namespace TradeSharp.Common
     //properties
     public static IList<CountryCode> CountryCodes { get => s_countryCodes; }
     public string ImagePath { get => m_imagePath; set => SetProperty(ref m_imagePath, value); }
+    public string IsoCode { get => m_isoCode; }
     public CultureInfo CultureInfo { get => m_cultureInfo; set => SetProperty(ref m_cultureInfo, value); }
     public RegionInfo RegionInfo { get => m_regionInfo; set => SetProperty(ref m_regionInfo, value); }
 

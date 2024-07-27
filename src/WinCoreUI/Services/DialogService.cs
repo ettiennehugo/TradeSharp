@@ -154,7 +154,8 @@ namespace TradeSharp.WinDataManager.Services
         result = progressDialog;
         taskCompletionSource.SetResult(true);
       }))
-        taskCompletionSource.Task.Wait(10000); //wait up to 10-seconds for the dialog to be created
+      
+      taskCompletionSource.Task.Wait(10000); //wait up to 10-seconds for the dialog to be created
       //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
       return result!;
     }
@@ -173,31 +174,23 @@ namespace TradeSharp.WinDataManager.Services
         result = loggerViewDialog;
         taskCompletionSource.SetResult(true);
       }))
-        taskCompletionSource.Task.Wait(10000); //wait up to 10-seconds for the dialog to be created
+      
+      taskCompletionSource.Task.Wait(10000); //wait up to 10-seconds for the dialog to be created
       //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
       return result!;
     }
 
     protected IInitNavigationService getInitNavigationService() => (IInitNavigationService)((IApplication)Application.Current).Services.GetService(typeof(IInitNavigationService));
 
-    public async Task<CountryInfo?> ShowSelectCountryAsync()
+    public void ShowCreateCountryAsync()
     {
-      WinCoreUI.Views.CountrySelectorView view = new WinCoreUI.Views.CountrySelectorView();
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Title = "Select a country",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
-
-      ContentDialogResult result = await dialog.ShowAsync();
-
-      if (result == ContentDialogResult.Primary) return view.SelectedCountry;
-
-      return null;
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.CountrySelectorView view = new WinCoreUI.Views.CountrySelectorView(window);
+        window.Title = "Select a country";
+        window.Activate();
+      });
     }
 
     public async Task<Holiday> ShowCreateHolidayAsync(Guid parentId)

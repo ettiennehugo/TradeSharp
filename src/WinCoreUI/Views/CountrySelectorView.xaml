@@ -17,6 +17,10 @@
     </DataTemplate>
   </Page.Resources>
   <StackPanel>
-    <ComboBox ItemsSource="{x:Bind Countries, Mode=OneTime}" SelectedItem="{x:Bind SelectedCountry, Mode=TwoWay}" ItemTemplate="{StaticResource CountryInfoComboBoxItem}"/>
+    <ComboBox ItemsSource="{x:Bind Countries, Mode=OneTime}" Height="40" Width="800" MaxWidth="800" Margin="5,5" SelectedItem="{x:Bind SelectedCountry, Mode=TwoWay}" ItemTemplate="{StaticResource CountryInfoComboBoxItem}"/>
+    <StackPanel x:Name="m_buttonBar" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,0">
+      <Button x:Name="m_okButton" Content="OK" Click="m_okButton_Click"/>
+      <Button x:Name="m_cancelButton" Content="Cancel" Click="m_cancelButton_Click"/>
+    </StackPanel>
   </StackPanel>
 </Page>

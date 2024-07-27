@@ -36,20 +36,7 @@ namespace TradeSharp.CoreUI.ViewModels
     //interface implementations
     public override async void OnAdd()
     {
-      CountryInfo? country = await m_dialogService.ShowSelectCountryAsync();
-      if (country != null)
-      {
-        var newCountry = new Country(Guid.NewGuid(), Country.DefaultAttributes, string.Empty, country.RegionInfo.TwoLetterISORegionName);
-        if (m_itemsService.Items.Contains(newCountry))
-          await m_dialogService.ShowPopupMessageAsync("The country you are trying to add already exists in the database.");
-        else
-        {
-          m_itemsService.Add(newCountry);
-          SelectedItem = newCountry;
-          Items.Add(newCountry);
-          OnRefresh();
-        }
-      }
+      m_dialogService.ShowCreateCountryAsync();
     }
 
     public override void OnDelete(object? target)
