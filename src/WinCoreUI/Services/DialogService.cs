@@ -238,49 +238,37 @@ namespace TradeSharp.WinDataManager.Services
       {
         ViewWindow window = new ViewWindow();
         WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView((Exchange)exchange.Clone(), window);
-        window.Title = $"Update holiday - ${exchange.Name}";
+        window.Title = $"Update exchange - ${exchange.Name}";
         window.Activate();
       });
 
       return Task.FromResult<Exchange?>(null);
     }
 
-    public async Task<Session?> ShowCreateSessionAsync(Guid parentId)
+    public Task<Session?> ShowCreateSessionAsync(Guid parentId)
     {
-      WinCoreUI.Views.SessionView view = new WinCoreUI.Views.SessionView(parentId);
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Title = "Create Session",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.SessionView view = new WinCoreUI.Views.SessionView(parentId, window);
+        window.Title = "Create session";
+        window.Activate();
+      });
 
-      ContentDialogResult result = await dialog.ShowAsync();
-      if (result == ContentDialogResult.Primary) return view.Session;
-
-      return null;
+      return Task.FromResult<Session?>(null);
     }
 
-    public async Task<Session?> ShowUpdateSessionAsync(Session session)
+    public Task<Session?> ShowUpdateSessionAsync(Session session)
     {
-      WinCoreUI.Views.SessionView view = new WinCoreUI.Views.SessionView((Session)session.Clone());
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Title = "Update Session",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.SessionView view = new WinCoreUI.Views.SessionView((Session)session.Clone(), window);
+        window.Title = "Create session";
+        window.Activate();
+      });
 
-      ContentDialogResult result = await dialog.ShowAsync();
-      if (result == ContentDialogResult.Primary) return view.Session;
-
-      return null;
+      return Task.FromResult<Session?>(null);
     }
 
     public Task<Instrument> ShowCreateInstrumentAsync(InstrumentType instrumentType)

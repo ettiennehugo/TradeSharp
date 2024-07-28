@@ -1,7 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System;
 using System.Diagnostics;
+using System.Xml.Linq;
 using TradeSharp.Common;
 
 namespace TradeSharp.Data
@@ -225,19 +228,22 @@ namespace TradeSharp.Data
     {
       lock (this)
         ExecuteCommand(
-          $"UPDATE OR FAIL {TableExchange} " +
-            $"SET CountryId = '{exchange.CountryId.ToString()}', " +
-                $"Name = '{ToSqlSafeString(exchange.Name)}', " +
-                $"AttributeSet = {(long)exchange.AttributeSet}, " +
-                $"Tag = '{ToSqlSafeString(exchange.TagStr)}', " +
-                $"TimeZone = '{exchange.TimeZone.ToSerializedString()}', " +
-                $"LogoId = '{exchange.LogoId}', " +
-                $"DefaultPriceDecimals = {exchange.DefaultPriceDecimals}, " +
-                $"DefaultMinimumMovement = {exchange.DefaultMinimumMovement}, " +
-                $"DefaultBigPointValue = {exchange.DefaultBigPointValue}, " +
-                $"Url = '{ToSqlSafeString(exchange.Url)}', " +
-                $"AlternateNames = '{ToSqlSafeString(Common.Utilities.ToCsv(exchange.AlternateNames))}'" +
-            $"WHERE Id = '{exchange.Id.ToString()}'"
+          $@"INSERT OR REPLACE INTO {TableExchange}
+            (Id,CountryId,Name,AttributeSet,Tag,TimeZone,LogoId,DefaultPriceDecimals,DefaultMinimumMovement,DefaultBigPointValue,Url,AlternateNames)
+            VALUES(
+              '{exchange.Id.ToString()}',
+              '{exchange.CountryId.ToString()}',
+              '{ToSqlSafeString(exchange.Name)}',
+              {(long)exchange.AttributeSet},
+              '{ToSqlSafeString(exchange.TagStr)}',
+              '{exchange.TimeZone.ToSerializedString()}',
+              '{exchange.LogoId}',
+              {exchange.DefaultPriceDecimals},
+              {exchange.DefaultMinimumMovement},
+              {exchange.DefaultBigPointValue},
+              '{ToSqlSafeString(exchange.Url)}',
+              '{ToSqlSafeString(Common.Utilities.ToCsv(exchange.AlternateNames))}'
+            )"
         );
     }
 
@@ -397,15 +403,25 @@ namespace TradeSharp.Data
     {
       lock (this)
         ExecuteCommand(
-          $"UPDATE OR FAIL {TableSession} " +
-            $"SET Name = '{ToSqlSafeString(session.Name)}', " +
-                $"ExchangeId = '{session.ExchangeId.ToString()}', " +
-                $"AttributeSet = {(long)session.AttributeSet}, " +
-                $"Tag = '{ToSqlSafeString(session.TagStr)}', " +
-                $"DayOfWeek = {(int)session.DayOfWeek}, " +
-                $"StartTime = {session.Start.Ticks}, " +
-                $"EndTime = {session.End.Ticks} " +
-            $"WHERE Id = '{session.Id.ToString()}'"
+          $"INSERT OR REPLACE INTO {TableSession} (" +
+              "Id, " +
+              "Name, " +
+              "ExchangeId, " +
+              "AttributeSet, " +
+              "Tag, " +
+              "DayOfWeek, " +
+              "StartTime, " +
+              "EndTime" +
+          ") VALUES (" +
+              $"'{session.Id.ToString()}', " +
+              $"'{ToSqlSafeString(session.Name)}', " +
+              $"'{session.ExchangeId.ToString()}', " +
+              $"{(long)session.AttributeSet}, " +
+              $"'{ToSqlSafeString(session.TagStr)}', " +
+              $"{(int)session.DayOfWeek}, " +
+              $"{session.Start.Ticks}, " +
+              $"{session.End.Ticks}" +
+          ")"
         );
     }
 
@@ -490,15 +506,25 @@ namespace TradeSharp.Data
       lock (this)
       {
         ExecuteCommand(
-          $"UPDATE OR FAIL {TableInstrumentGroup} SET " +
-              $"ParentId = '{instrumentGroup.ParentId.ToString()}', " +
-              $"AttributeSet = {(long)instrumentGroup.AttributeSet}, " +
-              $"Tag = '{ToSqlSafeString(instrumentGroup.TagStr)}', " +
-              $"Name = '{ToSqlSafeString(instrumentGroup.Name)}', " +
-              $"Description = '{ToSqlSafeString(instrumentGroup.Description)}', " +
-              $"UserId = '{ToSqlSafeString(instrumentGroup.UserId)}', " +
-              $"AlternateNames = '{ToSqlSafeString(string.Join(',', instrumentGroup.AlternateNames))}' " +
-            $"WHERE Id = '{instrumentGroup.Id.ToString()}'"
+          $"INSERT OR REPLACE INTO {TableInstrumentGroup} (" +
+              "Id, " +
+              "ParentId, " +
+              "AttributeSet, " +
+              "Tag, " +
+              "Name, " +
+              "Description, " +
+              "UserId, " +
+              "AlternateNames" +
+          ") VALUES (" +
+              $"'{instrumentGroup.Id.ToString()}', " +
+              $"'{instrumentGroup.ParentId.ToString()}', " +
+              $"{(long)instrumentGroup.AttributeSet}, " +
+              $"'{ToSqlSafeString(instrumentGroup.TagStr)}', " +
+              $"'{ToSqlSafeString(instrumentGroup.Name)}', " +
+              $"'{ToSqlSafeString(instrumentGroup.Description)}', " +
+              $"'{ToSqlSafeString(instrumentGroup.UserId)}', " +
+              $"'{ToSqlSafeString(string.Join(',', instrumentGroup.AlternateNames))}'" +
+          ")"
         );
 
         Delete(TableInstrumentGroupInstrument, instrumentGroup.Id, "InstrumentGroupId");
@@ -1454,19 +1480,33 @@ namespace TradeSharp.Data
       lock (this)
       {
         ExecuteCommand(
-          $"UPDATE OR FAIL {TableInstrument} " +
-            $"SET AttributeSet = '{(long)instrument.AttributeSet}', " +
-                $"Tag = '{ToSqlSafeString(instrument.TagStr)}', " +
-                $"Name = '{ToSqlSafeString(instrument.Name)}', " +
-                $"Description = '{ToSqlSafeString(instrument.Description)}', " +
-                $"PrimaryExchangeId = '{instrument.PrimaryExchangeId.ToString()}', " +
-                $"InceptionDate = {instrument.InceptionDate.ToUniversalTime().ToBinary()}, " +
-                $"PriceDecimals = {instrument.PriceDecimals}, " +
-                $"MinimumMovement = {instrument.MinimumMovement}, " +
-                $"BigPointValue = {instrument.BigPointValue}, " +
-                $"AlternateTickers = '{ToSqlSafeString(string.Join(',', instrument.AlternateTickers))}', " +
-                $"ExtendedProperties = '{ToSqlSafeString(instrument.ExtendedProperties)}' " +
-            $"WHERE Ticker = '{instrument.Ticker}'"
+          $"INSERT OR REPLACE INTO {TableInstrument} (" +
+              "Ticker, " +
+              "AttributeSet, " +
+              "Tag, " +
+              "Name, " +
+              "Description, " +
+              "PrimaryExchangeId, " +
+              "InceptionDate, " +
+              "PriceDecimals, " +
+              "MinimumMovement, " +
+              "BigPointValue, " +
+              "AlternateTickers, " +
+              "ExtendedProperties" +
+          ") VALUES (" +
+              $"'{instrument.Ticker}', " +
+              $"{(long)instrument.AttributeSet}, " +
+              $"'{ToSqlSafeString(instrument.TagStr)}', " +
+              $"'{ToSqlSafeString(instrument.Name)}', " +
+              $"'{ToSqlSafeString(instrument.Description)}', " +
+              $"'{instrument.PrimaryExchangeId.ToString()}', " +
+              $"{instrument.InceptionDate.ToUniversalTime().ToBinary()}, " +
+              $"{instrument.PriceDecimals}, " +
+              $"{instrument.MinimumMovement}, " +
+              $"{instrument.BigPointValue}, " +
+              $"'{ToSqlSafeString(string.Join(',', instrument.AlternateTickers))}', " +
+              $"'{ToSqlSafeString(instrument.ExtendedProperties)}'" +
+          ")"
         );
 
         ExecuteCommand($"DELETE FROM {TableInstrumentSecondaryExchange} WHERE InstrumentTicker = '{instrument.Ticker}'");

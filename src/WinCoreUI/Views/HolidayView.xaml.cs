@@ -18,7 +18,7 @@ namespace TradeSharp.WinCoreUI.Views
   public sealed partial class HolidayView : Page, IWindowedView
   {
     //constants
-    public const int Width = 628;
+    public const int Width = 759;
     public const int Height = 607;
 
     //enums

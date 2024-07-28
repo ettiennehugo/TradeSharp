@@ -40,7 +40,7 @@ namespace TradeSharp.WinCoreUI.Views
       m_countries = new List<CountryInfo>();
       foreach (var countryKey in CountryInfo.CountryCodes)
       {
-        if (m_countryService.Items.FirstOrDefault(x => x.IsoCode == countryKey.TwoLetterCode) == null)
+        if (m_countryService.Items.FirstOrDefault(x => x.IsoCode == countryKey.IsoCode) == null)
         {
           CountryInfo? country = CountryInfo.GetCountryInfo(countryKey.IsoCode);
           if (country != null) m_countries.Add(country);

@@ -67,16 +67,19 @@ namespace TradeSharp.CoreUI.Services
     public bool Add(Exchange item)
     {
       var result = m_exchangeRepository.Add(item);
-      Items.Add(item);
-      SelectedItem = item;
-      SelectedItemChanged?.Invoke(this, SelectedItem);
+      if (result)
+      {
+        Items.Add(item);
+        SelectedItem = item;
+        SelectedItemChanged?.Invoke(this, SelectedItem);
+      }
       return result;
     }
 
     public bool Delete(Exchange item)
     {
       var result = m_exchangeRepository.Delete(item);
-      Items.Remove(item);
+      if (result) Items.Remove(item);
       return result;
     }
 
@@ -92,7 +95,16 @@ namespace TradeSharp.CoreUI.Services
 
     public bool Update(Exchange item)
     {
-      return m_exchangeRepository.Update(item);
+      var result = m_exchangeRepository.Update(item);
+      if (result)
+      {
+        var existingItem = Items.FirstOrDefault((i) => i.Id == item.Id);
+        if (existingItem != null)
+          existingItem.Update(item);
+        else
+          Items.Add(item);
+      }
+      return result;
     }
 
     public bool Copy(Exchange item) => throw new NotImplementedException();

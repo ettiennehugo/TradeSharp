@@ -13,12 +13,13 @@
     <wincoreuicommon:EnumValueConverter x:Key="EnumValueConverter"/>
     <wincoreuicommon:TimeOnlyToTimeSpanConverter x:Key="TimeOnlyToTimeSpanConverter"/>
   </Page.Resources>
-  <Grid>
+  <Grid x:Name="m_main" Margin="5,5">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="auto"/>
       <ColumnDefinition Width="auto"/>
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
+      <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
       <RowDefinition Height="auto"/>
@@ -30,10 +31,14 @@
     <TextBlock x:Name="m_startTimeLbl" Text="Start Time" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="2"/>
     <TextBlock x:Name="m_endTimeLbl" Text="End Time" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="3"/>
     <TextBlock x:Name="m_tagLbl" Text="Tag" VerticalAlignment="Center" Margin="1, 1, 20, 1" Grid.Column="0" Grid.Row="4"/>
-    <TextBox x:Name="m_name" Text="{x:Bind Session.Name, Mode=TwoWay}" PlaceholderText="New session name" Grid.Column="1" Grid.Row="0"/>
+    <TextBox x:Name="m_name" Text="{x:Bind Session.Name, Mode=TwoWay}" Width="250" MaxWidth="250" PlaceholderText="New session name" Grid.Column="1" Grid.Row="0"/>
     <ComboBox x:Name="m_dayOfWeek" SelectedIndex="{x:Bind Session.DayOfWeek, Mode=TwoWay, Converter={StaticResource EnumValueConverter}}" Grid.Column="1" Grid.Row="1"/>
     <TimePicker ClockIdentifier="24HourClock" Time="{x:Bind Session.Start, Mode=TwoWay, Converter={StaticResource TimeOnlyToTimeSpanConverter}}" Grid.Column="1" Grid.Row="2"/>
     <TimePicker ClockIdentifier="24HourClock" Time="{x:Bind Session.End, Mode=TwoWay, Converter={StaticResource TimeOnlyToTimeSpanConverter}}" Grid.Column="1" Grid.Row="3"/>
     <TextBox x:Name="m_tag" Text="{x:Bind Session.TagStr, Mode=TwoWay}" PlaceholderText="Tag value JSON" Grid.Column="1" Grid.Row="4"/>
+    <StackPanel x:Name="m_buttonBar" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0" Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="2">
+      <Button x:Name="m_okButton" Content="OK" Click="m_okButton_Click"/>
+      <Button x:Name="m_cancelButton" Content="Cancel" Click="m_cancelButton_Click"/>
+    </StackPanel>
   </Grid>
 </Page>
