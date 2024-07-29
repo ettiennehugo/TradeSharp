@@ -103,7 +103,9 @@ namespace TradeSharp.PolygonIO.Commands
             {
 							Country? country = m_countryService.Items.FirstOrDefault(c => c.IsoCode != Data.Country.InternationalIsoCode && c.CountryInfo.RegionInfo.TwoLetterISORegionName == pioExchange.Locale.ToUpper());
 							Guid countryId = country?.Id ?? Country.InternationalId;
-              exchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributes, string.Empty, countryId, pioExchange.Name, new List<string> { pioExchange.Acronym }, TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Data.Exchange.BlankLogoId, string.Empty);
+              exchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributes, string.Empty, countryId, pioExchange.Name, Array.Empty<string>(), TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Data.Exchange.BlankLogoId, string.Empty);
+							if (!string.IsNullOrEmpty(pioExchange.Acronym)) exchange.AlternateNames.Add(pioExchange.Acronym);
+							if (!string.IsNullOrEmpty(pioExchange.Mic)) exchange.AlternateNames.Add(pioExchange.Mic);
 							exchange.Url = pioExchange.Url;
               exchange.Tag.Update(Constants.TagDataId, DateTime.UtcNow, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(pioExchange));
               m_exchangeService.Add(exchange);
@@ -116,6 +118,8 @@ namespace TradeSharp.PolygonIO.Commands
 							//update the defined exchange with data from Polygon
 							exchange.Url = pioExchange.Url;
               exchange.Tag.Update(Constants.TagDataId, DateTime.UtcNow, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(pioExchange));
+              if (string.IsNullOrEmpty(pioExchange.Acronym) && !exchange.AlternateNames.Contains(pioExchange.Acronym)) exchange.AlternateNames.Add(pioExchange.Acronym);
+              if (string.IsNullOrEmpty(pioExchange.Mic) && !exchange.AlternateNames.Contains(pioExchange.Mic)) exchange.AlternateNames.Add(pioExchange.Mic);
               m_exchangeService.Update(exchange);
 							//TBD: Should we update sessions.
 							updateService = true;

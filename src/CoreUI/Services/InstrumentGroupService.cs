@@ -241,7 +241,11 @@ namespace TradeSharp.CoreUI.Services
       var result = m_instrumentGroupRepository.GetItems();
       foreach (var item in result) Items.Add(item);
       var parentNode = getNode(parentId, Nodes);
-      if (parentNode != null) parentNode.Refresh();
+      if (parentNode != null)
+        parentNode.Refresh();
+      else
+        Refresh();
+
       SelectedNode = parentNode;
     }
 
@@ -251,6 +255,13 @@ namespace TradeSharp.CoreUI.Services
       var result = m_instrumentGroupRepository.GetItems();
       foreach (var item in result) Items.Add(item);
       parentNode.Refresh();
+    }
+
+    public bool Update(InstrumentGroup item)
+    {
+      var result = m_instrumentGroupRepository.Update(item);
+      if (result) Refresh(item.ParentId);
+      return result;
     }
 
     public bool Update(ITreeNodeType<Guid, InstrumentGroup> node)

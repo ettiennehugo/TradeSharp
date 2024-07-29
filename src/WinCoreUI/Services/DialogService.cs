@@ -212,7 +212,7 @@ namespace TradeSharp.WinDataManager.Services
       {
         ViewWindow window = new ViewWindow();
         WinCoreUI.Views.HolidayView view = new WinCoreUI.Views.HolidayView((Holiday)holiday.Clone(), window);
-        window.Title = $"Update holiday - ${holiday.Name}";
+        window.Title = $"Update holiday - {holiday.Name}";
         window.Activate();
       });
 
@@ -238,7 +238,7 @@ namespace TradeSharp.WinDataManager.Services
       {
         ViewWindow window = new ViewWindow();
         WinCoreUI.Views.ExchangeView view = new WinCoreUI.Views.ExchangeView((Exchange)exchange.Clone(), window);
-        window.Title = $"Update exchange - ${exchange.Name}";
+        window.Title = $"Update exchange - {exchange.Name}";
         window.Activate();
       });
 
@@ -339,44 +339,30 @@ namespace TradeSharp.WinDataManager.Services
       return null;
     }
 
-    public async Task<InstrumentGroup> ShowCreateInstrumentGroupAsync(Guid parentId)
+    public Task<InstrumentGroup?> ShowCreateInstrumentGroupAsync(Guid parentId)
     {
-      WinCoreUI.Views.InstrumentGroupView view = new WinCoreUI.Views.InstrumentGroupView(parentId);
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-        Title = "Create Instrument Group",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.InstrumentGroupView view = new WinCoreUI.Views.InstrumentGroupView(parentId, window);
+        window.Title = $"Create instrument group";
+        window.Activate();
+      });
 
-      ContentDialogResult result = await dialog.ShowAsync();
-      if (result == ContentDialogResult.Primary) return view.InstrumentGroup;
-
-      return null;
+      return Task.FromResult<InstrumentGroup?>(null);
     }
 
-    public async Task<InstrumentGroup> ShowUpdateInstrumentGroupAsync(InstrumentGroup instrumentGroup)
+    public Task<InstrumentGroup> ShowUpdateInstrumentGroupAsync(InstrumentGroup instrumentGroup)
     {
-      WinCoreUI.Views.InstrumentGroupView view = new WinCoreUI.Views.InstrumentGroupView((InstrumentGroup)instrumentGroup.Clone());
-      ContentDialog dialog = new ContentDialog()
+      PostUIUpdate(() =>
       {
-        XamlRoot = getInitNavigationService().Frame.XamlRoot,
-        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-        Title = "Update Instrument Group",
-        Content = view,
-        PrimaryButtonText = "OK",
-        CloseButtonText = "Cancel",
-        DefaultButton = ContentDialogButton.Primary,
-      };
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.InstrumentGroupView view = new WinCoreUI.Views.InstrumentGroupView(instrumentGroup, window);
+        window.Title = $"Update - {instrumentGroup.Name}";
+        window.Activate();
+      });
 
-      ContentDialogResult result = await dialog.ShowAsync();
-      if (result == ContentDialogResult.Primary) return view.InstrumentGroup;
-
-      return null;
+      return Task.FromResult<InstrumentGroup>(null);
     }
 
     public async Task<ImportSettings?> ShowImportInstrumentGroupsAsync()
