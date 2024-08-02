@@ -95,6 +95,7 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public IList<Instrument> Items { get; set; }
+    public IInstrumentCacheService Cache { get => m_instrumentCacheService; }
 
     //constructors
     public InstrumentService(ILogger<InstrumentService> logger, IExchangeService exchangeService, IInstrumentRepository instrumentRepository, IInstrumentCacheService instrumentCacheService, IDialogService dialogService) : base(dialogService)

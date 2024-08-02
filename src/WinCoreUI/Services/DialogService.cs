@@ -137,32 +137,26 @@ namespace TradeSharp.WinDataManager.Services
     /// </summary>
     public IProgressDialog CreateProgressDialog(string title, ILogger? logger)
     {
-      IProgressDialog result = null;
+      IProgressDialog? result = null;
+
       //create the dialog from the UI thread
       TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
       if (UIDispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>    //dialog creation needs precedence since other logs might still be incrementally loading
       {
-        Window window = new Window();
-        WinCoreUI.Views.ProgressDialogView progressDialog = new WinCoreUI.Views.ProgressDialogView();
-        progressDialog.Title = title;
-        progressDialog.Logger = logger;
-        progressDialog.ParentWindow = window;
-        window.ExtendsContentIntoTitleBar = true;
-        window.Content = progressDialog;
-        MakeDialog(window);
-        window.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(1230, 300));
+        ViewWindow window = new ViewWindow();
+        WinCoreUI.Views.ProgressDialogView progressDialog = new WinCoreUI.Views.ProgressDialogView(window, title, logger);
         result = progressDialog;
         taskCompletionSource.SetResult(true);
       }))
-      
-      taskCompletionSource.Task.Wait(10000); //wait up to 10-seconds for the dialog to be created
-      //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
+        Task.WaitAll(taskCompletionSource.Task);
+
       return result!;
     }
 
     public ICorrectiveLoggerDialog CreateCorrectiveLoggerDialog(string title, LogEntry? entry = null)
     {
       ICorrectiveLoggerDialog result = null;
+      
       //create the dialog from the UI thread
       TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
       if (UIDispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>    //dialog creation needs precedence since other logs might still be incrementally loading
@@ -174,8 +168,8 @@ namespace TradeSharp.WinDataManager.Services
         result = loggerViewDialog;
         taskCompletionSource.SetResult(true);
       }))
+      Task.WaitAll(taskCompletionSource.Task);
       
-      taskCompletionSource.Task.Wait(10000); //wait up to 10-seconds for the dialog to be created
       //caller needs to explicitly call the show, since it needs to setup some of the members before the progress dialog is shown
       return result!;
     }

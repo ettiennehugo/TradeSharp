@@ -129,40 +129,53 @@ namespace TradeSharp.PolygonIO
     }
 
     //methods
-    protected async Task OnDownloadExchangesAsync()
+    protected Task OnDownloadExchangesAsync()
     {
-      var command = new DownloadExchanges(m_logger, m_dialogService, m_exchangeService, m_database, m_client, m_cache);
-      await command.Run();
+      return Task.Run(() => {
+        var command = new DownloadExchanges(m_logger, m_dialogService, m_exchangeService, m_database, m_client, m_cache);
+        command.Run();
+      });
     }
 
-    protected async Task OnDownloadTickersAsync()
+    protected Task OnDownloadTickersAsync()
     {
-      var command = new DownloadTickers(m_logger, m_dialogService, m_instrumentService, m_database, m_client, m_cache);
-      await command.Run();
+      return Task.Run(() => {
+        var command = new DownloadTickers(m_logger, m_dialogService, m_instrumentService, m_database, m_client, m_cache);
+        command.Run();
+      });
     }
 
-    protected async Task OnDownloadTickerDetailsAsync()
+    protected Task OnDownloadTickerDetailsAsync()
     {
-      var command = new DownloadTickerDetails(m_logger, m_dialogService, m_instrumentService, m_database, m_client, m_cache);
-      await command.Run();
+      return Task.Run(() =>
+      {
+        var command = new DownloadTickerDetails(m_logger, m_dialogService, m_instrumentService, m_database, m_client, m_cache);
+        command.Run();
+      });
     }
 
-    protected async Task OnDefineCountriesForExchangesAsync()
+    protected Task OnDefineCountriesForExchangesAsync()
     {
-      var command = new CountriesForExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_database, m_cache);
-      await command.Run();
+      return Task.Run(() => {
+        var command = new CountriesForExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_database, m_cache);
+        command.Run();
+      });
     }
 
-    protected async Task OnCopyExchangesToTradeSharpAsync()
+    protected Task OnCopyExchangesToTradeSharpAsync()
     {
-      var command = new UpdateExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_sessionService, m_database, m_cache);
-      await command.Run();
+      return Task.Run(() => {
+        var command = new UpdateExchanges(m_logger, m_dialogService, m_countryService, m_exchangeService, m_sessionService, m_database, m_cache);
+        command.Run();
+      });
     }
 
-    protected async Task OnUpdateInstrumentsFromTickersAsync()
+    protected Task OnUpdateInstrumentsFromTickersAsync()
     {
-      var command = new UpdateInstrumentsFromTickers(m_logger, m_dialogService, m_exchangeService, m_instrumentService, m_database, m_cache);
-      await command.Run();
+      return Task.Run(() => {
+        var command = new UpdateInstrumentsFromTickers(m_logger, m_dialogService, m_exchangeService, m_instrumentService, m_database, m_cache);
+        command.Run();
+      });
     }
 
     protected void handleBarDataM1(BarDataM1ResultDto data)

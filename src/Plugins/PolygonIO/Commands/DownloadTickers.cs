@@ -44,16 +44,16 @@ namespace TradeSharp.PolygonIO.Commands
 
 
     //interface implementations
-    public async Task Run()
+    public void Run()
     {
       var progressDialog = m_dialogService.CreateProgressDialog("Downloading Ticker Definitions", m_logger);
       progressDialog.StatusMessage = "Requesting ticker definitions";
-      await progressDialog.ShowAsync();
+      progressDialog.ShowAsync();
 
       IList<Messages.TickersDto>? results = null;
       try
       {
-        results = await m_client.GetTickers(progressDialog);
+        results = m_client.GetTickers(progressDialog).Result;
       }
       catch (Exception ex)
       {

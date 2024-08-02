@@ -54,12 +54,12 @@ namespace TradeSharp.PolygonIO.Commands
 
 
     //interface implementations
-    public async Task Run()
+    public void Run()
     {
       bool updateService = false;
       var progressDialog = m_dialogService.CreateProgressDialog("Updating Instruments", m_logger);
       progressDialog.StatusMessage = "Updating instruments";
-      await progressDialog.ShowAsync();
+      progressDialog.ShowAsync();
 
       var tickers = m_cache.GetTickers();
       var tickerDetails = m_cache.GetTickerDetails();
@@ -72,7 +72,7 @@ namespace TradeSharp.PolygonIO.Commands
           try
           {
             var pioTickerDetails = tickerDetails.FirstOrDefault(td => td.Ticker == pioTicker.Ticker);
-            var instrument = m_instrumentService.Items.FirstOrDefault(i => i.Ticker == pioTicker.Ticker || i.AlternateTickers.Contains(pioTicker.Ticker));
+            var instrument = m_instrumentService.Cache.Items.FirstOrDefault(i => i.Ticker == pioTicker.Ticker || i.AlternateTickers.Contains(pioTicker.Ticker));
 
             //find the exchange associated with the Instrument
             Guid exchangeId = Data.Exchange.InternationalId;

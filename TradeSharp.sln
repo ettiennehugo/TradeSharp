@@ -19,6 +19,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{B627EA
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinDataManager", "src\DataManager\WinDataManager.csproj", "{D1A4F45C-DAE2-4BC6-953D-230803AB22BB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{64D83C3B-451B-426D-B887-7186FE0F3CD1} = {64D83C3B-451B-426D-B887-7186FE0F3CD1}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6168D40C-8A46-4FF7-B127-2DD2B115F3DF}"
 	ProjectSection(SolutionItems) = preProject
@@ -65,7 +68,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{19CC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InteractiveBrokers", "src\Plugins\InteractiveBrokers\InteractiveBrokers.csproj", "{70008A9E-658B-4A26-A8E2-B0C9CFF71225}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolygonIO", "src\Plugins\PolygonIO\PolygonIO.csproj", "{64D83C3B-451B-426D-B887-7186FE0F3CD1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolygonIO", "src\Plugins\PolygonIO\PolygonIO.csproj", "{64D83C3B-451B-426D-B887-7186FE0F3CD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

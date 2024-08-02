@@ -44,6 +44,9 @@ namespace TradeSharp.WinCoreUI.Common
     //methods
     public object Convert(object value, Type targetType, object parameter, string language)
     {
+      bool expandDescriptions = true;
+      if (parameter is bool parameterExpandDescriptions) expandDescriptions = parameterExpandDescriptions;
+
       if (targetType == typeof(string))
       {
         Type type = value.GetType();
@@ -52,7 +55,7 @@ namespace TradeSharp.WinCoreUI.Common
           foreach (FieldInfo field in type.GetFields())
             if (field.Name == value.ToString())
             {
-              DescriptionAttribute? description = (DescriptionAttribute?)field.GetCustomAttribute(typeof(DescriptionAttribute));
+              DescriptionAttribute? description = expandDescriptions ? (DescriptionAttribute?)field.GetCustomAttribute(typeof(DescriptionAttribute)) : null;
               return description != null ? description.Description : value.ToString();
             }
       }

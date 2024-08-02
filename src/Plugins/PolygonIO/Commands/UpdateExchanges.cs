@@ -48,12 +48,12 @@ namespace TradeSharp.PolygonIO.Commands
 
 
     //interface implementations
-    public async Task Run()
+    public void Run()
     {
 			bool updateService = false;
 			var progressDialog = m_dialogService.CreateProgressDialog("Updating Exchanges", m_logger);
 			progressDialog.StatusMessage = "Updating exchanges";
-			await progressDialog.ShowAsync();
+			progressDialog.ShowAsync();
 
 			var exchanges = m_cache.GetExchanges();
 			progressDialog.Maximum = exchanges.Count;

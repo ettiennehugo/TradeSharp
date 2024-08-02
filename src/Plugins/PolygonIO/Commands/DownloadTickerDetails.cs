@@ -41,11 +41,11 @@ namespace TradeSharp.PolygonIO.Commands
     }
 
     // Ensure this method is marked as async to use await
-    public async Task Run()
+    public void Run()
     {
       var progressDialog = m_dialogService.CreateProgressDialog("Downloading Ticker Details", m_logger);
       progressDialog.StatusMessage = "Requesting ticker details";
-      await progressDialog.ShowAsync();
+      progressDialog.ShowAsync();
       var tickers = m_cache.GetTickers();
       if (tickers == null || tickers.Count == 0)
       {
@@ -59,7 +59,7 @@ namespace TradeSharp.PolygonIO.Commands
       {
         try
         {
-          var result = await m_client.GetTickerDetails(ticker.Ticker, progressDialog).ConfigureAwait(false);
+          var result = m_client.GetTickerDetails(ticker.Ticker, progressDialog).Result;
 
           //process response if we have a valid response
           if (result != null && result.Result != null)

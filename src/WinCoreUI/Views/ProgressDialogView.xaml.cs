@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+using TradeSharp.CoreUI.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -18,10 +17,14 @@ namespace TradeSharp.WinCoreUI.Views
   /// Progress dialog with an optional log display.
   /// NOTE: The API of this window can be accessed from background threads so we need to run a lot of it through the dispatcher queue on the UI thread.
   /// </summary>
-  public sealed partial class ProgressDialogView : Page, IProgressDialog
+  public sealed partial class ProgressDialogView : Page, IProgressDialog, IWindowedView
   {
     //constants
-
+    public const int Width = 1234;
+    public const int Height = 217;
+    public const int WidthWithLoggerView = 2230;
+    public const int HeightWithLoggerView = 1216;
+    public const int ProgressWidthWithLoggerView = 1055;
 
     //enums
 
@@ -49,10 +52,11 @@ namespace TradeSharp.WinCoreUI.Views
     private bool m_closeOnCancelClick;
 
     //constructors
-    public ProgressDialogView()
-    {
+    public ProgressDialogView(ViewWindow window, string title, ILogger? logger)
+    { 
+      ParentWindow = window;
       m_cancellationTokenSource = new CancellationTokenSource();
-      m_title = "Progress";
+      m_title = title;
       m_minimumLock = new object();
       m_minimum = 0;
       m_maximumLock = new object();
@@ -64,11 +68,12 @@ namespace TradeSharp.WinCoreUI.Views
       m_complete = false;
       m_statusMessageLock = new object();
       m_statusMessageText = "";
-      m_logger = null;
+      m_logger = logger;
       m_logViewVisible = false;
       m_parentWindowSizeInit = false;
       m_closeOnCancelClick = false;
       InitializeComponent();
+      setParentProperties();
     }
 
     //finalizers
@@ -79,54 +84,45 @@ namespace TradeSharp.WinCoreUI.Views
 
     //properties
     public CancellationTokenSource CancellationTokenSource => m_cancellationTokenSource;
-    public Window ParentWindow { set; get; }
-    public string Title
-    {
-      get => m_title;
-      set
-      {
-        m_title = value;
-        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_titleBarText.Text = m_title);
-      }
-    }
 
     //NOTE: All these methods need to be thread safe and run the set methods on the UI thread since they would be called from the worker threads.
-    public double Minimum 
+    public double Minimum
     {
       get => m_minimum;
-      set 
-      { 
-        lock (m_minimumLock) 
+      set
+      {
+        lock (m_minimumLock)
         {
-          m_minimum = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_progressBar.Minimum = m_minimum);
+          m_minimum = value;  // NOTE: We need to keep a deep copy of the new value since dispatcher queue will look for it later in the UI thread when value parameter is already deallocated.
+          m_progressBar.DispatcherQueue.TryEnqueue(() => m_progressBar.Minimum = m_minimum);
         }
       }
     }
-    
-    public double Maximum 
-    { 
+
+    public double Maximum
+    {
       get => m_maximum;
-      set 
+      set
       {
         lock (m_maximumLock)
         {
-          m_maximum = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_progressBar.Maximum = m_maximum);
+          m_maximum = value;  // NOTE: We need to keep a deep copy of the new value since dispatcher queue will look for it later in the UI thread when value parameter is already deallocated.
+          m_progressBar.DispatcherQueue.TryEnqueue(() => m_progressBar.Maximum = m_maximum);
         }
       }
     }
 
-    public double Progress 
-    { 
+    public double Progress
+    {
       get => m_progress;
       set
       {
         lock (m_progressLock)
         {
-          m_progress = value;  //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
+          m_progress = value;  // NOTE: We need to keep a deep copy of the new value since dispatcher queue will look for it later in the UI thread when value parameter is already deallocated.
           m_progressPercent = m_maximum > 0 && m_progress >= 0 ? (m_progress / m_maximum) * 100 : 0;
-          DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => { m_progressBar.Value = m_progress; m_progressLabel.Text = $"{m_progressPercent:#0}%"; } );
+          m_progressBar.DispatcherQueue.TryEnqueue(() => m_progressBar.Value = m_progress);
+          m_progressLabel.DispatcherQueue.TryEnqueue(() => m_progressLabel.Text = $"{m_progressPercent:#0}%");
         }
       }
     }
@@ -140,46 +136,48 @@ namespace TradeSharp.WinCoreUI.Views
         {
           m_complete = value;
           if (m_complete)
-            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => { m_cancelBtn.Content = "Close"; m_closeOnCancelClick = true; ToolTipService.SetToolTip(m_cancelBtn, "Close dialog"); });
+          {
+            m_progressBar.DispatcherQueue.TryEnqueue(() => m_progressBar.Value = m_maximum);
+            m_progressLabel.DispatcherQueue.TryEnqueue(() => m_progressLabel.Text = "100%");
+            m_cancelBtn.DispatcherQueue.TryEnqueue(() => m_cancelBtn.Content = "Close");
+          }
         }
       }
     }
 
-    public string StatusMessage 
-    { 
+    public string StatusMessage
+    {
       get => m_statusMessage.Text;
-      set 
-      { 
-        lock (m_statusMessageLock) 
+      set
+      {
+        lock (m_statusMessageLock)
         {
           m_statusMessageText = value;   //NOTE: We need to keep a deep copy of the new value since dispather queue will look for it later in the UI thread when value parameter is already deallocated.
-          DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_statusMessage.Text = m_statusMessageText);
+          m_statusMessage.DispatcherQueue.TryEnqueue(() => m_statusMessage.Text = m_statusMessageText);
         }
       }
     }
 
-    public ILogger? Logger
-    {
-      get => m_logger;
-      set => m_logger = value;
-    }
+    public ViewWindow ParentWindow { get; private set; }
+    public UIElement UIElement => this;
 
     //methods
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      ParentWindow.SetTitleBar(m_titleBar);
       m_parentWindowSizeInit = true;
+      m_titleBarText.Text = m_title;
     }
 
     public Task ShowAsync()
     {
-      return Task.Run(() => ParentWindow.DispatcherQueue.TryEnqueue(() => ParentWindow.Activate()));
+      ParentWindow.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => ParentWindow.Activate());      
+      return Task.CompletedTask;
     }
 
     public void Close(bool cancelOperation)
     {
       if (cancelOperation) m_cancellationTokenSource.Cancel();
-      ParentWindow.Close();
+      ParentWindow.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => ParentWindow.Close());
     }
 
     private void m_cancelBtn_Click(object sender, RoutedEventArgs e)
@@ -223,7 +221,7 @@ namespace TradeSharp.WinCoreUI.Views
     public ILogCorrections LogDebug(string message)
     {
       ensureLogVisible();
-      return m_loggerView.LogDebug(message); 
+      return m_loggerView.LogDebug(message);
     }
 
     public ILogCorrections LogWarning(string message)
@@ -244,25 +242,33 @@ namespace TradeSharp.WinCoreUI.Views
       return m_loggerView.LogCritical(message);
     }
 
+    private void setParentProperties()
+    {
+      ParentWindow.View = this;   //need to set this only once the view screen elements are created
+      ParentWindow.ExtendsContentIntoTitleBar = true;
+      ParentWindow.ResetSizeable();
+      ParentWindow.HideMinimizeAndMaximizeButtons();
+      ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(Width, Height));
+      ParentWindow.CenterWindow();
+    }
+
     /// <summary>
     /// Logger view row is started out as size zero to collapse it, this method sets it up to be visible when required.
     /// </summary>
     private void ensureLogVisible()
     {
-      //make log viewer visible and resize window to accomodate it
-      //NOTE: Logging can be called before the window is initialized so we ignore the resize in this method
-      //      otherwise the initialization of the window size will override this resize.
+      // Make log viewer visible and resize window to accommodate it
+      // NOTE: Logging can be called before the window is initialized so we ignore the resize in this method
+      //       otherwise the initialization of the window size will override this resize.
       if (!m_parentWindowSizeInit || m_logViewVisible) return;
 
-      m_logViewVisible = true;  //flag that we already requested the log view to be visible
-      DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+      lock (this)
       {
-        //resize the controls and window to accomodate the larger log view
-        m_progressBar.Width = 1060;
-        ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(2230, 1285));
-        m_loggerView.Visibility = Visibility.Visible;
-        m_parentWindowSizeInit = true;
-      });
+        m_logViewVisible = true;  // Flag that we already requested the log view to be visible
+        m_progressBar.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_progressBar.Width = ProgressWidthWithLoggerView);
+        ParentWindow.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => ParentWindow.AppWindow.ResizeClient(new Windows.Graphics.SizeInt32(WidthWithLoggerView, HeightWithLoggerView)));
+        m_loggerView.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => m_loggerView.Visibility = Visibility.Visible);
+      }
     }
   }
 }

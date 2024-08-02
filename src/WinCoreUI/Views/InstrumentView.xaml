@@ -59,7 +59,7 @@
     <NumberBox x:Name="m_bigPointValue" Text="{x:Bind Instrument.BigPointValue, Mode=TwoWay}" SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="5" Minimum="0" Grid.Column="1" Grid.Row="9"/>
     <TextBox x:Name="m_tag" Text="{x:Bind Instrument.TagStr, Mode=TwoWay}" PlaceholderText="Tag value JSON" Grid.Column="1" Grid.Row="10"/>
     <TextBox x:Name="m_extendedProperties" Text="{x:Bind Instrument.ExtendedProperties, Mode=TwoWay}" PlaceholderText="Extended Properties JSON" Grid.Column="1" Grid.Row="11"/>
-    <StackPanel x:Name="m_buttonBar" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="12" Grid.ColumnSpan="2">
+    <StackPanel x:Name="m_buttonBar" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0" Grid.Column="0" Grid.Row="12" Grid.ColumnSpan="2">
       <Button x:Name="m_okButton" Content="OK" Click="m_okButton_Click"/>
       <Button x:Name="m_cancelButton" Content="Cancel" Click="m_cancelButton_Click"/>
     </StackPanel>

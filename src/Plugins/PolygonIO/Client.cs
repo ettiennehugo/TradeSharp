@@ -67,7 +67,34 @@ namespace TradeSharp.PolygonIO
     public string GetExchangesUri() => $"{BaseUrl}/v3/reference/exchanges?apiKey={m_apiKey}";
     public string GetTickersUri(string ticker) => $"{BaseUrl}/v3/reference/tickers?apiKey={m_apiKey}";
     public string GetTickerDetailsUri(string ticker) => $"{BaseUrl}/v3/reference/tickers/{ticker}?apiKey={m_apiKey}";
-    public string GetStockAggregatesUri(string ticker, Resolution resolution, long startDate, long endDate, int multiplier = 1) => $"{BaseUrl}/v2/aggs/ticker/{ticker}/range/{multiplier}/{resolution.ToString().ToLower()}/{startDate}/{endDate}?adjusted=true&sort=asc&limit={m_requestLimit}&apiKey={m_apiKey}";
+    
+    public string GetStockAggregatesUri(string ticker, Resolution resolution, long startDate, long endDate, int multiplier = 1)
+    {
+      string resolutionString = "";
+      
+      //adjust resolution string to value expected by API
+      switch (resolution)
+      {
+        case Resolution.Minutes:
+          resolutionString = "minute";
+          break;
+        case Resolution.Hours:
+          resolutionString = "hour";
+          break;
+        case Resolution.Days:
+          resolutionString = "day";
+          break;
+        case Resolution.Weeks:
+          resolutionString = "week";
+          break;
+        case Resolution.Months:
+          resolutionString = "month";
+          break;
+      }
+
+      return $"{BaseUrl}/v2/aggs/ticker/{ticker}/range/{multiplier}/{resolutionString}/{startDate}/{endDate}?adjusted=true&sort=asc&limit={m_requestLimit}&apiKey={m_apiKey}";
+    }
+
     public string GetTradesUri(string ticker, DateTime startDate, DateTime endDate) => $"{BaseUrl}/v3/trades/{ticker}?limit={m_requestLimit}&timestamp.gte={startDate.ToUniversalTime().ToString("o")}&timestamp.lte={endDate.ToUniversalTime().ToString("o")}&sort=timestamp&apiKey={m_apiKey}";
     public string GetSubscriptionUri(bool realTime = true) => realTime ? $"{RealTimeUrl}?apiKey={m_apiKey}" : $"{DelayedUrl}?apiKey={m_apiKey}";
     public string GetQuotesUri(string ticker, DateTime startDate, DateTime endDate) => $"{BaseUrl}/v3/quotes/{ticker}?limit={m_requestLimit}&timestamp.gte={startDate.ToUniversalTime().ToString("o")}&timestamp.lte={endDate.ToUniversalTime().ToString("o")}&sort=timestamp&apiKey={m_apiKey}";
@@ -124,7 +151,7 @@ namespace TradeSharp.PolygonIO
       if (aggregateResult?.Results is not null)
         allStockAggregates.AddRange(aggregateResult.Results);
 
-      while (aggregateResult?.NextUrl != null)
+      while (aggregateResult != null && !string.IsNullOrEmpty(aggregateResult.NextUrl))
       {
         aggregateResult = await GetPolygonApi<BarDataResponseDto>(aggregateResult.NextUrl + "&apiKey=" + m_apiKey, progressDialog);
         allStockAggregates.AddRange(aggregateResult!.Results);

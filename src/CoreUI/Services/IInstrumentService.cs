@@ -20,7 +20,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //properties
-
+    IInstrumentCacheService Cache { get; }
 
     //methods
     int GetCount();

@@ -4,7 +4,6 @@ using TradeSharp.CoreUI.Common;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using Microsoft.UI.Xaml;
-using Windows.Foundation;
 using System.Threading.Tasks;
 using TradeSharp.WinCoreUI.Common;
 using CommunityToolkit.Mvvm.ComponentModel;

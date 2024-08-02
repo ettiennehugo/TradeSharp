@@ -44,16 +44,16 @@ namespace TradeSharp.PolygonIO.Commands
 
 
     //interface implementations
-    public async Task Run()
+    public void Run()
     {
         var progressDialog = m_dialogService.CreateProgressDialog("Downloading Exchanges", m_logger);
         progressDialog.StatusMessage = "Requesting exchange definitions";
-        await progressDialog.ShowAsync();
+        progressDialog.ShowAsync();
 
         IList<Messages.ExchangeDto>? results = null;
         try
         {
-          results = await m_client.GetExchanges(progressDialog);
+          results = m_client.GetExchanges(progressDialog).Result;
         }
         catch (Exception ex)
         {

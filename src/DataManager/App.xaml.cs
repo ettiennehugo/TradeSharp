@@ -55,6 +55,12 @@ namespace TradeSharp.WinDataManager
       loadCachedData();
       m_window = new MainWindow();
       m_window.Activate();
+
+      //setup dispatcher queue for UI thread in the dialog service
+      var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+      var dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
+      ((DialogService)dialogService).UIDispatcherQueue = dispatcherQueue;
+
       UnhandledException += OnAppUnhandledException;
     }
 
@@ -139,11 +145,6 @@ namespace TradeSharp.WinDataManager
 
     private void loadCachedData()
     {
-      //setup dispatcher queue for UI thread in the dialog service
-      var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-      var dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
-      ((DialogService)dialogService).UIDispatcherQueue = dispatcherQueue;
-
       Task.Run(() =>
       {
         //start caching crucial data in the background

@@ -18,9 +18,9 @@ namespace TradeSharp.WinCoreUI.Views
     //NOTE: Currently (07/25/24) the ActualWidth and ActualHeight is never correct after the page layout so just setting the size values statically.
     //      Can revisit this but later but for now it is not a priority.
     public const int InstrumentWidth = 920;
-    public const int InstrumentHeight = 860;
+    public const int InstrumentHeight = 865;
     public const int StockWidth = 920;
-    public const int StockHeight = 1430;
+    public const int StockHeight = 1435;
 
     //enums
 
@@ -66,6 +66,7 @@ namespace TradeSharp.WinCoreUI.Views
       Exchanges = m_exchangeViewModel.Items;
       Instrument = instrument;
       this.InitializeComponent();
+      addStockView();
       setParentProperties();
     }
 
