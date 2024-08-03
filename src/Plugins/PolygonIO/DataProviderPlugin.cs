@@ -1,4 +1,5 @@
-﻿using TradeSharp.Data;
+﻿using System.Net.NetworkInformation;
+using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
@@ -37,9 +38,9 @@ namespace TradeSharp.PolygonIO
     protected Cache m_cache;
     protected Client m_client;
 
-
     //properties
-    public override int ConnectionCountMax { get => 1; }  
+    public override int ConnectionCountMax { get => 1; }
+    public override bool IsConnected { get => NetworkInterface.GetIsNetworkAvailable(); }
 
     //constructors
     public DataProviderPlugin() : base(Constants.Name, Constants.Description) { }
@@ -57,7 +58,6 @@ namespace TradeSharp.PolygonIO
     public override void Create(ILogger logger)
     {
       base.Create(logger);
-      IsConnected = true;   //uses a REST API so we're always connected when there is a network available
       m_dialogService = (IDialogService)ServiceHost.Services.GetService(typeof(IDialogService))!;
       m_database = (IDatabase)ServiceHost.Services.GetService(typeof(IDatabase))!;
       m_countryService = (ICountryService)ServiceHost.Services.GetService(typeof(ICountryService))!;
@@ -94,20 +94,24 @@ namespace TradeSharp.PolygonIO
 
     public override bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end)
     {
-      Task.Run(async () => {
-        var data = await m_client.GetHistoricalData(instrument.Ticker, resolution, start, end, null);
-        if (data != null)
-        { 
-          IList<IBarData> bars = new List<IBarData>();
-          foreach (var barDto in data)
-          {
-            var bar = new BarData(resolution, barDto.DateTime, Common.Constants.DefaultPriceFormatMask, barDto.Open, barDto.High, barDto.Low, barDto.Close, barDto.Volume);
-            bars.Add(bar);
-          }
-          m_database.UpdateData(this.Name, instrument.Ticker, resolution, bars);
+      bool result = false;
+      int count = 0;
+      var data = m_client.GetHistoricalData(instrument.Ticker, resolution, start, end, null).Result;
+      if (data != null)
+      { 
+        IList<IBarData> bars = new List<IBarData>();
+        foreach (var barDto in data)
+        {
+          var bar = new BarData(resolution, barDto.DateTime, Common.Constants.DefaultPriceFormatMask, barDto.Open, barDto.High, barDto.Low, barDto.Close, barDto.Volume);
+          bars.Add(bar);
         }
-      });
-      return true;
+        m_database.UpdateData(this.Name, instrument.Ticker, resolution, bars);
+        count = data.Count;
+        result = true;
+      }
+
+      raiseDataDownloadComplete(instrument, resolution, count);
+      return result;
     }
 
     public override bool Subscribe(Instrument instrument, Resolution resolution)

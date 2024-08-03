@@ -150,9 +150,9 @@ namespace TradeSharp.CoreUI.Services
           {
             //adjust the progress maximum to account for the requests that failed to be sent
             m_progressDialog.Maximum -= m_requestFailureCount;
-
             m_progressDialog.StatusMessage = $"Waiting for {m_requestSuccessCount} responses from requests that were successfully sent ({m_requestFailureCount} - requests failed).";
 
+            //wait for reconnection if the data provider was disconnected
             while (m_responseSuccessCount < m_requestSuccessCount && !m_progressDialog.CancellationTokenSource.IsCancellationRequested) waitForHealthyConnection();
           }
           else
