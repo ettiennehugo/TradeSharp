@@ -8,6 +8,6 @@ namespace TradeSharp.PolygonIO.Messages
   /// </summary>
   public class StockQuotesResultDto
   {
-    IList<StockQuotesDto> Quotes { get; set; }    
+    public IList<StockQuotesDto> Quotes { get; set; }    
   }
 }

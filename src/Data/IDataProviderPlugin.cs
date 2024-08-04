@@ -41,13 +41,18 @@ namespace TradeSharp.Data
 
     //methods
     /// <summary>
-    /// Request historical data for a specific ticker with a given resolution and time range.
+    /// Request historical data for a specific instrument with a given resolution and time range.
     /// </summary>
     bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end);
 
     /// <summary>
-    /// Subscribe to real-time data for a specific ticker with a given resolution.
+    /// Subscribe to real-time data for a specific instrument with a given resolution.
     /// </summary>
     bool Subscribe(Instrument instrument, Resolution resolution);
+
+    /// <summary>
+    /// Unsubscribe from real-time data for a specific instrument with a given resolution.
+    /// </summary>
+    bool Unsubscribe(Instrument instrument, Resolution resolution);
   }
 }

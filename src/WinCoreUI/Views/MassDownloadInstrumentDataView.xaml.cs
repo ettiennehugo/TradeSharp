@@ -50,7 +50,14 @@ namespace TradeSharp.WinCoreUI.Views
     public string DefaultStartDateTime { get => Constants.DefaultMinimumDateTime.ToString("yyyy-MM-dd HH:mm"); }
     public string DefaultEndDateTime { get => Constants.DefaultMaximumDateTime.ToString("yyyy-MM-dd HH:mm"); }
     public MassDownloadSettings Settings { get; internal set; }
-    public int ThreadCountMax { get; internal set; }
+
+    public static readonly DependencyProperty ThreadCountMaxProperty = DependencyProperty.Register("ThreadCountMax", typeof(int), typeof(MassDownloadInstrumentDataView), new PropertyMetadata(1));
+    public int ThreadCountMax
+    {
+      get => (int)GetValue(ThreadCountMaxProperty);
+      set => SetValue(ThreadCountMaxProperty, value);
+    }
+
     public Window ParentWindow { get; set; }
     public string DataProvider { get; set; }
 
@@ -60,7 +67,11 @@ namespace TradeSharp.WinCoreUI.Views
       Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportExportDataDateTimeTimeZone));
       m_endDateTime.Text = DateTime.Now.ToString("yyyy-MM-dd") + " 23:59";
       m_dataProvider = (IDataProviderPlugin)m_pluginsService.Items.FirstOrDefault(p => p is IDataProviderPlugin && p.Name == DataProvider);
-      if (m_dataProvider != null) ThreadCountMax = m_dataProvider.ConnectionCountMax;
+      if (m_dataProvider != null)
+      {
+        ThreadCountMax = m_dataProvider.ConnectionCountMax;
+        m_threadCount.Value = ThreadCountMax;
+      }
     }
 
     private bool enableDownloadButton()

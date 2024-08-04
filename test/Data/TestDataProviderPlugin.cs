@@ -60,6 +60,7 @@ namespace TradeSharp.Data.Testing
     public void ShowSettings() { }
     public bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end) { return true; }
     public bool Subscribe(Instrument instrument, Resolution resolution) { return true; }
+    public bool Unsubscribe(Instrument instrument, Resolution resolution) { return true; }
 
     //methods
     public void raiseConnected() { if (Connected != null) Connected(this, new EventArgs()); }

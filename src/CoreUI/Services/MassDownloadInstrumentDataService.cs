@@ -44,6 +44,7 @@ namespace TradeSharp.CoreUI.Services
     int m_requestSuccessCount;
     int m_requestFailureCount;
     int m_responseSuccessCount;
+    int m_responseFailureCount;
 
     //properties
     public IDataProviderPlugin DataProvider { get; set; }
@@ -54,6 +55,10 @@ namespace TradeSharp.CoreUI.Services
     protected List<Tuple<Resolution, Instrument>> m_requestsSent;
 
     //methods
+    //NOTES:
+    // - The DataProviderPlugin needs to catch any exceptions to properly handle the download/retry flow.
+    // - The Massdownload will capture exceptions but that might lead to some of the requests being skipped leading to
+    //   incomplete data.
     public Task StartAsync(IProgressDialog progressDialog, IList<Instrument> instruments)
     {
       m_progressDialog = progressDialog;
@@ -91,6 +96,7 @@ namespace TradeSharp.CoreUI.Services
         try
         {
           Queue<Tuple<Resolution, Instrument>> downloadCombinations = new Queue<Tuple<Resolution, Instrument>>();
+          Dictionary<Tuple<Resolution, Instrument>,int> retryCounts = new Dictionary<Tuple<Resolution, Instrument>, int>();
           foreach (Instrument instrument in instruments)
           {
             if (Settings.ResolutionMinute) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Minutes, instrument));
@@ -111,6 +117,7 @@ namespace TradeSharp.CoreUI.Services
           m_requestSuccessCount = 0;
           m_responseSuccessCount = 0;
           m_requestFailureCount = 0;
+          m_responseFailureCount = 0;
           object failureCountLock = new object();
 
           m_progressDialog.StatusMessage = $"Requesting data for {instruments.Count} instruments";
@@ -129,14 +136,29 @@ namespace TradeSharp.CoreUI.Services
               lock (instrumentDownloadCountLock) instrumentDownloadCount++;
               tasks.Add(Task.Run(() =>
               {
-                m_progressDialog.LogInformation($"Requesting data for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1}");
-                waitForHealthyConnection();
+                try
+                {
+                  m_progressDialog.LogInformation($"Requesting data for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1}");
+                  waitForHealthyConnection();
 
-                //send the download request
-                if (DataProvider!.Request(downloadCombination.Item2, downloadCombination.Item1, Settings.FromDateTime, Settings.ToDateTime))
-                  lock (successCountLock) m_requestSuccessCount++;
-                else
-                  lock (failureCountLock) m_requestFailureCount++;
+                  //send the download request
+                  if (DataProvider!.Request(downloadCombination.Item2, downloadCombination.Item1, Settings.FromDateTime, Settings.ToDateTime))
+                    lock (successCountLock) m_requestSuccessCount++;
+                  else
+                    lock (failureCountLock) m_requestFailureCount++;
+                }
+                catch (Exception e)
+                {
+                  m_progressDialog.LogError($"EXCEPTION: Request on instrument {downloadCombination.Item2.Ticker}, resolution {downloadCombination.Item1} failed - (Exception: \"{e.Message}\"");
+                  //requeue the request if it is still under the retry count threshold
+                  if (retryCounts.ContainsKey(downloadCombination))
+                  {
+                    lock (retryCounts) retryCounts[downloadCombination]++;
+                    if (retryCounts[downloadCombination] < Settings.RetryCount) lock (downloadCombinations) downloadCombinations.Enqueue(downloadCombination);  //requeue the request to try again later
+                  }
+                  else if (Settings.RetryCount > 0)
+                    lock(retryCounts) retryCounts.Add(downloadCombination, 1);
+                }
                 m_progressDialog.Progress++;
               }));
             }
@@ -171,7 +193,12 @@ namespace TradeSharp.CoreUI.Services
           else
           {
             m_progressDialog.LogInformation($"Attempted {instrumentDownloadCount} instrument/resolution combinations.");
-            m_progressDialog.LogInformation($"Requested {m_requestSuccessCount} instrument/resolutions successfully and {m_requestFailureCount} instrument/resolutions requests failed (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+            m_progressDialog.LogInformation($"Download Statistics:");
+            m_progressDialog.LogInformation($"Elapsed time - {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3}");
+            m_progressDialog.LogInformation($"Requests successfully sent - {m_requestSuccessCount}");
+            m_progressDialog.LogInformation($"Requests failured to send - {m_requestFailureCount}");
+            m_progressDialog.LogInformation($"Responses successfully received - {m_responseSuccessCount}");
+            m_progressDialog.LogInformation($"Responses failed to be received - {m_responseFailureCount}");
             m_progressDialog.StatusMessage = $"Mass download complete";
           }
 
@@ -194,28 +221,48 @@ namespace TradeSharp.CoreUI.Services
     protected void waitForHealthyConnection()
     {
       //wait for the data provider to become connected if for some reason it was disconnected
-      bool showDisconnectedMessage = false;
-      while (!DataProvider.IsConnected && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
+      if (!DataProvider.IsConnected)
       {
-        if (!showDisconnectedMessage)
+        bool showDisconnectedMessage = false;
+        while (!DataProvider.IsConnected && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
         {
-          m_progressDialog.LogError("Data provider is not connected, waiting for reconnection");
-          showDisconnectedMessage = true;
+          if (!showDisconnectedMessage)
+          {
+            m_progressDialog.LogError("Data provider is not connected, waiting for reconnection");
+            showDisconnectedMessage = true;
+          }
+          Thread.Sleep(1000);
         }
-        Thread.Sleep(1000);
+
+        if (DataProvider.IsConnected && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
+          m_progressDialog.LogInformation("Data provider reconnected.");
       }
     }
 
     protected void onRequestError(object sender, RequestErrorArgs args)
     {
-      m_logger.LogError($"Request error: {args.Message}");
-      m_progressDialog.LogError(args.Message);
+      if (args is DataDownloadErrorArgs downloadErrorArgs)
+      {
+        lock (m_requestsSent)
+        {
+          m_responseFailureCount++;
+          m_logger.LogError($"Request error: {args.Message}");
+          m_progressDialog.LogError(args.Message);
+          var request = m_requestsSent.Find(r => r.Item1 == downloadErrorArgs.Resolution && r.Item2 == downloadErrorArgs.Instrument);
+          if (request != null) m_requestsSent.Remove(request);
+        }
+      }
+      else
+      {
+        m_logger.LogError($"Request error: {args.Message}");
+        m_progressDialog.LogError(args.Message);
+      }
     }
 
     protected void onDataDownloadCompleted(object sender, DataDownloadCompleteArgs args)
     {
       m_progressDialog.Progress++;
-      m_progressDialog.LogInformation($"Download completed for - {args.Instrument.Ticker}, {args.Resolution}, {args.Count} bars received");
+      m_progressDialog.LogInformation($"Download completed for - {args.Instrument.Ticker}, {args.Resolution}, {args.Count} bars received from {args.First.ToString() ?? "<No start date>"} to {args.Last.ToString() ?? "<No end date>"}");
       lock (m_requestsSent)
       {
         m_responseSuccessCount++;

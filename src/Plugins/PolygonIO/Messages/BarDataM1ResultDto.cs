@@ -8,6 +8,6 @@ namespace TradeSharp.PolygonIO.Messages
   /// </summary>
   public class BarDataM1ResultDto
   {
-    IList<BarDataM1Dto> Data { get; set; }
+    public IList<BarDataM1Dto> Data { get; set; }
   }
 }

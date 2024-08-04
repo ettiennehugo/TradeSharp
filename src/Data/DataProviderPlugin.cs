@@ -52,10 +52,11 @@ namespace TradeSharp.Data
     //interface implementations
     public abstract bool Request(Instrument instrument, Resolution resolution, DateTime start, DateTime end);
     public abstract bool Subscribe(Instrument instrument, Resolution resolution);
+    public abstract bool Unsubscribe(Instrument instrument, Resolution resolution);
 
     //methods
-    protected virtual void raiseRequestError(string message, Exception? exception = null) { RequestError?.Invoke(this, new RequestErrorArgs(message, exception)); }
-    protected virtual void raiseDataDownloadComplete(Instrument instrument, Resolution resolution, long count) { DataDownloadComplete?.Invoke(this, new DataDownloadCompleteArgs(instrument, resolution, count)); }
-    protected virtual void raiseRealTimeDataUpdate(Instrument instrument, Resolution resolution, IList<BarData> barData, IList<Level1Data> level1Data) { RealTimeDataUpdate?.Invoke(this, new RealTimeDataUpdateArgs(instrument, resolution, barData, level1Data)); }
+    protected virtual void raiseRequestError(Instrument instrument, Resolution resolution, string message, Exception? exception = null) { RequestError?.Invoke(this, new DataDownloadErrorArgs(instrument, resolution, message, exception)); }
+    protected virtual void raiseDataDownloadComplete(Instrument instrument, Resolution resolution, long count, DateTime? first, DateTime? last) { DataDownloadComplete?.Invoke(this, new DataDownloadCompleteArgs(instrument, resolution, count, first, last)); }
+    protected virtual void raiseRealTimeDataUpdate(Instrument instrument, Resolution resolution, IList<IBarData>? barData, IList<ILevel1Data>? level1Data) { RealTimeDataUpdate?.Invoke(this, new RealTimeDataUpdateArgs(instrument, resolution, barData, level1Data)); }
   }
 }

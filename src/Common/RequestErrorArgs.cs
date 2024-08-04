@@ -1,4 +1,5 @@
-﻿namespace TradeSharp.Common
+﻿
+namespace TradeSharp.Common
 {
 	/// <summary>
 	/// Event arguments for request errors.
