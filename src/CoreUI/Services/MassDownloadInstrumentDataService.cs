@@ -65,25 +65,25 @@ namespace TradeSharp.CoreUI.Services
 
       if (DataProvider == null)
       {
-        if (Debugging.MassInstrumentDataDownload) m_logger.LogError("Failed to start mass download, no data provider was set");
+        progressDialog.LogError("Failed to start mass download, no data provider was set");
         return Task.CompletedTask;
       }
 
       if (DataProvider.IsConnected == false)
       {
-        if (Debugging.MassInstrumentDataDownload) m_logger.LogError("Failed to start mass download, data provider is not connected");
+        progressDialog.LogError("Failed to start mass download, data provider is not connected");
         return Task.CompletedTask;
       }
 
       if (IsRunning)
       {
-        if (Debugging.MassInstrumentDataDownload) m_logger.LogWarning("Mass download already running, returning from mass download");
+        progressDialog.LogWarning("Mass download already running, returning from mass download");
         return Task.CompletedTask;
       }
 
       if (instruments.Count == 0)
       {
-        if (Debugging.MassInstrumentDataDownload) m_logger.LogWarning("Failed to start mass download, no instruments were provided");
+        progressDialog.LogWarning("Failed to start mass download, no instruments were provided");
         return Task.CompletedTask;
       }
 

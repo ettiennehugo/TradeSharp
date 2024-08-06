@@ -59,7 +59,7 @@ namespace TradeSharp.WinCoreUI.Services
     {
       if (DataProvider == string.Empty)
       {
-        if (Debugging.MassInstrumentDataImport) m_logger.LogInformation("Failed to start mass import, no data provider was set");
+        progressDialog.LogInformation("Failed to start mass import, no data provider was set");
         return Task.CompletedTask;
       }
 
@@ -93,7 +93,7 @@ namespace TradeSharp.WinCoreUI.Services
           if (importFiles == null || importFiles.Count == 0)
           {
             IsRunning = false;
-            if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"No files found to import in \"{Settings.Directory}\"");
+            progressDialog.LogInformation($"No files found to import in \"{Settings.Directory}\"");
             m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Import", $"No files found to import in \"{Settings.Directory}\"");
             return;
           }
@@ -105,7 +105,7 @@ namespace TradeSharp.WinCoreUI.Services
           progressDialog.StatusMessage = $"Found {importFiles.Count} files to import";
           progressDialog.ShowAsync();
 
-          if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Starting mass import for \"{DataProvider}\" of instrument data for {progressDialog.Maximum:G0} files from \"{Settings.Directory}\"");
+          progressDialog.LogInformation($"Starting mass import for \"{DataProvider}\" of instrument data for {progressDialog.Maximum:G0} files from \"{Settings.Directory}\"");
 
           //start the requested set of threads to import the data from the list of files
           List<Task> taskPool = new List<Task>();
@@ -113,7 +113,7 @@ namespace TradeSharp.WinCoreUI.Services
             taskPool.Add(
               Task.Run(() =>
               {
-                if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Started worker thread for mass import into data provider tables \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+                progressDialog.LogInformation($"Started worker thread for mass import into data provider tables \"{DataProvider}\" (Thread id: {Task.CurrentId})");
 
                 //get the instrument bar data service to import files
                 IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
@@ -131,7 +131,7 @@ namespace TradeSharp.WinCoreUI.Services
                   //catch any import errors and log them to keep thread going
                   try
                   {
-                    if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Importing \"{importFile.Filename}\" for {importFile.Ticker}, resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
+                    progressDialog.LogInformation($"Importing \"{importFile.Filename}\" for {importFile.Ticker}, resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
 
                     //import the data
                     ImportSettings importSettings = new ImportSettings();
@@ -150,21 +150,21 @@ namespace TradeSharp.WinCoreUI.Services
                     }
                     else
                     {
-                      if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Failed to find instrument {importFile.Ticker} definition for \"{importFile.Filename}\" at resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
+                      progressDialog.LogInformation($"Failed to find instrument {importFile.Ticker} definition for \"{importFile.Filename}\" at resolution {importFile.Resolution} (Thread id: {Task.CurrentId})");
                       lock (failureCountLock) failureCount++;
                     }
                   }
                   catch (Exception e)
                   {
                     lock (failureCountLock) failureCount++;
-                    if (Debugging.MassInstrumentDataImport || Debugging.MassInstrumentDataImportException) m_logger.LogError($"EXCEPTION: Failed to import \"{importFile.Filename}\" for {importFile.Ticker} at resolution {importFile.Resolution} - (Exception: \"{e.Message}\", Thread id: {Task.CurrentId})");
+                    progressDialog.LogError($"EXCEPTION: Failed to import \"{importFile.Filename}\" for {importFile.Ticker} at resolution {importFile.Resolution} - (Exception: \"{e.Message}\", Thread id: {Task.CurrentId})");
                   }
 
                   //update progress after importing a file
                   progressDialog.Progress = progressDialog.Progress + 1;
                 }
 
-                if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Ending worker thread for mass import into data provider tables \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+                progressDialog.LogInformation($"Ending worker thread for mass import into data provider tables \"{DataProvider}\" (Thread id: {Task.CurrentId})");
               }, progressDialog.CancellationTokenSource.Token)
             );
 
@@ -178,7 +178,7 @@ namespace TradeSharp.WinCoreUI.Services
           IsRunning = false;
 
           //output status message
-          if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Mass import complete - Found {progressDialog.Maximum:G0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+          progressDialog.LogInformation($"Mass import complete - Found {progressDialog.Maximum:G0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Import Complete", $"Found {progressDialog.Maximum:G0} files, imported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
           LoadedState = LoadedState.Loaded;
         }
@@ -186,7 +186,7 @@ namespace TradeSharp.WinCoreUI.Services
         {
           IsRunning = false;
           LoadedState = LoadedState.Error;
-          if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"EXCEPTION: Mass import main thread failed - (Exception: \"{e.Message}\"");
+          progressDialog.LogError($"EXCEPTION: Mass import main thread failed - (Exception: \"{e.Message}\"");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "Mass Import Failed", $"Mass import main thread failed - (Exception: \"{e.Message}\"");
         }
       });
@@ -349,14 +349,11 @@ namespace TradeSharp.WinCoreUI.Services
         }
       }
 
-      if (Debugging.MassInstrumentDataImport)
-      {
-        m_logger.LogInformation($"Found minute resolution directory \"{minuteDirectory}\" (Thread id: {Task.CurrentId})");
-        m_logger.LogInformation($"Found hour resolution directory \"{hourDirectory}\" (Thread id: {Task.CurrentId})");
-        m_logger.LogInformation($"Found day resolution directory \"{dayDirectory}\" (Thread id: {Task.CurrentId})");
-        m_logger.LogInformation($"Found week resolution directory \"{weekDirectory}\" (Thread id: {Task.CurrentId})");
-        m_logger.LogInformation($"Found month resolution directory \"{monthDirectory}\" (Thread id: {Task.CurrentId})");
-      }
+      m_logger.LogInformation($"Found minute resolution directory \"{minuteDirectory}\" (Thread id: {Task.CurrentId})");
+      m_logger.LogInformation($"Found hour resolution directory \"{hourDirectory}\" (Thread id: {Task.CurrentId})");
+      m_logger.LogInformation($"Found day resolution directory \"{dayDirectory}\" (Thread id: {Task.CurrentId})");
+      m_logger.LogInformation($"Found week resolution directory \"{weekDirectory}\" (Thread id: {Task.CurrentId})");
+      m_logger.LogInformation($"Found month resolution directory \"{monthDirectory}\" (Thread id: {Task.CurrentId})");
 
       return reverseStack(importFiles);
     }
@@ -396,7 +393,7 @@ namespace TradeSharp.WinCoreUI.Services
       if (monthFiles.Length == 0) monthFiles = Directory.GetFiles(Settings.Directory, $"*_{IMassImportInstrumentDataService.TokenM}.{extension}", SearchOption.TopDirectoryOnly);
       if (monthFiles.Length == 0) monthFiles = Directory.GetFiles(Settings.Directory, $"*.{IMassImportInstrumentDataService.TokenM}.{extension}", SearchOption.TopDirectoryOnly);
 
-      if (Debugging.MassInstrumentDataImport) m_logger.LogInformation($"Import file scan found the following files: Minute({minuteFiles.Length}) Hour({hourFiles.Length}) Day({dayFiles.Length}) Week({weekFiles.Length}) Month({monthFiles.Length})");
+      m_logger.LogInformation($"Import file scan found the following files: Minute({minuteFiles.Length}) Hour({hourFiles.Length}) Day({dayFiles.Length}) Week({weekFiles.Length}) Month({monthFiles.Length})");
 
       //add the files to the import list
       if (Settings.ResolutionMinute)

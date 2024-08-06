@@ -195,13 +195,13 @@ namespace TradeSharp.CoreUI.Services
           IsRunning = false;
 
           //output status message
-          if (Debugging.MassInstrumentDataExport) m_logger.LogInformation($"Mass Copy Complete - Attempted {m_attemptedInstrumentCount} instruments, copied {m_successCount} instruments successfully and failed on {m_failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+          progressDialog.LogInformation($"Mass Copy Complete - Attempted {m_attemptedInstrumentCount} instruments, copied {m_successCount} instruments successfully and failed on {m_failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Copy Complete", $"Attempted {m_attemptedInstrumentCount} instruments, copied {m_successCount} instruments successfully and failed on {m_failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
         }
         catch (Exception e)
         {
           IsRunning = false;
-          if (Debugging.MassInstrumentDataCopy) m_logger.LogError($"EXCEPTION: Mass copy main thread failed - (Exception: \"{e.Message}\")");
+          progressDialog.LogError($"EXCEPTION: Mass copy main thread failed - (Exception: \"{e.Message}\")");
           m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "Mass Copy Failed", $"Mass copy main thread failed - (Exception: \"{e.Message}\"");
         }
       });
@@ -223,7 +223,7 @@ namespace TradeSharp.CoreUI.Services
         taskPool.Add(
           Task.Run(() =>
           {
-            if (Debugging.MassInstrumentDataCopy) m_logger.LogInformation($"Started worker thread for copy instrument data for data provider \"{DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");
+            progressDialog.LogInformation($"Started worker thread for copy instrument data for data provider \"{DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");
 
             IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
             instrumentBarDataService.DataProvider = DataProvider;
@@ -237,7 +237,7 @@ namespace TradeSharp.CoreUI.Services
                 if (list.Count > 0) copyInstrument = list.Pop();
               if (copyInstrument == null) continue; //failed to find a copy/resolution entry, all instruments processed
 
-              if (Debugging.MassInstrumentDataCopy) m_logger.LogInformation($"Copying instrument data for \"{copyInstrument!.Instrument.Ticker}\" to resolution \"{copyInstrument!.Resolution}\"");
+              progressDialog.LogInformation($"Copying instrument data for \"{copyInstrument!.Instrument.Ticker}\" to resolution \"{copyInstrument!.Resolution}\"");
 
               instrumentBarDataService.Resolution = copyInstrument!.Resolution;
               instrumentBarDataService.Instrument = copyInstrument!.Instrument;
@@ -251,7 +251,7 @@ namespace TradeSharp.CoreUI.Services
               catch (Exception e)
               {
                 lock (m_failureCountLock) m_failureCount++;
-                if (Debugging.MassInstrumentDataCopy) m_logger.LogError($"EXCEPTION: Failed to copy instrument data for \"{copyInstrument.Instrument.Ticker}\" at resolution \"{copyInstrument.Resolution}\" (Exception: \"{e.Message}\")");
+                progressDialog.LogError($"EXCEPTION: Failed to copy instrument data for \"{copyInstrument.Instrument.Ticker}\" at resolution \"{copyInstrument.Resolution}\" (Exception: \"{e.Message}\")");
               }
 
               lock (m_attemptedInstrumentCountLock) m_attemptedInstrumentCount++;
@@ -260,7 +260,7 @@ namespace TradeSharp.CoreUI.Services
               progressDialog.Progress = progressDialog.Progress + 1;
             }
 
-            if (Debugging.MassInstrumentDataCopy) m_logger.LogInformation($"Ending worker thread for copy of instrument data for data provider \"{DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");
+            progressDialog.LogInformation($"Ending worker thread for copy of instrument data for data provider \"{DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");
           }, progressDialog.CancellationTokenSource.Token));
 
       //wait for tasks to finish copying data for this resolution
