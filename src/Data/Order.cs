@@ -9,6 +9,7 @@ namespace TradeSharp.Data
   /// </summary>
   public enum OrderStatus
   {
+    New,            //order is new - not submitted yet
     PendingSubmit,  //order is pending submission
     PendingCancel,  //order is pending cancellation
     Inactive,       //order was received but was rejected or cancelled
@@ -58,7 +59,7 @@ namespace TradeSharp.Data
     {
       Account = account;
       Instrument = instrument;
-      Status = OrderStatus.PendingSubmit;
+      Status = OrderStatus.New;
       TimeInForce = OrderTimeInForce.Day;
       GoodTillDate = DateTime.Now.AddDays(1);
       CustomProperties = new Dictionary<string, CustomProperty>();

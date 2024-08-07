@@ -20,6 +20,7 @@ namespace TradeSharp.Data
     /// </summary>summary>
     public enum OrderType
     {
+      None,
       [Description("Order sends order")]
       OSO,
       [Description("Order cancels order")]
@@ -35,7 +36,10 @@ namespace TradeSharp.Data
 
 
     //constructors
-    public ComplexOrder(Account account, Instrument instrument) : base(account, instrument) { }
+    public ComplexOrder(Account account, Instrument instrument) : base(account, instrument) 
+    {
+      Type = OrderType.None;
+    }
 
     //finalizers
 

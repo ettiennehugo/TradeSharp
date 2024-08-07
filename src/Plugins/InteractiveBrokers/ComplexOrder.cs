@@ -44,6 +44,64 @@ namespace TradeSharp.InteractiveBrokers
     //methods
     public override void Send()
     {
+      //only send order if it's brand new or cancelled
+      if (Status != OrderStatus.New || Status != OrderStatus.Cancelled) return;
+
+      Order.Account = Account.Name;
+      Order.Rule80A = Constants.Rule80AIndividual;
+
+
+      throw new NotImplementedException();
+
+
+      //TODO - look at the sample app to see how you should fill in the order object details.
+      // https://ibkrcampus.com/ibkr-api-page/twsapi-ref/#order-ref
+      // https://ibkrcampus.com/ibkr-api-page/twsapi-ref/#comboleg-ref - it looks like the BUY/SELL side of combo orders are set in the ComboLeg object that goes into the order.
+
+      switch (Type)
+      {
+        case OrderType.OSO:
+          Order.OrderType = Constants.OrderTypeLimit;
+        break;
+        case OrderType.OCO:
+
+        break;
+        case OrderType.Bracket:
+
+        break;
+        case OrderType.Fade:
+
+        break;
+      }
+
+      switch (TimeInForce)
+      {
+        case OrderTimeInForce.GTC:
+          Order.Tif = Constants.OrderTimeInForceGTC;
+          Order.ActiveStartTime = DateTime.Now.ToUniversalTime().ToString("yyyyMMdd HH:mm:ss Z");
+          Order.ActiveStopTime = DateTime.Now.ToUniversalTime().AddMonths(6).ToString("yyyyMMdd HH:mm:ss Z");
+          break;
+        case OrderTimeInForce.GTD:
+          Order.Tif = Constants.OrderTimeInForceGTD;
+          Order.GoodTillDate = GoodTillDate.ToUniversalTime().ToString("yyyyMMdd HH:mm:ss Z");
+          break;
+        case OrderTimeInForce.IOC:
+          Order.Tif = Constants.OrderTimeInForceIOC;
+          break;
+        case OrderTimeInForce.FOK:
+          Order.Tif = Constants.OrderTimeInForceFOK;
+          break;
+        default:
+          Order.Tif = Constants.OrderTimeInForceDay;
+          break;
+      }
+
+
+
+
+      Order.Transmit = true;  //need to set this for TWS to send the order to the market
+
+      Status = OrderStatus.PendingSubmit;
       m_serviceHost.Client.ClientSocket!.placeOrder(Order.OrderId, Contract, Order);
     }
 

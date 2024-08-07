@@ -8,14 +8,14 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="8c5dba07-cc9d-4778-907c-2b00176e7b42"
+    Name="030c29a6-338a-43d6-bba7-1db068269e0f"
     Publisher="CN=Ettienne"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="8c5dba07-cc9d-4778-907c-2b00176e7b42" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="030c29a6-338a-43d6-bba7-1db068269e0f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>TradeSharp Data Manager</DisplayName>
+    <DisplayName>TradeSharp Portfolio Manager</DisplayName>
     <PublisherDisplayName>Ettienne</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -34,8 +34,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="TradeSharp Data Manager"
-        Description="TradeSharp Data Manager"
+        DisplayName="TradeSharp Portfolio Manager"
+        Description="TradeSharp Portfolio Manager"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

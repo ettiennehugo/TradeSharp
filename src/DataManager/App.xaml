@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Application
+<wincoreui:ApplicationBase
     x:Class="TradeSharp.WinDataManager.App"
+    xmlns:wincoreui="using:TradeSharp.WinCoreUI.Common"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Application.Resources>
@@ -11,4 +12,4 @@
       <!-- Other app resources here -->
     </ResourceDictionary>
   </Application.Resources>
-</Application>
+</wincoreui:ApplicationBase>

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WinPortfolioManager (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "WinPortfolioManager (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

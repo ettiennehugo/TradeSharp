@@ -74,13 +74,13 @@ namespace TradeSharp.CoreUI.Services
     {
       if (DataProvider == string.Empty)
       {
-        if (Debugging.MassInstrumentDataCopy) m_logger.LogInformation("Failed to start mass copy, no data provider was set");
+        progressDialog.LogInformation("Failed to start mass copy, no data provider was set");
         return Task.CompletedTask;
       }
 
       if (IsRunning)
       {
-        if (Debugging.MassInstrumentDataCopy) m_logger.LogInformation("Mass copy already running, returning from mass export");
+        progressDialog.LogInformation("Mass copy already running, returning from mass export");
         return Task.CompletedTask;
       }
 
@@ -106,7 +106,7 @@ namespace TradeSharp.CoreUI.Services
           //NOTE:
           // * We need to start from lower timeframes and work our way up to higher timeframes to ensure that we have the lower timeframes to build the higher timeframes from.
           // * We only add instruments that are going to be copied OR instruments that have data on the database to copy to the longer timeframes.
-          if (Debugging.MassInstrumentDataCopy) m_logger.LogInformation($"Starting mass copy of instrument data for {m_instrumentService.Items.Count} instruments");
+          progressDialog.LogInformation($"Starting mass copy of instrument data for {m_instrumentService.Items.Count} instruments");
 
           Stack<CopyInstrument> minuteToHourList = new Stack<CopyInstrument>();
           Stack<CopyInstrument> hourToDayList = new Stack<CopyInstrument>();
@@ -166,7 +166,7 @@ namespace TradeSharp.CoreUI.Services
           if (totalToCopyCount == 0)
           {
             IsRunning = false;
-            if (Debugging.MassInstrumentDataCopy) m_logger.LogInformation("No instruments found to copy for the given settings");
+            progressDialog.LogInformation("No instruments found to copy for the given settings");
             m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Copy", "No instruments found to copy for the given settings");
             return;
           }
@@ -180,7 +180,7 @@ namespace TradeSharp.CoreUI.Services
 
           //copy all the instrument data according to the defined data resolutions
           //NOTE: We wait to for the copletion of one resolution before starting the next resolution to ensure that the lower timeframes are available to construct the higher timeframes
-          if (Debugging.MassInstrumentDataCopy) m_logger.LogInformation($"Starting mass copy for \"{DataProvider}\" of instrument data, constructed {totalToCopyCount} instrument/resolution pairs (look at attempted count for actual number of instruments copied)");
+          progressDialog.LogInformation($"Starting mass copy for \"{DataProvider}\" of instrument data, constructed {totalToCopyCount} instrument/resolution pairs (look at attempted count for actual number of instruments copied)");
 
           copyInstrumentData(Resolution.Minutes, minuteToHourList, progressDialog);
           copyInstrumentData(Resolution.Hours, hourToDayList, progressDialog);

@@ -1,4 +1,5 @@
-﻿using IBApi;
+﻿using System;
+using IBApi;
 using System.ComponentModel;
 using TradeSharp.Data;
 
@@ -47,6 +48,9 @@ namespace TradeSharp.InteractiveBrokers
     //methods
     public override void Send()
     {
+      //only send order if it's brand new or cancelled
+      if (Status != OrderStatus.New || Status != OrderStatus.Cancelled) return;
+
       Order.Account = Account.Name;
       Order.Rule80A = Constants.Rule80AIndividual;
 
@@ -109,6 +113,7 @@ namespace TradeSharp.InteractiveBrokers
       Order.TotalQuantity = Quantity;
       Order.AuxPrice = StopPrice;   //auxiliry price is used for the stop price
       Order.LmtPrice = LimitPrice;
+      Order.Transmit = true;  //need to set this for TWS to send the order to the market
 
       Status = OrderStatus.PendingSubmit;
       m_serviceHost.Client.ClientSocket!.placeOrder(Order.OrderId, Contract, Order);

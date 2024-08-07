@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WinTraderWorkbench (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "WinTraderWorkbench (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
