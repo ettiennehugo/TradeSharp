@@ -1,17 +1,6 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.WinTraderWorkbench
 {
@@ -20,14 +9,49 @@ namespace TradeSharp.WinTraderWorkbench
   /// </summary>
   public sealed partial class MainWindow : Window
   {
+
+    //constants
+
+
+    //enums
+
+
+    //types
+
+
+    //attributes
+    private IDialogService m_dialogService;
+
+    //properties
+
+
+    //constructors
     public MainWindow()
     {
+      m_dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       this.InitializeComponent();
     }
 
-    private void myButton_Click(object sender, RoutedEventArgs e)
+    //finalizers
+
+
+    //interface implementations
+
+
+    //methods
+    private void m_newChartMenu_Click(object sender, RoutedEventArgs e)
     {
-      myButton.Content = "Clicked";
+      m_dialogService.ShowNewChartAsync();
+    }
+
+    private void m_newScannerMenu_Click(object sender, RoutedEventArgs e)
+    {
+      m_dialogService.ShowNewScannerAsync();
+    }
+
+    private void m_exitMenu_Click(object sender, RoutedEventArgs e)
+    {
+      App.Current.Exit();
     }
   }
 }

@@ -594,7 +594,7 @@ namespace TradeSharp.WinDataManager.Services
     /// <summary>
     /// Shows the account dialog for the specified account.
     /// </summary>
-    public async Task ShowAccountDialogAsync(IBrokerPlugin broker, Data.Account account)
+    public Task ShowAccountDialogAsync(IBrokerPlugin broker, Data.Account account)
     {
       PostUIUpdate(() =>
       {
@@ -608,6 +608,36 @@ namespace TradeSharp.WinDataManager.Services
         CenterWindow(window);
         window.Activate();
       });
+      return Task.CompletedTask;
+    }
+
+    public Task ShowNewChartAsync()
+    {
+
+      //TODO: Implement chart Window
+      ShowPopupMessageAsync("Chart Window not implemented yet");
+
+      return Task.CompletedTask;
+
+    }
+    
+    public Task ShowNewScannerAsync()
+    {
+
+      //TODO: Implement scanner Window
+      ShowPopupMessageAsync("Chart Window not implemented yet");
+
+      return Task.CompletedTask;
+
+    }
+
+    public Task ShowNewPortfolioAsync()
+    {
+      
+      //TODO: Implement portfolio Window
+      ShowPopupMessageAsync("Portfolio Window not implemented yet");
+
+      return Task.CompletedTask;
     }
 
     //properties

@@ -5,9 +5,22 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
-
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-    </StackPanel>
+    mc:Ignorable="d"
+    Title="TradeSharp Portfolio Manager">
+  <Grid x:Name="m_traderPortfolioMain" RowDefinitions="Auto,Auto">
+    <MenuBar x:Name="m_mainMenuBar" Grid.Row="0">
+      <MenuBarItem x:Name="m_fileMenuItem" Title="File">
+        <MenuFlyoutSubItem x:Name="m_newMenu" Text="New">
+          <MenuFlyoutItem x:Name="m_newChartMenu" ToolTipService.ToolTip="New portfolio" Text="Portfolio" Click="m_newChartMenu_Click"/>
+        </MenuFlyoutSubItem>
+        <MenuFlyoutSeparator />
+        <MenuFlyoutItem x:Name="m_exitMenu" Text="Exit" Click="m_exitMenu_Click"/>
+      </MenuBarItem>
+    </MenuBar>
+    <CommandBar x:Name="m_mainCommandBar" Grid.Row="1" OverflowButtonVisibility="Collapsed" HorizontalAlignment="Left">
+      <AppBarButton x:Name="m_newPortfolioButton" ToolTipService.ToolTip="New portfolio" Click="m_newPortfolioButton_Click">
+        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A1;" Margin="0"/>
+      </AppBarButton>
+    </CommandBar>
+  </Grid>
 </Window>

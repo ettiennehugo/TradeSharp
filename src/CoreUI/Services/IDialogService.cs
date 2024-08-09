@@ -330,5 +330,10 @@ namespace TradeSharp.CoreUI.Services
     Task ShowAccountDialogAsync();                                        //show accounts for all defined broker plugins
     Task ShowAccountDialogAsync(IBrokerPlugin broker);                    //show accounts for a specific broker plugin
     Task ShowAccountDialogAsync(IBrokerPlugin broker, Account account);   //show account for specific broker plugin and account
+
+    Task ShowNewChartAsync();
+    Task ShowNewScannerAsync();
+
+    Task ShowNewPortfolioAsync();
   }
 }
