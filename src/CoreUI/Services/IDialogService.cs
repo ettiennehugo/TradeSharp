@@ -200,6 +200,7 @@ namespace TradeSharp.CoreUI.Services
   {
     public MassCopySettings()
     {
+      DataProvider = string.Empty;
       FromDateTime = Constants.DefaultMinimumDateTime;
       ToDateTime = Constants.DefaultMaximumDateTime;
       ResolutionHour = false;
@@ -209,6 +210,7 @@ namespace TradeSharp.CoreUI.Services
       ThreadCount = Environment.ProcessorCount;    //clip this the Environment.ProcessorCount as max since it would most likely not be useful to have more threads than processors
     }
 
+    [ObservableProperty] string m_dataProvider;
     [ObservableProperty] DateTime m_fromDateTime;
     [ObservableProperty] DateTime m_toDateTime;
     [ObservableProperty] bool m_resolutionHour;

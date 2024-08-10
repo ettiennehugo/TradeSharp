@@ -26,6 +26,7 @@ namespace TradeSharp.CoreUI.Services
     protected IConfigurationService m_configurationService;
     protected ILogger<PluginsService> m_logger;
     private IPlugin? m_selectedItem;
+    private List<IPlugin> m_items;
 
     //constructors
     public PluginsService(IDialogService dialogService, ILogger<PluginsService> logger, IConfigurationService configurationService): base(dialogService) 
@@ -33,7 +34,7 @@ namespace TradeSharp.CoreUI.Services
       m_configurationService = configurationService;
       m_logger = logger;
       m_selectedItem = null;
-      Items = new List<IPlugin>();
+      m_items = new List<IPlugin>();
     }
 
     //finalizers
@@ -57,7 +58,7 @@ namespace TradeSharp.CoreUI.Services
 
     //properties
     public IHost Host { get; set; }
-    public IList<IPlugin> Items { get; set; }
+    public IList<IPlugin> Items { get => m_items; set => throw new NotSupportedException("Setting of IPluginsService items not supported."); }
     public Guid ParentId { get => Guid.Empty; set { /* nothing to do */ } } //plugin's do not have a parent
     public IPlugin SelectedItem 
     {
@@ -88,6 +89,21 @@ namespace TradeSharp.CoreUI.Services
     public bool Update(IPlugin item)
     {
       throw new NotImplementedException();
+    }
+
+    public IPlugin? GetPlugin(string name)
+    {
+      return m_items.Find((p) => p.Name == name);
+    }
+
+    public IDataProviderPlugin? GetDataProviderPlugin(string name)
+    {
+      return m_items.Find((p) => p.Name == name && p is IDataProviderPlugin) as IDataProviderPlugin;
+    }
+
+    public IBrokerPlugin? GetBrokerPlugin(string name)
+    {
+      return m_items.Find((p) => p.Name == name && p is IBrokerPlugin) as IBrokerPlugin;
     }
 
     protected void loadPlugins(IDictionary<string,IPluginConfiguration> plugins)

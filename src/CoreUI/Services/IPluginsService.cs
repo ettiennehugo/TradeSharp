@@ -24,6 +24,8 @@ namespace TradeSharp.CoreUI.Services
     IHost Host { get; set; }
 
     //methods
-
+    IPlugin? GetPlugin(string name);
+    IDataProviderPlugin? GetDataProviderPlugin(string name);
+    IBrokerPlugin? GetBrokerPlugin(string name);
   }
 }

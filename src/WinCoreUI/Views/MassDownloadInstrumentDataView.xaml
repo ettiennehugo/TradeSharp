@@ -27,7 +27,7 @@
     <TextBlock Text="Download Threads" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3" ToolTipService.ToolTip="Thread count to use for download"/>
     <Slider x:Name="m_threadCount" Margin="0,3, 10, 3" TickFrequency="1" TickPlacement="Outside" Grid.Column="1" Grid.Row="3" Value="{x:Bind Settings.ThreadCount, Mode=TwoWay}" Minimum="1" Maximum="{x:Bind ThreadCountMax, Mode=OneWay}"/>
     <TextBlock Text="Resolutions" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4" Grid.RowSpan="5"/>
-    <Grid Grid.Column="1" Grid.Row="4" Grid.RowSpan="5" RowDefinitions="Auto, Auto, Auto, Auto, Auto">
+    <Grid x:Name="m_resolutionsGrid" Grid.Column="1" Grid.Row="4" Grid.RowSpan="5" RowDefinitions="Auto, Auto, Auto, Auto, Auto">
       <CheckBox x:Name="m_resolutionMinute" Content="Minute" IsChecked="{x:Bind Settings.ResolutionMinute, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
       <CheckBox x:Name="m_resolutionHour" Content="Hour" IsChecked="{x:Bind Settings.ResolutionHour, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1"/>
       <CheckBox x:Name="m_resolutionDay" Content="Day" IsChecked="{x:Bind Settings.ResolutionDay, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2"/>

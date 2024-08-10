@@ -4,8 +4,8 @@ using System;
 using TradeSharp.Common;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Commands;
 using TradeSharp.CoreUI.Services;
-using System.Linq;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -27,7 +27,6 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private IMassDownloadInstrumentDataService m_massDownloadInstrumentDataService;
     private IPluginsService m_pluginsService;
     private IDataProviderPlugin? m_dataProvider;
 
@@ -35,7 +34,6 @@ namespace TradeSharp.WinCoreUI.Views
     public MassDownloadInstrumentDataView()
     {
       Settings = new MassDownloadSettings();
-      m_massDownloadInstrumentDataService = (IMassDownloadInstrumentDataService)IApplication.Current.Services.GetService(typeof(IMassDownloadInstrumentDataService));
       m_pluginsService = (IPluginsService)IApplication.Current.Services.GetService(typeof(IPluginsService));
       this.InitializeComponent();
     }
@@ -66,7 +64,7 @@ namespace TradeSharp.WinCoreUI.Views
     {
       Common.Utilities.populateComboBoxFromEnum(ref m_dateTimeTimeZone, typeof(ImportExportDataDateTimeTimeZone));
       m_endDateTime.Text = DateTime.Now.ToString("yyyy-MM-dd") + " 23:59";
-      m_dataProvider = (IDataProviderPlugin)m_pluginsService.Items.FirstOrDefault(p => p is IDataProviderPlugin && p.Name == DataProvider);
+      m_dataProvider = m_pluginsService.GetDataProviderPlugin(DataProvider);
       if (m_dataProvider != null)
       {
         ThreadCountMax = m_dataProvider.ConnectionCountMax;
@@ -86,12 +84,14 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_downloadBtn_Click(object sender, RoutedEventArgs e)
     {
-      m_massDownloadInstrumentDataService.DataProvider = m_dataProvider;
-      m_massDownloadInstrumentDataService.Settings = Settings;
-      m_massDownloadInstrumentDataService.Logger = null;
+      IMassDownloadInstrumentData massDownloadInstrumentData = new MassDownloadInstrumentData();
+      IMassDownloadInstrumentData.Context context = new IMassDownloadInstrumentData.Context();
+      context.DataProvider = DataProvider;
+      context.Settings = Settings;
+      context.Instruments = m_instrumentSelectionView.SelectedItems;
       IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
-      IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Download Progress", m_massDownloadInstrumentDataService.Logger);
-      m_massDownloadInstrumentDataService.StartAsync(progressDialog, m_instrumentSelectionView.SelectedItems);
+      IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Download Progress", null);
+      massDownloadInstrumentData.StartAsync(progressDialog, context);
       ParentWindow.Close();
     }
 

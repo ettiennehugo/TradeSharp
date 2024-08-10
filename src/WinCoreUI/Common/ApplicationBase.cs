@@ -13,13 +13,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TradeSharp.WinDataManager.Services;
+using TradeSharp.CoreUI.Commands;
 
 namespace TradeSharp.WinCoreUI.Common
 {
-  /// <summary>
-  /// Common base class for all TradeSharp applications.
-  /// </summary>
-  public class ApplicationBase: Application, IApplication
+    /// <summary>
+    /// Common base class for all TradeSharp applications.
+    /// </summary>
+    public class ApplicationBase: Application, IApplication
   {
     //constants
 
@@ -91,10 +92,6 @@ namespace TradeSharp.WinCoreUI.Common
       services.AddSingleton<IHolidayViewModel, HolidayViewModel>();
       services.AddSingleton<IExchangeViewModel, ExchangeViewModel>();
       services.AddSingleton<ISessionViewModel, SessionViewModel>();
-      services.AddSingleton<IMassDownloadInstrumentDataService, MassDownloadInstrumentDataService>();
-      services.AddSingleton<IMassCopyInstrumentDataService, MassCopyInstrumentDataService>();
-      services.AddSingleton<IMassImportInstrumentDataService, MassImportInstrumentDataService>();
-      services.AddSingleton<IMassExportInstrumentDataService, MassExportInstrumentDataService>();
       services.AddTransient<IInstrumentViewModel, InstrumentViewModel>();
       services.AddSingleton<IInstrumentGroupViewModel, WinCoreUI.ViewModels.InstrumentGroupViewModel>();
       services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient

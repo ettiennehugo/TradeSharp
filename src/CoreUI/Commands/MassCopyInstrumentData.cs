@@ -1,18 +1,12 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradeSharp.Common;
+using TradeSharp.CoreUI.Commands;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Services
 {
-  public partial class MassCopyInstrumentDataService : ServiceBase, IMassCopyInstrumentDataService
+    public partial class MassCopyInstrumentData: Command, IMassCopyInstrumentData
   {
     //constants
 
@@ -28,9 +22,9 @@ namespace TradeSharp.CoreUI.Services
     }
 
     //attributes
+    IMassCopyInstrumentData.Context m_context;
     IDatabase m_database;
     IInstrumentService m_instrumentService;
-    ILogger<MassExportInstrumentDataService> m_logger;
     ILogger? m_taskLogger;
     object m_attemptedInstrumentCountLock;
     int m_attemptedInstrumentCount;
@@ -39,22 +33,19 @@ namespace TradeSharp.CoreUI.Services
     object m_failureCountLock;
     int m_failureCount;
 
+    //properties
+
     //constructors
-    public MassCopyInstrumentDataService(ILogger<MassExportInstrumentDataService> logger, IDialogService dialogService, IInstrumentService instrumentService, IDatabase database) : base(dialogService)
+    public MassCopyInstrumentData() : base()
     {
-      Settings = new MassCopySettings();
-      m_logger = logger;
-      IsRunning = false;
-      DataProvider = string.Empty;
-      m_instrumentService = instrumentService;
-      m_database = database;
+      m_database = (IDatabase)m_serviceHost.GetService(typeof(IDatabase))!;
+      m_instrumentService = (IInstrumentService)m_serviceHost.GetService(typeof(IInstrumentService))!;
       m_attemptedInstrumentCountLock = new object();
       m_attemptedInstrumentCount = 0;
       m_successCountLock = new object();
       m_successCount = 0;
       m_failureCountLock = new object();
       m_failureCount = 0;
-      LoadedState = LoadedState.Loaded; //service does not require loading
     }
 
     //finalizers
@@ -63,32 +54,23 @@ namespace TradeSharp.CoreUI.Services
     //interface implementations
 
 
-    //properties
-    public string DataProvider { get; set; }
-    public ILogger? Logger { get => m_taskLogger; set => m_taskLogger = value; }
-    public MassCopySettings Settings { get; set; }
-    [ObservableProperty] public bool m_isRunning;
-
     //methods
-    public Task StartAsync(IProgressDialog progressDialog)
+    public override Task StartAsync(IProgressDialog progressDialog, object? context)
     {
-      if (DataProvider == string.Empty)
-      {
-        progressDialog.LogInformation("Failed to start mass copy, no data provider was set");
-        return Task.CompletedTask;
-      }
 
-      if (IsRunning)
+      if (context is not IMassCopyInstrumentData.Context m_context)
       {
-        progressDialog.LogInformation("Mass copy already running, returning from mass export");
+        progressDialog.LogError("Failed to start mass copy, invalid context provided");
+        State = CommandState.Failed;
         return Task.CompletedTask;
-      }
+      }  
 
       return Task.Run(() =>
       {
         try 
         {
-          IsRunning = true;
+          State = CommandState.Running;
+
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
 
@@ -113,9 +95,9 @@ namespace TradeSharp.CoreUI.Services
           Stack<CopyInstrument> dayToWeekList = new Stack<CopyInstrument>();
           Stack<CopyInstrument> weekToMonthList = new Stack<CopyInstrument>();
 
-          if (Settings.ResolutionHour)
+          if (m_context.Settings.ResolutionHour)
             foreach (Instrument instrument in m_instrumentService.Items)
-              if (m_database.GetDataCount(DataProvider, instrument.Ticker, Resolution.Minutes, Settings.FromDateTime, Settings.ToDateTime) > 0)
+              if (m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Minutes, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
                 copyInstrument.Resolution = Resolution.Minutes;
@@ -123,10 +105,10 @@ namespace TradeSharp.CoreUI.Services
                 minuteToHourList.Push(copyInstrument);
               }
 
-          if (Settings.ResolutionDay)
+          if (m_context.Settings.ResolutionDay)
             foreach (Instrument instrument in m_instrumentService.Items)
               if (minuteToHourList.FirstOrDefault(x => x.Instrument == instrument) != null ||    //going to construct the hourly bars from the minute bars
-                  m_database.GetDataCount(DataProvider, instrument.Ticker, Resolution.Hours, Settings.FromDateTime, Settings.ToDateTime) > 0)
+                  m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Hours, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
                 copyInstrument.Resolution = Resolution.Hours;
@@ -134,10 +116,10 @@ namespace TradeSharp.CoreUI.Services
                 hourToDayList.Push(copyInstrument);
               }
 
-          if (Settings.ResolutionWeek)
+          if (m_context.Settings.ResolutionWeek)
             foreach (Instrument instrument in m_instrumentService.Items)
               if (hourToDayList.FirstOrDefault(x => x.Instrument == instrument) != null ||    //going to construct the daily bars from the hourly bars
-                  m_database.GetDataCount(DataProvider, instrument.Ticker, Resolution.Days, Settings.FromDateTime, Settings.ToDateTime) > 0)
+                  m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Days, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
                 copyInstrument.Resolution = Resolution.Days;
@@ -145,10 +127,10 @@ namespace TradeSharp.CoreUI.Services
                 dayToWeekList.Push(copyInstrument);
               }
 
-          if (Settings.ResolutionMonth)
+          if (m_context.Settings.ResolutionMonth)
             foreach (Instrument instrument in m_instrumentService.Items)
               if (dayToWeekList.FirstOrDefault(x => x.Instrument == instrument) != null ||   //going to construct the weekly bars from the daily bars
-                  m_database.GetDataCount(DataProvider, instrument.Ticker, Resolution.Weeks, Settings.FromDateTime, Settings.ToDateTime) > 0)
+                  m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Weeks, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
                 copyInstrument.Resolution = Resolution.Weeks;
@@ -165,9 +147,8 @@ namespace TradeSharp.CoreUI.Services
           int totalToCopyCount = minuteToHourList.Count + hourToDayList.Count + dayToWeekList.Count + weekToMonthList.Count;
           if (totalToCopyCount == 0)
           {
-            IsRunning = false;
-            progressDialog.LogInformation("No instruments found to copy for the given settings");
-            m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Copy", "No instruments found to copy for the given settings");
+            State = CommandState.Completed;
+            progressDialog.LogInformation("No instruments found to copy for the given m_context.Settings");
             return;
           }
 
@@ -180,7 +161,7 @@ namespace TradeSharp.CoreUI.Services
 
           //copy all the instrument data according to the defined data resolutions
           //NOTE: We wait to for the copletion of one resolution before starting the next resolution to ensure that the lower timeframes are available to construct the higher timeframes
-          progressDialog.LogInformation($"Starting mass copy for \"{DataProvider}\" of instrument data, constructed {totalToCopyCount} instrument/resolution pairs (look at attempted count for actual number of instruments copied)");
+          progressDialog.LogInformation($"Starting mass copy for \"{m_context.DataProvider}\" of instrument data, constructed {totalToCopyCount} instrument/resolution pairs (look at attempted count for actual number of instruments copied)");
 
           copyInstrumentData(Resolution.Minutes, minuteToHourList, progressDialog);
           copyInstrumentData(Resolution.Hours, hourToDayList, progressDialog);
@@ -192,17 +173,15 @@ namespace TradeSharp.CoreUI.Services
 
           stopwatch.Stop();
           TimeSpan elapsed = stopwatch.Elapsed;
-          IsRunning = false;
+          State = CommandState.Completed;
 
           //output status message
           progressDialog.LogInformation($"Mass Copy Complete - Attempted {m_attemptedInstrumentCount} instruments, copied {m_successCount} instruments successfully and failed on {m_failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Copy Complete", $"Attempted {m_attemptedInstrumentCount} instruments, copied {m_successCount} instruments successfully and failed on {m_failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
         }
         catch (Exception e)
         {
-          IsRunning = false;
+          State = CommandState.Failed;
           progressDialog.LogError($"EXCEPTION: Mass copy main thread failed - (Exception: \"{e.Message}\")");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "Mass Copy Failed", $"Mass copy main thread failed - (Exception: \"{e.Message}\"");
         }
       });
     }
@@ -219,14 +198,14 @@ namespace TradeSharp.CoreUI.Services
       if (list.Count == 0) return;
 
       List<Task> taskPool = new List<Task>();
-      for (int i = 0; i < Settings.ThreadCount; i++)
+      for (int i = 0; i < m_context.Settings.ThreadCount; i++)
         taskPool.Add(
           Task.Run(() =>
           {
-            progressDialog.LogInformation($"Started worker thread for copy instrument data for data provider \"{DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");
+            progressDialog.LogInformation($"Started worker thread for copy instrument data for data provider \"{m_context.Settings.DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");
 
             IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
-            instrumentBarDataService.DataProvider = DataProvider;
+            instrumentBarDataService.DataProvider = m_context.Settings.DataProvider;
             instrumentBarDataService.MassOperation = true;
 
             while (list.Count > 0 && !progressDialog.CancellationTokenSource.IsCancellationRequested)
@@ -245,7 +224,7 @@ namespace TradeSharp.CoreUI.Services
               try
               {
                 lock (m_attemptedInstrumentCountLock) m_attemptedInstrumentCount++;
-                instrumentBarDataService.Copy(copyInstrument!.Resolution, Settings.FromDateTime, Settings.ToDateTime);
+                instrumentBarDataService.Copy(copyInstrument!.Resolution, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime);
                 lock (m_successCountLock) m_successCount++;
               }
               catch (Exception e)
@@ -260,7 +239,7 @@ namespace TradeSharp.CoreUI.Services
               progressDialog.Progress = progressDialog.Progress + 1;
             }
 
-            progressDialog.LogInformation($"Ending worker thread for copy of instrument data for data provider \"{DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");
+            progressDialog.LogInformation($"Ending worker thread for copy of instrument data for data provider \"{m_context.Settings.DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");
           }, progressDialog.CancellationTokenSource.Token));
 
       //wait for tasks to finish copying data for this resolution

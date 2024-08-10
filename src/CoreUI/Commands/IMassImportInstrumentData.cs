@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
-using TradeSharp.CoreUI.Common;
+﻿using TradeSharp.CoreUI.Services;
 
-namespace TradeSharp.CoreUI.Services
+namespace TradeSharp.CoreUI.Commands
 {
   /// <summary>
   /// Interface to support for the mass import of instrument data.
   /// </summary>
-  public interface IMassImportInstrumentDataService
+  public interface IMassImportInstrumentData : ICommand
   {
     //constants
     public const string TokenLevel1 = "level1";
@@ -35,18 +34,20 @@ namespace TradeSharp.CoreUI.Services
 
 
     //types
-
+    public struct Context
+    {
+      public string DataProvider;
+      public MassImportSettings Settings;
+    }
 
     //attributes
 
 
     //properties
-    string DataProvider { get; set; }
-    ILogger? Logger { get; set; }
-    MassImportSettings Settings { get; set; }
-    public bool IsRunning { get; }
+
 
     //methods
-    Task StartAsync(IProgressDialog progressDialog);
+
+
   }
 }

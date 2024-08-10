@@ -8,6 +8,7 @@ using System.Threading;
 using WinRT.Interop;
 using System.Runtime.InteropServices;
 using TradeSharp.Common;
+using TradeSharp.CoreUI.Commands;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -29,14 +30,13 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private IMassExportInstrumentDataService m_massExportInstrumentDataService;
+
 
     //constructors
     public MassExportInstrumentDataView()
     {
       Settings = new MassExportSettings();
       ExportStructureTooltip = "";
-      m_massExportInstrumentDataService = (IMassExportInstrumentDataService)IApplication.Current.Services.GetService(typeof(IMassExportInstrumentDataService));
       this.InitializeComponent();
     }
 
@@ -97,18 +97,24 @@ namespace TradeSharp.WinCoreUI.Views
 
     private bool enableExportButton()
     {
-      return m_startDateTime != null && DateTime.TryParse(m_startDateTime.Text, out DateTime startDateTime) && DateTime.TryParse(m_endDateTime.Text, out DateTime endDateTime) && startDateTime < endDateTime && m_outputDirectory.Text.Length > 0 &&
+      return m_startDateTime != null
+        && DateTime.TryParse(m_startDateTime.Text, out DateTime startDateTime)
+        && DateTime.TryParse(m_endDateTime.Text, out DateTime endDateTime)
+        && startDateTime < endDateTime && m_outputDirectory.Text.Length > 0 &&
+        m_instrumentSelectionView.SelectedItems.Count > 0 &&
         ((bool)m_resolutionMinute.IsChecked || (bool)m_resolutionHour.IsChecked || (bool)m_resolutionDay.IsChecked || (bool)m_resolutionWeek.IsChecked || (bool)m_resolutionMonth.IsChecked);
     }
 
     private void m_exportBtn_Click(object sender, RoutedEventArgs e)
     {
-      m_massExportInstrumentDataService.DataProvider = DataProvider;
-      m_massExportInstrumentDataService.Settings = Settings;
-      m_massExportInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass export service - this can be done as an improvement when we have a progress dialog working.
+      IMassExportInstrumentData massExportInstrumentData = new MassExportInstrumentData();
+      IMassExportInstrumentData.Context context = new IMassExportInstrumentData.Context();
+      context.DataProvider = DataProvider;
+      context.Settings = Settings;
+      context.Instruments = m_instrumentSelectionView.SelectedItems;
       IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
-      IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Export Progress", m_massExportInstrumentDataService.Logger);
-      m_massExportInstrumentDataService.StartAsync(progressDialog);
+      IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Export Progress", null);
+      massExportInstrumentData.StartAsync(progressDialog, context);
       ParentWindow.Close();
     }
 
@@ -140,6 +146,11 @@ namespace TradeSharp.WinCoreUI.Views
     }
 
     private void m_resolutionCheckBox_Unchecked(object sender, RoutedEventArgs e)
+    {
+      m_exportBtn.IsEnabled = enableExportButton();
+    }
+
+    private void m_instrumentSelectionView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
       m_exportBtn.IsEnabled = enableExportButton();
     }

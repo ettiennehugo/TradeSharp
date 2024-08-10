@@ -31,6 +31,7 @@ namespace TradeSharp.WinPortfolioManager
     {
       m_dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       this.InitializeComponent();
+      AppWindow.SetIcon("Assets\\Square64x64.ico");
     }
 
     //finalizers

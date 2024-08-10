@@ -4,13 +4,14 @@ using TradeSharp.Common;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Common;
 using System.Diagnostics;
+using TradeSharp.CoreUI.Commands;
 
 namespace TradeSharp.CoreUI.Services
 {
-  /// <summary>
-  /// Windows implementation of the mass export of instrument data - use as singleton.
-  /// </summary>
-  public partial class MassExportInstrumentDataService : ServiceBase, IMassExportInstrumentDataService
+    /// <summary>
+    /// Windows implementation of the mass export of instrument data - use as singleton.
+    /// </summary>
+    public partial class MassExportInstrumentData: Command, IMassExportInstrumentData
   {
     //constants
 
@@ -27,18 +28,18 @@ namespace TradeSharp.CoreUI.Services
     }
 
     //attributes
+    IProgressDialog m_progressDialog;
     IInstrumentService m_instrumentService;
-    ILogger<MassExportInstrumentDataService> m_logger;
-    ILogger? m_taskLogger;
+    IMassExportInstrumentData.Context m_context;
+
+    //properties
+
+
 
     //constructors
-    public MassExportInstrumentDataService(ILogger<MassExportInstrumentDataService> logger, IDialogService dialogService, IInstrumentService instrumentService) : base(dialogService)
+    public MassExportInstrumentData() : base()
     {
-      Settings = new MassExportSettings();
-      m_logger = logger;
-      IsRunning = false;
-      DataProvider = string.Empty;
-      m_instrumentService = instrumentService;
+      m_instrumentService = (IInstrumentService)m_serviceHost.GetService(typeof(IInstrumentService))!;
     }
 
     //finalizers
@@ -47,35 +48,24 @@ namespace TradeSharp.CoreUI.Services
     //interface implementations
 
 
-    //properties
-    public string DataProvider { get; set; }
-    public ILogger? Logger { get => m_taskLogger; set => m_taskLogger = value; }
-    public MassExportSettings Settings { get; set; }
-    [ObservableProperty] public bool m_isRunning;
-
     //methods
-    public Task StartAsync(IProgressDialog progressDialog)
+    public override Task StartAsync(IProgressDialog progressDialog, object? context)
     {
-      if (DataProvider == string.Empty)
-      {
-        m_logger.LogInformation("Failed to start mass export, no data provider was set");
-        progressDialog.LogInformation("Failed to start mass export, no data provider was set");
-        return Task.CompletedTask;
-      }
+      m_progressDialog = progressDialog;
 
-      if (IsRunning)
+      if (context is not IMassExportInstrumentData.Context m_context)
       {
-        m_logger.LogInformation("Mass export already running, returning from mass export");
-        progressDialog.LogInformation("Mass export already running, returning from mass export");
+        State = CommandState.Failed;
+        progressDialog.LogError("Invalid context for mass export instrument data");
         return Task.CompletedTask;
       }
 
       return Task.Run(() =>
       {
-        LoadedState = LoadedState.Loading;
+        State = CommandState.Running;
+
         try
         {
-          IsRunning = true;
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
 
@@ -86,45 +76,45 @@ namespace TradeSharp.CoreUI.Services
           progressDialog.LogInformation($"Starting mass export of instrument data for {m_instrumentService.Items.Count} instruments");
 
           //create export directories if they don't exist
-          string parentDirectory = Settings.Directory;
-          if (!Directory.Exists(Settings.Directory))
+          string parentDirectory = m_context.Settings.Directory;
+          if (!Directory.Exists(m_context.Settings.Directory))
           {
-            progressDialog.LogInformation($"Creating export directory \"{Settings.Directory}\"");
-            Directory.CreateDirectory(Settings.Directory);
+            progressDialog.LogInformation($"Creating export directory \"{m_context.Settings.Directory}\"");
+            Directory.CreateDirectory(m_context.Settings.Directory);
           }
 
-          if (Settings.ExportStructure == MassImportExportStructure.DiretoriesAndFiles)
+          if (m_context.Settings.ExportStructure == MassImportExportStructure.DiretoriesAndFiles)
           {
-            string directory = $"{Settings.Directory}\\{IMassExportInstrumentDataService.TokenMinute}";
-            if (Settings.ResolutionMinute && !Directory.Exists(directory))
+            string directory = $"{m_context.Settings.Directory}\\{IMassExportInstrumentData.TokenMinute}";
+            if (m_context.Settings.ResolutionMinute && !Directory.Exists(directory))
             {
               progressDialog.LogInformation($"Creating export directory \"{directory}\"");
               Directory.CreateDirectory(directory);
             }
 
-            directory = $"{Settings.Directory}\\{IMassExportInstrumentDataService.TokenHour}";
-            if (Settings.ResolutionHour && !Directory.Exists(directory))
+            directory = $"{m_context.Settings.Directory}\\{IMassExportInstrumentData.TokenHour}";
+            if (m_context.Settings.ResolutionHour && !Directory.Exists(directory))
             {
               progressDialog.LogInformation($"Creating export directory \"{directory}\"");
               Directory.CreateDirectory(directory);
             }
 
-            directory = $"{Settings.Directory}\\{IMassExportInstrumentDataService.TokenDay}";
-            if (Settings.ResolutionDay && !Directory.Exists(directory))
+            directory = $"{m_context.Settings.Directory}\\{IMassExportInstrumentData.TokenDay}";
+            if (m_context.Settings.ResolutionDay && !Directory.Exists(directory))
             {
               progressDialog.LogInformation($"Creating export directory \"{directory}\"");
               Directory.CreateDirectory(directory);
             }
 
-            directory = $"{Settings.Directory}\\{IMassExportInstrumentDataService.TokenWeek}";
-            if (Settings.ResolutionWeek && !Directory.Exists(directory))
+            directory = $"{m_context.Settings.Directory}\\{IMassExportInstrumentData.TokenWeek}";
+            if (m_context.Settings.ResolutionWeek && !Directory.Exists(directory))
             {
               progressDialog.LogInformation($"Creating export directory \"{directory}\"");
               Directory.CreateDirectory(directory);
             }
 
-            directory = $"{Settings.Directory}\\{IMassExportInstrumentDataService.TokenMonth}";
-            if (Settings.ResolutionMonth && !Directory.Exists(directory))
+            directory = $"{m_context.Settings.Directory}\\{IMassExportInstrumentData.TokenMonth}";
+            if (m_context.Settings.ResolutionMonth && !Directory.Exists(directory))
             {
               progressDialog.LogInformation($"Creating export directory \"{directory}\"");
               Directory.CreateDirectory(directory);
@@ -133,7 +123,7 @@ namespace TradeSharp.CoreUI.Services
 
           //construct the set of files to be exported
           Stack<ExportFile> exportFileList = new Stack<ExportFile>();
-          if (Settings.ResolutionMinute)
+          if (m_context.Settings.ResolutionMinute)
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
@@ -143,7 +133,7 @@ namespace TradeSharp.CoreUI.Services
               exportFileList.Push(exportFile);
             }
 
-          if (Settings.ResolutionHour)
+          if (m_context.Settings.ResolutionHour)
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
@@ -153,7 +143,7 @@ namespace TradeSharp.CoreUI.Services
               exportFileList.Push(exportFile);
             }
 
-          if (Settings.ResolutionDay)
+          if (m_context.Settings.ResolutionDay)
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
@@ -163,7 +153,7 @@ namespace TradeSharp.CoreUI.Services
               exportFileList.Push(exportFile);
             }
 
-          if (Settings.ResolutionWeek)
+          if (m_context.Settings.ResolutionWeek)
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
@@ -173,7 +163,7 @@ namespace TradeSharp.CoreUI.Services
               exportFileList.Push(exportFile);
             }
 
-          if (Settings.ResolutionMonth)
+          if (m_context.Settings.ResolutionMonth)
             foreach (Instrument instrument in m_instrumentService.Items)
             {
               ExportFile exportFile = new ExportFile();
@@ -200,17 +190,17 @@ namespace TradeSharp.CoreUI.Services
           object failureCountLock = new object();
           int failureCount = 0;
 
-          progressDialog.LogInformation($"Starting mass export for \"{DataProvider}\" of instrument data, constructed {exportFileList.Count} files (look at attempted count for actual number of files output)");
+          progressDialog.LogInformation($"Starting mass export for \"{m_context.DataProvider}\" of instrument data, constructed {exportFileList.Count} files (look at attempted count for actual number of files output)");
 
           List<Task> taskPool = new List<Task>();
-          for (int i = 0; i < Settings.ThreadCount; i++)
+          for (int i = 0; i < m_context.Settings.ThreadCount; i++)
             taskPool.Add(
             Task.Run(() =>
             {
-              progressDialog.LogInformation($"Started worker thread for export for data provider \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+              progressDialog.LogInformation($"Started worker thread for export for data provider \"{m_context.DataProvider}\" (Thread id: {Task.CurrentId})");
 
               IInstrumentBarDataService instrumentBarDataService = (IInstrumentBarDataService)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataService))!;
-              instrumentBarDataService.DataProvider = DataProvider;
+              instrumentBarDataService.DataProvider = m_context.DataProvider;
               instrumentBarDataService.MassOperation = true;
 
               while (exportFileList.Count > 0 && !progressDialog.CancellationTokenSource.Token.IsCancellationRequested)
@@ -223,10 +213,10 @@ namespace TradeSharp.CoreUI.Services
 
                 instrumentBarDataService.Resolution = exportFile.Resolution;
                 instrumentBarDataService.Instrument = exportFile.Instrument;
-                instrumentBarDataService.Refresh(Settings.FromDateTime, Settings.ToDateTime);
+                instrumentBarDataService.Refresh(m_context.Settings.FromDateTime, m_context.Settings.ToDateTime);
 
                 //skip creation of empty files if no data within the given range
-                if (!Settings.CreateEmptyFiles && instrumentBarDataService.Items.Count == 0)
+                if (!m_context.Settings.CreateEmptyFiles && instrumentBarDataService.Items.Count == 0)
                 {
                   progressDialog.LogInformation($"No data in range for {exportFile.Instrument.Ticker} at resolution {exportFile.Resolution}, skipping creation of file \"{exportFile.Filename}\" (Thread id: {Task.CurrentId})");
                   continue;
@@ -238,11 +228,11 @@ namespace TradeSharp.CoreUI.Services
                 {
                   lock (attemptedFileCountLock) attemptedFileCount++;
                   ExportSettings exportSettings = new ExportSettings();
-                  exportSettings.FromDateTime = Settings.FromDateTime;
-                  exportSettings.ToDateTime = Settings.ToDateTime;
+                  exportSettings.FromDateTime = m_context.Settings.FromDateTime;
+                  exportSettings.ToDateTime = m_context.Settings.ToDateTime;
                   exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
                   exportSettings.Filename = exportFile.Filename;
-                  exportSettings.DateTimeTimeZone = Settings.DateTimeTimeZone;
+                  exportSettings.DateTimeTimeZone = m_context.Settings.DateTimeTimeZone;
                   instrumentBarDataService.Export(exportSettings);
                   lock (successCountLock) successCount++;
                 }
@@ -256,7 +246,7 @@ namespace TradeSharp.CoreUI.Services
                 progressDialog.Progress = progressDialog.Progress + 1;
               }
 
-              progressDialog.LogInformation($"Ending worker thread for export for data provider \"{DataProvider}\" (Thread id: {Task.CurrentId})");
+              progressDialog.LogInformation($"Ending worker thread for export for data provider \"{m_context.DataProvider}\" (Thread id: {Task.CurrentId})");
             }, progressDialog.CancellationTokenSource.Token));
 
           //wait for tasks to finish exporting data for this resolution
@@ -267,19 +257,15 @@ namespace TradeSharp.CoreUI.Services
 
           stopwatch.Stop();
           TimeSpan elapsed = stopwatch.Elapsed;
-          IsRunning = false;
+          State = CommandState.Completed;
 
           //output status message
           progressDialog.LogInformation($"Mass Export Complete - Attempted {attemptedFileCount} files, exported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Mass Export Complete", $"Attempted {attemptedFileCount} files, exported {successCount} files successfully and failed on {failureCount} files (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
-          LoadedState = LoadedState.Loaded;
         }
         catch (Exception e)
         {
-          IsRunning = false;
-          LoadedState = LoadedState.Error;
+          State = CommandState.Failed;
           progressDialog.LogError($"EXCEPTION: Mass export main thread failed - (Exception: \"{e.Message}\")");
-          m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "Mass Export Failed", $"Mass export main thread failed - (Exception: \"{e.Message}\"");
         }
       });
     }
@@ -295,38 +281,38 @@ namespace TradeSharp.CoreUI.Services
     {
       string filename = "";
       string resolutionStr = "";
-      string extension = Settings.FileType.ToString().ToLower();
+      string extension = m_context.Settings.FileType.ToString().ToLower();
 
       //NOTE: This normaliation will misalign the ticker used in the filename with the actual ticker in the data file,
       //      the Tag on the instrument should be used to align the ticker in the data file.
       string normalizedTicker = TradeSharp.Common.Utilities.SafeFileName(instrument.Ticker);
 
-      switch (Settings.ExportStructure)
+      switch (m_context.Settings.ExportStructure)
       {
         case MassImportExportStructure.DiretoriesAndFiles:          
           switch (resolution)
           {
             case Resolution.Minutes:
-              resolutionStr = IMassExportInstrumentDataService.TokenMinute;
+              resolutionStr = IMassExportInstrumentData.TokenMinute;
               break;
             case Resolution.Hours:
-              resolutionStr = IMassExportInstrumentDataService.TokenHour;
+              resolutionStr = IMassExportInstrumentData.TokenHour;
               break;
             case Resolution.Days:
-              resolutionStr = IMassExportInstrumentDataService.TokenDay;
+              resolutionStr = IMassExportInstrumentData.TokenDay;
               break;
             case Resolution.Weeks:
-              resolutionStr = IMassExportInstrumentDataService.TokenWeek;
+              resolutionStr = IMassExportInstrumentData.TokenWeek;
               break;
             case Resolution.Months:
-              resolutionStr = IMassExportInstrumentDataService.TokenMonth;
+              resolutionStr = IMassExportInstrumentData.TokenMonth;
               break;
           }
 
-          filename = $"{Settings.Directory}\\{resolutionStr}\\{normalizedTicker}.{extension}";
+          filename = $"{m_context.Settings.Directory}\\{resolutionStr}\\{normalizedTicker}.{extension}";
           break;
         case MassImportExportStructure.FilesOnly:
-          filename = $"{Settings.Directory}\\{normalizedTicker}_{resolution}.{extension}";
+          filename = $"{m_context.Settings.Directory}\\{normalizedTicker}_{resolution}.{extension}";
           break;
       }
       return filename;

@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-using TradeSharp.CoreUI.Common;
+﻿using TradeSharp.Data;
+using TradeSharp.CoreUI.Services;
 
-namespace TradeSharp.CoreUI.Services
+namespace TradeSharp.CoreUI.Commands
 {
   /// <summary>
   /// Interface to support for the mass export of instrument data.
   /// </summary>
-  public interface IMassExportInstrumentDataService
+  public interface IMassExportInstrumentData : ICommand
   {
     //constants
     public const string TokenMinute = "minute";
@@ -19,18 +19,21 @@ namespace TradeSharp.CoreUI.Services
 
 
     //types
-
+    public struct Context
+    {
+      public string DataProvider;
+      public MassExportSettings Settings;
+      public IList<Instrument> Instruments;
+    }
 
     //attributes
 
 
     //properties
-    string DataProvider { get; set; }
-    ILogger? Logger { get; set; }
-    MassExportSettings Settings { get; set; }
-    public bool IsRunning { get; }
+
 
     //methods
-    Task StartAsync(IProgressDialog progressDialog);
+
+
   }
 }

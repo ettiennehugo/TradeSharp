@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using Windows.Storage.Pickers;
 using TradeSharp.Common;
+using TradeSharp.CoreUI.Commands;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.CoreUI.Common;
 using System.Runtime.InteropServices;
@@ -28,14 +29,13 @@ namespace TradeSharp.WinCoreUI.Views
 
 
     //attributes
-    private IMassImportInstrumentDataService m_massImportInstrumentDataService;
+
 
     //constructors
     public MassImportInstrumentDataView()
     {
       Settings = new MassImportSettings();
       ImportStructureTooltip = "";
-      m_massImportInstrumentDataService = (IMassImportInstrumentDataService)IApplication.Current.Services.GetService(typeof(IMassImportInstrumentDataService));
       this.InitializeComponent();
     }
 
@@ -102,12 +102,13 @@ namespace TradeSharp.WinCoreUI.Views
 
     private void m_importBtn_Click(object sender, RoutedEventArgs e)
     {
-      m_massImportInstrumentDataService.DataProvider = DataProvider;
-      m_massImportInstrumentDataService.Settings = Settings;
-      m_massImportInstrumentDataService.Logger = null;    //TODO: Currently we do not set the logger for the mass export service - this can be done as an improvement when we have a progress dialog working.
+      IMassImportInstrumentData massImportInstrumentData = new MassImportInstrumentData();
+      IMassImportInstrumentData.Context context = new IMassImportInstrumentData.Context();
+      context.DataProvider = DataProvider;
+      context.Settings = Settings;
       IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
-      IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Import Progress", m_massImportInstrumentDataService.Logger);
-      m_massImportInstrumentDataService.StartAsync(progressDialog);
+      IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Import Progress", null);
+      massImportInstrumentData.StartAsync(progressDialog, context);
       ParentWindow.Close();
     }
 
