@@ -29,7 +29,6 @@ namespace TradeSharp.CoreUI.Services
 
     //attributes
     IProgressDialog m_progressDialog;
-    IInstrumentService m_instrumentService;
     IMassExportInstrumentData.Context m_context;
 
     //properties
@@ -37,10 +36,7 @@ namespace TradeSharp.CoreUI.Services
 
 
     //constructors
-    public MassExportInstrumentData() : base()
-    {
-      m_instrumentService = (IInstrumentService)m_serviceHost.GetService(typeof(IInstrumentService))!;
-    }
+    public MassExportInstrumentData() : base() { }
 
     //finalizers
 
@@ -60,6 +56,13 @@ namespace TradeSharp.CoreUI.Services
         return Task.CompletedTask;
       }
 
+      if (m_context.Instruments.Count == 0)
+      {
+        progressDialog.LogError("Failed to start mass export, no instruments selected");
+        State = CommandState.Failed;
+        return Task.CompletedTask;
+      }
+
       return Task.Run(() =>
       {
         State = CommandState.Running;
@@ -69,11 +72,8 @@ namespace TradeSharp.CoreUI.Services
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
 
-          //load instruments from the cache into the instrument service
-          m_instrumentService.Refresh();
-
           //draw up the set of instruments to export in a stack
-          progressDialog.LogInformation($"Starting mass export of instrument data for {m_instrumentService.Items.Count} instruments");
+          progressDialog.LogInformation($"Starting mass export of instrument data for {m_context.Instruments.Count} instruments");
 
           //create export directories if they don't exist
           string parentDirectory = m_context.Settings.Directory;
@@ -124,7 +124,7 @@ namespace TradeSharp.CoreUI.Services
           //construct the set of files to be exported
           Stack<ExportFile> exportFileList = new Stack<ExportFile>();
           if (m_context.Settings.ResolutionMinute)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
             {
               ExportFile exportFile = new ExportFile();
               exportFile.Filename = getExportFileName(Resolution.Minutes, instrument);
@@ -134,7 +134,7 @@ namespace TradeSharp.CoreUI.Services
             }
 
           if (m_context.Settings.ResolutionHour)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
             {
               ExportFile exportFile = new ExportFile();
               exportFile.Filename = getExportFileName(Resolution.Hours, instrument);
@@ -144,7 +144,7 @@ namespace TradeSharp.CoreUI.Services
             }
 
           if (m_context.Settings.ResolutionDay)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
             {
               ExportFile exportFile = new ExportFile();
               exportFile.Filename = getExportFileName(Resolution.Days, instrument);
@@ -154,7 +154,7 @@ namespace TradeSharp.CoreUI.Services
             }
 
           if (m_context.Settings.ResolutionWeek)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
             {
               ExportFile exportFile = new ExportFile();
               exportFile.Filename = getExportFileName(Resolution.Weeks, instrument);
@@ -164,7 +164,7 @@ namespace TradeSharp.CoreUI.Services
             }
 
           if (m_context.Settings.ResolutionMonth)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
             {
               ExportFile exportFile = new ExportFile();
               exportFile.Filename = getExportFileName(Resolution.Months, instrument);

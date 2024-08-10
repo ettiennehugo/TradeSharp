@@ -24,7 +24,6 @@ namespace TradeSharp.CoreUI.Services
     //attributes
     IMassCopyInstrumentData.Context m_context;
     IDatabase m_database;
-    IInstrumentService m_instrumentService;
     ILogger? m_taskLogger;
     object m_attemptedInstrumentCountLock;
     int m_attemptedInstrumentCount;
@@ -39,7 +38,6 @@ namespace TradeSharp.CoreUI.Services
     public MassCopyInstrumentData() : base()
     {
       m_database = (IDatabase)m_serviceHost.GetService(typeof(IDatabase))!;
-      m_instrumentService = (IInstrumentService)m_serviceHost.GetService(typeof(IInstrumentService))!;
       m_attemptedInstrumentCountLock = new object();
       m_attemptedInstrumentCount = 0;
       m_successCountLock = new object();
@@ -63,7 +61,14 @@ namespace TradeSharp.CoreUI.Services
         progressDialog.LogError("Failed to start mass copy, invalid context provided");
         State = CommandState.Failed;
         return Task.CompletedTask;
-      }  
+      }
+      
+      if (m_context.Instruments.Count == 0) 
+      {
+        progressDialog.LogError("Failed to start mass copy, no instruments selected");
+        State = CommandState.Failed;
+        return Task.CompletedTask;
+      }
 
       return Task.Run(() =>
       {
@@ -73,9 +78,6 @@ namespace TradeSharp.CoreUI.Services
 
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
-
-          //load the instruments from the cache into the instrument service
-          m_instrumentService.Refresh();
 
           //reinitialize instance variables
           m_attemptedInstrumentCount = 0;
@@ -88,7 +90,7 @@ namespace TradeSharp.CoreUI.Services
           //NOTE:
           // * We need to start from lower timeframes and work our way up to higher timeframes to ensure that we have the lower timeframes to build the higher timeframes from.
           // * We only add instruments that are going to be copied OR instruments that have data on the database to copy to the longer timeframes.
-          progressDialog.LogInformation($"Starting mass copy of instrument data for {m_instrumentService.Items.Count} instruments");
+          progressDialog.LogInformation($"Starting mass copy of instrument data for {m_context.Instruments.Count} instruments");
 
           Stack<CopyInstrument> minuteToHourList = new Stack<CopyInstrument>();
           Stack<CopyInstrument> hourToDayList = new Stack<CopyInstrument>();
@@ -96,7 +98,7 @@ namespace TradeSharp.CoreUI.Services
           Stack<CopyInstrument> weekToMonthList = new Stack<CopyInstrument>();
 
           if (m_context.Settings.ResolutionHour)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
               if (m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Minutes, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
@@ -106,7 +108,7 @@ namespace TradeSharp.CoreUI.Services
               }
 
           if (m_context.Settings.ResolutionDay)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
               if (minuteToHourList.FirstOrDefault(x => x.Instrument == instrument) != null ||    //going to construct the hourly bars from the minute bars
                   m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Hours, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
@@ -117,7 +119,7 @@ namespace TradeSharp.CoreUI.Services
               }
 
           if (m_context.Settings.ResolutionWeek)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
               if (hourToDayList.FirstOrDefault(x => x.Instrument == instrument) != null ||    //going to construct the daily bars from the hourly bars
                   m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Days, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
@@ -128,7 +130,7 @@ namespace TradeSharp.CoreUI.Services
               }
 
           if (m_context.Settings.ResolutionMonth)
-            foreach (Instrument instrument in m_instrumentService.Items)
+            foreach (Instrument instrument in m_context.Instruments)
               if (dayToWeekList.FirstOrDefault(x => x.Instrument == instrument) != null ||   //going to construct the weekly bars from the daily bars
                   m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Weeks, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
