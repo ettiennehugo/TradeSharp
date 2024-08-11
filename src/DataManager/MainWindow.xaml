@@ -58,6 +58,16 @@
             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;"/>
           </NavigationViewItem.Icon>
         </NavigationViewItem>
+        <NavigationViewItem x:Name="m_instrumentDataDiagnostics" Content="Data Diagnostics" Tag="DataManager.InstrumentDataDiagnostics"  ToolTipService.ToolTip="Instrument Data Diagnostic Tools">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC7A;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem x:Name="m_instrumentPrecomputedIndicators" Content="Precomputed Indicators" Tag="DataManager.InstrumentPrecomputedIndicators" ToolTipService.ToolTip="Configure Indicators for Precomputation on Instruments and Instrument Groups">
+          <NavigationViewItem.Icon>
+            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8EF;"/>
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
         <NavigationViewItemHeader x:Name="m_utilities" Content="Utilities"/>
         <NavigationViewItem x:Name="m_taskScheduling" Content="Task Scheduling" Tag="DataManager.TaskScheduling"  ToolTipService.ToolTip="Schedule Maintenance Tasks">
           <NavigationViewItem.Icon>

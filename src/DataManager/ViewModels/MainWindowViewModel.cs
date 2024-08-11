@@ -42,6 +42,8 @@ namespace TradeSharp.WinDataManager.ViewModels
       { INavigationService.DataManager.InstrumentGroups, typeof(WinCoreUI.Views.InstrumentGroupsView) },
       //{ INavigationService.DataManager.FundamentalData, typeof(BlankView) },
       { INavigationService.DataManager.InstrumentData, typeof(WinCoreUI.Views.InstrumentDataView) },
+      { INavigationService.DataManager.InstrumentDataDiagnostics, typeof(WinCoreUI.Views.InstrumentDataDiagnosticsView) },
+      { INavigationService.DataManager.InstrumentPrecomputedIndicators, typeof(WinCoreUI.Views.InstrumentPrecomputedIndicators) },
       { INavigationService.DataManager.TaskScheduling,  typeof(WinCoreUI.Views.TaskSchedulingView) },
       { INavigationService.DataManager.Settings, typeof(WinDataManager.Views.SettingsView) }
     };

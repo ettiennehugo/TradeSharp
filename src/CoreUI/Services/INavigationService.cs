@@ -27,6 +27,8 @@
       public const string InstrumentGroups = "DataManager.InstrumentGroups";
       public const string FundamentalData = "DataManager.FundamentalData";
       public const string InstrumentData = "DataManager.InstrumentData";
+      public const string InstrumentDataDiagnostics = "DataManager.InstrumentDataDiagnostics";
+      public const string InstrumentPrecomputedIndicators = "DataManager.InstrumentPrecomputedIndicators";
       public const string TaskScheduling = "DataManager.TaskScheduling";
       public const string Settings = "Settings";  //must be set to this value used by the NavigationView
     }

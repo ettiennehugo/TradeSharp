@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="TradeSharp.WinCoreUI.Views.TaskSchedulingView"
+    x:Class="TradeSharp.WinCoreUI.Views.InstrumentDataDiagnosticsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TradeSharp.WinCoreUI.Views"
@@ -17,15 +17,17 @@
     </CommandBar>
     <RichTextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1">
       <Paragraph>
-        <Run FontWeight="Bold">Task Scheduling</Run>
+        <Run FontWeight="Bold">Data Diagnostics</Run>
         <LineBreak/>
-        <Run FontWeight="Normal">TBD - Implement task scheduling using some list of tasks executed at regular intervals. Might not need this.</Run>
+        <Run FontWeight="Normal">TODO - Implement tooling to analyse data in different resolutions</Run>
       </Paragraph>
       <Paragraph>
         <InlineUIContainer>
           <StackPanel>
-            <TextBlock Text="• Tasks can be run every few minutes, hours or days (e.g. weekly or every Thursday at 8:30pm)" Margin="0,0,0,5"/>
-            <TextBlock Text="• See how to implement task scheduling in C# using maybe the standard Windows functions OR maybe require TradeSharp to run" Margin="0,0,0,5"/>
+            <TextBlock Text="• TBD - Allow user to select a set of instruments, threads and output something like a heat map that turns red as more data is missing in a specific region" Margin="0,0,0,5"/>
+            <TextBlock Text="• Determine how complete the data is against the Instrument, it's Exchange sessions and the Country holidays" Margin="0,0,0,5"/>
+            <TextBlock Text="• Measure the percentage completeness of the data relative to the sessions for which it should be defined" Margin="0,0,0,5"/>
+            <TextBlock Text="• Output the head/tail of the instrument data" Margin="0,0,0,5"/>
           </StackPanel>
         </InlineUIContainer>
       </Paragraph>

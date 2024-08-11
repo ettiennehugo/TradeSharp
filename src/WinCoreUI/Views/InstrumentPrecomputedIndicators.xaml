@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="TradeSharp.WinCoreUI.Views.TaskSchedulingView"
+    x:Class="TradeSharp.WinCoreUI.Views.InstrumentPrecomputedIndicators"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TradeSharp.WinCoreUI.Views"
@@ -17,15 +17,18 @@
     </CommandBar>
     <RichTextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1">
       <Paragraph>
-        <Run FontWeight="Bold">Task Scheduling</Run>
+        <Run FontWeight="Bold">Precomputed Indicators</Run>
         <LineBreak/>
-        <Run FontWeight="Normal">TBD - Implement task scheduling using some list of tasks executed at regular intervals. Might not need this.</Run>
+        <Run FontWeight="Normal">TODO - Implement precomputed indicators for instruments/instrument groups</Run>
       </Paragraph>
       <Paragraph>
         <InlineUIContainer>
           <StackPanel>
-            <TextBlock Text="• Tasks can be run every few minutes, hours or days (e.g. weekly or every Thursday at 8:30pm)" Margin="0,0,0,5"/>
-            <TextBlock Text="• See how to implement task scheduling in C# using maybe the standard Windows functions OR maybe require TradeSharp to run" Margin="0,0,0,5"/>
+            <TextBlock Text="• Implement database layer, respository, service, view model" Margin="0,0,0,5"/>
+            <TextBlock Text="• Allow definition to add an indicator to be quickly computed" Margin="0,0,0,5"/>
+            <TextBlock Text="• See how this would need to be hooked into the normal instrument data layer - update when price data goes into the DB vs update in bulk" Margin="0,0,0,5"/>
+            <TextBlock Text="• Allow the definition of price indexes around the instrument groups based on the open, high, low, close of all instruments in the instrument group" Margin="0,0,0,5"/>
+            <TextBlock Text="• Allow computing indicators around instrument groups" Margin="0,0,0,5"/>
           </StackPanel>
         </InlineUIContainer>
       </Paragraph>

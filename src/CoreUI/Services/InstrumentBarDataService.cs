@@ -193,6 +193,19 @@ namespace TradeSharp.CoreUI.Services
     }
 
     /// <summary>
+    /// Determines whether the current and previous bar dates are in different weeks.
+    /// </summary>
+    public bool isNewWeek(DateTime current, DateTime previous)
+    {
+      //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
+      //NOTE: * This function only works for Gregorian dates which is fine, CultureInfo and ISOWeek returns anything and everything
+      //        except just a sane interpretation of the week number based on "which week of the year is this given that 1 January
+      //        is the start of the first week?".
+      //      * We are good with considering the first and last weeks of the year to be "partial" weeks.
+      return ISOWeek.GetWeekOfYear(current) != ISOWeek.GetWeekOfYear(previous);
+    }
+
+    /// <summary>
     /// Copy the given bar resolution to the next higher resolution, e.g. minute input parameter copies the data to the
     /// hourly timeframe.
     /// NOTES:
@@ -275,8 +288,7 @@ namespace TradeSharp.CoreUI.Services
 
           if (Debugging.Copy) m_logger.LogInformation($"Copying {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toRepository.Resolution} resolution.");
           foreach (IBarData bar in fromBarData)
-            //we always end the week on a Sunday and use Monday as the start of the week
-            if (toBar == null || (toBar.DateTime.DayOfWeek != DayOfWeek.Monday && bar.DateTime.DayOfWeek == DayOfWeek.Monday ))
+            if (toBar == null || isNewWeek(toBar.DateTime, bar.DateTime))
             {
               toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
               toBarData.Add(toBar);
@@ -296,6 +308,8 @@ namespace TradeSharp.CoreUI.Services
 
           if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
           if (!MassOperation) m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Success, "", $"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
+
+
           break;
         case Resolution.Weeks:
           toRepository.Resolution = Resolution.Months;
@@ -442,12 +456,7 @@ namespace TradeSharp.CoreUI.Services
             foreach (IBarData bar in fromBarData)
               if (bar.DateTime >= internalFromDateTime && bar.DateTime <= internalToDateTime)
               {
-                //ISO8601 considers Monday the first day of the week, so we use that as the first day of the week for week resolution bars.
-                //NOTE: * This function only works for Gregorian dates which is fine, CultureInfo and ISOWeek returns anything and everything
-                //        except just a sane interpretation of the week number based on "which week of the year is this given that 1 January
-                //        is the start of the first week?".
-                //      * We are good with considering the first and last weeks of the year to be "partial" weeks.
-                if (toBar == null || ISOWeek.GetWeekOfYear(toBar.DateTime) != ISOWeek.GetWeekOfYear(bar.DateTime))
+                if (toBar == null || isNewWeek(toBar.DateTime, bar.DateTime))
                 {
                   toBar = new BarData(toRepository.Resolution, bar.DateTime, bar.PriceFormatMask, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
                   toBarData.Add(toBar);
@@ -537,7 +546,6 @@ namespace TradeSharp.CoreUI.Services
 
 
     //methods
-
     /// <summary>
     /// Convert the input column date/time value to the output value based on the import settings.
     /// </summary>

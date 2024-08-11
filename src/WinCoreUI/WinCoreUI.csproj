@@ -197,6 +197,8 @@
     <CustomAdditionalCompileInputs Remove="Views\TaskSchedulingView.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Views\InstrumentDataDiagnosticsView.xaml" />
+    <None Remove="Views\InstrumentPrecomputedIndicators.xaml" />
     <None Remove="Views\StockInstrumentView.xaml" />
     <None Remove="Views\TaskSchedulingView.xaml" />
   </ItemGroup>
@@ -205,6 +207,17 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\StockInstrumentView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomAdditionalCompileInputs Remove="Views\InstrumentDataDiagnosticsView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Remove="Views\InstrumentDataDiagnosticsView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\InstrumentPrecomputedIndicators.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

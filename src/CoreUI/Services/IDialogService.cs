@@ -205,8 +205,8 @@ namespace TradeSharp.CoreUI.Services
       ToDateTime = Constants.DefaultMaximumDateTime;
       ResolutionHour = false;
       ResolutionDay = false;
-      ResolutionWeek = false;
-      ResolutionMonth = false;
+      ResolutionWeek = true;
+      ResolutionMonth = true;
       ThreadCount = Environment.ProcessorCount;    //clip this the Environment.ProcessorCount as max since it would most likely not be useful to have more threads than processors
     }
 
@@ -230,8 +230,8 @@ namespace TradeSharp.CoreUI.Services
       FromDateTime = Constants.DefaultMinimumDateTime;
       ToDateTime = Constants.DefaultMaximumDateTime;
       DateTimeTimeZone = ImportExportDataDateTimeTimeZone.UTC;
-      ResolutionMinute = true;
-      ResolutionHour = true;
+      ResolutionMinute = false;
+      ResolutionHour = false;
       ResolutionDay = true;
       ResolutionWeek = true;
       ResolutionMonth = true;
