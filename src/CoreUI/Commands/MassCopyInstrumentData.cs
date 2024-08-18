@@ -226,7 +226,11 @@ namespace TradeSharp.CoreUI.Services
               try
               {
                 lock (m_attemptedInstrumentCountLock) m_attemptedInstrumentCount++;
-                instrumentBarDataService.Copy(copyInstrument!.Resolution, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime);
+                //monthly resolution needs to be copied from daily resolution
+                if (fromResolution == Resolution.Weeks)
+                  instrumentBarDataService.Copy(Resolution.Days, Resolution.Months, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime);
+                else
+                  instrumentBarDataService.Copy(copyInstrument!.Resolution, copyInstrument!.Resolution + 1, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime);
                 lock (m_successCountLock) m_successCount++;
               }
               catch (Exception e)

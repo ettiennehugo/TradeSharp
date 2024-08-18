@@ -94,6 +94,7 @@ namespace TradeSharp.WinCoreUI.Common
       services.AddSingleton<ISessionViewModel, SessionViewModel>();
       services.AddTransient<IInstrumentViewModel, InstrumentViewModel>();
       services.AddSingleton<IInstrumentGroupViewModel, WinCoreUI.ViewModels.InstrumentGroupViewModel>();
+      services.AddTransient<IFileSystemService, FileSystemService>();
       services.AddTransient<IInstrumentBarDataRepository, InstrumentBarDataRepository>(); //this repository must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
       services.AddTransient<IInstrumentBarDataService, InstrumentBarDataService>(); //this service must be transient as it requires keying around the data provider, instrument and resolution passed from the view model which is also transient
       services.AddTransient<IInstrumentBarDataViewModel, WinCoreUI.ViewModels.InstrumentBarDataViewModel>();  //windows implementation is used in order to support incremental loading

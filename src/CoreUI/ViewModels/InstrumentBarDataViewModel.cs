@@ -122,15 +122,20 @@ namespace TradeSharp.CoreUI.ViewModels
     /// </summary>
     public virtual Task OnCopyToHourAsync()
     {
-      return Task.Run(() => m_barDataService.Copy(Resolution.Minutes));
+      return Task.Run(() =>
+      {
+        if (Resolution == Resolution.Seconds) m_barDataService.Copy(Resolution.Seconds, Resolution.Hours);
+        m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
+      });
+
     }
 
     public virtual Task OnCopyToDayAsync()
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes);
-        m_barDataService.Copy(Resolution.Hours);
+        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes, Resolution.Days);
+        m_barDataService.Copy(Resolution.Hours, Resolution.Days);
       });
     }
 
@@ -138,9 +143,10 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes);
-        if (Resolution == Resolution.Hours) m_barDataService.Copy(Resolution.Hours);
-        m_barDataService.Copy(Resolution.Days);
+        if (Resolution == Resolution.Seconds) m_barDataService.Copy(Resolution.Seconds, Resolution.Weeks);
+        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes, Resolution.Weeks);
+        if (Resolution == Resolution.Hours) m_barDataService.Copy(Resolution.Hours, Resolution.Weeks);
+        m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
       });
     }
 
@@ -148,10 +154,11 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes);
-        if (Resolution == Resolution.Hours) m_barDataService.Copy(Resolution.Hours);
-        if (Resolution == Resolution.Days) m_barDataService.Copy(Resolution.Days);
-        m_barDataService.Copy(Resolution.Weeks);
+        if (Resolution == Resolution.Seconds) m_barDataService.Copy(Resolution.Seconds, Resolution.Months);
+        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes, Resolution.Months);
+        if (Resolution == Resolution.Hours) m_barDataService.Copy(Resolution.Hours, Resolution.Months);
+        if (Resolution == Resolution.Days) m_barDataService.Copy(Resolution.Days, Resolution.Months);
+        m_barDataService.Copy(Resolution.Weeks, Resolution.Months);
       });
     }
 
@@ -161,23 +168,30 @@ namespace TradeSharp.CoreUI.ViewModels
       {
         switch (Resolution)
         {
+          case Resolution.Seconds:
+            m_barDataService.Copy(Resolution.Seconds, Resolution.Minutes);
+            m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
+            m_barDataService.Copy(Resolution.Hours, Resolution.Days);
+            m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+            break;
           case Resolution.Minutes:
-            m_barDataService.Copy(Resolution.Minutes);
-            m_barDataService.Copy(Resolution.Hours);
-            m_barDataService.Copy(Resolution.Days);
-            m_barDataService.Copy(Resolution.Weeks);
+            m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
+            m_barDataService.Copy(Resolution.Hours, Resolution.Days);
+            m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
             break;
           case Resolution.Hours:
-            m_barDataService.Copy(Resolution.Hours);
-            m_barDataService.Copy(Resolution.Days);
-            m_barDataService.Copy(Resolution.Weeks);
+            m_barDataService.Copy(Resolution.Hours, Resolution.Days);
+            m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
             break;
           case Resolution.Days:
-            m_barDataService.Copy(Resolution.Days);
-            m_barDataService.Copy(Resolution.Weeks);
+            m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
             break;
           case Resolution.Weeks:
-            m_barDataService.Copy(Resolution.Weeks);
+            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
             break;
         }
       });
