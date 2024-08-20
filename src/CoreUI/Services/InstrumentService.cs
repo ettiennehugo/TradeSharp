@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TradeSharp.Common;
+using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Events;
 
 namespace TradeSharp.CoreUI.Services
@@ -253,7 +254,8 @@ namespace TradeSharp.CoreUI.Services
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
       bool noErrors = true;
-      using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+      IFileSystemService fileSystemService = (IFileSystemService)IApplication.Current.Services.GetService(typeof(IFileSystemService))!;
+      using (StreamReader file = fileSystemService.OpenFile(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       {
         JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
 
@@ -490,7 +492,8 @@ namespace TradeSharp.CoreUI.Services
       if (Debugging.ImportExport) loggerScope = m_logger.BeginScope(statusMessage);
       m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "", statusMessage);
 
-      using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+      IFileSystemService fileSystemService = (IFileSystemService)IApplication.Current.Services.GetService(typeof(IFileSystemService))!;
+      using (StreamReader reader = fileSystemService.OpenFile(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
       {
         //read the header record
@@ -748,7 +751,8 @@ namespace TradeSharp.CoreUI.Services
       }
 
       Exchange? globalExchange = m_exchangeService.Items.FirstOrDefault(e => e.Id == Exchange.InternationalId);
-      using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
+      IFileSystemService fileSystemService = (IFileSystemService)IApplication.Current.Services.GetService(typeof(IFileSystemService))!;
+      using (StreamWriter file = fileSystemService.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         int instrumentIndex = 0;
         int instrumentCount = m_instrumentCacheService.Items.Count;
@@ -849,7 +853,8 @@ namespace TradeSharp.CoreUI.Services
       }
 
       Exchange globalExchange = m_exchangeService.Items.First(x => x.Id == Exchange.InternationalId);    //global exchange must always exist
-      using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
+      IFileSystemService fileSystemService = (IFileSystemService)IApplication.Current.Services.GetService(typeof(IFileSystemService))!;
+      using (StreamWriter file = fileSystemService.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         file.WriteLine($"{tokenCsvType},{tokenCsvTicker},{tokenCsvAlternateTickers},{tokenCsvName},{tokenCsvDescription},{tokenCsvExchange},{tokenCsvInceptionDate1},{tokenCsvPriceDecimals1},{tokenCsvMinimumMovement1},{tokenCsvBigPointValue1},{tokenCsvMarketCap1},{tokenCsvTag},{tokenCsvSecondaryExchanges1},{tokenCsvAttributes}");
 

@@ -375,7 +375,8 @@ namespace TradeSharp.CoreUI.Services
 
       List<InstrumentGroupRecord> fileInstrumentGroups = new List<InstrumentGroupRecord>();
 
-      using (var reader = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+      IFileSystemService fileSystemService = (IFileSystemService)IApplication.Current.Services.GetService(typeof(IFileSystemService))!;
+      using (var reader = fileSystemService.OpenFile(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
       {
 
@@ -701,7 +702,8 @@ namespace TradeSharp.CoreUI.Services
       {
         int instrumentGroupExportCount = 0;
         List<string> exportLines = new List<string>();
-        using (StreamWriter file = File.CreateText(exportSettings.Filename))
+        IFileSystemService fileSystemService = (IFileSystemService)IApplication.Current.Services.GetService(typeof(IFileSystemService))!;
+        using (StreamWriter file = fileSystemService.CreateText(exportSettings.Filename))
         {
           string statusMessage = $"Exporting instrument groups to \"{exportSettings.Filename}\"";
           if (Debugging.InstrumentGroupExport) m_logger.LogInformation(statusMessage);
@@ -762,7 +764,8 @@ namespace TradeSharp.CoreUI.Services
       ImportCounts counts = new();
       bool noErrors = true;
 
-      using (StreamReader file = new StreamReader(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
+      IFileSystemService fileSystemService = (IFileSystemService)IApplication.Current.Services.GetService(typeof(IFileSystemService))!;
+      using (StreamReader file = fileSystemService.OpenFile(importSettings.Filename, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read }))
       {
         JsonNode? documentNode = JsonNode.Parse(file.ReadToEnd(), new JsonNodeOptions { PropertyNameCaseInsensitive = true }, new JsonDocumentOptions { AllowTrailingCommas = true });  //try make the parsing as forgivable as possible
         string statusMessage = $"Importing instrument groups from \"{importSettings.Filename}\"";
@@ -929,7 +932,8 @@ namespace TradeSharp.CoreUI.Services
           if (instrumentGroup.ParentId == InstrumentGroup.InstrumentGroupRoot) rootNodes.Add(writeJsonNode(InstrumentGroup.InstrumentGroupRoot, instrumentGroup, ref exportCount));
       }
 
-      using (StreamWriter file = File.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
+      IFileSystemService fileSystemService = (IFileSystemService)IApplication.Current.Services.GetService(typeof(IFileSystemService))!;
+      using (StreamWriter file = fileSystemService.CreateText(exportSettings.Filename))   //NOTE: This will always overwrite the text file if it exists.
       {
         int rootNodeCount = rootNodes.Count;
         int rootNodeIndex = 0;

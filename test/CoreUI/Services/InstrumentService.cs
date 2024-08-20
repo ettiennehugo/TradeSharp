@@ -4,158 +4,15 @@ using TradeSharp.CoreUI.Repositories;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Common;
 using System.Diagnostics;
+using TradeSharp.CoreUI.Common;
+using System;
+using System.Text;
 
 namespace TradeSharp.CoreUI.Testing.Services
 {
   [TestClass]
   public class InstrumentService
   {
-    //constants
-    string[] csv = [
-      "type,ticker,alternatetickers,name,description,exchange,inception date,price decimals,minimum movement,big point value,marketcap,tag,attributes,secondary exchanges",
-      "Stock,MSFT,\"MSFT^C,MSFT-C\",Microsoft,Microsoft Corporation,NYSE,2021-01-01T00:00:00,2,1,1,3.07356E+12,\"{\"\"Entries\"\":[]}\",3,\"Nasdaq,LSE\"",
-      "5,AAPL,\"AAPL^C,AAPL~C\",Apple,Apple Corporation,NYSE,2021-01-01T00:00:00,2,1,1,200000,\"{\"\"Entries\"\":[]}\",3,\"Nasdaq\",",
-      "Stock,DISP,\"DISP^C,DISP-C\",Disney,Disney Corporation,NYSE,2021-01-01T00:00:00,2,1,1,300000,\"{\"\"Entries\"\":[]}\",3,\"Nasdaq,LSE\"",
-      "5,NFLX,\"NFLX^C,NFLX~C\",Netflix,Netflix Corporation,NYSE,2021-01-01T00:00:00,2,1,1,400000,\"{\"\"Entries\"\":[]}\",3,\"Nasdaq\",",
-      "Stock,AUTO,\"AUTO^C,AUTO@C\",Autozone,Autozone Corporation,NYSE,2021-01-01T00:00:00,2,1,1,500000,\"{\"\"Entries\"\":[]}\",3,\"Nasdaq,LSE\"",
-      "5,PEP,\"PEP~C,PEP@C\",Pep Boys,Pep Boys Corporation,NYSE,2021-01-01T00:00:00,2,1,1,600000,\"{\"\"Entries\"\":[]}\",3,\"LSE\",",
-      "Stock,GOOD,\"GOOD_C,GOOD-C\",Goodyear,Goodyear Corporation,NYSE,2021-01-01T00:00:00,2,1,1,700000,\"{\"\"Entries\"\":[]}\",3,\"Nasdaq\",",
-      "5,MICH,\"MICH~C,MICH^C\",Michelin,Michelin Corporation,NYSE,2021-01-01T00:00:00,2,1,1,800000,\"{\"\"Entries\"\":[]}\",3,\"LSE\","
-    ];
-
-    string[] json = [
-      "[",
-      "  {",
-      "    \"Type\": \"Stock\",",
-      "    \"Ticker\": \"MSFT\",",
-      "    \"AlternateTickers\": [\"MSFT^C\",\"MSFT-C\"],",
-      "    \"Name\": \"Microsoft\",",
-      "    \"Description\": \"Microsoft Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 3.07356E+12,",
-      "    \"Tag\": {\"Entries\":[]},",
-      "    \"Attributes\": \"3\",",
-      "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"5\",",
-      "    \"Ticker\": \"AAPL\",",
-      "    \"AlternateTickers\": [\"AAPL^C\",\",AAPL~C\"],",
-      "    \"Name\": \"Apple\",",
-      "    \"Description\": \"Apple Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 200000,",
-      "    \"Tag\": {\"Entries\":[]},",
-      "    \"Attributes\": 3,",
-      "    \"SecondaryExchanges\": [\"Nasdaq\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"Stock\",",
-      "    \"Ticker\": \"DISP\",",
-      "    \"AlternateTickers\": [\"DISP^C\",\"DISP-C\"],",
-      "    \"Name\": \"Disney\",",
-      "    \"Description\": \"Disney Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 300000,",
-      "    \"Tag\": {\"Entries\":[]},",
-      "    \"Attributes\": 3,",
-      "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"5\",",
-      "    \"Ticker\": \"NFLX\",",
-      "    \"AlternateTickers\": [\"NFLX^C\",\"NFLX~C\"],",
-      "    \"Name\": \"Netflix\",",
-      "    \"Description\": \"Netflix Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 400000,",
-      "    \"Tag\": {\"Entries\":[]},",
-      "    \"Attributes\": \"3\",",
-      "    \"SecondaryExchanges\": [\"Nasdaq\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"Stock\",",
-      "    \"Ticker\": \"AUTO\",",
-      "    \"AlternateTickers\": [\"AUTO^C\",\"AUTO@C\"],",
-      "    \"Name\": \"Autozone\",",
-      "    \"Description\": \"Autozone Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 500000,",
-      "    \"Tag\": {\"Entries\":[]},",
-      "    \"Attributes\": \"3\",",
-      "    \"SecondaryExchanges\": [\"Nasdaq\",\"LSE\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"5\",",
-      "    \"Ticker\": \"PEP\",",
-      "    \"AlternateTickers\": [\"PEP~C\",\"PEP@C\"],",
-      "    \"Name\": \"Pep Boys\",",
-      "    \"Description\": \"Pep Boys Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 600000,",
-      "    \"Tag\": {\"Entries\":[]},",
-      "    \"Attributes\": \"3\",",
-      "    \"SecondaryExchanges\": [\"LSE\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"Stock\",",
-      "    \"Ticker\": \"GOOD\",",
-      "    \"AlternateTickers\": [\"GOOD_C\",\"GOOD-C\"],",
-      "    \"Name\": \"Goodyear\",",
-      "    \"Description\": \"Goodyear Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 700000,",
-      "    \"Tag\": {\"Entries\":[]},",
-      "    \"Attributes\": \"3\",",
-      "    \"SecondaryExchanges\": [\"Nasdaq\"]",
-      "  },",
-      "  {",
-      "    \"Type\": \"5\",",
-      "    \"Ticker\": \"MICH\",",
-      "    \"AlternateTickers\": [\"MICH~C\",\"MICH^C\"],",
-      "    \"Name\": \"Michelin\",",
-      "    \"Description\": \"Michelin Corporation\",",
-      "    \"Exchange\": \"NYSE\",",
-      "    \"InceptionDate\": \"2021-01-01T00:00:00\",",
-      "    \"PriceDecimals\": 2,",
-      "    \"MinimumMovement\": 1,",
-      "    \"BigPointValue\": 1,",
-      "    \"MarketCap\": 800000,",
-      "    \"Tag\": {\"Entries\":[]},",
-      "    \"Attributes\": 3,",
-      "    \"SecondaryExchanges\": [\"LSE\"]",
-      "  }",
-      "]"
-    ];
-
     //enums
 
 
@@ -163,6 +20,9 @@ namespace TradeSharp.CoreUI.Testing.Services
 
 
     //attributes
+    private Mock<IApplication> m_application;
+    private Mock<IServiceProvider> m_serviceProvider;
+    private Mock<IFileSystemService> m_fileSystemService;
     private Mock<ILogger<CoreUI.Services.InstrumentService>> m_logger;
     private Mock<IExchangeService> m_exchangeService;
     private Mock<IInstrumentRepository> m_instrumentRepository;
@@ -242,6 +102,13 @@ namespace TradeSharp.CoreUI.Testing.Services
             Debug.WriteLine($"InstrumentService Log: {(string)logMessage!}");
           }));
 
+      m_application = new Mock<IApplication>();
+      m_serviceProvider = new Mock<IServiceProvider>();
+      m_fileSystemService = new Mock<IFileSystemService>();
+      m_serviceProvider.Setup(x => x.GetService(typeof(IFileSystemService))).Returns(m_fileSystemService.Object);
+      m_application.SetupGet(x => x.Services).Returns(m_serviceProvider.Object);
+      IApplication.Current = m_application.Object;
+
       m_exchangeService = new Mock<IExchangeService>();
       m_instrumentRepository = new Mock<IInstrumentRepository>();
       m_dialogService = new Mock<IDialogService>();
@@ -286,13 +153,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       return true;
     }
 
-    public string outputTestFile(string filename, string[] content)
-    {
-      string fullFilename = Path.Combine(Path.GetTempPath(), filename);
-      File.WriteAllText(fullFilename, string.Join("\n", content));
-      return fullFilename;
-    }
-
     public void postImport()
     {
       m_allFileInstruments.AddRange(m_addedInstruments);
@@ -328,112 +188,81 @@ namespace TradeSharp.CoreUI.Testing.Services
       }
     }
 
-    [TestMethod]
-    public void Import_CsvCreated_Success()
-    {
-      string filename = "testInstrumentsWithoutIds.csv";
-      var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, csv);
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
-      m_instrumentService.Import(importSettings);
-      checkImportedInstruments(m_instruments, m_addedInstruments);
-    }
+    //ENHANCEMENT: Can add explicit tests to add instruments to the repository and check if they are added correctly.
 
     [TestMethod]
-    public void Import_JsonCreated_Success()
+    [DataRow("test.csv")]
+    [DataRow("test.json")]
+    public void ExportImport_Created_Success(string filename)
     {
-      string filename = "testInstrumentsWithoutIds.json";
-      var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, json);
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace; //force call to our dummy repository
-      m_instrumentService.Import(importSettings);
-      checkImportedInstruments(m_instruments, m_addedInstruments);
-    }
-
-    [TestMethod]
-    public void Import_CsvUpdated_Success()
-    {
+      //load the data from the mock repository
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
-      m_instrumentService.Refresh(); //load the data from the mock repository
+      m_instrumentService.Refresh();
       m_instrumentCacheService.Refresh();
 
-      string filename = "testInstrumentsWithIds.csv";
+      //export
+      MemoryStream writeStream = new MemoryStream();
+      StreamWriter streamWriter = new StreamWriter(writeStream);
+      m_fileSystemService.Setup(x => x.CreateText(It.IsAny<string>())).Returns(streamWriter);
+      m_serviceProvider.Setup(x => x.GetService(typeof(IFileSystemService))).Returns(m_fileSystemService.Object);
+
       var exportSettings = new ExportSettings();
       exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-      exportSettings.Filename = outputTestFile(filename, csv);
+      exportSettings.Filename = filename;
+
       m_instrumentService.Export(exportSettings);
 
+      //import
+      byte[] buffer = writeStream.ToArray();
+      MemoryStream readStream = new MemoryStream(buffer);
+      StreamReader streamReader = new StreamReader(readStream);
+      m_fileSystemService.Setup(x => x.OpenFile(It.IsAny<string>(), It.IsAny<FileStreamOptions>())).Returns(streamReader);
+
       var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, csv);
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Update; //force call to our dummy repository
+      importSettings.Filename = filename;
+      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
+
       m_instrumentService.Import(importSettings);
+      postImport();
       checkImportedInstruments(m_instruments, m_updatedInstruments);
     }
 
     [TestMethod]
-    public void Import_JsonUpdated_Success()
+    [DataRow("test.csv")]
+    [DataRow("test.json")]
+    public void ExportImport_Updated_Success(string filename)
     {
+      //load the data from the mock repository
       m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
-      m_instrumentService.Refresh(); //load the data from the mock repository
+      m_instrumentService.Refresh();
       m_instrumentCacheService.Refresh();
 
-      string filename = "testInstrumentsWithIds.json";
+      //export
+      MemoryStream writeStream = new MemoryStream();
+      StreamWriter streamWriter = new StreamWriter(writeStream);
+      m_fileSystemService.Setup(x => x.CreateText(It.IsAny<string>())).Returns(streamWriter);
+      m_serviceProvider.Setup(x => x.GetService(typeof(IFileSystemService))).Returns(m_fileSystemService.Object);
+
       var exportSettings = new ExportSettings();
       exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-      exportSettings.Filename = outputTestFile(filename, json);
+      exportSettings.Filename = filename;
+      
       m_instrumentService.Export(exportSettings);
 
+      //import
+      byte[] buffer = writeStream.ToArray();
+      MemoryStream readStream = new MemoryStream(buffer);
+      StreamReader streamReader = new StreamReader(readStream);
+      m_fileSystemService.Setup(x => x.OpenFile(It.IsAny<string>(), It.IsAny<FileStreamOptions>())).Returns(streamReader);
+
       var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, json);
+      importSettings.Filename = filename;
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Update; //force call to our dummy repository
+      
       m_instrumentService.Import(importSettings);
+
+      postImport();
       checkImportedInstruments(m_instruments, m_updatedInstruments);
-    }
-
-    [TestMethod]
-    public void Export_CsvCreated_Success()
-    {
-      m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
-      m_instrumentService.Refresh(); //load the data from the mock repository
-      m_instrumentCacheService.Refresh();
-
-      string filename = "testExportWithoutIds.csv";
-      var exportSettings = new ExportSettings();
-      exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-      exportSettings.Filename = outputTestFile(filename, csv);
-      var importSettings = new ImportSettings();
-      importSettings.Filename = exportSettings.Filename;
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
-      m_instrumentService.Export(exportSettings);
-      m_instrumentService.Import(importSettings);
-      postImport();
-      checkImportedInstruments(m_instruments, m_updatedInstruments);  //for replacement instruments they are updated without merging in the current instrument definition
-    }
-
-    [TestMethod]
-    public void Export_JsonCreated_Success()
-    {
-      m_instrumentRepository.Setup(x => x.GetItems()).Returns(m_instruments);
-      m_instrumentService.Refresh(); //load the data from the mock repository
-      m_instrumentCacheService.Refresh();
-
-      string filename = "testExportWithoutIds.json";
-      var exportSettings = new ExportSettings();
-      exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-      exportSettings.Filename = outputTestFile(filename, json);
-      var importSettings = new ImportSettings();
-      importSettings.Filename = exportSettings.Filename;
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
-      m_instrumentService.Export(exportSettings);
-
-      //clear the defined instruments
-      m_instrumentRepository.Setup(x => x.GetItems()).Returns(Array.Empty<Instrument>());
-      m_instrumentService.Refresh(); //load the data from the mock repository
-      m_instrumentCacheService.Refresh();
-
-      m_instrumentService.Import(importSettings);
-      postImport();
-      checkImportedInstruments(m_instruments, m_addedInstruments);
     }
   }
 }

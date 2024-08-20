@@ -4,6 +4,7 @@ using TradeSharp.CoreUI.Repositories;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.Common;
 using System.Diagnostics;
+using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.Testing.Services
 {
@@ -11,448 +12,7 @@ namespace TradeSharp.CoreUI.Testing.Services
   public class InstrumentGroupService
   {
     //constants
-    static string[] csvWithIds = [
-      "parentid,id,name,alternatenames,description,userid,tag,attributes,tickers",
-      "11111111-1111-1111-1111-111111111111,12121212-1212-1212-1212-121212121212,MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,\"{\"\"Entries\"\":[]}\",0,",
-      "12121212-1212-1212-1212-121212121212,13131313-1313-1313-1313-131313131313,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,\"{\"\"Entries\"\":[]}\",0,",
-      "12121212-1212-1212-1212-121212121212,14141414-1414-1414-1414-141414141414,Communication Services,\"Comms Services,Coms\",Communication Services,50,\"{\"\"Entries\"\":[]}\",0,",
-      "13131313-1313-1313-1313-131313131313,15151515-1515-1515-1515-151515151515,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,\"{\"\"Entries\"\":[]}\",0,",
-      "14141414-1414-1414-1414-141414141414,16161616-1616-1616-1616-161616161616,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,\"{\"\"Entries\"\":[]}\",0,",
-      "13131313-1313-1313-1313-131313131313,17171717-1717-1717-1717-171717171717,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,\"{\"\"Entries\"\":[]}\",0,",
-      "14141414-1414-1414-1414-141414141414,18181818-1818-1818-1818-181818181818,Entertainment,Entertain,Entertainment,502020,\"{\"\"Entries\"\":[]}\",0,",
-      "18181818-1818-1818-1818-181818181818,19191919-1919-1919-1919-191919191919,Movies & Entertainment,\"Movies, Film Entertainment\",Movies & Entertainment,50202010,\"{\"\"Entries\"\":[]}\",0,\"DISP,NFLX\"",
-      "18181818-1818-1818-1818-181818181818,21212121-2121-2121-2121-212121212121,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment\",Interactive Entertainment,50202020,\"{\"\"Entries\"\":[]}\",0,\"MSFT,AAPL\"",
-      "17171717-1717-1717-1717-171717171717,22222222-2222-2222-2222-222222222222,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers\",Automotive Parts & Equipment,25101010,\"{\"\"Entries\"\":[]}\",0,\"AUTO,PEP\"",
-      "17171717-1717-1717-1717-171717171717,23232323-2323-2323-2323-232323232323,Tires & Rubber,\"Tires+Rubber,TiresRubber\",Tires & Rubber,25101020,\"{\"\"Entries\"\":[]}\",0,\"GOOD,MICH\""
-    ];
 
-    static string[] csvWithNames = [
-      "parentname,name,alternatenames,description,userid,tag,attributes,tickers",
-      ",MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,\"{\"\"Entries\"\":[]}\",0,",
-      "MSCI GICS,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,\"{\"\"Entries\"\":[]}\",0,",
-      "MSCI Global Industry Classification Standard,Communication Services,\"Comms Services,Coms\",Communication Services,50,\"{\"\"Entries\"\":[]}\",0,",
-      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,\"{\"\"Entries\"\":[]}\",0,",
-      "Coms,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,\"{\"\"Entries\"\":[]}\",0,",
-      "Auto & Comp,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,\"{\"\"Entries\"\":[]}\",0,",
-      "Media&Ent,Entertainment,Entertain,Entertainment,502020,\"{\"\"Entries\"\":[]}\",0,,",
-      "Entertainment,Movies & Entertainment,\"Movies, Film Entertainment\",Movies & Entertainment,50202010,\"{\"\"Entries\"\":[]}\",0,\"DISP,NFLX\"",
-      "Entertain,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment\",Interactive Entertainment,50202020,\"{\"\"Entries\"\":[]}\",0,\"MSFT,AAPL\"",
-      "Automotive Components,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers\",Automotive Parts & Equipment,25101010,\"{\"\"Entries\"\":[]}\",0,\"AUTO,PEP\"",
-      "Automotive,Tires & Rubber,\"Tires+Rubber,TiresRubber\",Tires & Rubber,25101020,\"{\"\"Entries\"\":[]}\",0,\"GOOD,MICH\""
-    ];
-
-    static string[] csvWithNamesAndUpdates = [
-      "parentname,name,alternatenames,description,userid,tag,attributes,tickers",
-      ",MSCI Global Industry Classification Standard,\"MSCI GICS, MSCI GICS Standard\",MSCI Global Industry Classification Standard,0,\"{\"\"Entries\"\":[]}\",0,",
-      "MSCI GICS,Consumer Discretionary,\"Consumer Disc,Con Disc\",Consumer Discretionary,25,\"{\"\"Entries\"\":[]}\",0,",
-      "MSCI Global Industry Classification Standard,Communication Services,\"Comms Services,Coms\",Communication Services,50,\"{\"\"Entries\"\":[]}\",0,",
-      "Con Disc,Automobiles & Components,\"Auto & Comp, Auto&Comp\",Automobiles & Components,2510,\"{\"\"Entries\"\":[]}\",0,",
-      "Coms,Media & Entertainment,\"Media & Ent, Media&Ent\",Media & Entertainment,5020,\"{\"\"Entries\"\":[]}\",0,",
-      "Auto & Comp,Automobile Components,\"Automotive Components, Automotive\",Automobile Components,251010,\"{\"\"Entries\"\":[]}\",0,",
-      "Media&Ent,Entertainment,Entertain,Entertainment,502020,\"{\"\"Entries\"\":[]}\",0,,",
-      "Entertainment,Movies & Entertainment,\"Movies, Film Entertainment, Films\",Movies & Entertainment,50202010,\"{\"\"Entries\"\":[]}\",0,\"DISP,NFLX,ROKU\"",
-      "Entertain,Interactive Home Entertainment,\"Inter Home Ent, Interactive Entertainment, Home Entertainment\",Interactive Entertainment,50202020,\"{\"\"Entries\"\":[]}\",0,\"MSFT,AAPL,GOOG\"",
-      "Automotive Components,Automotive Parts & Equipment,\"Auto Parts, Auto Parts Suppliers, Car Parts\",Automotive Parts & Equipment,25101010,\"{\"\"Entries\"\":[]}\",0,\"AUTO,PEP,ORLY\"",
-      "Automotive,Tires & Rubber,\"Tires+Rubber,TiresRubber,Automotive Rubber\",Tires & Rubber,25101020,\"{\"\"Entries\"\":[]}\",0,\"GOOD,MICH,FIRE\""
-    ];
-
-    static private string[] jsonWithNames =
-    [
-      "[",
-      "{",
-      "  \"Name\": \"MSCI Global Industry Classification Standard\",",
-      "  \"AlternateNames\":[\"MSCI GICS\",\"MSCI GICS Standard\"],",
-      "  \"Description\": \"MSCI Global Industry Classification Standard\",",
-      "  \"UserId\": \"0\",",
-      "  \"Tag\": {\"Entries\":[]},",
-      "  \"Attributes\": \"0\",",
-      "  \"Instruments\": [],",
-      "  \"Children\": ",
-      "  [",
-      "  {",
-      "      \"Name\": \"Communication Services\",",
-      "      \"AlternateNames\":[\"Comms Services\", \"Coms\"],",
-      "      \"Description\": \"Communication Services\",",
-      "      \"UserId\": \"50\",",
-      "      \"Tag\": {\"Entries\":[]},",
-      "      \"Attributes\": \"0\",",
-      "      \"Instruments\": [],",
-      "      \"Children\": ",
-      "      [",
-      "        {",
-      "          \"Name\": \"Media \u0026 Entertainment\",",
-      "          \"AlternateNames\":[\"Media \u0026 Ent\",\"Media\u0026Ent\"],",
-      "          \"Description\": \"Media \u0026 Entertainment\",",
-      "          \"UserId\": \"5020\",",
-      "          \"Tag\": {\"Entries\":[]},",
-      "          \"Attributes\": \"0\",",
-      "          \"Instruments\": [],",
-      "          \"Children\":",
-      "          [",
-      "            {",
-      "              \"Name\": \"Entertainment\",",
-      "              \"AlternateNames\":[\"Entertain\"],",
-      "              \"Description\": \"Entertainment\",",
-      "              \"UserId\": \"502020\",",
-      "              \"Tag\": {\"Entries\":[]},",
-      "              \"Attributes\": \"0\",",
-      "              \"Instruments\": [],",
-      "              \"Children\": [",
-      "                {",
-      "                  \"Name\": \"Movies \u0026 Entertainment\",",
-      "                  \"AlternateNames\":[\"Movies\",\"Film Entertainment\"],",
-      "                  \"Description\": \"Movies \u0026 Entertainment\",",
-      "                  \"UserId\": \"50202010\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"DISP\",\"NFLX\"],",
-      "                  \"Children\": []",
-      "              },",
-      "              {",
-      "                  \"Name\": \"Interactive Home Entertainment\",",
-      "                  \"AlternateNames\":[\"Inter Home Ent\",\"Interactive Entertainment\"],",
-      "                  \"Description\": \"Interactive Entertainment\",",
-      "                  \"UserId\": \"50202020\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"MSFT\",\"AAPL\"],",
-      "                  \"Children\": []",
-      "              }",
-      "            ]",
-      "          }",
-      "        ]",
-      "      }",
-      "    ]",
-      "  },",
-      "  {",
-      "      \"Name\": \"Consumer Discretionary\",",
-      "      \"AlternateNames\":[\"Consumer Disc\",\"Con Disc\"],",
-      "      \"Description\": \"Consumer Discretionary\",",
-      "      \"UserId\": \"25\",",
-      "      \"Tag\": {\"Entries\":[]},",
-      "      \"Attributes\": \"0\",",
-      "      \"Instruments\": [],",
-      "      \"Children\": ",
-      "      [",
-      "        {",
-      "          \"Name\": \"Automobiles \u0026 Components\",",
-      "          \"AlternateNames\":[\"Auto \u0026 Comp\",\"Auto\u0026Comp\"],",
-      "          \"Description\": \"Automobiles \u0026 Components\",",
-      "          \"UserId\": \"2510\",",
-      "          \"Tag\": {\"Entries\":[]},",
-      "          \"Attributes\": \"0\",",
-      "          \"Instruments\": [],",
-      "          \"Children\": ",
-      "          [",
-      "            {",
-      "              \"Name\": \"Automobile Components\",",
-      "              \"AlternateNames\":[\"Automotive Components\",\"Automotive\"],",
-      "              \"Description\": \"Automobile Components\",",
-      "              \"UserId\": \"251010\",",
-      "              \"Tag\": {\"Entries\":[]},",
-      "              \"Attributes\": \"0\",",
-      "              \"Instruments\": [],",
-      "              \"Children\": ",
-      "              [",
-      "                {",
-      "                  \"Name\": \"Automotive Parts \u0026 Equipment\",",
-      "                  \"AlternateNames\":[\"Auto Parts\",\"Auto Parts Suppliers\"],",
-      "                  \"Description\": \"Automotive Parts \u0026 Equipment\",",
-      "                  \"UserId\": \"25101010\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"AUTO\",\"PEP\"],",
-      "                  \"Children\": []",
-      "                },",
-      "                {",
-      "                  \"Name\": \"Tires \u0026 Rubber\",",
-      "                  \"AlternateNames\":[\"Tires+Rubber\",\"TiresRubber\"],",
-      "                  \"Description\": \"Tires \u0026 Rubber\",",
-      "                  \"UserId\": \"25101020\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"GOOD\",\"MICH\"],",
-      "                  \"Children\": []",
-      "                }",
-      "              ]",
-      "            }",
-      "          ]",
-      "        }  ",
-      "      ]",
-      "    }",
-      "  ]",
-      "}",
-      "]"
-    ];
-
-    static private string[] jsonWithNamesAndUpdates =
-    [
-      "[",
-      "{",
-      "  \"Name\": \"MSCI Global Industry Classification Standard\",",
-      "  \"AlternateNames\":[\"MSCI GICS\",\"MSCI GICS Standard\"],",
-      "  \"Description\": \"MSCI Global Industry Classification Standard\",",
-      "  \"UserId\": \"0\",",
-      "  \"Tag\": {\"Entries\":[]},",
-      "  \"Attributes\": \"0\",",
-      "  \"Instruments\": [],",
-      "  \"Children\": ",
-      "  [",
-      "  {",
-      "      \"Name\": \"Communication Services\",",
-      "      \"AlternateNames\":[\"Comms Services\", \"Coms\"],",
-      "      \"Description\": \"Communication Services\",",
-      "      \"UserId\": \"50\",",
-      "      \"Tag\": {\"Entries\":[]},",
-      "      \"Attributes\": \"0\",",
-      "      \"Instruments\": [],",
-      "      \"Children\": ",
-      "      [",
-      "        {",
-      "          \"Name\": \"Media \u0026 Entertainment\",",
-      "          \"AlternateNames\":[\"Media \u0026 Ent\",\"Media\u0026Ent\"],",
-      "          \"Description\": \"Media \u0026 Entertainment\",",
-      "          \"UserId\": \"5020\",",
-      "          \"Tag\": {\"Entries\":[]},",
-      "          \"Attributes\": \"0\",",
-      "          \"Instruments\": [],",
-      "          \"Children\":",
-      "          [",
-      "            {",
-      "              \"Name\": \"Entertainment\",",
-      "              \"AlternateNames\":[\"Entertain\"],",
-      "              \"Description\": \"Entertainment\",",
-      "              \"UserId\": \"502020\",",
-      "              \"Tag\": {\"Entries\":[]},",
-      "              \"Attributes\": \"0\",",
-      "              \"Instruments\": [],",
-      "              \"Children\": [",
-      "                {",
-      "                  \"Name\": \"Movies \u0026 Entertainment\",",
-      "                  \"AlternateNames\":[\"Movies\",\"Film Entertainment\",\"Films\"],",
-      "                  \"Description\": \"Movies \u0026 Entertainment\",",
-      "                  \"UserId\": \"50202010\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"DISP\",\"NFLX\",\"ROKU\"],",
-      "                  \"Children\": []",
-      "              },",
-      "              {",
-      "                  \"Name\": \"Interactive Home Entertainment\",",
-      "                  \"AlternateNames\":[\"Inter Home Ent\",\"Interactive Entertainment\",\"Home Entertainment\"],",
-      "                  \"Description\": \"Interactive Entertainment\",",
-      "                  \"UserId\": \"50202020\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"MSFT\",\"AAPL\",\"GOOG\"],",
-      "                  \"Children\": []",
-      "              }",
-      "            ]",
-      "          }",
-      "        ]",
-      "      }",
-      "    ]",
-      "  },",
-      "  {",
-      "      \"Name\": \"Consumer Discretionary\",",
-      "      \"AlternateNames\":[\"Consumer Disc\",\"Con Disc\"],",
-      "      \"Description\": \"Consumer Discretionary\",",
-      "      \"UserId\": \"25\",",
-      "      \"Tag\": {\"Entries\":[]},",
-      "      \"Attributes\": \"0\",",
-      "      \"Instruments\": [],",
-      "      \"Children\": ",
-      "      [",
-      "        {",
-      "          \"Name\": \"Automobiles \u0026 Components\",",
-      "          \"AlternateNames\":[\"Auto \u0026 Comp\",\"Auto\u0026Comp\"],",
-      "          \"Description\": \"Automobiles \u0026 Components\",",
-      "          \"UserId\": \"2510\",",
-      "          \"Tag\": {\"Entries\":[]},",
-      "          \"Attributes\": \"0\",",
-      "          \"Instruments\": [],",
-      "          \"Children\": ",
-      "          [",
-      "            {",
-      "              \"Name\": \"Automobile Components\",",
-      "              \"AlternateNames\":[\"Automotive Components\",\"Automotive\"],",
-      "              \"Description\": \"Automobile Components\",",
-      "              \"UserId\": \"251010\",",
-      "              \"Tag\": {\"Entries\":[]},",
-      "              \"Attributes\": \"0\",",
-      "              \"Instruments\": [],",
-      "              \"Children\": ",
-      "              [",
-      "                {",
-      "                  \"Name\": \"Automotive Parts \u0026 Equipment\",",
-      "                  \"AlternateNames\":[\"Auto Parts\",\"Auto Parts Suppliers\",\"Car Parts\"],",
-      "                  \"Description\": \"Automotive Parts \u0026 Equipment\",",
-      "                  \"UserId\": \"25101010\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"AUTO\",\"PEP\",\"ORLY\"],",
-      "                  \"Children\": []",
-      "                },",
-      "                {",
-      "                  \"Name\": \"Tires \u0026 Rubber\",",
-      "                  \"AlternateNames\":[\"Tires+Rubber\",\"TiresRubber\",\"Automotive Rubber\"],",
-      "                  \"Description\": \"Tires \u0026 Rubber\",",
-      "                  \"UserId\": \"25101020\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"GOOD\",\"MICH\",\"FIRE\"],",
-      "                  \"Children\": []",
-      "                }",
-      "              ]",
-      "            }",
-      "          ]",
-      "        }  ",
-      "      ]",
-      "    }",
-      "  ]",
-      "}",
-      "]"
-    ];
-
-    static private string[] jsonWithIds =
-    [
-      "[",
-      "{",
-      "  \"Id\":\"12121212-1212-1212-1212-121212121212\",",
-      "  \"Name\": \"MSCI Global Industry Classification Standard\",",
-      "  \"AlternateNames\":[\"MSCI GICS\",\"MSCI GICS Standard\"],",
-      "  \"Description\": \"MSCI Global Industry Classification Standard\",",
-      "  \"UserId\": \"0\",",
-      "  \"Tag\": {\"Entries\":[]},",
-      "  \"Attributes\": \"0\",",
-      "  \"Instruments\": [],",
-      "  \"Children\": ",
-      "  [",
-      "  {",
-      "      \"Id\":\"14141414-1414-1414-1414-141414141414\",",
-      "      \"Name\": \"Communication Services\",",
-      "      \"AlternateNames\":[\"Comms Services\", \"Coms\"],",
-      "      \"Description\": \"Communication Services\",",
-      "      \"UserId\": \"50\",",
-      "      \"Tag\": {\"Entries\":[]},",
-      "      \"Attributes\": \"0\",",
-      "      \"Instruments\": [],",
-      "      \"Children\": ",
-      "      [",
-      "        {",
-      "          \"Id\":\"16161616-1616-1616-1616-161616161616\",",
-      "          \"Name\": \"Media \u0026 Entertainment\",",
-      "          \"AlternateNames\":[\"Media \u0026 Ent\",\"Media\u0026Ent\"],",
-      "          \"Description\": \"Media \u0026 Entertainment\",",
-      "          \"UserId\": \"5020\",",
-      "          \"Tag\": {\"Entries\":[]},",
-      "          \"Attributes\": \"0\",",
-      "          \"Instruments\": [],",
-      "          \"Children\":",
-      "          [",
-      "            {",
-      "              \"Id\":\"18181818-1818-1818-1818-181818181818\",",
-      "              \"Name\": \"Entertainment\",",
-      "              \"AlternateNames\":[\"Entertain\"],",
-      "              \"Description\": \"Entertainment\",",
-      "              \"UserId\": \"502020\",",
-      "              \"Tag\": {\"Entries\":[]},",
-      "              \"Attributes\": \"0\",",
-      "              \"Instruments\": [],",
-      "              \"Children\": [",
-      "                {",
-      "                  \"Id\":\"19191919-1919-1919-1919-191919191919\",",
-      "                  \"Name\": \"Movies \u0026 Entertainment\",",
-      "                  \"AlternateNames\":[\"Movies\",\"Film Entertainment\"],",
-      "                  \"Description\": \"Movies \u0026 Entertainment\",",
-      "                  \"UserId\": \"50202010\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"DISP\",\"NFLX\"],",
-      "                  \"Children\": []",
-      "              },",
-      "              {",
-      "                  \"Id\":\"21212121-2121-2121-2121-212121212121\",",
-      "                  \"Name\": \"Interactive Home Entertainment\",",
-      "                  \"AlternateNames\":[\"Inter Home Ent\",\"Interactive Entertainment\"],",
-      "                  \"Description\": \"Interactive Entertainment\",",
-      "                  \"UserId\": \"50202020\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"MSFT\",\"AAPL\"],",
-      "                  \"Children\": []",
-      "              }",
-      "            ]",
-      "          }",
-      "        ]",
-      "      }",
-      "    ]",
-      "  },",
-      "  {",
-      "      \"Id\":\"13131313-1313-1313-1313-131313131313\",",
-      "      \"Name\": \"Consumer Discretionary\",",
-      "      \"AlternateNames\":[\"Consumer Disc\",\"Con Disc\"],",
-      "      \"Description\": \"Consumer Discretionary\",",
-      "      \"UserId\": \"25\",",
-      "      \"Tag\": {\"Entries\":[]},",
-      "      \"Attributes\": \"0\",",
-      "      \"Instruments\": [],",
-      "      \"Children\": ",
-      "      [",
-      "        {",
-      "          \"Id\":\"15151515-1515-1515-1515-151515151515\",",
-      "          \"Name\": \"Automobiles \u0026 Components\",",
-      "          \"AlternateNames\":[\"Auto \u0026 Comp\",\"Auto\u0026Comp\"],",
-      "          \"Description\": \"Automobiles \u0026 Components\",",
-      "          \"UserId\": \"2510\",",
-      "          \"Tag\": {\"Entries\":[]},",
-      "          \"Attributes\": \"0\",",
-      "          \"Instruments\": [],",
-      "          \"Children\": ",
-      "          [",
-      "            {",
-      "              \"Id\":\"17171717-1717-1717-1717-171717171717\",",
-      "              \"Name\": \"Automobile Components\",",
-      "              \"AlternateNames\":[\"Automotive Components\",\"Automotive\"],",
-      "              \"Description\": \"Automobile Components\",",
-      "              \"UserId\": \"251010\",",
-      "              \"Tag\": {\"Entries\":[]},",
-      "              \"Attributes\": \"0\",",
-      "              \"Instruments\": [],",
-      "              \"Children\": ",
-      "              [",
-      "                {",
-      "                  \"Id\":\"22222222-2222-2222-2222-222222222222\",",
-      "                  \"Name\": \"Automotive Parts \u0026 Equipment\",",
-      "                  \"AlternateNames\":[\"Auto Parts\",\"Auto Parts Suppliers\"],",
-      "                  \"Description\": \"Automotive Parts \u0026 Equipment\",",
-      "                  \"UserId\": \"25101010\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"AUTO\",\"PEP\"],",
-      "                  \"Children\": []",
-      "                },",
-      "                {",
-      "                  \"Id\":\"23232323-2323-2323-2323-232323232323\",",
-      "                  \"Name\": \"Tires \u0026 Rubber\",",
-      "                  \"AlternateNames\":[\"Tires+Rubber\",\"TiresRubber\"],",
-      "                  \"Description\": \"Tires \u0026 Rubber\",",
-      "                  \"UserId\": \"25101020\",",
-      "                  \"Tag\": {\"Entries\":[]},",
-      "                  \"Attributes\": \"0\",",
-      "                  \"Instruments\": [\"GOOD\",\"MICH\"],",
-      "                  \"Children\": []",
-      "                }",
-      "              ]",
-      "            }",
-      "          ]",
-      "        }  ",
-      "      ]",
-      "    }",
-      "  ]",
-      "}",
-      "]"
-    ];
 
     //enums
 
@@ -462,6 +22,9 @@ namespace TradeSharp.CoreUI.Testing.Services
 
     //attributes
     private Mock<ILogger<CoreUI.Services.InstrumentGroupService>> m_logger;
+    private Mock<IApplication> m_application;
+    private Mock<IServiceProvider> m_serviceProvider;
+    private Mock<IFileSystemService> m_fileSystemService;
     private Mock<IDatabase> m_database;
     private Mock<IInstrumentService> m_instrumentService;
     private Mock<IDialogService> m_dialogService;
@@ -593,6 +156,13 @@ namespace TradeSharp.CoreUI.Testing.Services
             Debug.WriteLine($"InstrumentGroupService Log: {(string)logMessage!}");
           }));
 
+      m_application = new Mock<IApplication>();
+      m_serviceProvider = new Mock<IServiceProvider>();
+      m_fileSystemService = new Mock<IFileSystemService>();
+      m_serviceProvider.Setup(x => x.GetService(typeof(IFileSystemService))).Returns(m_fileSystemService.Object);
+      m_application.SetupGet(x => x.Services).Returns(m_serviceProvider.Object);
+      IApplication.Current = m_application.Object;
+
       m_database = new Mock<IDatabase>();
       m_instrumentGroupRepository = new Mock<IInstrumentGroupRepository>();
       m_instrumentService = new Mock<IInstrumentService>();
@@ -700,12 +270,35 @@ namespace TradeSharp.CoreUI.Testing.Services
     }
 
     [TestMethod]
-    public void Import_CsvWithNames_Success()
+    [DataRow("test.csv")]
+    [DataRow("test.json")]
+    public void ExportImport_Success(string filename)
     {
-      string filename = "testWithNames.csv";
+      //load the instrument groups from the mock repository
+      m_instrumentGroupService.Refresh();
+
+      //export
+      MemoryStream writeStream = new MemoryStream();
+      StreamWriter streamWriter = new StreamWriter(writeStream);
+      m_fileSystemService.Setup(x => x.CreateText(It.IsAny<string>())).Returns(streamWriter);
+      m_serviceProvider.Setup(x => x.GetService(typeof(IFileSystemService))).Returns(m_fileSystemService.Object);
+
+      var exportSettings = new ExportSettings();
+      exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
+      exportSettings.Filename = filename;
+
+      m_instrumentGroupService.Export(exportSettings);
+
+      //import
+      byte[] buffer = writeStream.ToArray();
+      MemoryStream readStream = new MemoryStream(buffer);
+      StreamReader streamReader = new StreamReader(readStream);
+      m_fileSystemService.Setup(x => x.OpenFile(It.IsAny<string>(), It.IsAny<FileStreamOptions>())).Returns(streamReader);
+
       var importSettings = new ImportSettings();
+      importSettings.Filename = filename;
       importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
-      importSettings.Filename = outputTestFile(filename, csvWithNames);
+
       m_instrumentGroupService.Import(importSettings);
       mergedAddedUpdated();
 
@@ -715,171 +308,6 @@ namespace TradeSharp.CoreUI.Testing.Services
       //check node consistency
       checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
       checkIds(m_instrumentGroups, m_allFileInstrumentGroups, false);
-      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
-    }
-
-    [TestMethod]
-    public void Import_CsvWithIds_Success()
-    {
-      string filename = "testWithIds.csv";
-      var importSettings = new ImportSettings();
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
-      importSettings.Filename = outputTestFile(filename, csvWithIds);
-      m_instrumentGroupService.Import(importSettings);
-      mergedAddedUpdated();
-
-      //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_allFileInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
-
-      //check node consistency
-      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, true);
-      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
-    }
-
-    [TestMethod]
-    public void Import_CsvUpdateInstruments_Success()
-    {
-      string filename = "testWithNames.csv";
-      var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, csvWithNamesAndUpdates);
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Update;
-      m_instrumentGroupService.Import(importSettings);
-
-      m_moviesEntertainment.AlternateNames.Add("Films");
-      m_moviesEntertainment.Instruments = new List<string> { m_disp.Ticker, m_nflx.Ticker, m_roku.Ticker };
-      m_interactiveHomeEntertainment.AlternateNames.Add("Home Entertainment");
-      m_interactiveHomeEntertainment.Instruments = new List<string> { m_msft.Ticker, m_aapl.Ticker, m_goog.Ticker };
-      m_automotivePartsAndEquipment.AlternateNames.Add("Car Parts");
-      m_automotivePartsAndEquipment.Instruments = new List<string> { m_auto.Ticker, m_pep.Ticker, m_orly.Ticker };
-      m_tiresAndRubber.AlternateNames.Add("Automotive Rubber");
-      m_tiresAndRubber.Instruments = new List<string> { m_good.Ticker, m_mich.Ticker, m_fire.Ticker };
-
-      checkLoadedInstrumentGroups(m_instrumentGroups, m_updatedInstrumentGroups);
-      checkLoadedInstruments(m_instrumentGroups, m_updatedInstrumentGroups);
-    }
-
-    [TestMethod]
-    public void Import_JsonWithNames_Success()
-    {
-      string filename = "testWithNames.json";
-      var importSettings = new ImportSettings();
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
-      importSettings.Filename = outputTestFile(filename, jsonWithNames);
-      m_instrumentGroupService.Import(importSettings);
-      mergedAddedUpdated();
-
-      //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_allFileInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
-
-      //check node consistency
-      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, false);
-      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
-    }
-
-    [TestMethod]
-    public void Import_JsonWithIds_Success()
-    {
-      string filename = "testWithIds.json";
-      var importSettings = new ImportSettings();
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
-      importSettings.Filename = outputTestFile(filename, jsonWithIds);
-      m_instrumentGroupService.Import(importSettings);
-      mergedAddedUpdated();
-
-      //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_allFileInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
-
-      //check node consistency
-      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, true);
-      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
-    }
-
-
-    [TestMethod]
-    public void Import_JsonUpdateInstruments_Success()
-    {
-      string filename = "testWithNames.json";
-      var importSettings = new ImportSettings();
-      importSettings.Filename = outputTestFile(filename, jsonWithNamesAndUpdates);
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Update;
-      m_instrumentGroupService.Import(importSettings);
-
-      m_moviesEntertainment.AlternateNames.Add("Films");
-      m_moviesEntertainment.Instruments = new List<string> { m_disp.Ticker, m_nflx.Ticker, m_roku.Ticker };
-      m_interactiveHomeEntertainment.AlternateNames.Add("Home Entertainment");
-      m_interactiveHomeEntertainment.Instruments = new List<string> { m_msft.Ticker, m_aapl.Ticker, m_goog.Ticker };
-      m_automotivePartsAndEquipment.AlternateNames.Add("Car Parts");
-      m_automotivePartsAndEquipment.Instruments = new List<string> { m_auto.Ticker, m_pep.Ticker, m_orly.Ticker };
-      m_tiresAndRubber.AlternateNames.Add("Automotive Rubber");
-      m_tiresAndRubber.Instruments = new List<string> { m_good.Ticker, m_mich.Ticker, m_fire.Ticker };
-
-      checkLoadedInstrumentGroups(m_instrumentGroups, m_updatedInstrumentGroups);
-      checkLoadedInstruments(m_instrumentGroups, m_updatedInstrumentGroups);
-    }
-
-
-    [TestMethod]
-    public void Export_Csv_Success()
-    {
-      m_instrumentGroupService.Refresh(); //load the data from the mock repository
-      m_instrumentGroupService.SelectedNode = null;
-
-      string filename = "testExport.csv";
-      var exportSettings = new ExportSettings();
-      exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-      exportSettings.Filename = outputTestFile(filename, Array.Empty<string>());
-      var importSettings = new ImportSettings();
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
-      importSettings.Filename = exportSettings.Filename;
-      m_instrumentGroupService.Export(exportSettings);
-      m_instrumentGroupService.Import(importSettings);
-      mergedAddedUpdated();
-
-      //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_addedInstrumentGroups.Count + m_updatedInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
-
-      //check node consistency
-      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, true);
-      checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
-    }
-
-    [TestMethod]
-    public void Export_Json_Success()
-    {
-      m_instrumentGroupService.Refresh(); //load the data from the mock repository
-      m_instrumentGroupService.SelectedNode = null;
-
-      string filename = "testExport.json";
-      var exportSettings = new ExportSettings();
-      exportSettings.ReplaceBehavior = ExportReplaceBehavior.Replace;
-      exportSettings.Filename = outputTestFile(filename, Array.Empty<string>());
-      var importSettings = new ImportSettings();
-      importSettings.ReplaceBehavior = ImportReplaceBehavior.Replace;
-      importSettings.Filename = exportSettings.Filename;
-      m_instrumentGroupService.Export(exportSettings);
-      m_instrumentGroupService.Import(importSettings);
-      mergedAddedUpdated();
-
-      //check that the elements added are correct in terms of number
-      Assert.AreEqual(m_instrumentGroups.Count, m_addedInstrumentGroups.Count + m_updatedInstrumentGroups.Count, "Number of loaded instrument groups are not correct.");
-
-      //check node consistency
-      checkParentIds(m_instrumentGroups, m_allFileInstrumentGroups);
-      checkIds(m_instrumentGroups, m_allFileInstrumentGroups, true);
       checkChildParentAssociations(m_instrumentGroups, m_allFileInstrumentGroups);
       checkLoadedInstruments(m_instrumentGroups, m_allFileInstrumentGroups);
       checkLoadedInstrumentGroups(m_instrumentGroups, m_allFileInstrumentGroups);
