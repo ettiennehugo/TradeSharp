@@ -16,7 +16,7 @@
     public static bool InstrumentGroupService = false;  //log messages for instrument group service
 
     // Instrument Bar Data debugging switches
-    public static bool InstrumentBarDataLoadAsync = false;   //debugging for instrument bar data LoadAsync
+    public static bool InstrumentBarDataLoadAsync = true;   //debugging for instrument bar data LoadAsync
     public static bool InstrumentBarDataFilterParse = false; //debugging for instrument bar data filter start/end date parsing
   }
 }

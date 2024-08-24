@@ -73,7 +73,7 @@ namespace TradeSharp.CoreUI.Services
         return Task.CompletedTask;
       }
 
-      if (m_dataProvider.IsConnected == false)
+      if (!m_dataProvider.IsConnected)
       {
         State = CommandState.Failed;
         progressDialog.LogError("Failed to start mass download, data provider is not connected");
@@ -212,14 +212,15 @@ namespace TradeSharp.CoreUI.Services
       });
     }
 
-    //Wait for the data provider to become connected if it is disconnected for some reason.
+    /// <summary>
+    /// Wait for the data provider to become connected if it is disconnected for some reason.
+    /// </summary>
     protected void waitForHealthyConnection()
     {
-      //wait for the data provider to become connected if for some reason it was disconnected
-      if (m_dataProvider.IsConnected)
+      if (!m_dataProvider.IsConnected)
       {
         bool showDisconnectedMessage = false;
-        while (m_dataProvider.IsConnected && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
+        while (!m_dataProvider.IsConnected && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
         {
           if (!showDisconnectedMessage)
           {

@@ -203,6 +203,7 @@ namespace TradeSharp.CoreUI.Services
       DataProvider = string.Empty;
       FromDateTime = Constants.DefaultMinimumDateTime;
       ToDateTime = Constants.DefaultMaximumDateTime;
+      ResolutionMinute = false;
       ResolutionHour = false;
       ResolutionDay = false;
       ResolutionWeek = true;
@@ -213,6 +214,7 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] string m_dataProvider;
     [ObservableProperty] DateTime m_fromDateTime;
     [ObservableProperty] DateTime m_toDateTime;
+    [ObservableProperty] bool m_resolutionMinute;
     [ObservableProperty] bool m_resolutionHour;
     [ObservableProperty] bool m_resolutionDay;
     [ObservableProperty] bool m_resolutionWeek;
@@ -335,6 +337,7 @@ namespace TradeSharp.CoreUI.Services
 
     Task ShowNewChartAsync();
     Task ShowNewScannerAsync();
+    Task ShowNewEventStudyAsync();
 
     Task ShowNewPortfolioAsync();
   }

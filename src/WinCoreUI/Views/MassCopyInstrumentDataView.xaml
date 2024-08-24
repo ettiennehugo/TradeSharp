@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-  <Grid x:Name="m_main" ColumnDefinitions="150, 430, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *, Auto">
+  <Grid x:Name="m_main" ColumnDefinitions="150, 430, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, *, Auto">
     <TextBlock Text="Date/time range" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
     <StackPanel Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal">
       <TextBox x:Name="m_startDateTime" Text="{x:Bind DefaultStartDateTime, Mode=OneTime}" Width="200" Margin="3,3" VerticalAlignment="Center" PlaceholderText="yyyy/mm/dd hh:mm" TextChanged="m_startDateTime_TextChanged"/>
@@ -17,15 +17,16 @@
     </StackPanel>
     <TextBlock Text="Copy Threads" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1" ToolTipService.ToolTip="Thread count used to copy data"/>
     <Slider x:Name="m_threadCount" TickFrequency="1" TickPlacement="Outside" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,3,3,3" Value="{x:Bind Settings.ThreadCount, Mode=TwoWay}" Minimum="1" Maximum="{x:Bind ThreadCountMax, Mode=OneTime}"/>
-    <TextBlock Text="Resolutions" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1" Grid.RowSpan="4"/>
-    <Grid Grid.Column="1" Grid.Row="2" Grid.RowSpan="4" RowDefinitions="Auto, Auto, Auto, Auto, Auto">
+    <TextBlock Text="Resolutions" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2" Grid.RowSpan="5"/>
+    <Grid Grid.Column="1" Grid.Row="2" Grid.RowSpan="5" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto">
+      <CheckBox x:Name="m_resolutionMinute" Content="From Seconds to Minutes" IsChecked="{x:Bind Settings.ResolutionMinute, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
       <CheckBox x:Name="m_resolutionHour" Content="From Minute to Hour" IsChecked="{x:Bind Settings.ResolutionHour, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1"/>
       <CheckBox x:Name="m_resolutionDay" Content="From Hour to Day" IsChecked="{x:Bind Settings.ResolutionDay, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2"/>
       <CheckBox x:Name="m_resolutionWeek" Content="From Day to Week" IsChecked="{x:Bind Settings.ResolutionWeek, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3"/>
-      <CheckBox x:Name="m_resolutionMonth" Content="From Week to Month" IsChecked="{x:Bind Settings.ResolutionMonth, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4"/>
+      <CheckBox x:Name="m_resolutionMonth" Content="From Day to Month" IsChecked="{x:Bind Settings.ResolutionMonth, Mode=TwoWay}" Checked="m_resolutionCheckBox_Checked" Unchecked="m_resolutionCheckBox_Unchecked" Margin="3,3" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4"/>
     </Grid>
-    <local:InstrumentSelectionView x:Name="m_instrumentSelectionView" Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="3" Margin="3,3" InstrumentSelectionViewMode="SelectMulti" SelectionChanged="m_instrumentSelectionView_SelectionChanged"/>
-    <StackPanel Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="3" Margin="3,3" Orientation="Horizontal" HorizontalAlignment="Right">
+    <local:InstrumentSelectionView x:Name="m_instrumentSelectionView" Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="3" Margin="3,3" InstrumentSelectionViewMode="SelectMulti" SelectionChanged="m_instrumentSelectionView_SelectionChanged"/>
+    <StackPanel Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="3" Margin="3,3" Orientation="Horizontal" HorizontalAlignment="Right">
       <Button x:Name="m_copyBtn" Content="Copy" IsEnabled="False" Click="m_copyBtn_Click"/>
       <Button x:Name="m_cancelBtn" Content="Cancel" Click="m_cancelBtn_Click"/>
     </StackPanel>

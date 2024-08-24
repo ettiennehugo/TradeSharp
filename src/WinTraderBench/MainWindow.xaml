@@ -25,6 +25,9 @@
       <AppBarButton x:Name="m_newScannerButton" ToolTipService.ToolTip="New scanner window" Click="m_newScannerMenu_Click">
         <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEB44;" Margin="0"/>
       </AppBarButton>
+      <AppBarButton x:Name="m_newEVentStudyButton" ToolTipService.ToolTip="New event study window" Click="m_newEventStudyButton_Click">
+        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7BE;" Margin="0"/>
+      </AppBarButton>
     </CommandBar>
   </Grid>
 </Window>

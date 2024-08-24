@@ -145,9 +145,9 @@ namespace TradeSharp.WinCoreUI.ViewModels
             int start = m_offsetIndex;
             int end = m_offsetIndex + items.Count;
             if (items.Count > 0)
-              m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId}, From Date/Time: {m_fromDateTime}, To Date/Time: {m_toDateTime}, First bar date/time: {items[0].DateTime})");
+              m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId}, From Date/Time: {m_fromDateTime}, To Date/Time: {m_toDateTime}, First bar date/time: {items[0].DateTime}, Last bar date/time: {items[items.Count - 1].DateTime})");
             else
-              m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId}, From Date/Time: {m_fromDateTime}, To Date/Time: {m_toDateTime}, First bar date/time: no ars loaded)");
+              m_logger.LogInformation($"Loaded {items.Count} for requested count {count} range from {start} to {end} (Resolution: {Resolution}, ThreadId: {Thread.CurrentThread.ManagedThreadId}, From Date/Time: {m_fromDateTime}, To Date/Time: {m_toDateTime}, First/Last bar date/time: no bars loaded)");
           }
 
           m_offsetIndex += items.Count;

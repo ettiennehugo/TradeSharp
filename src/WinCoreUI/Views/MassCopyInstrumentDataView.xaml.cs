@@ -58,16 +58,14 @@ namespace TradeSharp.WinCoreUI.Views
         DateTime.TryParse(m_endDateTime.Text, out DateTime endDateTime) &&
         startDateTime < endDateTime &&
         m_instrumentSelectionView.SelectedItems.Count > 0 &&
-        ((bool)m_resolutionHour.IsChecked || (bool)m_resolutionDay.IsChecked || (bool)m_resolutionWeek.IsChecked || (bool)m_resolutionMonth.IsChecked);
+        ((bool)m_resolutionMinute.IsChecked || (bool)m_resolutionHour.IsChecked || (bool)m_resolutionDay.IsChecked || (bool)m_resolutionWeek.IsChecked || (bool)m_resolutionMonth.IsChecked);
     }
 
     private void m_copyBtn_Click(object sender, RoutedEventArgs e)
     {
       MassCopyInstrumentData massCopyInstrumentData = new MassCopyInstrumentData();
-      IMassCopyInstrumentData.Context context = new IMassCopyInstrumentData.Context();
-      context.DataProvider = DataProvider;
-      context.Settings = Settings;
-      context.Instruments = m_instrumentSelectionView.SelectedItems;
+      Settings.DataProvider = DataProvider;
+      IMassCopyInstrumentData.Context context = new IMassCopyInstrumentData.Context(Settings, m_instrumentSelectionView.SelectedItems);
       IDialogService dialogService = (IDialogService)IApplication.Current.Services.GetService(typeof(IDialogService));
       IProgressDialog progressDialog = dialogService.CreateProgressDialog("Mass Copy Progress", null);
       massCopyInstrumentData.StartAsync(progressDialog, context);

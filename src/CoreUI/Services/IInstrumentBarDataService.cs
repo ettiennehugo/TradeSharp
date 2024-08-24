@@ -15,7 +15,20 @@ namespace TradeSharp.CoreUI.Services
 
 
     //types
+    /// <summary>
+    /// Copy result structure for the Copy method.
+    /// </summary>
+    public struct CopyResult
+    {
+      public Resolution FromResolution = Resolution.Days;
+      public Resolution ToResolution = Resolution.Days;
+      public int FromCount = 0;
+      public int ToCount = 0;
+      public DateTime From = DateTime.Now;
+      public DateTime To = DateTime.Now;
 
+      public CopyResult() { }
+    }
 
     //attributes
 
@@ -34,6 +47,6 @@ namespace TradeSharp.CoreUI.Services
     /// NOTE: This method operates on the data available in the repository, so, if the repository
     ///       is not populated with data, this method will produce incorrect results.
     /// </summary>
-    void Copy(Resolution from, Resolution to, DateTime? fromDateTime = null, DateTime? toDateTime = null);
+    CopyResult Copy(Resolution from, Resolution to, DateTime? fromDateTime = null, DateTime? toDateTime = null);
   }
 }

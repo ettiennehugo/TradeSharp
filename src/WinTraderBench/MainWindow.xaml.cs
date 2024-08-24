@@ -40,6 +40,11 @@ namespace TradeSharp.WinTraderWorkbench
 
 
     //methods
+    private void m_exitMenu_Click(object sender, RoutedEventArgs e)
+    {
+      App.Current.Exit();
+    }
+
     private void m_newChartMenu_Click(object sender, RoutedEventArgs e)
     {
       m_dialogService.ShowNewChartAsync();
@@ -50,9 +55,9 @@ namespace TradeSharp.WinTraderWorkbench
       m_dialogService.ShowNewScannerAsync();
     }
 
-    private void m_exitMenu_Click(object sender, RoutedEventArgs e)
+    private void m_newEventStudyButton_Click(object sender, RoutedEventArgs e)
     {
-      App.Current.Exit();
+      m_dialogService.ShowNewEventStudyAsync();
     }
   }
 }

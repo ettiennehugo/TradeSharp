@@ -124,18 +124,38 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Seconds) m_barDataService.Copy(Resolution.Seconds, Resolution.Hours);
-        m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
+        IInstrumentBarDataService.CopyResult result = new IInstrumentBarDataService.CopyResult();
+        switch (Resolution)
+        {
+          case Resolution.Seconds:
+            result = m_barDataService.Copy(Resolution.Seconds, Resolution.Hours);
+            break;
+          case Resolution.Minutes:
+            result = m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
+            break;
+        }
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied {result.FromCount} bars to {result.ToCount} bars using date/time range {result.From} to {result.To}.");
       });
-
     }
 
     public virtual Task OnCopyToDayAsync()
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes, Resolution.Days);
-        m_barDataService.Copy(Resolution.Hours, Resolution.Days);
+        IInstrumentBarDataService.CopyResult result = new IInstrumentBarDataService.CopyResult();
+        switch (Resolution)
+        {
+          case Resolution.Seconds:
+            result = m_barDataService.Copy(Resolution.Seconds, Resolution.Days);
+            break;
+          case Resolution.Minutes:
+            result = m_barDataService.Copy(Resolution.Minutes, Resolution.Days);
+            break;
+          case Resolution.Hours:
+            result = m_barDataService.Copy(Resolution.Hours, Resolution.Days);
+            break;
+        }
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied {result.FromCount} bars to {result.ToCount} bars using date/time range {result.From} to {result.To}.");
       });
     }
 
@@ -143,10 +163,23 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Seconds) m_barDataService.Copy(Resolution.Seconds, Resolution.Weeks);
-        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes, Resolution.Weeks);
-        if (Resolution == Resolution.Hours) m_barDataService.Copy(Resolution.Hours, Resolution.Weeks);
-        m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+        IInstrumentBarDataService.CopyResult result = new IInstrumentBarDataService.CopyResult();
+        switch (Resolution)
+        {
+          case Resolution.Seconds:
+            result = m_barDataService.Copy(Resolution.Seconds, Resolution.Weeks);
+            break;
+          case Resolution.Minutes:
+            result = m_barDataService.Copy(Resolution.Minutes, Resolution.Weeks);
+            break;
+          case Resolution.Hours:
+            result = m_barDataService.Copy(Resolution.Hours, Resolution.Weeks);
+            break;
+          case Resolution.Days:
+            result = m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+            break;
+        }
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied {result.FromCount} bars to {result.ToCount} bars using date/time range {result.From} to {result.To}.");
       });
     }
 
@@ -154,11 +187,24 @@ namespace TradeSharp.CoreUI.ViewModels
     {
       return Task.Run(() =>
       {
-        if (Resolution == Resolution.Seconds) m_barDataService.Copy(Resolution.Seconds, Resolution.Months);
-        if (Resolution == Resolution.Minutes) m_barDataService.Copy(Resolution.Minutes, Resolution.Months);
-        if (Resolution == Resolution.Hours) m_barDataService.Copy(Resolution.Hours, Resolution.Months);
-        if (Resolution == Resolution.Days) m_barDataService.Copy(Resolution.Days, Resolution.Months);
-        m_barDataService.Copy(Resolution.Weeks, Resolution.Months);
+        IInstrumentBarDataService.CopyResult result = new IInstrumentBarDataService.CopyResult();
+        switch (Resolution)
+        {
+          case Resolution.Seconds:
+            result = m_barDataService.Copy(Resolution.Seconds, Resolution.Months);
+            break;
+          case Resolution.Minutes:
+            result = m_barDataService.Copy(Resolution.Minutes, Resolution.Months);
+            break;
+          case Resolution.Hours:
+            result = m_barDataService.Copy(Resolution.Hours, Resolution.Months);
+            break;
+          case Resolution.Days:
+          case Resolution.Weeks:    //can not copy from weeks to months because the month end is not guaranteed to be the same as the week end
+            result = m_barDataService.Copy(Resolution.Days, Resolution.Months);
+            break;
+        }
+        m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied {result.FromCount} bars to {result.ToCount} bars using date/time range {result.From} to {result.To}.");
       });
     }
 
@@ -169,29 +215,44 @@ namespace TradeSharp.CoreUI.ViewModels
         switch (Resolution)
         {
           case Resolution.Seconds:
-            m_barDataService.Copy(Resolution.Seconds, Resolution.Minutes);
-            m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
-            m_barDataService.Copy(Resolution.Hours, Resolution.Days);
-            m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
-            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+            {
+              IInstrumentBarDataService.CopyResult minutesResult = m_barDataService.Copy(Resolution.Seconds, Resolution.Minutes);
+              IInstrumentBarDataService.CopyResult hoursResult = m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
+              IInstrumentBarDataService.CopyResult daysResult = m_barDataService.Copy(Resolution.Hours, Resolution.Days);
+              IInstrumentBarDataService.CopyResult weeksResult = m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+              IInstrumentBarDataService.CopyResult monthsResult = m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied - Seconds/Minutes: {minutesResult.FromCount}/{minutesResult.ToCount}  Minutes/Hours: {hoursResult.FromCount}/{hoursResult.ToCount} Hours/Days: {daysResult.FromCount}/{daysResult.ToCount}  Days/Weeks: {weeksResult.FromCount}/{weeksResult.ToCount}   Days/Months: {monthsResult.FromCount}/{monthsResult.ToCount}");
+            }
             break;
           case Resolution.Minutes:
-            m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
-            m_barDataService.Copy(Resolution.Hours, Resolution.Days);
-            m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
-            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+            {
+              IInstrumentBarDataService.CopyResult hoursResult = m_barDataService.Copy(Resolution.Minutes, Resolution.Hours);
+              IInstrumentBarDataService.CopyResult daysResult = m_barDataService.Copy(Resolution.Hours, Resolution.Days);
+              IInstrumentBarDataService.CopyResult weeksResult = m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+              IInstrumentBarDataService.CopyResult monthsResult = m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied - Minutes/Hours: {hoursResult.FromCount}/{hoursResult.ToCount} Hours/Days: {daysResult.FromCount}/{daysResult.ToCount}  Days/Weeks: {weeksResult.FromCount}/{weeksResult.ToCount}   Days/Months: {monthsResult.FromCount}/{monthsResult.ToCount}");
+            }
             break;
           case Resolution.Hours:
-            m_barDataService.Copy(Resolution.Hours, Resolution.Days);
-            m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
-            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+            {
+              IInstrumentBarDataService.CopyResult daysResult = m_barDataService.Copy(Resolution.Hours, Resolution.Days);
+              IInstrumentBarDataService.CopyResult weeksResult = m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+              IInstrumentBarDataService.CopyResult monthsResult = m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied - Hours/Days: {daysResult.FromCount}/{daysResult.ToCount}  Days/Weeks: {weeksResult.FromCount}/{weeksResult.ToCount}   Days/Months: {monthsResult.FromCount}/{monthsResult.ToCount}");
+            }
             break;
           case Resolution.Days:
-            m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
-            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+            {
+              IInstrumentBarDataService.CopyResult weeksResult = m_barDataService.Copy(Resolution.Days, Resolution.Weeks);
+              IInstrumentBarDataService.CopyResult monthsResult = m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied - Days/Weeks: {weeksResult.FromCount}/{weeksResult.ToCount}   Days/Months: {monthsResult.FromCount}/{monthsResult.ToCount}");
+            }
             break;
           case Resolution.Weeks:
-            m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+            {
+              IInstrumentBarDataService.CopyResult monthsResult = m_barDataService.Copy(Resolution.Days, Resolution.Months);  //NOTE: Months needs to come from daily data to ensure correct month end (can not come from weeks).
+              m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Information, "Done", $"Copied - Days/Months: {monthsResult.FromCount}/{monthsResult.ToCount}");
+            }
             break;
         }
       });

@@ -8,6 +8,8 @@ using CsvHelper;
 using System.Globalization;
 using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
+using System.Diagnostics;
+using static TradeSharp.CoreUI.Services.IInstrumentBarDataService;
 
 namespace TradeSharp.CoreUI.Services
 {
@@ -19,6 +21,7 @@ namespace TradeSharp.CoreUI.Services
     //constants
     private const string extensionCSV = ".csv";
     private const string extensionJSON = ".json";
+    //long form field names
     private const string tokenCsvDateTime = "datetime";
     private const string tokenCsvDate = "date";
     private const string tokenCsvTime = "time";
@@ -36,6 +39,24 @@ namespace TradeSharp.CoreUI.Services
     private const string tokenJsonClose = "close";
     private const string tokenJsonVolume = "volume";
 
+    //short form field names
+    private const string tokenCsvDateTimeShort = "dt";
+    private const string tokenCsvDateShort = "d";
+    private const string tokenCsvTimeShort = "t";
+    private const string tokenCsvOpenShort = "o";
+    private const string tokenCsvHighShort = "h";
+    private const string tokenCsvLowShort = "l";
+    private const string tokenCsvCloseShort = "c";
+    private const string tokenCsvVolumeShort = "v";
+    private const string tokenJsonDateTimeShort = "dt";
+    private const string tokenJsonDateShort = "d";
+    private const string tokenJsonTimeShort = "t";
+    private const string tokenJsonOpenShort = "o";
+    private const string tokenJsonHighShort = "h";
+    private const string tokenJsonLowShort = "l";
+    private const string tokenJsonCloseShort = "c";
+    private const string tokenJsonVolumeShort = "v";
+
     //enums
 
 
@@ -47,15 +68,17 @@ namespace TradeSharp.CoreUI.Services
     private IConfigurationService m_configurationService;
     private IBarData? m_selectedItem;
     private ILogger<InstrumentBarDataService> m_logger;
+    private IExchangeService m_exchangeService;
     private IDatabase m_database;
 
     //constructors
-    public InstrumentBarDataService(IInstrumentBarDataRepository repository, ILogger<InstrumentBarDataService> logger, IDatabase database, IConfigurationService configurationService, IDialogService dialogService) : base(dialogService)
+    public InstrumentBarDataService(IInstrumentBarDataRepository repository, ILogger<InstrumentBarDataService> logger, IDatabase database, IConfigurationService configurationService, IExchangeService exchangeService, IDialogService dialogService) : base(dialogService)
     {
       m_logger = logger;
       m_database = database;
       m_repository = repository;
       m_configurationService = configurationService;
+      m_exchangeService = exchangeService;
       DataProvider = string.Empty;
       Instrument = null;
       Resolution = Resolution.Days;
@@ -217,14 +240,18 @@ namespace TradeSharp.CoreUI.Services
       throw new Exception("Invalid resolution.");
     }
 
-    public void Copy(Resolution from, Resolution to, DateTime? fromDateTime = null, DateTime? toDateTime = null)
+    public CopyResult Copy(Resolution from, Resolution to, DateTime? fromDateTime = null, DateTime? toDateTime = null)
     {
+      CopyResult result = new CopyResult();
+      result.FromResolution = from;
+      result.ToResolution = to;
+
       //make sure the from resolution is lower than the to resolution
       if (Debugging.Copy && from >= to)
       {
         string statusMessage = $"The from resolution {from} must be lower than the to resolution {to}.";
         m_logger.LogError(statusMessage);
-        return;
+        return result;
       }
 
       //NOTE: Should not try to copy months from weeks since end of month is not the same as end of week and the last week in the
@@ -236,12 +263,43 @@ namespace TradeSharp.CoreUI.Services
       DateTime internalFromDateTime = fromDateTime ?? Constants.DefaultMinimumDateTime;
       DateTime internalToDateTime = toDateTime ?? Constants.DefaultMaximumDateTime;
 
+      //determine the date/time timezone in which data needs to be copied and convert the time filters to that
+      IConfigurationService.TimeZone timeZoneToUse = (IConfigurationService.TimeZone)m_configurationService.General[IConfigurationService.GeneralConfiguration.TimeZone];
+
+      switch (timeZoneToUse)
+      {
+        case IConfigurationService.TimeZone.Local:
+          internalFromDateTime = internalFromDateTime.ToLocalTime();
+          internalToDateTime = internalToDateTime.ToLocalTime();
+          break;
+        case IConfigurationService.TimeZone.Exchange:
+          Exchange? exchange = m_exchangeService.Items.FirstOrDefault(x => x.Id == Instrument!.PrimaryExchangeId);
+          if (exchange != null)
+          {
+            internalFromDateTime = TimeZoneInfo.ConvertTimeToUtc(internalFromDateTime, exchange.TimeZone);
+            internalToDateTime = TimeZoneInfo.ConvertTimeToUtc(internalToDateTime, exchange.TimeZone);
+          }
+          else
+          {
+            m_logger.LogError($"Failed to find exchange with id \"{Instrument!.PrimaryExchangeId}\" for instrument \"{Instrument!.Ticker}\" to perform time-zone conversions.");
+            m_dialogService.ShowStatusMessageAsync(IDialogService.StatusMessageSeverity.Error, "", "Failed to find exchange to perform time-zone conversions.");
+            return result;
+          }
+          break;
+          //case IConfigurationService.TimeZone.UTC: - no conversion needed
+      }
+
+      result.From = internalFromDateTime;
+      result.To = internalToDateTime;
+
+      //get the bar data services for the copy operation
       IInstrumentBarDataRepository fromRepository = (IInstrumentBarDataRepository)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataRepository))!;
       IInstrumentBarDataRepository toRepository = (IInstrumentBarDataRepository)IApplication.Current.Services.GetService(typeof(IInstrumentBarDataRepository))!;
       fromRepository.DataProvider = DataProvider;
       fromRepository.Instrument = Instrument;
       fromRepository.Resolution = from;
       IList<IBarData> fromBarData = fromRepository.GetItems(internalFromDateTime, internalToDateTime);
+      result.FromCount = fromBarData.Count;
 
       toRepository.DataProvider = DataProvider;
       toRepository.Instrument = Instrument;
@@ -271,8 +329,15 @@ namespace TradeSharp.CoreUI.Services
       }
       if (Debugging.Copy) m_logger.LogInformation($"Copied {fromBarData.Count} bars defined in {fromRepository.Resolution} resolution to {toBarData.Count} bars in resolution {toRepository.Resolution}.");
 
-      if (toBarData.Count > 0) toRepository.Delete(internalFromDateTime, internalToDateTime); //we replace the bars of data
+      //remove existing bars that will be replaced by new data
+      result.ToCount = toBarData.Count;
+      if (toBarData.Count > 0)
+        toRepository.Delete(internalFromDateTime, internalToDateTime);
+
+      //update the database with the new bars
       toRepository.Update(toBarData);
+
+      return result;
     }
 
     public bool Update(IBarData item)
@@ -425,21 +490,21 @@ namespace TradeSharp.CoreUI.Services
           for (int columnIndex = 0; columnIndex < csv.HeaderRecord.Count(); columnIndex++)
           {
             string columnName = csv.HeaderRecord[columnIndex].ToLower();
-            if (columnName == tokenCsvDateTime)
+            if (columnName == tokenCsvDateTime || columnName == tokenCsvDateTimeShort)
               dateTimeFound = true;
-            else if (columnName == tokenCsvDate)
+            else if (columnName == tokenCsvDate || columnName == tokenCsvDateShort)
               dateFound = true;
-            else if (columnName == tokenCsvTime)
+            else if (columnName == tokenCsvTime || columnName == tokenCsvTimeShort)
               timeFound = true;
-            else if (columnName == tokenCsvOpen)
+            else if (columnName == tokenCsvOpen || columnName == tokenCsvOpenShort)
               openFound = true;
-            else if (columnName == tokenCsvHigh)
+            else if (columnName == tokenCsvHigh || columnName == tokenCsvHighShort)
               highFound = true;
-            else if (columnName == tokenCsvLow)
+            else if (columnName == tokenCsvLow || columnName == tokenCsvLowShort)
               lowFound = true;
-            else if (columnName == tokenCsvClose)
+            else if (columnName == tokenCsvClose || columnName == tokenCsvCloseShort)
               closeFound = true;
-            else if (columnName == tokenCsvVolume)
+            else if (columnName == tokenCsvVolume || columnName == tokenCsvVolumeShort)
               volumeFound = true;
           }
 
@@ -482,13 +547,14 @@ namespace TradeSharp.CoreUI.Services
                 string? columnValue = null;
                 if (csv.TryGetField(columnIndex, out columnValue))
                 {
-                  if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDateTime)
+                  string columnName = csv.HeaderRecord[columnIndex].ToLower();
+                  if (columnName == tokenCsvDateTime || columnName == tokenCsvDateTimeShort)
                   {
                     //convert input date/time value and filter the bar data if needed
                     dateTime = convertImportDateTime(columnValue!, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
                     filterBar = unconvertedDateTime < importSettings.FromDateTime && unconvertedDateTime > importSettings.ToDateTime;
                   }
-                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvDate)
+                  else if (columnName == tokenCsvDate || columnName == tokenCsvDateShort)
                   {
                     date = DateOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
                     if (date != null && time != null)
@@ -498,7 +564,7 @@ namespace TradeSharp.CoreUI.Services
                       filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
                     }
                   }
-                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvTime)
+                  else if (columnName == tokenCsvTime || columnName == tokenCsvTimeShort)
                   {
                     time = TimeOnly.Parse(columnValue!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
                     if (date != null && time != null)
@@ -508,15 +574,15 @@ namespace TradeSharp.CoreUI.Services
                       filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
                     }
                   }
-                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvOpen)
+                  else if (columnName == tokenCsvOpen || columnName == tokenCsvOpenShort)
                     open = double.Parse(columnValue!);
-                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvHigh)
+                  else if (columnName == tokenCsvHigh || columnName == tokenCsvHighShort)
                     high = double.Parse(columnValue!);
-                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvLow)
+                  else if (columnName == tokenCsvLow || columnName == tokenCsvLowShort)
                     low = double.Parse(columnValue!);
-                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvClose)
+                  else if (columnName == tokenCsvClose || columnName == tokenCsvCloseShort)
                     close = double.Parse(columnValue!);
-                  else if (csv.HeaderRecord[columnIndex].ToLower() == tokenCsvVolume)
+                  else if (columnName == tokenCsvVolume || columnName == tokenCsvVolumeShort)
                     volume = double.Parse(columnValue!);
                 }
               }
@@ -606,10 +672,22 @@ namespace TradeSharp.CoreUI.Services
               dateTime = convertImportDateTime(barDataJson![tokenJsonDateTime]!.AsValue().Deserialize<string>()!, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
               filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
             }
+            if (barDataJson!.ContainsKey(tokenJsonDateTimeShort))
+            {
+              dateTime = convertImportDateTime(barDataJson![tokenJsonDateTimeShort]!.AsValue().Deserialize<string>()!, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
+              filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
+            }
             else if (barDataJson!.ContainsKey(tokenJsonDate) && barDataJson!.ContainsKey(tokenJsonTime))
             {
               DateOnly date = DateOnly.Parse(barDataJson![tokenJsonDate]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
               TimeOnly time = TimeOnly.Parse(barDataJson![tokenJsonTime]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
+              dateTime = convertImportDateTime((DateOnly)date, (TimeOnly)time, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
+              filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
+            }
+            else if (barDataJson!.ContainsKey(tokenJsonDateShort) && barDataJson!.ContainsKey(tokenJsonTimeShort))
+            {
+              DateOnly date = DateOnly.Parse(barDataJson![tokenJsonDateShort]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
+              TimeOnly time = TimeOnly.Parse(barDataJson![tokenJsonTimeShort]!.AsValue().Deserialize<string>()!, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces);
               dateTime = convertImportDateTime((DateOnly)date, (TimeOnly)time, importSettings.DateTimeTimeZone, exchange, out DateTime unconvertedDateTime);
               filterBar = unconvertedDateTime < importSettings.FromDateTime || unconvertedDateTime > importSettings.ToDateTime;
             }
@@ -624,11 +702,60 @@ namespace TradeSharp.CoreUI.Services
             //skip bars that are not within the import date/time range
             if (filterBar) continue;
 
-            double open = barDataJson![tokenJsonOpen]!.AsValue().Deserialize<double>();
-            double high = barDataJson![tokenJsonHigh]!.AsValue().Deserialize<double>();
-            double low = barDataJson![tokenJsonLow]!.AsValue().Deserialize<double>();
-            double close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
-            double volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<double>();
+            double open = -1.0;
+            if (barDataJson!.ContainsKey(tokenJsonOpenShort))
+              open = barDataJson![tokenJsonOpenShort]!.AsValue().Deserialize<double>();
+            else if (barDataJson!.ContainsKey(tokenJsonOpen))
+              open = barDataJson![tokenJsonOpen]!.AsValue().Deserialize<double>();
+            else
+            {
+              m_logger.LogError($"Failed to find open for bar data at \"{barDataJson.ToString()}\"");
+              continue;
+            }
+
+            double high = -1.0;
+            if (barDataJson!.ContainsKey(tokenJsonHighShort))
+              high = barDataJson![tokenJsonHighShort]!.AsValue().Deserialize<double>();
+            else if (barDataJson!.ContainsKey(tokenJsonHigh))
+              high = barDataJson![tokenJsonHigh]!.AsValue().Deserialize<double>();
+            else
+            {
+              m_logger.LogError($"Failed to find high for bar data at \"{barDataJson.ToString()}\"");
+              continue;
+            }
+
+            double low = -1.0;
+            if (barDataJson!.ContainsKey(tokenJsonLowShort))
+              low = barDataJson![tokenJsonLowShort]!.AsValue().Deserialize<double>();
+            else if (barDataJson!.ContainsKey(tokenJsonLow))
+              low = barDataJson![tokenJsonLow]!.AsValue().Deserialize<double>();
+            else
+            {
+              m_logger.LogError($"Failed to find low for bar data at \"{barDataJson.ToString()}\"");
+              continue;
+            }
+
+            double close = -1.0;
+            if (barDataJson!.ContainsKey(tokenJsonCloseShort))
+              close = barDataJson![tokenJsonCloseShort]!.AsValue().Deserialize<double>();
+            else if (barDataJson!.ContainsKey(tokenJsonClose))
+              close = barDataJson![tokenJsonClose]!.AsValue().Deserialize<double>();
+            else
+            {
+              m_logger.LogError($"Failed to find close for bar data at \"{barDataJson.ToString()}\"");
+              continue;
+            }
+
+            double volume = -1.0;
+            if (barDataJson!.ContainsKey(tokenJsonVolumeShort))
+              volume = barDataJson![tokenJsonVolumeShort]!.AsValue().Deserialize<double>();
+            else if (barDataJson!.ContainsKey(tokenJsonVolume))
+              volume = barDataJson![tokenJsonVolume]!.AsValue().Deserialize<double>();
+            else
+            {
+              m_logger.LogError($"Failed to find volume for bar data at \"{barDataJson.ToString()}\"");
+              continue;
+            }
 
             bars.Add(new BarData(Resolution, dateTime, PriceFormatMask, open, high, low, close, volume));
             barsUpdated++; //we do not check for create since it would mean we need to search through all the data constantly
@@ -754,6 +881,7 @@ namespace TradeSharp.CoreUI.Services
           DateTime exportDateTime = convertExportDateTime(barData.DateTime, dbTimeZoneUsed, exportSettings.DateTimeTimeZone, exchange);
           if (exportDateTime <= exportSettings.FromDateTime || exportDateTime >= exportSettings.ToDateTime) continue; //skip bars that are not within the export date/time range
 
+          //NOTE: We use the SHORT form names for the JSON data as it would spare some file space when exporting large amounts of data.
           //NOTE: We need to output the data in a very specific format to ensure that date/time parsing will work when importing the data (DateTime.Parse will fail if the format is not correct).
           // o format = s: 2008-06-15T21:15:07.0000000 (not currently used since it's not needed).
           // s format = s: 2008-06-15T21:15:07
@@ -761,12 +889,12 @@ namespace TradeSharp.CoreUI.Services
 
           JsonObject barDataJson = new JsonObject
           {
-            [tokenJsonDateTime] = dateTimeStr,
-            [tokenJsonOpen] = barData.Open,
-            [tokenJsonHigh] = barData.High,
-            [tokenJsonLow] = barData.Low,
-            [tokenJsonClose] = barData.Close,
-            [tokenJsonVolume] = barData.Volume,
+            [tokenJsonDateTimeShort] = dateTimeStr,
+            [tokenJsonOpenShort] = barData.Open,
+            [tokenJsonHighShort] = barData.High,
+            [tokenJsonLowShort] = barData.Low,
+            [tokenJsonCloseShort] = barData.Close,
+            [tokenJsonVolumeShort] = barData.Volume,
           };
 
           file.Write(barDataJson.ToJsonString(options));

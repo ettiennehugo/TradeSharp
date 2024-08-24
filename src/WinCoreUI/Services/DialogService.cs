@@ -632,6 +632,16 @@ namespace TradeSharp.WinDataManager.Services
 
     }
 
+    public Task ShowNewEventStudyAsync()
+    {
+
+      //TODO: Implement scanner Window
+      ShowPopupMessageAsync("Event Study Window not implemented yet");
+
+      return Task.CompletedTask;
+    }
+
+
     public Task ShowNewPortfolioAsync()
     {
       

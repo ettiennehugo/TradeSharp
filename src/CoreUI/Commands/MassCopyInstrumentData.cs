@@ -92,10 +92,21 @@ namespace TradeSharp.CoreUI.Services
           // * We only add instruments that are going to be copied OR instruments that have data on the database to copy to the longer timeframes.
           progressDialog.LogInformation($"Starting mass copy of instrument data for {m_context.Instruments.Count} instruments");
 
+          Stack<CopyInstrument> secondToMinuteList = new Stack<CopyInstrument>();
           Stack<CopyInstrument> minuteToHourList = new Stack<CopyInstrument>();
           Stack<CopyInstrument> hourToDayList = new Stack<CopyInstrument>();
           Stack<CopyInstrument> dayToWeekList = new Stack<CopyInstrument>();
-          Stack<CopyInstrument> weekToMonthList = new Stack<CopyInstrument>();
+          Stack<CopyInstrument> dayToMonthList = new Stack<CopyInstrument>();
+
+          if (m_context.Settings.ResolutionMinute)
+            foreach (Instrument instrument in m_context.Instruments)
+              if (m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Seconds, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
+              {
+                CopyInstrument copyInstrument = new CopyInstrument();
+                copyInstrument.Resolution = Resolution.Seconds;
+                copyInstrument.Instrument = instrument;
+                secondToMinuteList.Push(copyInstrument);
+              }
 
           if (m_context.Settings.ResolutionHour)
             foreach (Instrument instrument in m_context.Instruments)
@@ -132,21 +143,22 @@ namespace TradeSharp.CoreUI.Services
           if (m_context.Settings.ResolutionMonth)
             foreach (Instrument instrument in m_context.Instruments)
               if (dayToWeekList.FirstOrDefault(x => x.Instrument == instrument) != null ||   //going to construct the weekly bars from the daily bars
-                  m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Weeks, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
+                  m_database.GetDataCount(m_context.Settings.DataProvider, instrument.Ticker, Resolution.Days, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime) > 0)
               {
                 CopyInstrument copyInstrument = new CopyInstrument();
-                copyInstrument.Resolution = Resolution.Weeks;
+                copyInstrument.Resolution = Resolution.Days;
                 copyInstrument.Instrument = instrument;
-                weekToMonthList.Push(copyInstrument);
+                dayToMonthList.Push(copyInstrument);
               }
 
+          secondToMinuteList = reverseStack(secondToMinuteList);
           minuteToHourList = reverseStack(minuteToHourList);
           hourToDayList = reverseStack(hourToDayList);
           dayToWeekList = reverseStack(dayToWeekList);
-          weekToMonthList = reverseStack(weekToMonthList);
+          dayToMonthList = reverseStack(dayToMonthList);
 
           //output status message and return if there are no instruments to copy
-          int totalToCopyCount = minuteToHourList.Count + hourToDayList.Count + dayToWeekList.Count + weekToMonthList.Count;
+          int totalToCopyCount = secondToMinuteList.Count + minuteToHourList.Count + hourToDayList.Count + dayToWeekList.Count + dayToMonthList.Count;
           if (totalToCopyCount == 0)
           {
             State = CommandState.Completed;
@@ -163,12 +175,13 @@ namespace TradeSharp.CoreUI.Services
 
           //copy all the instrument data according to the defined data resolutions
           //NOTE: We wait to for the copletion of one resolution before starting the next resolution to ensure that the lower timeframes are available to construct the higher timeframes
-          progressDialog.LogInformation($"Starting mass copy for \"{m_context.DataProvider}\" of instrument data, constructed {totalToCopyCount} instrument/resolution pairs (look at attempted count for actual number of instruments copied)");
+          progressDialog.LogInformation($"Starting mass copy for \"{m_context.Settings.DataProvider}\" of instrument data, constructed {totalToCopyCount} instrument/resolution pairs (look at attempted count for actual number of instruments copied)");
 
-          copyInstrumentData(Resolution.Minutes, minuteToHourList, progressDialog);
-          copyInstrumentData(Resolution.Hours, hourToDayList, progressDialog);
-          copyInstrumentData(Resolution.Days, dayToWeekList, progressDialog);
-          copyInstrumentData(Resolution.Weeks, weekToMonthList, progressDialog);
+          copyInstrumentData(Resolution.Seconds, Resolution.Minutes, secondToMinuteList, progressDialog);
+          copyInstrumentData(Resolution.Minutes, Resolution.Hours, minuteToHourList, progressDialog);
+          copyInstrumentData(Resolution.Hours, Resolution.Days, hourToDayList, progressDialog);
+          copyInstrumentData(Resolution.Days, Resolution.Weeks, dayToWeekList, progressDialog);
+          copyInstrumentData(Resolution.Days, Resolution.Months, dayToMonthList, progressDialog);
 
           progressDialog.Complete = true;
           progressDialog.StatusMessage = $"Copy complete - {m_successCount} instrument/resolutions successfully copied, {m_failureCount} failed";
@@ -195,7 +208,7 @@ namespace TradeSharp.CoreUI.Services
       return output;
     }
 
-    private void copyInstrumentData(Resolution fromResolution, Stack<CopyInstrument> list, IProgressDialog progressDialog)
+    private void copyInstrumentData(Resolution fromResolution, Resolution toResolution, Stack<CopyInstrument> list, IProgressDialog progressDialog)
     {
       if (list.Count == 0) return;
 
@@ -227,10 +240,7 @@ namespace TradeSharp.CoreUI.Services
               {
                 lock (m_attemptedInstrumentCountLock) m_attemptedInstrumentCount++;
                 //monthly resolution needs to be copied from daily resolution
-                if (fromResolution == Resolution.Weeks)
-                  instrumentBarDataService.Copy(Resolution.Days, Resolution.Months, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime);
-                else
-                  instrumentBarDataService.Copy(copyInstrument!.Resolution, copyInstrument!.Resolution + 1, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime);
+                instrumentBarDataService.Copy(fromResolution, toResolution, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime);
                 lock (m_successCountLock) m_successCount++;
               }
               catch (Exception e)

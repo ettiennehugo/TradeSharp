@@ -20,9 +20,14 @@ namespace TradeSharp.CoreUI.Commands
     /// </summary>
     public struct Context
     {
-      public string DataProvider;
       public MassCopySettings Settings;
       public IList<Instrument> Instruments;
+
+      public Context(MassCopySettings settings, IList<Instrument> instruments)
+      {
+        Settings = settings;
+        Instruments = instruments;
+      }
     }
 
     //attributes

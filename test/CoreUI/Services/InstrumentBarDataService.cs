@@ -107,6 +107,11 @@ namespace TradeSharp.CoreUI.Testing.Services
 
     //NOTE: Copying data to the month timeframe should be copied from the days data since the end of the last week of a month will not correctly align
     //      with the end of the month (e.g. last Friday is not always the end of the month).
+    public static readonly List<IBarData> ExistingMonthlyBars = new List<IBarData>()    //used to test against partial month data existing that needs to be removed
+    {
+      new BarData(Resolution.Months, new DateTime(2024, 8, 30, 21, 0, 0, DateTimeKind.Utc), "0.0000", 28.03, 30.00, 26.70, 28.83, 790689803),
+      new BarData(Resolution.Months, new DateTime(2024, 9, 12, 21, 0, 0, DateTimeKind.Utc), "0.0000", 28.59, 29.46, 27.75, 28.91, 451044056),
+    };
     public static readonly List<IBarData> MonthlyBars = new List<IBarData>()
     {
       new BarData(Resolution.Months, new DateTime(2024, 8, 30, 21, 0, 0, DateTimeKind.Utc), "0.0000", 28.03, 30.00, 26.70, 28.83, 790689803),
@@ -132,6 +137,7 @@ namespace TradeSharp.CoreUI.Testing.Services
     private Mock<IDatabase> m_database;
     private Mock<IConfigurationService> m_configurationService;
     private Mock<IDialogService> m_dialogService;
+    private Mock<IExchangeService> m_exchangeService;
     private Country m_country;
     private Exchange m_nasdaq;
     private TimeZoneInfo m_timeZone;
@@ -165,12 +171,13 @@ namespace TradeSharp.CoreUI.Testing.Services
       m_configurationService = new Mock<IConfigurationService>();
       m_configurationService.Setup(x => x.General[IConfigurationService.GeneralConfiguration.TimeZone]).Returns(IConfigurationService.TimeZone.UTC);
       m_dialogService = new Mock<IDialogService>();
+      m_exchangeService = new Mock<IExchangeService>();
       m_application = new Mock<IApplication>();
       m_serviceProvider = new Mock<IServiceProvider>();
       m_application.SetupGet(x => x.Services).Returns(m_serviceProvider.Object);
       IApplication.Current = m_application.Object;
 
-      m_instrumentBarDataService = new CoreUI.Services.InstrumentBarDataService(m_barDataRepository.Object, m_logger.Object, m_database.Object, m_configurationService.Object, m_dialogService.Object);      
+      m_instrumentBarDataService = new CoreUI.Services.InstrumentBarDataService(m_barDataRepository.Object, m_logger.Object, m_database.Object, m_configurationService.Object, m_exchangeService.Object, m_dialogService.Object);      
     }
 
     ~InstrumentBarDataService()
@@ -213,15 +220,20 @@ namespace TradeSharp.CoreUI.Testing.Services
     public void Copy_DaysToMonths_Success()
     {
       List<IBarData>? result = null;
+      bool deleteCalled = false;
       m_fromBarDataRepository.Setup(x => x.GetItems(It.IsAny<DateTime>(), It.IsAny<DateTime>())).Returns((IList<IBarData>)DialyBars);
+      m_toBarDataRepository.Setup(x => x.GetItems(It.IsAny<DateTime>(), It.IsAny<DateTime>())).Returns((IList<IBarData>)ExistingMonthlyBars);
       m_toBarDataRepository.Setup(x => x.Update(It.IsAny<IList<IBarData>>())).Callback((IList<IBarData> bars) => result = (List<IBarData>)bars);
       m_toBarDataRepository.SetupGet(x => x.Resolution).Returns(Resolution.Months);
+      m_toBarDataRepository.Setup(x => x.Delete(It.IsAny<DateTime>(), It.IsAny<DateTime>())).Callback(() => deleteCalled = true);
+
       m_serviceProvider.SetupSequence(m_serviceProvider => m_serviceProvider.GetService(typeof(IInstrumentBarDataRepository)))
         .Returns(m_fromBarDataRepository.Object)
         .Returns(m_toBarDataRepository.Object);
 
       m_instrumentBarDataService.Copy(Resolution.Days, Resolution.Months, StartDate, EndDate);
 
+      Assert.IsTrue(deleteCalled, "Stale data was not removed");
       Assert.IsNotNull(result);
       Assert.AreEqual(MonthlyBars.Count, result.Count);
       for (int i = 0; i < MonthlyBars.Count; i++)
