@@ -56,13 +56,15 @@ namespace TradeSharp.CoreUI.Services
     public override Task StartAsync(IProgressDialog progressDialog, object? context)
     {
 
-      if (context is not IMassCopyInstrumentData.Context m_context)
+      if (context is not IMassCopyInstrumentData.Context)
       {
         progressDialog.LogError("Failed to start mass copy, invalid context provided");
         State = CommandState.Failed;
         return Task.CompletedTask;
       }
       
+      m_context = (IMassCopyInstrumentData.Context)context;
+
       if (m_context.Instruments.Count == 0) 
       {
         progressDialog.LogError("Failed to start mass copy, no instruments selected");
@@ -246,13 +248,13 @@ namespace TradeSharp.CoreUI.Services
               catch (Exception e)
               {
                 lock (m_failureCountLock) m_failureCount++;
-                progressDialog.LogError($"EXCEPTION: Failed to copy instrument data for \"{copyInstrument.Instrument.Ticker}\" at resolution \"{copyInstrument.Resolution}\" (Exception: \"{e.Message}\")");
+                progressDialog.LogError($"Failed to copy instrument data for \"{copyInstrument.Instrument.Ticker}\" at resolution \"{copyInstrument.Resolution}\" (Exception: \"{e.Message}\")");
               }
 
               lock (m_attemptedInstrumentCountLock) m_attemptedInstrumentCount++;
 
               //update progress after copying instrument data
-              progressDialog.Progress = progressDialog.Progress + 1;
+              progressDialog.Progress++;
             }
 
             progressDialog.LogInformation($"Ending worker thread for copy of instrument data for data provider \"{m_context.Settings.DataProvider}\" from resolution {fromResolution} to resolution {fromResolution + 1} (Thread id: {Task.CurrentId})");

@@ -144,25 +144,18 @@ namespace TradeSharp.CoreUI.Services
                   if (m_dataProvider.Request(downloadCombination.Item2, downloadCombination.Item1, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime))
                     lock (successCountLock) m_requestSuccessCount++;
                   else
-                    lock (failureCountLock) m_requestFailureCount++;
+                    retryRequest(downloadCombination, retryCounts, downloadCombinations, failureCountLock);
                 }
                 catch (Exception e)
                 {
-                  m_progressDialog.LogError($"EXCEPTION: Request on instrument {downloadCombination.Item2.Ticker}, resolution {downloadCombination.Item1} failed - (Exception: \"{e.Message}\"");
-                  //requeue the request if it is still under the retry count threshold
-                  if (retryCounts.ContainsKey(downloadCombination))
-                  {
-                    lock (retryCounts) retryCounts[downloadCombination]++;
-                    if (retryCounts[downloadCombination] < m_context.Settings.RetryCount) lock (downloadCombinations) downloadCombinations.Enqueue(downloadCombination);  //requeue the request to try again later
-                  }
-                  else if (m_context.Settings.RetryCount > 0)
-                    lock(retryCounts) retryCounts.Add(downloadCombination, 1);
+                  m_progressDialog.LogError($"Request on instrument {downloadCombination.Item2.Ticker}, resolution {downloadCombination.Item1} failed - (Exception: \"{e.Message}\"");
+                  retryRequest(downloadCombination, retryCounts, downloadCombinations, failureCountLock);
                 }
                 m_progressDialog.Progress++;
               }));
             }
 
-            //wait for all threads to complete and then clear the list for next block
+            //wait for all threads to complete and then clear the list for next block to download
             try { Task.WaitAll(tasks.ToArray(), m_progressDialog.CancellationTokenSource.Token); } catch (OperationCanceledException) { }
             tasks.Clear();
           }
@@ -171,7 +164,7 @@ namespace TradeSharp.CoreUI.Services
           {
             //adjust the progress maximum to account for the requests that failed to be sent
             m_progressDialog.Maximum -= m_requestFailureCount;
-            m_progressDialog.StatusMessage = $"Waiting for {m_requestSuccessCount} responses from requests that were successfully sent ({m_requestFailureCount} - requests failed).";
+            m_progressDialog.StatusMessage = $"Waiting for {m_requestSuccessCount - m_requestSuccessCount} responses from requests that were successfully sent ({m_requestFailureCount} - requests failed).";
 
             //wait for reconnection if the data provider was disconnected
             while (m_responseSuccessCount < m_requestSuccessCount && !m_progressDialog.CancellationTokenSource.IsCancellationRequested) waitForHealthyConnection();
@@ -196,6 +189,10 @@ namespace TradeSharp.CoreUI.Services
             m_progressDialog.LogInformation($"Requests failured to send - {m_requestFailureCount}");
             m_progressDialog.LogInformation($"Responses successfully received - {m_responseSuccessCount}");
             m_progressDialog.LogInformation($"Responses failed to be received - {m_responseFailureCount}");
+            m_progressDialog.LogInformation($"Outstanding responses - {m_requestsSent.Count}");
+
+            foreach (var request in m_requestsSent)
+              m_progressDialog.LogError($"Request failed for {request.Item2.Ticker} resolution {request.Item1}");
             m_progressDialog.StatusMessage = $"Mass download complete";
           }
 
@@ -233,6 +230,36 @@ namespace TradeSharp.CoreUI.Services
         if (m_dataProvider.IsConnected && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
           m_progressDialog.LogInformation("Data provider reconnected.");
       }
+    }
+
+    protected void retryRequest(Tuple<Resolution, Instrument> downloadCombination, Dictionary<Tuple<Resolution, Instrument>, int> retryCounts, Queue<Tuple<Resolution, Instrument>> downloadCombinations, object failureCountLock)
+    {
+      if (m_context.Settings.RetryCount > 0)
+      {
+        //create/check the retry count for the request in question
+        if (retryCounts.ContainsKey(downloadCombination))
+        {
+          lock (retryCounts) retryCounts[downloadCombination]++;
+          if (retryCounts[downloadCombination] < m_context.Settings.RetryCount) 
+          {
+            m_progressDialog.LogWarning($"Request failed for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1} - retrying ({retryCounts[downloadCombination]}/{m_context.Settings.RetryCount})");
+            lock (downloadCombinations) downloadCombinations.Enqueue(downloadCombination);  //requeue the request to try again later
+            m_progressDialog.Maximum++; //calling method will increment progress, so offset that here
+          } 
+          else
+          {
+            lock (failureCountLock) m_requestFailureCount++;
+            m_progressDialog.LogError($"Request failed for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1} - retry limit reached");
+          }
+        }
+        else
+        {
+          lock (retryCounts) retryCounts.Add(downloadCombination, 1);
+          m_progressDialog.LogError($"Request failed for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1}");
+        }
+      }
+      else
+        lock (failureCountLock) m_requestFailureCount++;
     }
 
     protected void onRequestError(object sender, RequestErrorArgs args)

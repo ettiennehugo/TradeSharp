@@ -18,8 +18,8 @@ namespace TradeSharp.CoreUI.Services
     CSV,
     [Description("JavaScript Object Notation (JSON)")]
     JSON,
-  }  
-  
+  }
+
   /// <summary>
   /// Behavior when importing instrument groups, instruments or instrument bar data when an item already exists in the database.
   /// </summary>
@@ -47,7 +47,7 @@ namespace TradeSharp.CoreUI.Services
   {
     SelectSingle = 1,
     SelectMulti = 2,
-    Refresh = 4, 
+    Refresh = 4,
     Add = 8,
     Edit = 16,
     Delete = 32,
@@ -69,7 +69,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Settings to use for importing instrument groups, instruments and instrument data.
   /// </summary>
-  public partial class ImportSettings: ObservableObject
+  public partial class ImportSettings : ObservableObject
   {
     public ImportSettings()
     {
@@ -90,7 +90,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Settings to use for exporting instrument groups, instruments and instrument data.
   /// </summary>
-  public partial class ExportSettings: ObservableObject
+  public partial class ExportSettings : ObservableObject
   {
     public ExportSettings()
     {
@@ -122,7 +122,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Settings used for mass import of instrument data.
   /// </summary>
-  public partial class MassImportSettings: ObservableObject
+  public partial class MassImportSettings : ObservableObject
   {
     public MassImportSettings()
     {
@@ -159,7 +159,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Settings used for mass export of instrument data.
   /// </summary>
-  public partial class MassExportSettings: ObservableObject
+  public partial class MassExportSettings : ObservableObject
   {
     public MassExportSettings()
     {
@@ -225,7 +225,7 @@ namespace TradeSharp.CoreUI.Services
   /// <summary>
   /// Settings used for mass download of instrument data.
   /// </summary>
-  public partial class MassDownloadSettings: ObservableObject
+  public partial class MassDownloadSettings : ObservableObject
   {
     public MassDownloadSettings()
     {
@@ -266,7 +266,7 @@ namespace TradeSharp.CoreUI.Services
     /// <summary>
     /// Severity used for status messages.
     /// </summary>
-    public enum StatusMessageSeverity 
+    public enum StatusMessageSeverity
     {
       Success,
       Information,
