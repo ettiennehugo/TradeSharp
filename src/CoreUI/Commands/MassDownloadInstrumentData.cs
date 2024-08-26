@@ -43,6 +43,12 @@ namespace TradeSharp.CoreUI.Services
     IProgressDialog m_progressDialog;
     IMassDownloadInstrumentData.Context m_context;
     IDataProviderPlugin? m_dataProvider;
+    Queue<Tuple<Resolution, Instrument>> m_downloadCombinations;
+    Dictionary<Tuple<Resolution, Instrument>, int> m_retryCounts;
+    object m_successRequestCountLock;
+    object m_successResponseCountLock;
+    object m_failureRequestCountLock;
+    object m_failureResponseCountLock;
 
     //properties
     protected List<Tuple<Resolution, Instrument>> m_requestsSent;
@@ -95,43 +101,45 @@ namespace TradeSharp.CoreUI.Services
 
         try
         {
-          Queue<Tuple<Resolution, Instrument>> downloadCombinations = new Queue<Tuple<Resolution, Instrument>>();
-          Dictionary<Tuple<Resolution, Instrument>,int> retryCounts = new Dictionary<Tuple<Resolution, Instrument>, int>();
+          m_downloadCombinations = new Queue<Tuple<Resolution, Instrument>>();
+          m_retryCounts = new Dictionary<Tuple<Resolution, Instrument>, int>();
           foreach (Instrument instrument in m_context.Instruments)
           {
-            if (m_context.Settings.ResolutionMinute) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Minutes, instrument));
-            if (m_context.Settings.ResolutionHour) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Hours, instrument));
-            if (m_context.Settings.ResolutionDay) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Days, instrument));
-            if (m_context.Settings.ResolutionWeek) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Weeks, instrument));
-            if (m_context.Settings.ResolutionMonth) downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Months, instrument));
+            if (m_context.Settings.ResolutionMinute) m_downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Minutes, instrument));
+            if (m_context.Settings.ResolutionHour) m_downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Hours, instrument));
+            if (m_context.Settings.ResolutionDay) m_downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Days, instrument));
+            if (m_context.Settings.ResolutionWeek) m_downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Weeks, instrument));
+            if (m_context.Settings.ResolutionMonth) m_downloadCombinations.Enqueue(new Tuple<Resolution, Instrument>(Resolution.Months, instrument));
           }
 
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
 
-          m_requestsSent = downloadCombinations.ToList();   //record the expected number of requests to be sent
+          m_requestsSent = m_downloadCombinations.ToList();   //record the expected number of requests to be sent
           object instrumentDownloadCountLock = new object();
           int instrumentDownloadCount = 0;
-          object successCountLock = new object();
+          m_successRequestCountLock = new object();
+          m_successResponseCountLock = new object();
+          m_failureRequestCountLock = new object();
+          m_failureResponseCountLock = new object();
           m_requestSuccessCount = 0;
           m_responseSuccessCount = 0;
           m_requestFailureCount = 0;
           m_responseFailureCount = 0;
-          object failureCountLock = new object();
 
           m_progressDialog.StatusMessage = $"Requesting data for {m_context.Instruments.Count} instruments";
           m_progressDialog.Progress = 0;
           m_progressDialog.Minimum = 0;
-          m_progressDialog.Maximum = downloadCombinations.Count * 2;  //*2 since we count the requests and the responses to be received
+          m_progressDialog.Maximum = m_downloadCombinations.Count * 2;  //*2 since we count the requests and the responses to be received
           m_progressDialog.ShowAsync();
 
           List<Task> tasks = new List<Task>();
-          while (downloadCombinations.Count > 0 && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
+          while (m_downloadCombinations.Count > 0 && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
           {
             //allocate block of threads to download data
-            while (tasks.Count < m_context.Settings.ThreadCount && downloadCombinations.Count > 0)
+            while (tasks.Count < m_context.Settings.ThreadCount && m_downloadCombinations.Count > 0)
             {
-              Tuple<Resolution, Instrument> downloadCombination = downloadCombinations.Dequeue();
+              Tuple<Resolution, Instrument> downloadCombination = m_downloadCombinations.Dequeue();
               lock (instrumentDownloadCountLock) instrumentDownloadCount++;
               tasks.Add(Task.Run(() =>
               {
@@ -142,16 +150,15 @@ namespace TradeSharp.CoreUI.Services
 
                   //send the download request
                   if (m_dataProvider.Request(downloadCombination.Item2, downloadCombination.Item1, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime))
-                    lock (successCountLock) m_requestSuccessCount++;
+                    lock (m_successRequestCountLock) m_requestSuccessCount++;
                   else
-                    retryRequest(downloadCombination, retryCounts, downloadCombinations, failureCountLock);
+                    retryRequest(downloadCombination);
                 }
                 catch (Exception e)
                 {
                   m_progressDialog.LogError($"Request on instrument {downloadCombination.Item2.Ticker}, resolution {downloadCombination.Item1} failed - (Exception: \"{e.Message}\"");
-                  retryRequest(downloadCombination, retryCounts, downloadCombinations, failureCountLock);
+                  retryRequest(downloadCombination);
                 }
-                m_progressDialog.Progress++;
               }));
             }
 
@@ -164,10 +171,10 @@ namespace TradeSharp.CoreUI.Services
           {
             //adjust the progress maximum to account for the requests that failed to be sent
             m_progressDialog.Maximum -= m_requestFailureCount;
-            m_progressDialog.StatusMessage = $"Waiting for {m_requestSuccessCount - m_requestSuccessCount} responses from requests that were successfully sent ({m_requestFailureCount} - requests failed).";
+            m_progressDialog.StatusMessage = $"Waiting for {m_responseSuccessCount - m_requestSuccessCount} responses from requests that were successfully sent ({m_requestFailureCount} - requests failed).";
 
             //wait for reconnection if the data provider was disconnected
-            while (m_responseSuccessCount < m_requestSuccessCount && !m_progressDialog.CancellationTokenSource.IsCancellationRequested) waitForHealthyConnection();
+            while ((m_responseSuccessCount + m_responseFailureCount) < m_requestSuccessCount && !m_progressDialog.CancellationTokenSource.IsCancellationRequested) waitForHealthyConnection();
           }
           else
           {
@@ -202,7 +209,7 @@ namespace TradeSharp.CoreUI.Services
         catch (Exception e)
         {
           State = CommandState.Failed;
-          m_progressDialog.LogError($"EXCEPTION: Mass download main thread failed - (Exception: \"{e.Message}\"");
+          m_progressDialog.LogError($"Mass download main thread failed - (Exception: \"{e.Message}\"");
         }
 
         m_dataProvider.RequestError -= onRequestError;
@@ -232,51 +239,54 @@ namespace TradeSharp.CoreUI.Services
       }
     }
 
-    protected void retryRequest(Tuple<Resolution, Instrument> downloadCombination, Dictionary<Tuple<Resolution, Instrument>, int> retryCounts, Queue<Tuple<Resolution, Instrument>> downloadCombinations, object failureCountLock)
+    /// <summary>
+    /// Removes the request from the list of requests sent and retries the request if required.
+    /// </summary>
+    protected void retryRequest(Tuple<Resolution, Instrument> downloadCombination)
     {
+      //remove the request from the list of requests sent
+      lock (m_requestsSent)
+      {
+        var request = m_requestsSent.Find(r => r.Item1 == downloadCombination.Item1 && r.Item2 == downloadCombination.Item2);
+        if (request != null) m_requestsSent.Remove(request);
+      }
+
+      //retry the combination if required
       if (m_context.Settings.RetryCount > 0)
       {
         //create/check the retry count for the request in question
-        if (retryCounts.ContainsKey(downloadCombination))
+        if (m_retryCounts.ContainsKey(downloadCombination))
         {
-          lock (retryCounts) retryCounts[downloadCombination]++;
-          if (retryCounts[downloadCombination] < m_context.Settings.RetryCount) 
+          lock (m_retryCounts) m_retryCounts[downloadCombination]++;
+          if (m_retryCounts[downloadCombination] < m_context.Settings.RetryCount) 
           {
-            m_progressDialog.LogWarning($"Request failed for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1} - retrying ({retryCounts[downloadCombination]}/{m_context.Settings.RetryCount})");
-            lock (downloadCombinations) downloadCombinations.Enqueue(downloadCombination);  //requeue the request to try again later
+            m_progressDialog.LogWarning($"Request failed for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1} - retrying ({m_retryCounts[downloadCombination]}/{m_context.Settings.RetryCount})");
+            lock (m_downloadCombinations) m_downloadCombinations.Enqueue(downloadCombination);  //requeue the request to try again later
             m_progressDialog.Maximum++; //calling method will increment progress, so offset that here
           } 
           else
           {
-            lock (failureCountLock) m_requestFailureCount++;
+            lock (m_failureRequestCountLock) m_requestFailureCount++;
             m_progressDialog.LogError($"Request failed for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1} - retry limit reached");
           }
         }
         else
         {
-          lock (retryCounts) retryCounts.Add(downloadCombination, 1);
-          m_progressDialog.LogError($"Request failed for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1}");
+          lock (m_retryCounts) m_retryCounts.Add(downloadCombination, 1);
+          m_progressDialog.LogError($"Request failed for {downloadCombination.Item2.Ticker} resolution {downloadCombination.Item1} - adding retry count entry");
         }
       }
       else
-        lock (failureCountLock) m_requestFailureCount++;
+        lock (m_failureRequestCountLock) m_requestFailureCount++;
     }
 
     protected void onRequestError(object sender, RequestErrorArgs args)
     {
       if (args is DataDownloadErrorArgs downloadErrorArgs)
       {
-        lock (m_requestsSent)
-        {
-          m_responseFailureCount++;
-          m_progressDialog.LogError(args.Message);
-          var request = m_requestsSent.Find(r => r.Item1 == downloadErrorArgs.Resolution && r.Item2 == downloadErrorArgs.Instrument);
-          if (request != null) m_requestsSent.Remove(request);
-        }
-      }
-      else
-      {
-        m_progressDialog.LogError(args.Message);
+        lock (m_failureResponseCountLock) m_responseFailureCount++;
+        retryRequest(new Tuple<Resolution, Instrument>(downloadErrorArgs.Resolution, downloadErrorArgs.Instrument));
+        m_progressDialog.Progress++;
       }
     }
 
@@ -286,9 +296,10 @@ namespace TradeSharp.CoreUI.Services
       m_progressDialog.LogInformation($"Download completed for - {args.Instrument.Ticker}, {args.Resolution}, {args.Count} bars received from {args.First.ToString() ?? "<No start date>"} to {args.Last.ToString() ?? "<No end date>"}");
       lock (m_requestsSent)
       {
-        m_responseSuccessCount++;
+        lock (m_successResponseCountLock) m_responseSuccessCount++;
         var request = m_requestsSent.Find(r => r.Item1 == args.Resolution && r.Item2 == args.Instrument);
         if (request != null) m_requestsSent.Remove(request);
+        m_progressDialog.Progress++;
       }
     }
   }
