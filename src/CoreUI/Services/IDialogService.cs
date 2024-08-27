@@ -237,9 +237,9 @@ namespace TradeSharp.CoreUI.Services
       ResolutionDay = true;
       ResolutionWeek = true;
       ResolutionMonth = true;
-      ThreadCount = 1;    //clip this the Environment.ProcessorCount as max and the data provider max connection count, it would most likely not be useful to have more threads than processors
-      RetryCount = 3;     //retry count for failed download requests
-
+      ThreadCount = 1;           //clip this the Environment.ProcessorCount as max and the data provider max connection count, it would most likely not be useful to have more threads than processors
+      RetryCount = 3;            //retry count for failed download requests
+      RequestTimeout = 5000;     //timeout for download requests
     }
 
     [ObservableProperty] DateTime m_fromDateTime;
@@ -252,6 +252,7 @@ namespace TradeSharp.CoreUI.Services
     [ObservableProperty] bool m_resolutionMonth;
     [ObservableProperty] int m_threadCount;
     [ObservableProperty] int m_retryCount;
+    [ObservableProperty] int m_requestTimeout;
   }
 
   /// <summary>

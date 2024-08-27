@@ -49,9 +49,10 @@ namespace TradeSharp.CoreUI.Services
     object m_successResponseCountLock;
     object m_failureRequestCountLock;
     object m_failureResponseCountLock;
+    List<Tuple<Resolution, Instrument, DateTime>> m_requestsSent;
 
     //properties
-    protected List<Tuple<Resolution, Instrument>> m_requestsSent;
+
 
     //methods
     //NOTES:
@@ -62,12 +63,14 @@ namespace TradeSharp.CoreUI.Services
     {
       m_progressDialog = progressDialog;
 
-      if (context is not IMassDownloadInstrumentData.Context m_context)
+      if (context is not IMassDownloadInstrumentData.Context)
       {
         State = CommandState.Failed;
         progressDialog.LogError("Failed to start mass download, no data provider was set");
         return Task.CompletedTask;
       }
+
+      m_context = (IMassDownloadInstrumentData.Context)context;
 
       IPluginsService pluginService = (IPluginsService)m_serviceHost.GetService(typeof(IPluginsService))!;
       m_dataProvider = pluginService.GetDataProviderPlugin(m_context.DataProvider);
@@ -115,7 +118,8 @@ namespace TradeSharp.CoreUI.Services
           Stopwatch stopwatch = new Stopwatch();
           stopwatch.Start();
 
-          m_requestsSent = m_downloadCombinations.ToList();   //record the expected number of requests to be sent
+          m_requestsSent = new List<Tuple<Resolution, Instrument, DateTime>>();
+          TimeSpan requestTimeout = new TimeSpan(m_context.Settings.RequestTimeout);
           object instrumentDownloadCountLock = new object();
           int instrumentDownloadCount = 0;
           m_successRequestCountLock = new object();
@@ -134,7 +138,7 @@ namespace TradeSharp.CoreUI.Services
           m_progressDialog.ShowAsync();
 
           List<Task> tasks = new List<Task>();
-          while (m_downloadCombinations.Count > 0 && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
+          while ((m_downloadCombinations.Count > 0 || m_requestsSent.Count > 0) && !m_progressDialog.CancellationTokenSource.IsCancellationRequested)
           {
             //allocate block of threads to download data
             while (tasks.Count < m_context.Settings.ThreadCount && m_downloadCombinations.Count > 0)
@@ -150,7 +154,10 @@ namespace TradeSharp.CoreUI.Services
 
                   //send the download request
                   if (m_dataProvider.Request(downloadCombination.Item2, downloadCombination.Item1, m_context.Settings.FromDateTime, m_context.Settings.ToDateTime))
+                  {
                     lock (m_successRequestCountLock) m_requestSuccessCount++;
+                    lock (m_requestsSent) m_requestsSent.Add(new Tuple<Resolution, Instrument, DateTime>(downloadCombination.Item1, downloadCombination.Item2, DateTime.Now));
+                  }
                   else
                     retryRequest(downloadCombination);
                 }
@@ -162,24 +169,27 @@ namespace TradeSharp.CoreUI.Services
               }));
             }
 
+            //scan set of requests sent to check whether we need to retry them be removing them from the requests sent list and readding them to the
+            //download combinations list
+            lock (m_requestsSent)
+            {
+              //need to first identify the requests that have timed out and then retry them to avoid modifying the list while iterating over it
+              var requestsToRetry = new List<Tuple<Resolution, Instrument>>();
+              foreach (var request in m_requestsSent)
+              {
+                if (DateTime.Now - request.Item3 > requestTimeout)
+                {
+                  m_progressDialog.LogWarning($"Request for {request.Item2.Ticker} resolution {request.Item1} timed out - retrying");
+                  requestsToRetry.Add(new Tuple<Resolution, Instrument>(request.Item1, request.Item2));
+                }
+              }
+
+              foreach (var request in requestsToRetry) retryRequest(request);
+            }
+
             //wait for all threads to complete and then clear the list for next block to download
             try { Task.WaitAll(tasks.ToArray(), m_progressDialog.CancellationTokenSource.Token); } catch (OperationCanceledException) { }
             tasks.Clear();
-          }
-
-          if (!m_progressDialog.CancellationTokenSource.IsCancellationRequested)
-          {
-            //adjust the progress maximum to account for the requests that failed to be sent
-            m_progressDialog.Maximum -= m_requestFailureCount;
-            m_progressDialog.StatusMessage = $"Waiting for {m_responseSuccessCount - m_requestSuccessCount} responses from requests that were successfully sent ({m_requestFailureCount} - requests failed).";
-
-            //wait for reconnection if the data provider was disconnected
-            while ((m_responseSuccessCount + m_responseFailureCount) < m_requestSuccessCount && !m_progressDialog.CancellationTokenSource.IsCancellationRequested) waitForHealthyConnection();
-          }
-          else
-          {
-            m_progressDialog.StatusMessage += " - Cancelled";
-            m_progressDialog.Complete = true;
           }
 
           stopwatch.Stop();
