@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using TradeSharp.CoreUI.Commands;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
+using TradeSharp.CoreUI.Commands;
 using TradeSharp.Data;
 
 namespace TradeSharp.CoreUI.Services
@@ -193,7 +194,7 @@ namespace TradeSharp.CoreUI.Services
           State = CommandState.Completed;
 
           //output status message
-          progressDialog.LogInformation($"Mass Copy Complete - Attempted {m_attemptedInstrumentCount} instruments, copied {m_successCount} instruments successfully and failed on {m_failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
+          progressDialog.LogInformation($"Mass Copy Complete - Attempted {m_attemptedInstrumentCount} instruments/resolution combinations, copied {m_successCount} instruments successfully and failed on {m_failureCount} instruments (Elapsed time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3})");
         }
         catch (Exception e)
         {
@@ -233,7 +234,7 @@ namespace TradeSharp.CoreUI.Services
                 if (list.Count > 0) copyInstrument = list.Pop();
               if (copyInstrument == null) continue; //failed to find a copy/resolution entry, all instruments processed
 
-              progressDialog.LogInformation($"Copying instrument data for \"{copyInstrument!.Instrument.Ticker}\" to resolution \"{copyInstrument!.Resolution}\"");
+              progressDialog.LogInformation($"Copying instrument data for \"{copyInstrument!.Instrument.Ticker}\" to resolution \"{toResolution}\"");
 
               instrumentBarDataService.Resolution = copyInstrument!.Resolution;
               instrumentBarDataService.Instrument = copyInstrument!.Instrument;

@@ -179,7 +179,7 @@ namespace TradeSharp.CoreUI.Services
           progressDialog.Minimum = 0;
           progressDialog.Maximum = exportFileList!.Count;
           progressDialog.Progress = 0;
-          progressDialog.StatusMessage = $"Found {exportFileList.Count} instruments to export";
+          progressDialog.StatusMessage = $"Found {exportFileList.Count} instrument/resolution combinations to export";
           progressDialog.ShowAsync();
 
           //export all the data according to the defined data resolutions
@@ -222,7 +222,7 @@ namespace TradeSharp.CoreUI.Services
                   continue;
                 }
 
-                progressDialog.LogInformation($"Exporting {exportFile.Instrument.Ticker} for resolution {exportFile.Resolution} to file \"{exportFile.Filename}\" (Thread id: {Task.CurrentId})");
+                progressDialog.LogInformation($"Exporting {exportFile.Instrument.Ticker} for resolution {exportFile.Resolution} to file \"{exportFile.Filename}\" (Thread id: {Task.CurrentId}, Data point count: {instrumentBarDataService.Items.Count})");
 
                 try
                 {
@@ -265,7 +265,7 @@ namespace TradeSharp.CoreUI.Services
         catch (Exception e)
         {
           State = CommandState.Failed;
-          progressDialog.LogError($"EXCEPTION: Mass export main thread failed - (Exception: \"{e.Message}\")");
+          progressDialog.LogError($"Mass export main thread failed - (Exception: \"{e.Message}\")");
         }
       });
     }

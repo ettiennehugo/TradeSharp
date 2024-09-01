@@ -1,5 +1,5 @@
 using Microsoft.UI.Xaml;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Services;
 
 namespace TradeSharp.WinTraderWorkbench

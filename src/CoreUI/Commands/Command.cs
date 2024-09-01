@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
 
 namespace TradeSharp.CoreUI.Commands

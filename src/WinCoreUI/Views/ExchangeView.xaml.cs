@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using WinRT.Interop;
 using Windows.Storage;
 using System.ComponentModel;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Services;
 
 // To learn more about WinUI, the WinUI project structure,

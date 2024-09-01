@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using TradeSharp.CoreUI.ViewModels;
 using System.Collections.Generic;
 using TradeSharp.Data;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Services;
 
 // To learn more about WinUI, the WinUI project structure,

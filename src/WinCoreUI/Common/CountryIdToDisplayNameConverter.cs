@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using TradeSharp.Data;
 
 namespace TradeSharp.WinCoreUI.Common

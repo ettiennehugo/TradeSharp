@@ -1,6 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using TradeSharp.Data;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
 using TradeSharp.CoreUI.Commands;
 

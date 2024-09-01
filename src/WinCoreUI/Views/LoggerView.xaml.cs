@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 using System;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Common;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;

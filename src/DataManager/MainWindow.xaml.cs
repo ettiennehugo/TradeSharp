@@ -2,8 +2,7 @@ using Microsoft.UI.Xaml;
 using TradeSharp.WinDataManager.ViewModels;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.WinDataManager.Services;
-using TradeSharp.CoreUI.Common;
-using TradeSharp.Data;
+using TradeSharp.Common;
 
 namespace TradeSharp.WinDataManager
 {

@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using TradeSharp.Data;
 using TradeSharp.CoreUI.Services;
 using TradeSharp.CoreUI.ViewModels;

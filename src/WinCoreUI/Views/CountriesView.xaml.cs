@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.ViewModels;
 
 namespace TradeSharp.WinCoreUI.Views

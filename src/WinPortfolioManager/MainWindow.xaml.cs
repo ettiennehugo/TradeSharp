@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
-using TradeSharp.CoreUI.Common;
+using TradeSharp.Common;
 using TradeSharp.CoreUI.Services;
-using TradeSharp.WinDataManager.Services;
 
 namespace TradeSharp.WinPortfolioManager
 {

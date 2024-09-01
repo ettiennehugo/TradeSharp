@@ -1,7 +1,7 @@
-﻿namespace TradeSharp.CoreUI.Common
+﻿namespace TradeSharp.Common
 {
   /// <summary>
-  /// Interface to support application wide behaviour.
+  /// Interface to support application wide behaviour, service discovery being one of the core functions.
   /// </summary>
   public interface IApplication
   {
