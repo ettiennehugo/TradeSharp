@@ -1,27 +1,32 @@
-﻿namespace TradeSharp.Analysis.Common
+﻿using Microsoft.Extensions.Logging;
+
+namespace TradeSharp.Analysis.Common
 {
   /// <summary>
   /// Base interaface for a pipe or filter in the analysis engine.
   /// </summary>
   public interface IPipeOrFilter
-    {
-        //constants
+  {
+    //constants
 
 
-        //enums
+    //enums
 
 
-        //types
+    //types
 
 
-        //attributes
+    //attributes
 
 
-        //properties
+    //properties
+    /// <summary>
+    /// Logger used by the pipe/filter to log the the engine/pipeline log.
+    /// </summary>
+    ILogger Logger { get; }
+
+    //methods
 
 
-        //methods
-
-
-    }
+  }
 }

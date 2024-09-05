@@ -108,5 +108,22 @@ namespace TradeSharp.CoreUI.Services
     }
 
     public bool Copy(Exchange item) => throw new NotImplementedException();
+
+    public Exchange? Find(Instrument instrument, bool includeSecondaryExchange)
+    {
+      Exchange? result = null;
+
+      result = Items.FirstOrDefault((e) => e.Id == instrument.PrimaryExchangeId);
+      if (result == null && includeSecondaryExchange)
+      {
+        foreach (var secondaryExchangeId in instrument.SecondaryExchangeIds)
+        {
+          result = Items.FirstOrDefault((e) => e.Id == secondaryExchangeId);
+          if (result != null) break;
+        }
+      }
+
+      return result;
+    }
   }
 }

@@ -201,12 +201,12 @@ namespace TradeSharp.CoreUI.Services
           {
             m_progressDialog.LogInformation($"Attempted {instrumentDownloadCount} instrument/resolution combinations.");
             m_progressDialog.LogInformation($"Download Statistics:");
-            m_progressDialog.LogInformation($"Elapsed time - {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3}");
-            m_progressDialog.LogInformation($"Requests successfully sent - {m_requestSuccessCount}");
-            m_progressDialog.LogInformation($"Requests failured to send - {m_requestFailureCount}");
-            m_progressDialog.LogInformation($"Responses successfully received - {m_responseSuccessCount}");
-            m_progressDialog.LogInformation($"Responses failed to be received - {m_responseFailureCount}");
-            m_progressDialog.LogInformation($"Outstanding responses - {m_requestsSent.Count}");
+            m_progressDialog.LogInformation($"\tElapsed time - {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3}");
+            m_progressDialog.LogInformation($"\tRequests successfully sent - {m_requestSuccessCount}");
+            m_progressDialog.LogInformation($"\tRequests failured to send - {m_requestFailureCount}");
+            m_progressDialog.LogInformation($"\tResponses successfully received - {m_responseSuccessCount}");
+            m_progressDialog.LogInformation($"\tResponses failed to be received - {m_responseFailureCount}");
+            m_progressDialog.LogInformation($"\tOutstanding responses - {m_requestsSent.Count}");
 
             foreach (var request in m_requestsSent)
               m_progressDialog.LogError($"Request failed for {request.Item2.Ticker} resolution {request.Item1}");

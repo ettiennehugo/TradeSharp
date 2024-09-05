@@ -101,9 +101,15 @@ namespace TradeSharp.PolygonIO.Commands
 						//create the exchange if nothing was found
             if (exchange == null)
             {
+							//find the country associated with the exchange
 							Country? country = m_countryService.Items.FirstOrDefault(c => c.IsoCode != Data.Country.InternationalIsoCode && c.CountryInfo.RegionInfo.TwoLetterISORegionName == pioExchange.Locale.ToUpper());
 							Guid countryId = country?.Id ?? Country.InternationalId;
-              exchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributes, string.Empty, countryId, pioExchange.Name, Array.Empty<string>(), TimeZoneInfo.Utc, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Data.Exchange.BlankLogoId, string.Empty);
+
+							//determine the correct time zone for the exchange, this needs to be correct since it will be used to convert bar data date/time values since
+							//the PolygonIO end-point always return UTC date/time values even though the data is in the date/time of the exchange
+							TimeZoneInfo timeZone = determineTimeZone(pioExchange);
+
+              exchange = new Data.Exchange(Guid.NewGuid(), Data.Exchange.DefaultAttributes, string.Empty, countryId, pioExchange.Name, Array.Empty<string>(), timeZone, Instrument.DefaultPriceDecimals, Instrument.DefaultMinimumMovement, Instrument.DefaultBigPointValue, Data.Exchange.BlankLogoId, string.Empty);
 							if (!string.IsNullOrEmpty(pioExchange.Acronym)) exchange.AlternateNames.Add(pioExchange.Acronym);
 							if (!string.IsNullOrEmpty(pioExchange.Mic)) exchange.AlternateNames.Add(pioExchange.Mic);
 							exchange.Url = pioExchange.Url;
@@ -113,10 +119,12 @@ namespace TradeSharp.PolygonIO.Commands
 							if (pioExchange.AssetClass == Constants.AssetClassForex) defineForexSessions(exchange);
               updateService = true;
             }
-						else if (exchange.Id != Data.Exchange.InternationalId && !exchange.Url.Equals(pioExchange.Url))	//ignore global exchange and check if the URL has changed
+						else if (exchange.Id != Data.Exchange.InternationalId)	//ignore global exchange
 						{
-							//update the defined exchange with data from Polygon
+              //update the defined exchange with data from Polygon
+              exchange.Name = pioExchange.Name;
 							exchange.Url = pioExchange.Url;
+              exchange.TimeZone = determineTimeZone(pioExchange);
               exchange.Tag.Update(Constants.TagDataId, DateTime.UtcNow, Constants.TagDataVersionMajor, Constants.TagDataVersionMinor, Constants.TagDataVersionPatch, JsonSerializer.Serialize(pioExchange));
               if (string.IsNullOrEmpty(pioExchange.Acronym) && !exchange.AlternateNames.Contains(pioExchange.Acronym)) exchange.AlternateNames.Add(pioExchange.Acronym);
               if (string.IsNullOrEmpty(pioExchange.Mic) && !exchange.AlternateNames.Contains(pioExchange.Mic)) exchange.AlternateNames.Add(pioExchange.Mic);
@@ -148,6 +156,45 @@ namespace TradeSharp.PolygonIO.Commands
     }
 
     //methods
+		/// <summary>
+		/// Determine the time zone of the exchange using heuristics of the known data. The exchange data only contains the locale which is the general
+		/// country of the exchange and not exactly the time zone.
+		/// </summary>
+		protected TimeZoneInfo determineTimeZone(Exchange pioExchange)
+		{
+			TimeZoneInfo result = TimeZoneInfo.Utc;
+
+			//country specific heuristics
+			//for global exchange the default time zone is UTC - already set
+			if (pioExchange.Locale.Trim().ToUpper() == "US")
+				result = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+			//city specific heuristics
+			if (pioExchange.Name.ToUpper().Contains("NEW YORK"))
+        result = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+			if (pioExchange.Name.ToUpper().Contains("LONDON"))
+				result = TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time");
+
+			if (pioExchange.Name.ToUpper().Contains("TOKYO"))
+				result = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
+
+			if (pioExchange.Name.ToUpper().Contains("HONG KONG"))
+				result = TimeZoneInfo.FindSystemTimeZoneById("China Standard Time");
+
+			//exchange name specific heuristics
+			if (pioExchange.Name.ToUpper().Contains("NASDAQ"))
+        result = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+			if (pioExchange.Name.ToUpper().Contains("NYSE") || pioExchange.Url.ToUpper().Contains("NYSE"))
+        result = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+			if (pioExchange.Name.ToUpper().Contains("CBOE") || pioExchange.Url.ToUpper().Contains("CBOE"))
+        result = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+
+			return result;
+		}
+
 		private void defineStockSessions(Data.Exchange exchange)
 		{
       m_sessionService.Add(new Session(Guid.NewGuid(), Session.DefaultAttributes, string.Empty, "Monday Pre-market", exchange.Id, DayOfWeek.Monday, new TimeOnly(4, 0), new TimeOnly(9, 29)));

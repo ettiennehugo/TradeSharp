@@ -19,11 +19,12 @@ namespace TradeSharp.CoreUI.ViewModels
 
 
     //attributes
-
+    protected IExchangeService m_exchangeService;
 
     //constructors
     public ExchangeViewModel(IExchangeService itemsService, INavigationService navigationService, IDialogService dialogService) : base(itemsService, navigationService, dialogService)
     {
+      m_exchangeService = itemsService;
       UpdateCommand = new RelayCommand(OnUpdate, () => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Editable));
       DeleteCommand = new RelayCommand<object?>(OnDelete, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
       //DeleteCommandAsync = new AsyncRelayCommand<object?>(OnDeleteAsync, (object? x) => SelectedItem != null && SelectedItem.HasAttribute(Attributes.Deletable));
@@ -73,6 +74,11 @@ namespace TradeSharp.CoreUI.ViewModels
           }
         }
       }
+    }
+
+    public Exchange? Find(Instrument instrument, bool includeSecondaryExchange = true)
+    {
+      return m_exchangeService.Find(instrument, includeSecondaryExchange);
     }
 
     public Exchange? GetItem(Guid id)

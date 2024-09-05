@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Moq;
-
-namespace TradeSharp.Data.Testing
+﻿namespace TradeSharp.Data.Testing
 {
   [TestClass]
   public class DataStream

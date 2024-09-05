@@ -17,7 +17,7 @@
 
     //Default minimum and maximum date/time values used for time sensitive data.
     public static DateTime DefaultMinimumDateTime = new DateTime(1980, 1, 1, 0, 0, 0, DateTimeKind.Utc);    //minimum date/time must be UTC as usd by the database
-    public static DateTime DefaultMaximumDateTime = new DateTime(2100, 12, 31, 23, 59, 0, DateTimeKind.Utc);  //maximum date/time must be UTC as usd by the database
+    public static DateTime DefaultMaximumDateTime = new DateTime(2100, 12, 31, 23, 59, 59, DateTimeKind.Utc);  //maximum date/time must be UTC as usd by the database
 
     //Default format masks if none specified
     public const string DefaultPriceFormatMask = "0.00";

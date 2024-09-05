@@ -86,10 +86,13 @@ namespace TradeSharp.CoreUI.Services
       get => m_selectedItem;
       set { SetProperty(ref m_selectedItem, value); SelectedItemChanged?.Invoke(this, value); }
     }
-
     public IList<Country> Items { get; set; }
 
     //methods
+    public Country? Find(Exchange exchange)
+    {
+      return Items.FirstOrDefault(x => x.Id == exchange.CountryId);
+    }
 
   }
 }

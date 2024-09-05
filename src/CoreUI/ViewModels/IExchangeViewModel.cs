@@ -24,5 +24,6 @@ namespace TradeSharp.CoreUI.ViewModels
 
     //methods
     Exchange? GetItem(Guid id);
+    Exchange? Find(Instrument instrument, bool includeSecondaryExchange = true);
   }
 }

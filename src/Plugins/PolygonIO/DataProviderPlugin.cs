@@ -8,6 +8,7 @@ using TradeSharp.PolygonIO.Commands;
 using TradeSharp.PolygonIO.Messages;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TradeSharp.PolygonIO
 {
@@ -59,7 +60,7 @@ namespace TradeSharp.PolygonIO
     protected Dictionary<int, SubscriptionEntry> m_subscriptions;
 
     //properties
-    public override int ConnectionCountMax { get => Environment.ProcessorCount * 2; }   //PolygonIO does have a rate limit of 100 calls per second this should never reach that limit. 
+    public override int ConnectionCountMax { get => Environment.ProcessorCount; }   //PolygonIO does have a rate limit of 100 calls per second this should never reach that limit. 
     public override bool IsConnected { get => NetworkInterface.GetIsNetworkAvailable(); }
 
     //constructors
@@ -120,10 +121,17 @@ namespace TradeSharp.PolygonIO
       var data = m_client.GetHistoricalData(instrument.Ticker, resolution, start, end, null).Result;
       if (data != null)
       {
+        //find country and exchange timezone for date/time adjustment below
+        Data.Exchange exchange = m_exchangeService.Find(instrument)!;
+        
         IList<IBarData> bars = new List<IBarData>();
         foreach (var barDto in data)
         {
-          var bar = new BarData(resolution, barDto.DateTime, Common.Constants.DefaultPriceFormatMask, barDto.Open, barDto.High, barDto.Low, barDto.Close, barDto.Volume);
+          //we need to adjust the resolution of the bars since PolygonIO do not care about the time of a bar
+          //and timezone, everything comes back as UTC time even though the time is in the local time zone of the
+          //exchange
+          DateTimeOffset dateTimeOffset = new DateTimeOffset(barDto.DateTime.Year, barDto.DateTime.Month, barDto.DateTime.Day, barDto.DateTime.Hour, barDto.DateTime.Minute, barDto.DateTime.Second, barDto.DateTime.Millisecond, barDto.DateTime.Nanosecond, exchange.TimeZone.GetUtcOffset(barDto.DateTime));
+          var bar = new BarData(resolution, dateTimeOffset.UtcDateTime, Common.Constants.DefaultPriceFormatMask, barDto.Open, barDto.High, barDto.Low, barDto.Close, barDto.Volume);
           bars.Add(bar);
         }
         m_database.UpdateData(this.Name, instrument.Ticker, resolution, bars);

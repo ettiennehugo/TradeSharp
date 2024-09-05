@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,15 +8,18 @@ using TradeSharp.Analysis.Common;
 
 namespace TradeSharp.Analysis
 {
-    /// <summary>
-    /// Engine run status.
-    /// </summary>
-    public enum RunStatus
+  /// <summary>
+  /// Engine run status.
+  /// </summary>
+  [Flags]
+  public enum RunStatus
   {
-    Init,     //pre-run initialization state
-    Composed, //engine has been composed and ready to run
-    Running,  //engine is running
-    Stopped   //engine was stopped (completed)
+    Init = 1 << 0,      // 1: pre-run initialization state
+    Composed = 1 << 1,  // 2: engine has been composed and is going to be validated
+    Validated = 1 << 2, // 4: engine was validated and ready to run
+    Running = 1 << 3,   // 8: engine is running
+    Stopped = 1 << 4,   // 16: engine was stopped (completed)
+    Error = 1 << 5      // 32: engine has encountered an error
   }
 
   /// <summary>
@@ -37,19 +41,24 @@ namespace TradeSharp.Analysis
 
     //properties
     /// <summary>
+    /// Logger used to log entries to the engine log.
+    /// </summary>
+    ILogger Logger { get; }
+
+    /// <summary>
     /// Configuration used to setup the analysis engine.
     /// </summary>
     IEngineConfiguration Configuration { get; }
 
     /// <summary>
-    /// Composition of the engine once it has been composed.
+    /// Set of data pipelines defined in the engine.
     /// </summary>
-    IList<IPipeOrFilter> Composition { get; }
+    IList<IPipeline> Pipelines { get; }
 
     /// <summary>
-    /// Token used to stop the engine execution.
+    /// Cancellation token source used to stop the engine execution.
     /// </summary>
-    CancellationToken CancellationToken { get; }
+    CancellationTokenSource CancellationTokenSource { get; }
 
     /// <summary>
     /// State of the engine.
@@ -58,19 +67,15 @@ namespace TradeSharp.Analysis
 
     //methods
     /// <summary>
-    /// Sets the start filter for the engine. This would typically be a filter that
-    /// produces data.
+    /// Adds a pipeline to the engine for processing data.
     /// </summary>
-    void SetStart(IFilter filter);
+    IPipeline AddPipeline();
 
     /// <summary>
-    /// Add a filter to the engine.
+    /// Start/stop the engine execution. Engine can enter the stopped state
+    /// if it does not require perpetual execution.
     /// </summary>
-    void Add(IPipe pipe, IFilter filter);
-
-    /// <summary>
-    /// Run the engine asynchronously.
-    /// </summary>
-    void RunAsync();
+    bool Start();
+    bool Stop();
   }
 }

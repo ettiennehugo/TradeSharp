@@ -90,7 +90,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPortfolioManager", "src\
 		{F39A987A-7771-4DA4-958F-0351C687E347} = {F39A987A-7771-4DA4-958F-0351C687E347}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Analysis", "test\Analysis\Analysis.csproj", "{150594FE-A5CB-488E-8C9B-F8963C874BA1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Analysis.Testing", "test\Analysis\Analysis.Testing.csproj", "{150594FE-A5CB-488E-8C9B-F8963C874BA1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
