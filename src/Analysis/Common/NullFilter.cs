@@ -20,13 +20,17 @@ namespace TradeSharp.Analysis.Common
 
 
     //properties
+    public string Name { get; }
+    public ExecutionStatus Status { get; }
     public FilterMode Mode => FilterMode.Synchronous;
     public IPipe Input { get; set; }
     public IPipe Output { get; set; }
 
     //constructors
-    public NullFilter(ILogger logger) : base(logger)
+    public NullFilter(string name, ILogger logger) : base(logger)
     {
+      Name = name;
+      Status = ExecutionStatus.Init;
       Input = new NullPipe(logger, this);
       Output = Input;
     }

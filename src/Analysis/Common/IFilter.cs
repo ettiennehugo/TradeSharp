@@ -28,6 +28,16 @@
 
     //properties
     /// <summary>
+    /// Name of the filter, mainly used for debugging to see where in the pipe certain components are.
+    /// </summary>
+    string Name { get; }
+
+    /// <summary>
+    /// Status of the filter, used to signal the engine to either continue processing or terminate.
+    /// </summary>
+    ExecutionStatus Status { get; }
+
+    /// <summary>
     /// Execution mode of the filter, synchronous or asynchronous. Synchronous filters run on the pipeline execution thread while
     /// asynchronous filters run on a separate thread using thread safe pipes to post messages along.
     /// </summary>

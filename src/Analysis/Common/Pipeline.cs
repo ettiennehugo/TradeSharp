@@ -20,14 +20,19 @@ namespace TradeSharp.Analysis.Common
     protected CancellationToken m_cancellationToken;
 
     //properties
+    public string Name { get; }
+    public ExecutionStatus Status { get; protected set; }
     public ILogger Logger { get; }
-    public IList<IPipeOrFilter> Composition => new List<IPipeOrFilter>();
+    public IList<IPipeOrFilter> Composition { get; }
 
     //constructors
-    public Pipeline(ILogger logger, CancellationToken cancellationToken)
+    public Pipeline(string name, ILogger logger, CancellationToken cancellationToken)
     {
+      Name = name;
+      Status = ExecutionStatus.Init;
       Logger = logger;
       m_cancellationToken = cancellationToken;
+      Composition = new List<IPipeOrFilter>();
     }
 
     //finalizers
@@ -51,8 +56,11 @@ namespace TradeSharp.Analysis.Common
       //NOTE: We hook in the pipes but they never form part of the actual pipeline.
       if (previous != null)
       {
-        previous.Output = new Pipe(Logger);
-        filter.Input = previous.Output;
+        var pipe = new Pipe(Logger);
+        pipe.Source = previous;
+        pipe.End = filter;
+        previous.Output = pipe;
+        filter.Input = pipe;
       }
 
       Composition.Add(filter);
@@ -131,20 +139,31 @@ namespace TradeSharp.Analysis.Common
       if (!Validate()) throw new InvalidOperationException("Pipeline is not valid.");
       return Task.Run(() =>
       {
+        //set the name for the running thread to help debugging
+        Thread.CurrentThread.Name = Name;
+        Status = ExecutionStatus.Running;
+
         //start asynchronous filters
         foreach (var filter in Composition)
           if (filter is IFilter f && f.Mode == FilterMode.Asynchronous) f.EvaluateAsync();
 
         //run synchronous filters
-        while (!m_cancellationToken.IsCancellationRequested)
+        while (Status != ExecutionStatus.Completed || !m_cancellationToken.IsCancellationRequested)
+        {
+          bool allFiltersCompleted = true;
           foreach (var component in Composition)
           {
             if (m_cancellationToken.IsCancellationRequested) break;
             if (component is IFilter filter && filter.Mode == FilterMode.Synchronous)
             {
               filter.Evaluate();
+              if (filter.Status != ExecutionStatus.Completed) allFiltersCompleted = false;
             }
           }
+
+          if (allFiltersCompleted)
+            Status = ExecutionStatus.Completed;
+        }
       });
     }
   }

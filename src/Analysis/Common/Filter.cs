@@ -23,12 +23,16 @@ namespace TradeSharp.Analysis.Common
     protected CancellationToken m_cancellationToken;
 
     //properties
+    public string Name { get; }
+    public ExecutionStatus Status { get; protected set; }
     public FilterMode Mode { get; }
     public IPipe Input { get; set; }
     public IPipe Output { get; set; }
 
     //constructors
-    public Filter(ILogger logger, FilterMode mode, CancellationToken cancellationToken) : base(logger) {
+    public Filter(string name, ILogger logger, FilterMode mode, CancellationToken cancellationToken) : base(logger) {
+      Name = name;
+      Status = ExecutionStatus.Init;
       Mode = mode;
       m_cancellationToken = cancellationToken;
       //pipeline configuration should set the input and output
@@ -48,19 +52,29 @@ namespace TradeSharp.Analysis.Common
       return pipeline.Composition.Count > 0 && pipeline.Composition[0] == this;
     }
 
-    public bool Evaluate()
+    public virtual bool Evaluate()
     {
-      if (Input.Count == 0) return false;
+      if (Input.Count == 0) {
+        //check whether we should continue execution if source is still running
+        if (Input.Source.Status == ExecutionStatus.Completed) Status = ExecutionStatus.Completed;
+        return false;
+      }
+
       var message = Input.Dequeue();
       if (message != null) Output.Enqueue(message);
       return true;
     }
 
-    public Task EvaluateAsync()
+    public virtual Task EvaluateAsync()
     {
       return Task.Run(() =>
       {
-        while (!m_cancellationToken.IsCancellationRequested) Evaluate();
+        Thread.CurrentThread.Name = Name;
+        while (!m_cancellationToken.IsCancellationRequested)
+        {
+          Evaluate();
+          if (Status == ExecutionStatus.Completed) break;  //terminate filter execution if no more data will be injected into the pipeline
+        }
       });
     }
   }

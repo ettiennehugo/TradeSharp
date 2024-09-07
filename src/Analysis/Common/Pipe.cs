@@ -19,7 +19,7 @@ namespace TradeSharp.Analysis.Common
 
 
     //attributes
-    protected ConcurrentQueue<IMessage> m_messages => new ConcurrentQueue<IMessage>();
+    protected ConcurrentQueue<IMessage> m_messages;
 
     //properties
     public int Count => m_messages.Count;
@@ -27,7 +27,9 @@ namespace TradeSharp.Analysis.Common
     public IFilter End { get; set; }
 
     //constructors
-    public Pipe(ILogger logger) : base(logger) { }
+    public Pipe(ILogger logger) : base(logger) {
+      m_messages = new ConcurrentQueue<IMessage>();
+    }
 
     //finalizers
 

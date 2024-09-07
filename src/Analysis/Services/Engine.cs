@@ -43,7 +43,7 @@ namespace TradeSharp.Analysis
     {
       Logger = logger;
       Configuration = configuration;
-      Status = RunStatus.Init;
+      Status = RunStatus.None;
       Pipelines = new List<IPipeline>();
       CancellationTokenSource = new CancellationTokenSource();
     }
@@ -62,9 +62,9 @@ namespace TradeSharp.Analysis
     public ILogger Logger { get; protected set; }
 
     //methods
-    public IPipeline AddPipeline()
+    public IPipeline AddPipeline(string name)
     {
-      var pipeline = new Pipeline(Logger, CancellationTokenSource.Token);
+      var pipeline = new Pipeline(name, Logger, CancellationTokenSource.Token);
       Pipelines.Add(pipeline);
       return pipeline;
     }

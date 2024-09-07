@@ -14,6 +14,7 @@ namespace TradeSharp.Analysis
   [Flags]
   public enum RunStatus
   {
+    None = 0,           // 0: no state
     Init = 1 << 0,      // 1: pre-run initialization state
     Composed = 1 << 1,  // 2: engine has been composed and is going to be validated
     Validated = 1 << 2, // 4: engine was validated and ready to run
@@ -69,7 +70,7 @@ namespace TradeSharp.Analysis
     /// <summary>
     /// Adds a pipeline to the engine for processing data.
     /// </summary>
-    IPipeline AddPipeline();
+    IPipeline AddPipeline(string name);
 
     /// <summary>
     /// Start/stop the engine execution. Engine can enter the stopped state

@@ -23,6 +23,17 @@ namespace TradeSharp.Analysis.Common
 
     //properties
     /// <summary>
+    /// Name of the pipeline, will be assigned to the thread running the pipeline.
+    /// </summary>
+    string Name { get; }
+
+    /// <summary>
+    /// Execution status of the pipeline, pipeline can execute perpertually until the engine signals termination through the cancellation token or
+    /// the pipeline can run until all filters reach a completed status meaning that they will produce no more messages.
+    /// </summary>
+    ExecutionStatus Status { get; }
+
+    /// <summary>
     /// Logger used by the pipe/filter to log the the engine/pipeline log.
     /// </summary>
     ILogger Logger { get; }
