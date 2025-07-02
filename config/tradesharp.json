@@ -14,7 +14,7 @@
       "ApiBaseUrl": "https://api.polygon.io",
       "Cache": "PolygonIO.db",
       "RequestLimit": "50000",
-      "ApiKey": "fAbnorpF_fpmp_ETxAilHo4WEAtGQZOF"
+      "ApiKey": "<API KEY>"
     }
   },
   "Brokers": {
